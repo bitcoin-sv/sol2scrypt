@@ -1,0 +1,50 @@
+name:                sol2scrypt
+version:             0.1.0
+github:              sCrypt-Inc/sol2scrypt
+license:             MIT
+author:              sCrypt Inc
+maintainer:          sCrypt Inc
+copyright:           "2021 sCrypt"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         A Solidity to sCrypt Transpiler. See more at https://github.com/sCrypt-Inc/sol2scrypt
+
+ghc-options: -Wall
+
+dependencies:
+- base >= 4.7 && < 5
+
+library:
+  source-dirs: src
+
+executables:
+  sol2scrypt:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - sol2scrypt
+
+tests:
+  golden:
+    main:                Spec.hs
+    source-dirs:         test/golden
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - sol2scrypt
