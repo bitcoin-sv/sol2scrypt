@@ -3,4 +3,8 @@ module Main where
 import Transpiler
 
 main :: IO ()
-main = transpile
+main = do
+  let solProgram = ""
+  scryptCode <- transpile solProgram
+  -- putStrLn $ "Transpile `" ++ solProgram ++ "` to `" ++ scryptCode ++ "`"
+  return ()

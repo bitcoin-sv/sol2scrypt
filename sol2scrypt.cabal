@@ -25,14 +25,33 @@ source-repository head
 
 library
   exposed-modules:
+      Intermediate
+      Intermediate.Spec
+      Intermediate.Specs.Expression
+      Intermediate.Specs.Type
+      Intermediate.Transformations.Base
+      Intermediate.Transformations.Expression
+      Intermediate.Transformations.Type
+      Intermediate.Transformer
+      Scrypt
+      Scrypt.Generator
+      Scrypt.Spec
+      Solidity
+      Solidity.Parser
+      Solidity.Spec
       Transpiler
+      Utils
   other-modules:
       Paths_sol2scrypt
   hs-source-dirs:
       src
   ghc-options: -Wall
   build-depends:
-      base >=4.7 && <5
+      aeson
+    , base
+    , containers
+    , mtl
+    , parsec
   default-language: Haskell2010
 
 executable sol2scrypt
@@ -47,15 +66,36 @@ executable sol2scrypt
     , sol2scrypt
   default-language: Haskell2010
 
+test-suite e2e
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  other-modules:
+      Paths_sol2scrypt
+  hs-source-dirs:
+      test/e2e
+  ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , hspec
+    , sol2scrypt
+    , tasty
+    , tasty-hspec
+  default-language: Haskell2010
+
 test-suite golden
   type: exitcode-stdio-1.0
-  main-is: Spec.hs
+  main-is: Main.hs
   other-modules:
+      GeneratorSpec
+      TransformerSpec
       Paths_sol2scrypt
   hs-source-dirs:
       test/golden
   ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , hspec
     , sol2scrypt
+    , tasty
+    , tasty-hspec
   default-language: Haskell2010
