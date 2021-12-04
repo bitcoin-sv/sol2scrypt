@@ -1,0 +1,48 @@
+# This is the simple Travis configuration, which is intended for use
+# on applications which do not require cross-platform and
+# multiple-GHC-version support. For more information and other
+# options, see:
+#
+# https://docs.haskellstack.org/en/stable/travis_ci/
+#
+# Copy these contents into the root directory of your Github project in a file
+# named .travis.yml
+
+# Choose a build environment
+dist: xenial
+
+# Caching so the next build will be fast too.
+cache:
+    directories:
+        - $HOME/.ghc
+        - $HOME/.cabal
+        - $HOME/.stack
+        - $TRAVIS_BUILD_DIR/.stack-work
+
+matrix:
+    include:
+        - env: BUILD=stack ARGS="--resolver lts-16.23"
+          compiler: ": #stack 8.8.4"
+          addons: {apt: {packages: [ghc-8.8.4], sources: [hvr-ghc]}}
+          
+before_install:
+    # Download and unpack the stack executable
+    - mkdir -p ~/.local/bin
+    - export PATH=$HOME/.local/bin:$PATH
+    # TODO: used -k/--insecure to bypass certificate: https://travis-ci.community/t/build-system-setup-failure-due-to-os-curl-ssl-certificate-issues/11008
+    - travis_retry curl -L -k https://get.haskellstack.org/stable/linux-x86_64.tar.gz | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+
+install:
+    # Build dependencies
+    - stack --no-terminal --install-ghc test --only-dependencies
+
+script:
+    # Build the package, its tests, and run the tests
+    - stack --no-terminal test
+
+notifications:
+  slack:
+    rooms:
+      - secure: "TLekdUyM5auOeZ9Jbd99S7Qx2GQXK+6QnXyN+MAts0O4M0DAmI3MBaZ5/V+9abK63vbpbuAbz8s5SRE6gbGKUNbyCmMrUuRE+bN3ddoEvXqJpFfV+ZpvPU/juGL+bFTVxTz4JBqqxYRYlzN517rFfcF4CZIkRdl1VB78qw5RiI9+oCxog5RgbCdq3XHyfqd89LTONsmFWg7mo3BJqR18DOuZ91tJSVHxwSLSwnF0PCkTb5840h3F06Vve0SVjZ2qzXiCE8V/eJzN411C34BAi/X2LkirIw8nSxOViBhI3CAGGhUFEfF3oEiI3woZ9KVAWJlHLof+jC0WheikTfhayJ6COop2Wj0RkbCqYFtu+g1h0aIY5uuv2tz2K72XLAvNBik3kKN0vGE3yiT4Q9J5xXhUFfcOL0dS8b9sikhyC0OKpcJqPWktmdOCDPgc15byZamP7XAos20aTkq2vxdOa7WccS0W8VQJVxojFph0rhix9VouEOCMpi4t4q9tvNlIfWPo3IIM+Us+08Ubc+gCJ4g309J8/stqsMd1ZEzPdhNAClTkX3PkLBbHiK/m8kz6MflfS8vvKhV5gW+ejVpoUp4azHYMJ2hW0Yfxce4Nblwrk0KC7OI4eXotR78SddwLRxdz4DtsDG8YalT3jGfPwOdXRlsWrg0ZD4vDObLq6ic="
+    on_success: change # default: always
+    on_failure: always # default: always
