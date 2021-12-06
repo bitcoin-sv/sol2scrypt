@@ -3,13 +3,17 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Intermediate.Transformer (
-  module Intermediate.Transformations.Type,
-  module Intermediate.Transformations.Expression
+  module Intermediate.Transformations.Sol2IntM.Type,
+  module Intermediate.Transformations.IntM2Scr.Type,
+  module Intermediate.Transformations.Sol2IntM.Expression,
+  module Intermediate.Transformations.IntM2Scr.Expression
 ) where
 
 import Intermediate.Spec
-import Intermediate.Transformations.Type
-import Intermediate.Transformations.Expression
+import Intermediate.Transformations.Sol2IntM.Type
+import Intermediate.Transformations.IntM2Scr.Type
+import Intermediate.Transformations.Sol2IntM.Expression
+import Intermediate.Transformations.IntM2Scr.Expression
 
 class Node a where
   nodeType :: Show a => a -> String
@@ -19,6 +23,8 @@ class Node a where
   current a = a
 
 instance Node IType
+
+
 
 
 -- transformSol2Inter' :: Node a => String -> IO a

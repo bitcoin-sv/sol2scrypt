@@ -41,6 +41,7 @@ executables:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
+    - -fno-warn-orphans
     dependencies:
     - sol2scrypt
 

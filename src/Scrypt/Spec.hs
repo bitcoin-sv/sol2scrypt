@@ -13,7 +13,6 @@ import Data.List
 import qualified Data.Map.Lazy as Map
 import Data.Word
 import GHC.Generics hiding (Constructor)
-import Numeric
 
 type Name = String
 data NameAnn a = NameAnn { unName :: String, annot :: a }

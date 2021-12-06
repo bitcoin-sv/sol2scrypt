@@ -30,10 +30,15 @@ library
       Intermediate.Specs.Expression
       Intermediate.Specs.Type
       Intermediate.Transformations.Base
-      Intermediate.Transformations.Expression
-      Intermediate.Transformations.Type
+      Intermediate.Transformations.IntM2Scr.Expression
+      Intermediate.Transformations.IntM2Scr.Type
+      Intermediate.Transformations.Sol2IntM.Expression
+      Intermediate.Transformations.Sol2IntM.Type
       Intermediate.Transformer
       Scrypt
+      Scrypt.Generables.Base
+      Scrypt.Generables.Expr
+      Scrypt.Generables.Type
       Scrypt.Generator
       Scrypt.Spec
       Solidity
@@ -60,7 +65,7 @@ executable sol2scrypt
       Paths_sol2scrypt
   hs-source-dirs:
       app
-  ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N -fno-warn-orphans
   build-depends:
       base >=4.7 && <5
     , sol2scrypt
@@ -86,7 +91,15 @@ test-suite golden
   type: exitcode-stdio-1.0
   main-is: Main.hs
   other-modules:
+      Generables.Expr
+      Generables.Type
       GeneratorSpec
+      Transformations.IntM2Scr.Expression
+      Transformations.IntM2Scr.Main
+      Transformations.IntM2Scr.Type
+      Transformations.Sol2IntM.Expression
+      Transformations.Sol2IntM.Main
+      Transformations.Sol2IntM.Type
       TransformerSpec
       Paths_sol2scrypt
   hs-source-dirs:

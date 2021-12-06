@@ -8,7 +8,4 @@ main = defaultMain =<< goldenTests
 goldenTests :: IO TestTree
 goldenTests =
   testGroup "golden tests"
-    <$> sequence
-      [ transformerTests,
-        generatorTests
-      ]
+    <$> sequence [TransformerSpec.spec, GeneratorSpec.spec]

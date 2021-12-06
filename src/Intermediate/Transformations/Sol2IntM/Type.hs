@@ -1,10 +1,9 @@
 {-# LANGUAGE ScopedTypeVariables #-}
-module Intermediate.Transformations.Type where
+module Intermediate.Transformations.Sol2IntM.Type where
 
 import Intermediate.Transformations.Base
 import Solidity.Spec as Sol
 import Intermediate.Spec as IntM
-import Scrypt.Spec as Scr
 import Control.Monad.State
 
 -----------------  Solidity to Intermediate -----------------
@@ -22,13 +21,3 @@ solTypeName2Intermediate (TypeNameElementaryTypeName (BytesType _)) = return $ J
 solTypeName2Intermediate (TypeNameElementaryTypeName ByteType) = return $ Just ITypeBytes
 solTypeName2Intermediate (TypeNameElementaryTypeName StringType) = return $ Just ITypeString
 solTypeName2Intermediate _ = return Nothing
-
-
------------------  Intermediate to sCrypt  -----------------
-
-transformIntermediateType :: IType -> Type
-transformIntermediateType ITypeBool = Scr.Bool
-transformIntermediateType ITypeInt = Scr.Int
-transformIntermediateType ITypeBytes = Scr.Bytes
-transformIntermediateType ITypeAddress = Scr.SubBytes Scr.PubKey
-transformIntermediateType t = error $ "Type `" ++ show t ++ "` not implemented in scrypt"
