@@ -4,6 +4,5 @@ module Scrypt.Generables.Base where
 class Generable a where
   genCode :: a -> String
 
-generateScrypt :: Generable a => Maybe a -> IO String
-generateScrypt (Just a) = return $ genCode a
-generateScrypt Nothing = return ""
+generateScrypt :: Generable a => a -> IO String
+generateScrypt a = return $ genCode a
