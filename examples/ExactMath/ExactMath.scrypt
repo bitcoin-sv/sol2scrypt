@@ -1,0 +1,79 @@
+
+library ExactMath {
+
+    static const int UINT_ZERO = 0;
+    static const int UINT_ONE = 1;
+    static const int UINT_TWO = 2;
+    static const int UINT_MAX = Utils.fromLEUnsigned(num2bin(2, 33) >> 256) - 1;
+    static const int UINT_MIN = 0;
+
+    static const int INT_ZERO = 0;
+    static const int INT_ONE = 1;
+    static const int INT_TWO = 2;
+    static const int INT_MINUS_ONE = -1;
+    static const int INT_MAX = unpack(num2bin(2, 33) >> 255) - 1;
+    static const int INT_MIN = unpack(num2bin(2, 33) >> 255);
+
+    // Calculates and returns 'self + other'
+    // The function will throw if the operation would result in an overflow.
+    static function exactAdd(int self, int other) : int {
+        int sum = self + other;
+        return sum;
+    }
+
+    // Calculates and returns 'self - other'
+    // The function will throw if the operation would result in an underflow.
+    static function exactSub(int self, int other) : int {
+        require(other <= self);
+        int diff = self - other;
+        return diff;
+    }
+
+    // Calculates and returns 'self * other'
+    // The function will throw if the operation would result in an overflow.
+    static function exactMul(int self, int other) : int {
+        int prod = self * other;
+        require(self == 0 || prod / self == other);
+        return prod;
+    }
+
+    // Calculates and returns 'self + other'
+    // The function will throw if the operation would result in an over/underflow.
+    static function exactAdd2(int self, int other) : int {
+        int sum = self + other;
+        if (self > 0 && other > 0) {
+            require(0 <= sum && sum <= INT_MAX);
+        } else if (self < 0 && other < 0) {
+            require(INT_MIN <= sum && sum <= 0);
+        }
+        return sum;
+    }
+
+    // Calculates and returns 'self - other'
+    // The function will throw if the operation would result in an over/underflow.
+    static function exactSub2(int self, int other)  : int {
+        int diff = self - other;
+        if (self > 0 && other < 0) {
+            require(0 <= diff && diff <= INT_MAX);
+        } else if (self < 0 && other > 0) {
+            require(INT_MIN <= diff && diff <= 0);
+        }
+        return diff;
+    }
+
+    // Calculates and returns 'self * other'
+    // The function will throw if the operation would result in an over/underflow.
+    static function exactMul2(int self, int other) : int {
+        int prod = self * other;
+        require(self == 0 || ((other != INT_MIN || self != INT_MINUS_ONE) && prod / self == other));
+        return prod;
+    }
+
+    // Calculates and returns 'self / other'
+    // The function will throw if the operation would result in an over/underflow.
+    static function exactDiv(int self, int other) : int {
+        require(self != INT_MIN || other != INT_MINUS_ONE);
+        int quot = self / other;
+        return quot;
+    }
+}
