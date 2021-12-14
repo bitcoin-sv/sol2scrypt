@@ -1,0 +1,31 @@
+
+contract Counter {
+    @state
+    int count;
+
+    // Function to get the current count
+    function get() : int {
+        return this.count;
+    }
+
+    // Function to increment count by 1
+    public function inc(SigHashPreimage preimage) {
+        require(Tx.checkPreimage(preimage));
+        
+        this.count += 1;
+        
+        bytes outputScript = this.getStateScript();
+        bytes output = Utils.buildOutput(outputScript, SigHash.value(preimage));
+        require(hash256(output) == SigHash.hashOutputs(preimage));
+    }
+
+    public function set(int count, SigHashPreimage preimage) {
+        require(Tx.checkPreimage(preimage));
+        
+        this.count = count;
+        
+        bytes outputScript = this.getStateScript();
+        bytes output = Utils.buildOutput(outputScript, SigHash.value(preimage));
+        require(hash256(output) == SigHash.hashOutputs(preimage));
+    }
+}
