@@ -10,10 +10,10 @@ import Intermediate.Spec as IntM
 
 -- from TypeName to IType'
 instance ToIntermediateTransformable TypeName IType' where
-  _toIntermediate (TypeNameElementaryTypeName BoolType) = return $ Just ITypeBool
-  _toIntermediate (TypeNameElementaryTypeName (IntType _)) = return $ Just ITypeInt
-  _toIntermediate (TypeNameElementaryTypeName (UintType _)) = return $ Just ITypeInt
-  _toIntermediate (TypeNameElementaryTypeName (BytesType _)) = return $ Just ITypeBytes
-  _toIntermediate (TypeNameElementaryTypeName ByteType) = return $ Just ITypeBytes
-  _toIntermediate (TypeNameElementaryTypeName StringType) = return $ Just ITypeString
+  _toIntermediate (TypeNameElementaryTypeName Sol.BoolType) = return $ Just $ ElementaryType Bool
+  _toIntermediate (TypeNameElementaryTypeName (Sol.IntType _)) = return $ Just $ ElementaryType Int
+  _toIntermediate (TypeNameElementaryTypeName (UintType _)) = return $ Just $ ElementaryType Int
+  _toIntermediate (TypeNameElementaryTypeName (Sol.BytesType _)) = return $ Just $ ElementaryType Bytes
+  _toIntermediate (TypeNameElementaryTypeName ByteType) = return $ Just $ ElementaryType Bytes
+  _toIntermediate (TypeNameElementaryTypeName Sol.StringType) = return $ Just $ ElementaryType String
   _toIntermediate _ = return Nothing

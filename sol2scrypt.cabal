@@ -27,7 +27,16 @@ library
   exposed-modules:
       Intermediate
       Intermediate.Spec
+      Intermediate.Specs.Contract
       Intermediate.Specs.Expression
+      Intermediate.Specs.Function
+      Intermediate.Specs.Interface
+      Intermediate.Specs.Lexical
+      Intermediate.Specs.Lexicals.Identifier
+      Intermediate.Specs.Lexicals.Literal
+      Intermediate.Specs.Lexicals.Operator
+      Intermediate.Specs.Program
+      Intermediate.Specs.Statement
       Intermediate.Specs.Type
       Intermediate.Transformations.Base
       Intermediate.Transformations.IntM2Scr.Expression

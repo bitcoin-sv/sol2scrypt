@@ -10,10 +10,10 @@ spec :: IO TestTree
 spec = testSpec "instance ToIntermediateTransformable TypeName IType'" $ do
   it "should transfrom Solidity `BoolType` to Intermediate Type correctly" $ do
     r <- transform2Intermediate TransformState (TypeNameElementaryTypeName BoolType)
-    r `shouldBe` Just ITypeBool
+    r `shouldBe` (Just $ ElementaryType Bool)
 
   it "should transfrom Solidity `IntType` to Intermediate Type correctly" $ do
     r1 <- transform2Intermediate TransformState (TypeNameElementaryTypeName (IntType $ Just 8))
-    r1 `shouldBe` Just ITypeInt
+    r1 `shouldBe` (Just $ ElementaryType Int)
     r2 <- transform2Intermediate TransformState (TypeNameElementaryTypeName (UintType $ Just 256))
-    r2 `shouldBe` Just ITypeInt
+    r2 `shouldBe` (Just $ ElementaryType Int)

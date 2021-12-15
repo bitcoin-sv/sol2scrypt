@@ -10,12 +10,12 @@ spec :: IO TestTree
 spec = testSpec "instance ToIntermediateTransformable Sol.Expression IExpr'" $ do
   it "should transfrom Solidity `BoolLiteral` to Intermediate Expression correctly" $ do
     r1 <- transform2Intermediate TransformState (Literal (PrimaryExpressionBooleanLiteral (Sol.BooleanLiteral "true")))
-    r1 `shouldBe` Just (IntM.BoolLiteral True)
+    r1 `shouldBe` Just (LiteralExpr $ IntM.BoolLiteral True)
     r2 <- transform2Intermediate TransformState (Literal (PrimaryExpressionBooleanLiteral (Sol.BooleanLiteral "false")))
-    r2 `shouldBe` Just (IntM.BoolLiteral False)
+    r2 `shouldBe` Just (LiteralExpr $ IntM.BoolLiteral False)
 
   it "should transfrom Solidity `NumberLiteral` to Intermediate Expression correctly" $ do
     r1 <- transform2Intermediate TransformState (Literal (PrimaryExpressionNumberLiteral (NumberLiteralHex "0123abcdef" Nothing)))
-    r1 `shouldBe` Just (IntM.IntLiteral True 4893429231)
+    r1 `shouldBe` Just (LiteralExpr $ IntM.IntLiteral True 4893429231)
     r2 <- transform2Intermediate TransformState (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "12345" Nothing)))
-    r2 `shouldBe` Just (IntM.IntLiteral False 12345)
+    r2 `shouldBe` Just (LiteralExpr $ IntM.IntLiteral False 12345)

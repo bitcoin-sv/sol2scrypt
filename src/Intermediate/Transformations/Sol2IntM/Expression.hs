@@ -12,9 +12,9 @@ import Utils
 
 instance ToIntermediateTransformable Sol.Expression IExpr' where
   _toIntermediate (Literal (PrimaryExpressionBooleanLiteral (Sol.BooleanLiteral b))) = 
-    return $ Just $ IntM.BoolLiteral ("true" == toLower b)
+    return $ Just $ LiteralExpr $ IntM.BoolLiteral ("true" == toLower b)
   _toIntermediate (Literal (PrimaryExpressionNumberLiteral (NumberLiteralHex n _))) =
-    return $ Just $ IntM.IntLiteral True (fst $ head $ readHex n)
+    return $ Just $ LiteralExpr $ IntM.IntLiteral True (fst $ head $ readHex n)
   _toIntermediate (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec n _))) =
-    return $ Just $ IntM.IntLiteral False (fst $ head $ readDec n)
+    return $ Just $ LiteralExpr $ IntM.IntLiteral False (fst $ head $ readDec n)
   _toIntermediate _ = return Nothing
