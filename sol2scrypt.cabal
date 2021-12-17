@@ -84,6 +84,8 @@ test-suite e2e
   type: exitcode-stdio-1.0
   main-is: Main.hs
   other-modules:
+      ExpressionSpec
+      TypeSpec
       Paths_sol2scrypt
   hs-source-dirs:
       test/e2e

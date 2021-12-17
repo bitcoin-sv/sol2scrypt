@@ -1,2 +1,11 @@
+import Test.Tasty
+import TypeSpec
+import ExpressionSpec
+
 main :: IO ()
-main = putStrLn "Test suite e2e not yet implemented"
+main = defaultMain =<< e2eTests
+
+e2eTests :: IO TestTree
+e2eTests =
+  testGroup "e2e tests"
+    <$> sequence [TypeSpec.spec, ExpressionSpec.spec]
