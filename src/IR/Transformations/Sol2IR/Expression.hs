@@ -19,4 +19,6 @@ instance ToIRTransformable Sol.Expression IExpr' where
     return $ Just $ LiteralExpr $ IR.IntLiteral False (fst $ head $ readDec n)
   _toIR (Unary "-" (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec n Nothing)))) =
     return $ Just $ LiteralExpr $ IR.IntLiteral False $ negate (fst $ head $ readDec n)
+  _toIR (Literal (PrimaryExpressionHexLiteral (HexLiteral h))) =
+    return $ Just $ LiteralExpr $ IR.BytesLiteral $ parseHex h
   _toIR e = error ("can not match sol.expression : '" ++ show e ++ "'")

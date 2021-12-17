@@ -11,4 +11,5 @@ import Scrypt.Spec as Scr
 instance ToScryptTransformable IExpr' (Maybe (Scr.Expr IExpr)) where
   _toScrypt (Just e@(LiteralExpr (IR.BoolLiteral b))) = Just $ Scr.BoolLiteral b e
   _toScrypt (Just e@(LiteralExpr (IR.IntLiteral _isHex i))) = Just $ Scr.IntLiteral _isHex i e
+  _toScrypt (Just e@(LiteralExpr (IR.BytesLiteral b))) = Just $ Scr.BytesLiteral b e
   _toScrypt e = error $ "_toScrypt for `" ++ show e ++ "` not implemented in scrypt"

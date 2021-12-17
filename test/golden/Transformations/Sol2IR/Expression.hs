@@ -19,3 +19,7 @@ spec = testSpec "instance ToIRTransformable Sol.Expression IExpr'" $ do
     r1 `shouldBe` Just (LiteralExpr $ IR.IntLiteral True 4893429231)
     r2 <- transform2IR TransformState (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "12345" Nothing)))
     r2 `shouldBe` Just (LiteralExpr $ IR.IntLiteral False 12345)
+
+  it "should transfrom Solidity `HexLiteral` to IR Expression correctly" $ do
+    r1 <- transform2IR TransformState (Literal (PrimaryExpressionHexLiteral (HexLiteral "010113")))
+    r1 `shouldBe` Just (LiteralExpr $ IR.BytesLiteral [01,01,19])
