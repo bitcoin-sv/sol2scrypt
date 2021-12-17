@@ -1,6 +1,6 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module Intermediate.Transformations.Base where
+module IR.Transformations.Base where
 
 import Control.Monad.State
 import Solidity.Parser
@@ -11,19 +11,19 @@ parseIO solidityCode = either (fail . (parseError ++) . show) return $ parse par
   where
     parseError = "Error during parsing of <" ++ solidityCode ++ ">\n"
 
------------------  Solidity to Intermediate -----------------
+-----------------  Solidity to IR -----------------
 
 data TransformState = TransformState {}
 
 type Transformation a = StateT TransformState IO a
 
-class Parseable sol => ToIntermediateTransformable sol intmd where
-  _toIntermediate :: sol -> Transformation intmd
+class Parseable sol => ToIRTransformable sol intmd where
+  _toIR :: sol -> Transformation intmd
 
-transform2Intermediate :: ToIntermediateTransformable sol intmd => TransformState -> sol -> IO intmd
-transform2Intermediate ts sol = fst <$> runStateT (_toIntermediate sol) ts
+transform2IR :: ToIRTransformable sol intmd => TransformState -> sol -> IO intmd
+transform2IR ts sol = fst <$> runStateT (_toIR sol) ts
 
------------------  Intermediate to sCrypt  -----------------
+-----------------  IR to sCrypt  -----------------
 
 class ToScryptTransformable intmd scr where
   _toScrypt :: intmd -> scr

@@ -2,7 +2,7 @@
 
 module TypeSpec where
 
-import Intermediate
+import IR
 import Scrypt as Scr
 import Solidity as Sol
 import Test.Tasty

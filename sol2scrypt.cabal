@@ -25,25 +25,25 @@ source-repository head
 
 library
   exposed-modules:
-      Intermediate
-      Intermediate.Spec
-      Intermediate.Specs.Contract
-      Intermediate.Specs.Expression
-      Intermediate.Specs.Function
-      Intermediate.Specs.Interface
-      Intermediate.Specs.Lexical
-      Intermediate.Specs.Lexicals.Identifier
-      Intermediate.Specs.Lexicals.Literal
-      Intermediate.Specs.Lexicals.Operator
-      Intermediate.Specs.Program
-      Intermediate.Specs.Statement
-      Intermediate.Specs.Type
-      Intermediate.Transformations.Base
-      Intermediate.Transformations.IntM2Scr.Expression
-      Intermediate.Transformations.IntM2Scr.Type
-      Intermediate.Transformations.Sol2IntM.Expression
-      Intermediate.Transformations.Sol2IntM.Type
-      Intermediate.Transformer
+      IR
+      IR.Spec
+      IR.Specs.Contract
+      IR.Specs.Expression
+      IR.Specs.Function
+      IR.Specs.Interface
+      IR.Specs.Lexical
+      IR.Specs.Lexicals.Identifier
+      IR.Specs.Lexicals.Literal
+      IR.Specs.Lexicals.Operator
+      IR.Specs.Program
+      IR.Specs.Statement
+      IR.Specs.Type
+      IR.Transformations.Base
+      IR.Transformations.IntM2Scr.Expression
+      IR.Transformations.IntM2Scr.Type
+      IR.Transformations.Sol2IntM.Expression
+      IR.Transformations.Sol2IntM.Type
+      IR.Transformer
       Scrypt
       Scrypt.Generables.Base
       Scrypt.Generables.Expr

@@ -1,4 +1,4 @@
-module Intermediate.Specs.Lexicals.Literal where
+module IR.Specs.Lexicals.Literal where
 
 import Data.Word
 

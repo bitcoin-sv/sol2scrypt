@@ -1,1 +1,0 @@
-module Intermediate.Specs.Interface where

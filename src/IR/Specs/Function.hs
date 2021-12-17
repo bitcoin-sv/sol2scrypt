@@ -1,8 +1,8 @@
-module Intermediate.Specs.Function where
+module IR.Specs.Function where
 
-import Intermediate.Specs.Lexical
-import Intermediate.Specs.Statement
-import Intermediate.Specs.Type
+import IR.Specs.Lexical
+import IR.Specs.Statement
+import IR.Specs.Type
 
 data IFunction = IFunction
   { funcName :: IIdentifier,

@@ -3,7 +3,7 @@
 module ExpressionSpec where
 import Transpiler
 import Solidity as Sol
-import Intermediate
+import IR
 import Scrypt as Scr
 import Test.Tasty
 import Test.Tasty.Hspec

@@ -1,19 +1,19 @@
 module Transformations.Sol2IntM.Type where
 
-import Intermediate.Spec as IntM
-import Intermediate.Transformer
+import IR.Spec as IR
+import IR.Transformer
 import Solidity.Spec
 import Test.Tasty
 import Test.Tasty.Hspec
 
 spec :: IO TestTree
-spec = testSpec "instance ToIntermediateTransformable TypeName IType'" $ do
-  it "should transfrom Solidity `BoolType` to Intermediate Type correctly" $ do
-    r <- transform2Intermediate TransformState (TypeNameElementaryTypeName BoolType)
+spec = testSpec "instance ToIRTransformable TypeName IType'" $ do
+  it "should transfrom Solidity `BoolType` to IR Type correctly" $ do
+    r <- transform2IR TransformState (TypeNameElementaryTypeName BoolType)
     r `shouldBe` (Just $ ElementaryType Bool)
 
-  it "should transfrom Solidity `IntType` to Intermediate Type correctly" $ do
-    r1 <- transform2Intermediate TransformState (TypeNameElementaryTypeName (IntType $ Just 8))
+  it "should transfrom Solidity `IntType` to IR Type correctly" $ do
+    r1 <- transform2IR TransformState (TypeNameElementaryTypeName (IntType $ Just 8))
     r1 `shouldBe` (Just $ ElementaryType Int)
-    r2 <- transform2Intermediate TransformState (TypeNameElementaryTypeName (UintType $ Just 256))
+    r2 <- transform2IR TransformState (TypeNameElementaryTypeName (UintType $ Just 256))
     r2 `shouldBe` (Just $ ElementaryType Int)

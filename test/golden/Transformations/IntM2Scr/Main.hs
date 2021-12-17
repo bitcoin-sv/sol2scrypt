@@ -6,7 +6,7 @@ import qualified Transformations.IntM2Scr.Type
 
 spec :: IO TestTree
 spec =
-  testGroup "Transform Intermediate to sCrypt Tests"
+  testGroup "Transform IR to sCrypt Tests"
     <$> sequence
       [ Transformations.IntM2Scr.Type.spec,
         Transformations.IntM2Scr.Expression.spec

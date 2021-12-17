@@ -1,6 +1,6 @@
-module Intermediate.Specs.Expression where
+module IR.Specs.Expression where
 
-import Intermediate.Specs.Lexical
+import IR.Specs.Lexical
 
 data IExpr
   = LiteralExpr ILiteral

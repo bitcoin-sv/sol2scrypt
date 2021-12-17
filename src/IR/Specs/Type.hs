@@ -1,6 +1,6 @@
-module Intermediate.Specs.Type where
+module IR.Specs.Type where
 
-import Intermediate.Specs.Lexical
+import IR.Specs.Lexical
 
 data IType
   = ElementaryType IElementaryTypeName

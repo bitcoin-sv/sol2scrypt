@@ -1,9 +1,9 @@
-module Intermediate.Specs.Contract where
+module IR.Specs.Contract where
 
-import Intermediate.Specs.Lexical
-import Intermediate.Specs.Type
-import Intermediate.Specs.Function
-import Intermediate.Specs.Expression
+import IR.Specs.Lexical
+import IR.Specs.Type
+import IR.Specs.Function
+import IR.Specs.Expression
 
 data IContract = Contract 
   {

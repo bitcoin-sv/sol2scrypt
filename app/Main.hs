@@ -2,7 +2,7 @@
 
 module Main where
 
-import Intermediate
+import IR
 import Scrypt
 import Solidity
 import Transpiler

@@ -1,4 +1,4 @@
-module Intermediate.Specs.Lexicals.Operator where
+module IR.Specs.Lexicals.Operator where
 
 data IUnaryOp
   = Not

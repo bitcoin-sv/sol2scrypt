@@ -1,6 +1,6 @@
-module Intermediate.Specs.Statement where
+module IR.Specs.Statement where
 
-import Intermediate.Specs.Expression
+import IR.Specs.Expression
 
 data IStatement 
   = IfStmt {cond :: IExpr, trueBranch :: IStatement, falseBranch :: Maybe IStatement}

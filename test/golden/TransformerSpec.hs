@@ -1,7 +1,7 @@
 module TransformerSpec where
 
-import Intermediate.Spec as IntM
-import Intermediate.Transformer
+import IR.Spec as IR
+import IR.Transformer
 import Scrypt.Spec as Scr
 import Test.Tasty
 import Test.Tasty.Hspec

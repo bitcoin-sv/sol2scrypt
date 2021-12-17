@@ -1,6 +1,6 @@
-module Intermediate.Specs.Program where
+module IR.Specs.Program where
 
-import Intermediate.Specs.Contract
+import IR.Specs.Contract
 
 data IProgram = Program
   { programImports :: [IImportDirective],
