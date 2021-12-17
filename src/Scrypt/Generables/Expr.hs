@@ -9,7 +9,8 @@ import Scrypt.Spec as Scr
 
 instance Generable (Maybe (Scr.Expr a)) where
   genCode (Just (Scr.BoolLiteral b _)) = if b then "true" else "false"
-  genCode (Just (Scr.IntLiteral _isHex i _)) = if _isHex then "0x" ++ int2hex else showInt i ""
+  genCode (Just (Scr.IntLiteral _isHex i _)) = if _isHex then showHex_ else showInt_
     where
-      int2hex = showHex i ""
+      showHex_ = if i < 0 then "-(" ++  "0x" ++ showHex (negate i) "" ++ ")" else "0x" ++ showHex i ""
+      showInt_ = if i < 0 then '-' : showInt (negate i) "" else showInt i ""
   genCode _ = error "unimplemented show scrypt expr"
