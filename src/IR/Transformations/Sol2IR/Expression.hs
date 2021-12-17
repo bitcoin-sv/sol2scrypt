@@ -17,4 +17,6 @@ instance ToIRTransformable Sol.Expression IExpr' where
     return $ Just $ LiteralExpr $ IR.IntLiteral True (fst $ head $ readHex n)
   _toIR (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec n _))) =
     return $ Just $ LiteralExpr $ IR.IntLiteral False (fst $ head $ readDec n)
-  _toIR _ = return Nothing
+  _toIR (Unary "-" (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec n Nothing)))) =
+    return $ Just $ LiteralExpr $ IR.IntLiteral False $ negate (fst $ head $ readDec n)
+  _toIR e = error ("can not match sol.expression : '" ++ show e ++ "'")
