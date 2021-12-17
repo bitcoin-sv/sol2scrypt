@@ -13,5 +13,6 @@ spec = testSpec "instance Generable (Expr a)" $ do
     genCode (Just $ Scr.BoolLiteral False Nothing) `shouldBe` "false"
 
   it "should generate sCrypt code for `IntLiteral` correctly" $ do
-    genCode (Just $ Scr.IntLiteral True 15 Nothing) `shouldBe` "0x0f"
+    genCode (Just $ Scr.IntLiteral True 15 Nothing) `shouldBe` "0xf"
     genCode (Just $ Scr.IntLiteral False 15 Nothing) `shouldBe` "15"
+    genCode (Just $ Scr.IntLiteral True 32 Nothing) `shouldBe` "0x20"
