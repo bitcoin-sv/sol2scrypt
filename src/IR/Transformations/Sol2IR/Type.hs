@@ -2,7 +2,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
-module IR.Transformations.Sol2IntM.Type where
+module IR.Transformations.Sol2IR.Type where
 
 import IR.Transformations.Base
 import Solidity.Spec as Sol

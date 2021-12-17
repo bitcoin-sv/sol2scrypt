@@ -2,7 +2,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
-module IR.Transformations.IntM2Scr.Expression where
+module IR.Transformations.IR2Scr.Expression where
 
 import IR.Transformations.Base
 import IR.Spec as IR

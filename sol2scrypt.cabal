@@ -39,10 +39,10 @@ library
       IR.Specs.Statement
       IR.Specs.Type
       IR.Transformations.Base
-      IR.Transformations.IntM2Scr.Expression
-      IR.Transformations.IntM2Scr.Type
-      IR.Transformations.Sol2IntM.Expression
-      IR.Transformations.Sol2IntM.Type
+      IR.Transformations.IR2Scr.Expression
+      IR.Transformations.IR2Scr.Type
+      IR.Transformations.Sol2IR.Expression
+      IR.Transformations.Sol2IR.Type
       IR.Transformer
       Scrypt
       Scrypt.Generables.Base
@@ -105,12 +105,12 @@ test-suite golden
       Generables.Expr
       Generables.Type
       GeneratorSpec
-      Transformations.IntM2Scr.Expression
-      Transformations.IntM2Scr.Main
-      Transformations.IntM2Scr.Type
-      Transformations.Sol2IntM.Expression
-      Transformations.Sol2IntM.Main
-      Transformations.Sol2IntM.Type
+      Transformations.IR2Scr.Expression
+      Transformations.IR2Scr.Main
+      Transformations.IR2Scr.Type
+      Transformations.Sol2IR.Expression
+      Transformations.Sol2IR.Main
+      Transformations.Sol2IR.Type
       TransformerSpec
       Paths_sol2scrypt
   hs-source-dirs:

@@ -1,4 +1,4 @@
-module Transformations.Sol2IntM.Type where
+module Transformations.Sol2IR.Type where
 
 import IR.Spec as IR
 import IR.Transformer

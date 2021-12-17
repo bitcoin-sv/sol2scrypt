@@ -1,4 +1,4 @@
-module Transformations.Sol2IntM.Expression where
+module Transformations.Sol2IR.Expression where
 
 import Solidity.Spec as Sol
 import IR.Spec as IR

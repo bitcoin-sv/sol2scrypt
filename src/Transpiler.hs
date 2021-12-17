@@ -11,7 +11,7 @@ import Solidity
 
 -- Transpile Type Path: Solidity Type -> IR Type -> Scrypt Type 
 -- Used in function `transpile` to provide types information
-data TranspilePath sol intm scr = TranspilePath sol intm scr
+data TranspilePath sol ir scr = TranspilePath sol ir scr
 
 data TranspileResult a b c = TranspileResult {scryptCode :: String, tranpilePath :: TranspilePath a b c}
 

@@ -2,7 +2,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
-module IR.Transformations.Sol2IntM.Expression where
+module IR.Transformations.Sol2IR.Expression where
 
 import Numeric
 import IR.Transformations.Base

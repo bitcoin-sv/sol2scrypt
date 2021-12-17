@@ -1,4 +1,4 @@
-module Transformations.IntM2Scr.Expression where
+module Transformations.IR2Scr.Expression where
 
 import IR.Spec as IR
 import IR.Transformer

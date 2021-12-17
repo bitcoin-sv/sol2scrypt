@@ -17,16 +17,16 @@ data TransformState = TransformState {}
 
 type Transformation a = StateT TransformState IO a
 
-class Parseable sol => ToIRTransformable sol intmd where
-  _toIR :: sol -> Transformation intmd
+class Parseable sol => ToIRTransformable sol ir where
+  _toIR :: sol -> Transformation ir
 
-transform2IR :: ToIRTransformable sol intmd => TransformState -> sol -> IO intmd
+transform2IR :: ToIRTransformable sol ir => TransformState -> sol -> IO ir
 transform2IR ts sol = fst <$> runStateT (_toIR sol) ts
 
 -----------------  IR to sCrypt  -----------------
 
-class ToScryptTransformable intmd scr where
-  _toScrypt :: intmd -> scr
+class ToScryptTransformable ir scr where
+  _toScrypt :: ir -> scr
 
-transform2Scrypt :: ToScryptTransformable intmd scr => intmd -> IO scr
+transform2Scrypt :: ToScryptTransformable ir scr => ir -> IO scr
 transform2Scrypt = return . _toScrypt
