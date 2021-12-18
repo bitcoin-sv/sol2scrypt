@@ -10,6 +10,7 @@ import Solidity.Spec as Sol
 import IR.Spec as IR
 import Utils
 
+
 instance ToIRTransformable Sol.Expression IExpr' where
   _toIR (Literal (PrimaryExpressionBooleanLiteral (Sol.BooleanLiteral b))) = 
     return $ Just $ LiteralExpr $ IR.BoolLiteral ("true" == toLower b)
@@ -18,7 +19,7 @@ instance ToIRTransformable Sol.Expression IExpr' where
   _toIR (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec n _))) =
     return $ Just $ LiteralExpr $ IR.IntLiteral False (fst $ head $ readDec n)
   _toIR (Unary "-" (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec n Nothing)))) =
-    return $ Just $ LiteralExpr $ IR.IntLiteral False $ negate (fst $ head $ readDec n)
+    return $ Just $ UnaryExpr Negate (LiteralExpr $ IR.IntLiteral False (fst $ head $ readDec n))
   _toIR (Literal (PrimaryExpressionHexLiteral (HexLiteral h))) =
     return $ Just $ LiteralExpr $ IR.BytesLiteral $ parseHex h
   _toIR e = error ("can not match sol.expression : '" ++ show e ++ "'")
