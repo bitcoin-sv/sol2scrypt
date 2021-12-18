@@ -281,3 +281,142 @@ spec = testSpec "Transpile Type" $ do
       it "should transpile Solidity `int` correctly" $ do
         tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile "int"
         scryptCode tr `shouldBe` "int"
+
+
+    describe "#ByteType" $ do
+
+      it "should transpile Solidity `byte` correctly" $ do
+        tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile "byte"
+        scryptCode tr `shouldBe` "bytes"
+
+      it "should transpile Solidity `bytes` correctly" $ do
+        tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile "bytes"
+        scryptCode tr `shouldBe` "bytes"
+
+      it "should transpile Solidity `bytes1` correctly" $ do
+        tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile "bytes1"
+        scryptCode tr `shouldBe` "bytes"
+
+      it "should transpile Solidity `bytes2` correctly" $ do
+        tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile "bytes2"
+        scryptCode tr `shouldBe` "bytes"
+
+      it "should transpile Solidity `bytes3` correctly" $ do
+        tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile "bytes3"
+        scryptCode tr `shouldBe` "bytes"
+
+      it "should transpile Solidity `bytes4` correctly" $ do
+        tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile "bytes4"
+        scryptCode tr `shouldBe` "bytes"
+
+      it "should transpile Solidity `bytes5` correctly" $ do
+        tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile "bytes5"
+        scryptCode tr `shouldBe` "bytes"
+
+      it "should transpile Solidity `bytes6` correctly" $ do
+        tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile "bytes6"
+        scryptCode tr `shouldBe` "bytes"
+
+      it "should transpile Solidity `bytes7` correctly" $ do
+        tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile "bytes7"
+        scryptCode tr `shouldBe` "bytes"
+
+      it "should transpile Solidity `bytes8` correctly" $ do
+        tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile "bytes8"
+        scryptCode tr `shouldBe` "bytes"
+
+      it "should transpile Solidity `bytes9` correctly" $ do
+        tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile "bytes9"
+        scryptCode tr `shouldBe` "bytes"
+
+      it "should transpile Solidity `bytes10` correctly" $ do
+        tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile "bytes10"
+        scryptCode tr `shouldBe` "bytes"
+
+      it "should transpile Solidity `bytes11` correctly" $ do
+        tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile "bytes11"
+        scryptCode tr `shouldBe` "bytes"
+
+      it "should transpile Solidity `bytes12` correctly" $ do
+        tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile "bytes12"
+        scryptCode tr `shouldBe` "bytes"
+
+      it "should transpile Solidity `bytes13` correctly" $ do
+        tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile "bytes13"
+        scryptCode tr `shouldBe` "bytes"
+
+      it "should transpile Solidity `bytes14` correctly" $ do
+        tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile "bytes14"
+        scryptCode tr `shouldBe` "bytes"
+
+      it "should transpile Solidity `bytes15` correctly" $ do
+        tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile "bytes15"
+        scryptCode tr `shouldBe` "bytes"
+
+      it "should transpile Solidity `bytes16` correctly" $ do
+        tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile "bytes16"
+        scryptCode tr `shouldBe` "bytes"
+
+      it "should transpile Solidity `bytes17` correctly" $ do
+        tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile "bytes17"
+        scryptCode tr `shouldBe` "bytes"
+
+      it "should transpile Solidity `bytes18` correctly" $ do
+        tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile "bytes18"
+        scryptCode tr `shouldBe` "bytes"
+
+      it "should transpile Solidity `bytes19` correctly" $ do
+        tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile "bytes19"
+        scryptCode tr `shouldBe` "bytes"
+
+      it "should transpile Solidity `bytes20` correctly" $ do
+        tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile "bytes20"
+        scryptCode tr `shouldBe` "bytes"
+
+      it "should transpile Solidity `bytes21` correctly" $ do
+        tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile "bytes21"
+        scryptCode tr `shouldBe` "bytes"
+
+      it "should transpile Solidity `bytes22` correctly" $ do
+        tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile "bytes22"
+        scryptCode tr `shouldBe` "bytes"
+
+      it "should transpile Solidity `bytes23` correctly" $ do
+        tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile "bytes23"
+        scryptCode tr `shouldBe` "bytes"
+
+      it "should transpile Solidity `bytes24` correctly" $ do
+        tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile "bytes24"
+        scryptCode tr `shouldBe` "bytes"
+
+      it "should transpile Solidity `bytes25` correctly" $ do
+        tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile "bytes25"
+        scryptCode tr `shouldBe` "bytes"
+      
+      it "should transpile Solidity `bytes26` correctly" $ do
+        tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile "bytes26"
+        scryptCode tr `shouldBe` "bytes"
+
+      it "should transpile Solidity `bytes27` correctly" $ do
+        tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile "bytes27"
+        scryptCode tr `shouldBe` "bytes"
+
+      it "should transpile Solidity `bytes28` correctly" $ do
+        tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile "bytes28"
+        scryptCode tr `shouldBe` "bytes"
+
+      it "should transpile Solidity `bytes29` correctly" $ do
+        tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile "bytes29"
+        scryptCode tr `shouldBe` "bytes"
+
+      it "should transpile Solidity `bytes30` correctly" $ do
+        tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile "bytes30"
+        scryptCode tr `shouldBe` "bytes"
+
+      it "should transpile Solidity `bytes31` correctly" $ do
+        tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile "bytes31"
+        scryptCode tr `shouldBe` "bytes"
+      
+      it "should transpile Solidity `bytes32` correctly" $ do
+        tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile "bytes32"
+        scryptCode tr `shouldBe` "bytes"

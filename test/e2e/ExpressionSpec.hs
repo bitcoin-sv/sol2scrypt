@@ -36,6 +36,10 @@ spec = testSpec "Transpile Expression" $ do
         tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "hex\"010113\""
         scryptCode tr `shouldBe` "b'010113'"
       
+      it "should transpile Solidity `HexLiteral` correctly" $ do
+        tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "hex\"0aAD\""
+        scryptCode tr `shouldBe` "b'0aad'"
+      
       it "should transpile Solidity `HexLiteral` empty hex correctly" $ do
         tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "hex\"\""
         scryptCode tr `shouldBe` "b''"
