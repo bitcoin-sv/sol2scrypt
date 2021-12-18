@@ -40,13 +40,16 @@ library
       IR.Specs.Type
       IR.Transformations.Base
       IR.Transformations.IR2Scr.Expression
+      IR.Transformations.IR2Scr.Statement
       IR.Transformations.IR2Scr.Type
       IR.Transformations.Sol2IR.Expression
+      IR.Transformations.Sol2IR.Statement
       IR.Transformations.Sol2IR.Type
       IR.Transformer
       Scrypt
       Scrypt.Generables.Base
       Scrypt.Generables.Expr
+      Scrypt.Generables.Stmt
       Scrypt.Generables.Type
       Scrypt.Generator
       Scrypt.Spec
@@ -66,6 +69,7 @@ library
     , containers
     , mtl
     , parsec
+    , protolude
   default-language: Haskell2010
 
 executable sol2scrypt
@@ -85,6 +89,7 @@ test-suite e2e
   main-is: Main.hs
   other-modules:
       ExpressionSpec
+      StmtSpec
       TypeSpec
       Paths_sol2scrypt
   hs-source-dirs:
@@ -103,13 +108,16 @@ test-suite golden
   main-is: Main.hs
   other-modules:
       Generables.Expr
+      Generables.Stmt
       Generables.Type
       GeneratorSpec
       Transformations.IR2Scr.Expression
       Transformations.IR2Scr.Main
+      Transformations.IR2Scr.Stmt
       Transformations.IR2Scr.Type
       Transformations.Sol2IR.Expression
       Transformations.Sol2IR.Main
+      Transformations.Sol2IR.Statement
       Transformations.Sol2IR.Type
       TransformerSpec
       Paths_sol2scrypt

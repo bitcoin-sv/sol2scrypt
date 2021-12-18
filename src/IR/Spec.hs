@@ -6,7 +6,7 @@ module IR.Spec
     module IR.Specs.Function,
     module IR.Specs.Contract,
     module IR.Specs.Program,
-    IType', IExpr'
+    IType', IExpr', IStatement',
   )
 where
 
@@ -21,3 +21,5 @@ import IR.Specs.Program
 type IType' = Maybe IType
 
 type IExpr' = Maybe IExpr
+
+type IStatement' = Maybe IStatement
