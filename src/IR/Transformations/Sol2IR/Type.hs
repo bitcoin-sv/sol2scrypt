@@ -17,5 +17,6 @@ instance ToIRTransformable TypeName IType' where
   _toIR (TypeNameElementaryTypeName Sol.ByteType) = return $ Just $ ElementaryType Bytes
   _toIR (TypeNameElementaryTypeName Sol.StringType) = return $ Just $ ElementaryType String
   _toIR (TypeNameElementaryTypeName Sol.AddressType) = return $ Just $ ElementaryType Address
+  _toIR (TypeNameElementaryTypeName Sol.VarType) = return $ Just $ ElementaryType Any
   
   _toIR _ = return Nothing

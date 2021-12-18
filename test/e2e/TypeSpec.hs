@@ -426,3 +426,9 @@ spec = testSpec "Transpile Type" $ do
       it "should transpile Solidity `address` correctly" $ do
         tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile "address"
         scryptCode tr `shouldBe` "Ripemd160"
+
+    describe "#VarType" $ do
+
+      it "should transpile Solidity `var` correctly" $ do
+        tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile "var"
+        scryptCode tr `shouldBe` "auto"
