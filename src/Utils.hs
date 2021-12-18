@@ -9,21 +9,37 @@ toLower :: String -> String
 toLower = map C.toLower
 
 
-charToWord8 :: Char -> Word8
-charToWord8 = toEnum . fromEnum
+hexChar :: Char -> Word8
+hexChar ch
+    | ch == '0' = 0
+    | ch == '1' = 1
+    | ch == '2' = 2
+    | ch == '3' = 3
+    | ch == '4' = 4
+    | ch == '5' = 5
+    | ch == '6' = 6
+    | ch == '7' = 7
+    | ch == '8' = 8
+    | ch == '9' = 9
+    | ch == 'A' = 10
+    | ch == 'a' = 10
+    | ch == 'B' = 11
+    | ch == 'b' = 11
+    | ch == 'C' = 12
+    | ch == 'c' = 12
+    | ch == 'D' = 13
+    | ch == 'd' = 13
+    | ch == 'E' = 14
+    | ch == 'e' = 14
+    | ch == 'F' = 15
+    | ch == 'f' = 15
+    | otherwise     = 0
 
 parseHex :: String -> [Word8]
 parseHex [] = []
-parseHex (x:y:xs) = (charToWord8 x - 48) * 16 + (charToWord8 y - 48): parseHex xs
-
-showHexPadded :: (Show n, Integral n) => Int -> n -> ShowS
--- ^ showHex of n padded with leading zeros if necessary to fill d digits
-showHexPadded d n = showString (replicate (d - sigDigits n) '0') . showHex n  where
-  sigDigits 0 = 1
-  sigDigits n' = truncate (logBase 16 $ fromIntegral n' :: Double) + 1
+parseHex (x:y:xs) = hexChar x * 16 + hexChar y: parseHex xs
 
 
-showHexWithPadded :: (Integral n, Show n) => n -> String 
-
+showHexWithPadded :: (Integral n, Show n) => n -> String
 showHexWithPadded n = if n > 15 then showHex n "" else "0" ++ showHex n ""
 
