@@ -37,6 +37,7 @@ hexChar ch
 
 parseHex :: String -> [Word8]
 parseHex [] = []
+parseHex [_] = error "Invalid hex: length of the hex literal must be an even number" 
 parseHex (x:y:xs) = hexChar x * 16 + hexChar y: parseHex xs
 
 
