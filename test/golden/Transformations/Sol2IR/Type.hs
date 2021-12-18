@@ -17,3 +17,11 @@ spec = testSpec "instance ToIRTransformable TypeName IType'" $ do
     r1 `shouldBe` (Just $ ElementaryType Int)
     r2 <- transform2IR TransformState (TypeNameElementaryTypeName (UintType $ Just 256))
     r2 `shouldBe` (Just $ ElementaryType Int)
+
+  it "should transfrom Solidity `BytesType` to IR Type correctly" $ do
+    r2 <- transform2IR TransformState (TypeNameElementaryTypeName (BytesType $ Just 1))
+    r2 `shouldBe` (Just $ ElementaryType Bytes)
+
+  it "should transfrom Solidity `ByteType` to IR Type correctly" $ do
+    r2 <- transform2IR TransformState (TypeNameElementaryTypeName (ByteType))
+    r2 `shouldBe` (Just $ ElementaryType Bytes)
