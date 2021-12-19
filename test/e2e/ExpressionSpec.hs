@@ -22,7 +22,3 @@ spec = testSpec "Transpile Expression" $ do
       it "should transpile Solidity `NumberLiteralHex` correctly" $ do
         tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "0x123a"
         scryptCode tr `shouldBe` "0x123a"
-
-      it "should transpile Solidity `NumberLiteralDec` correctly" $ do
-        tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile "uint256"
-        scryptCode tr `shouldBe` "int"
