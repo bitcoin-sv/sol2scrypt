@@ -51,6 +51,19 @@ spec = testSpec "Transpile Expression" $ do
 
 
 
+  describe "#Unary Expression" $ do
+    describe "#Unary" $ do
+      it "should transpile Solidity `- Unary Expression`  correctly" $ do
+        tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "-(0xf)"
+        scryptCode tr `shouldBe` "-(0xf)"
+
+      it "should transpile Solidity `() Unary Expression`  correctly" $ do
+        tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "(0xf)"
+        scryptCode tr `shouldBe` "(0xf)"
+
+
+
+
 
             
 

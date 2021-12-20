@@ -24,6 +24,10 @@ spec = testSpec "instance ToIRTransformable Sol.Expression IExpr'" $ do
     r1 <- transform2IR TransformState (Literal (PrimaryExpressionHexLiteral (HexLiteral "010113")))
     r1 `shouldBe` Just (LiteralExpr $ IR.BytesLiteral [01,01,19])
 
-  it "should transfrom Solidity `Unary` to IR Expression correctly" $ do
+  it "should transfrom Solidity `Unary -` to IR Expression correctly" $ do
     r1 <- transform2IR TransformState (Unary "-" (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "100" Nothing))))
     r1 `shouldBe` Just ( UnaryExpr Negate (LiteralExpr $ IR.IntLiteral False 100))
+
+  it "should transfrom Solidity `Unary ()` to IR Expression correctly" $ do
+    r1 <- transform2IR TransformState (Unary "()" (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "100" Nothing))))
+    r1 `shouldBe` Just ( Parens (LiteralExpr $ IR.IntLiteral False 100))

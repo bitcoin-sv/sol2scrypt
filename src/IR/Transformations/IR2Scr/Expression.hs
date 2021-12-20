@@ -17,6 +17,7 @@ toScryptExpr e@(LiteralExpr (IR.BoolLiteral b)) = Scr.BoolLiteral b e
 toScryptExpr e@(LiteralExpr (IR.IntLiteral _isHex i)) = Scr.IntLiteral _isHex i e
 toScryptExpr e@(LiteralExpr (IR.BytesLiteral b)) = Scr.BytesLiteral b e
 toScryptExpr e@(IdentifierExpr (IIdentifier i)) = Scr.Var i False e
+toScryptExpr e@(IR.Parens ie) = Scr.Parens (toScryptExpr ie) e
 toScryptExpr e@(IR.UnaryExpr op ie) = Scr.UnaryExpr (toScryptUnaryOp op) (toScryptExpr ie) e
 toScryptExpr e@(IR.BinaryExpr op ie1 ie2) = Scr.BinaryExpr (toScryptBinaryOp op) (toScryptExpr ie1) (toScryptExpr ie2) e
 toScryptExpr e = error $ "IExpr `" ++ show e ++ "` not implemented in scrypt"

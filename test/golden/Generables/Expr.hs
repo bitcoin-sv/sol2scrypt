@@ -20,7 +20,11 @@ spec = testSpec "instance Generable (Expr a)" $ do
   it "should generate sCrypt code for `BytesLiteral` correctly" $ do
     genCode (Just $ Scr.BytesLiteral [1,1,19] Nothing) `shouldBe` "b'010113'"
 
-  it "should generate sCrypt code for `UnaryExpr` correctly"  $ do
+  it "should generate sCrypt code for `Parens` correctly"  $ do
+    genCode (Just $ Scr.Parens (Scr.IntLiteral False 0 Nothing) Nothing) `shouldBe` "(0)"
+
+  it "should generate sCrypt code for `UnaryExpr Negate` correctly"  $ do
     genCode (Just $ Scr.UnaryExpr Negate (Scr.IntLiteral False 15 Nothing) Nothing) `shouldBe` "-15"
-    genCode (Just $ Scr.UnaryExpr Negate (Scr.IntLiteral True 15 Nothing) Nothing) `shouldBe` "-(0xf)"
+    genCode (Just $ Scr.UnaryExpr Negate (Scr.IntLiteral True 15 Nothing) Nothing) `shouldBe` "-0xf"
+    genCode (Just $ Scr.UnaryExpr Negate (Scr.Parens (Scr.IntLiteral True 15 Nothing) Nothing) Nothing) `shouldBe` "-(0xf)"
 
