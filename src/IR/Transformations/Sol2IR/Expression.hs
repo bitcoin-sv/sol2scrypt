@@ -22,4 +22,4 @@ instance ToIRTransformable Sol.Expression IExpr' where
     return $ Just $ UnaryExpr Negate (LiteralExpr $ IR.IntLiteral False (fst $ head $ readDec n))
   _toIR (Literal (PrimaryExpressionHexLiteral (HexLiteral h))) =
     return $ Just $ LiteralExpr $ IR.BytesLiteral $ parseHex h
-  _toIR e = error ("can not match sol.expression : '" ++ show e ++ "'")
+  _toIR _ = return Nothing -- ignore those which can not be transformed

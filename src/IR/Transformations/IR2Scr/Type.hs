@@ -9,10 +9,13 @@ import IR.Spec as IR
 import Scrypt.Spec as Scr
 
 instance ToScryptTransformable IType' (Maybe Type) where
-  _toScrypt (Just (ElementaryType IR.Bool)) = Just Scr.Bool
-  _toScrypt (Just (ElementaryType IR.Int)) = Just Scr.Int
-  _toScrypt (Just (ElementaryType IR.Bytes)) = Just Scr.Bytes
-  _toScrypt (Just (ElementaryType IR.Any)) = Just Scr.Any
-  _toScrypt (Just (ElementaryType IR.Address)) = Just $ Scr.SubBytes Scr.Ripemd160
-  _toScrypt t = error $ "Type `" ++ show t ++ "` not implemented in scrypt"
+  _toScrypt Nothing = Nothing
+  _toScrypt (Just t) = Just $ toScryptType t
 
+toScryptType :: IType -> Type
+toScryptType (ElementaryType IR.Bool) = Scr.Bool
+toScryptType (ElementaryType IR.Int) = Scr.Int
+toScryptType (ElementaryType IR.Bytes) = Scr.Bytes
+toScryptType (ElementaryType IR.Any) = Scr.Any
+toScryptType (ElementaryType IR.Address) = Scr.SubBytes Scr.Ripemd160
+toScryptType t = error $ "IType `" ++ show t ++ "` not implemented in scrypt"
