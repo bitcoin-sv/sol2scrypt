@@ -16,5 +16,14 @@ toScryptExpr :: IExpr -> Scr.Expr IExpr
 toScryptExpr e@(LiteralExpr (IR.BoolLiteral b)) = Scr.BoolLiteral b e
 toScryptExpr e@(LiteralExpr (IR.IntLiteral _isHex i)) = Scr.IntLiteral _isHex i e
 toScryptExpr e@(LiteralExpr (IR.BytesLiteral b)) = Scr.BytesLiteral b e
-toScryptExpr e@(IR.UnaryExpr IR.Negate (LiteralExpr (IR.IntLiteral _isHex i))) = Scr.UnaryExpr Scr.Negate (Scr.IntLiteral _isHex i e) e
+toScryptExpr e@(IR.UnaryExpr op ie) = Scr.UnaryExpr (toScryptUnaryOp op) (toScryptExpr ie) e
+toScryptExpr e@(IR.BinaryExpr op ie1 ie2) = Scr.BinaryExpr (toScryptBinaryOp op) (toScryptExpr ie1) (toScryptExpr ie2) e
 toScryptExpr e = error $ "IExpr `" ++ show e ++ "` not implemented in scrypt"
+
+toScryptUnaryOp :: IR.IUnaryOp -> Scr.UnaryOp
+toScryptUnaryOp IR.Negate = Scr.Negate
+toScryptUnaryOp op = error $ "unimplemented tranform from IR op `" ++ show op ++ "` to scrypt"
+
+toScryptBinaryOp :: IR.IBinaryOp -> Scr.BinaryOp
+toScryptBinaryOp IR.Add = Scr.Add
+toScryptBinaryOp op = error $ "unimplemented tranform from IR op `" ++ show op ++ "` to scrypt"
