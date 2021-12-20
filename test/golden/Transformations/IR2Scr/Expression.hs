@@ -42,3 +42,106 @@ spec = testSpec "instance ToScryptTransformable IExpr (Scr.Expr IExpr)" $ do
     r1 <- transform2Scrypt $ Just e2
     r1 `shouldBe` Just (Scr.UnaryExpr Scr.Negate (Scr.IntLiteral True 15 e1) e2)
 
+  it "should transform IR `BinaryExpr +` to sCrypt Type correctly" $ do
+    let e1 = LiteralExpr $ IR.IntLiteral True 15
+    let e2 = LiteralExpr $ IR.IntLiteral True 15
+    let e = IR.BinaryExpr IR.Add e1 e2
+    r1 <- transform2Scrypt $ Just e
+    r1 `shouldBe` Just (Scr.BinaryExpr Scr.Add (Scr.IntLiteral True 15 e1) (Scr.IntLiteral True 15 e2) e)
+
+  it "should transform IR `BinaryExpr -` to sCrypt Type correctly" $ do
+    let e1 = LiteralExpr $ IR.IntLiteral True 15
+    let e2 = LiteralExpr $ IR.IntLiteral True 15
+    let e = IR.BinaryExpr IR.Sub  e1 e2
+    r1 <- transform2Scrypt $ Just e
+    r1 `shouldBe` Just (Scr.BinaryExpr Scr.Sub (Scr.IntLiteral True 15 e1) (Scr.IntLiteral True 15 e2) e)
+
+  it "should transform IR `BinaryExpr *` to sCrypt Type correctly" $ do
+    let e1 = LiteralExpr $ IR.IntLiteral True 15
+    let e2 = LiteralExpr $ IR.IntLiteral True 15
+    let e = IR.BinaryExpr IR.Mul  e1 e2
+    r1 <- transform2Scrypt $ Just e
+    r1 `shouldBe` Just (Scr.BinaryExpr Scr.Mul (Scr.IntLiteral True 15 e1) (Scr.IntLiteral True 15 e2) e)
+
+
+  it "should transform IR `BinaryExpr /` to sCrypt Type correctly" $ do
+    let e1 = LiteralExpr $ IR.IntLiteral True 15
+    let e2 = LiteralExpr $ IR.IntLiteral True 15
+    let e = IR.BinaryExpr IR.Div  e1 e2
+    r1 <- transform2Scrypt $ Just e
+    r1 `shouldBe` Just (Scr.BinaryExpr Scr.Div (Scr.IntLiteral True 15 e1) (Scr.IntLiteral True 15 e2) e)
+
+  it "should transform IR `BinaryExpr %` to sCrypt Type correctly" $ do
+    let e1 = LiteralExpr $ IR.IntLiteral True 15
+    let e2 = LiteralExpr $ IR.IntLiteral True 15
+    let e = IR.BinaryExpr IR.Mod e1 e2
+    r1 <- transform2Scrypt $ Just e
+    r1 `shouldBe` Just (Scr.BinaryExpr Scr.Mod (Scr.IntLiteral True 15 e1) (Scr.IntLiteral True 15 e2) e)
+
+  -- it "should transform IR `BinaryExpr +=` to sCrypt Type correctly" $ do
+
+  -- it "should transform IR `BinaryExpr -=` to sCrypt Type correctly" $ do
+
+  -- it "should transform IR `BinaryExpr *=` to sCrypt Type correctly" $ do
+
+  -- it "should transform IR `BinaryExpr /=` to sCrypt Type correctly" $ do
+
+  -- it "should transform IR `BinaryExpr %=` to sCrypt Type correctly" $ do
+
+  it "should transform IR `BinaryExpr ==` to sCrypt Type correctly" $ do
+    let e1 = LiteralExpr $ IR.IntLiteral True 15
+    let e2 = LiteralExpr $ IR.IntLiteral True 15
+    let e = IR.BinaryExpr IR.Equal e1 e2
+    r1 <- transform2Scrypt $ Just e
+    r1 `shouldBe` Just (Scr.BinaryExpr Scr.Equal (Scr.IntLiteral True 15 e1) (Scr.IntLiteral True 15 e2) e)
+
+  it "should transform IR `BinaryExpr !=` to sCrypt Type correctly" $ do
+    let e1 = LiteralExpr $ IR.IntLiteral True 3
+    let e2 = LiteralExpr $ IR.IntLiteral True 15
+    let e = IR.BinaryExpr IR.Neq e1 e2
+    r1 <- transform2Scrypt $ Just e
+    r1 `shouldBe` Just (Scr.BinaryExpr Scr.Neq (Scr.IntLiteral True 3 e1) (Scr.IntLiteral True 15 e2) e)
+
+  it "should transform IR `BinaryExpr &&` to sCrypt Type correctly" $ do
+    let e1 = LiteralExpr $ IR.BoolLiteral True
+    let e2 = LiteralExpr $ IR.BoolLiteral False
+    let e = IR.BinaryExpr IR.BoolAnd e1 e2
+    r1 <- transform2Scrypt $ Just e
+    r1 `shouldBe` Just (Scr.BinaryExpr Scr.BoolAnd (Scr.BoolLiteral True e1) (Scr.BoolLiteral False e2) e)
+
+  it "should transform IR `BinaryExpr ||` to sCrypt Type correctly" $ do
+    let e1 = LiteralExpr $ IR.BoolLiteral True
+    let e2 = LiteralExpr $ IR.BoolLiteral False
+    let e = IR.BinaryExpr IR.BoolOr e1 e2
+    r1 <- transform2Scrypt $ Just e
+    r1 `shouldBe` Just (Scr.BinaryExpr Scr.BoolOr (Scr.BoolLiteral True e1) (Scr.BoolLiteral False e2) e)
+
+
+  it "should transform IR `BinaryExpr <` to sCrypt Type correctly" $ do
+    let e1 = LiteralExpr $ IR.IntLiteral True 3
+    let e2 = LiteralExpr $ IR.IntLiteral True 15
+    let e = IR.BinaryExpr IR.LessThan e1 e2
+    r1 <- transform2Scrypt $ Just e
+    r1 `shouldBe` Just (Scr.BinaryExpr Scr.LessThan (Scr.IntLiteral True 3 e1) (Scr.IntLiteral True 15 e2) e)
+
+
+  it "should transform IR `BinaryExpr <=` to sCrypt Type correctly" $ do
+    let e1 = LiteralExpr $ IR.IntLiteral True 3
+    let e2 = LiteralExpr $ IR.IntLiteral True 15
+    let e = IR.BinaryExpr IR.LessThanOrEqual e1 e2
+    r1 <- transform2Scrypt $ Just e
+    r1 `shouldBe` Just (Scr.BinaryExpr Scr.LessThanOrEqual (Scr.IntLiteral True 3 e1) (Scr.IntLiteral True 15 e2) e)
+
+  it "should transform IR `BinaryExpr >` to sCrypt Type correctly" $ do
+    let e1 = LiteralExpr $ IR.IntLiteral True 3
+    let e2 = LiteralExpr $ IR.IntLiteral True 15
+    let e = IR.BinaryExpr IR.GreaterThan e1 e2
+    r1 <- transform2Scrypt $ Just e
+    r1 `shouldBe` Just (Scr.BinaryExpr Scr.GreaterThan (Scr.IntLiteral True 3 e1) (Scr.IntLiteral True 15 e2) e)
+
+  it "should transform IR `BinaryExpr >=` to sCrypt Type correctly" $ do
+    let e1 = LiteralExpr $ IR.IntLiteral True 3
+    let e2 = LiteralExpr $ IR.IntLiteral True 15
+    let e = IR.BinaryExpr IR.GreaterThanOrEqual e1 e2
+    r1 <- transform2Scrypt $ Just e
+    r1 `shouldBe` Just (Scr.BinaryExpr Scr.GreaterThanOrEqual (Scr.IntLiteral True 3 e1) (Scr.IntLiteral True 15 e2) e)

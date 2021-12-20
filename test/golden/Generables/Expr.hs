@@ -23,8 +23,55 @@ spec = testSpec "instance Generable (Expr a)" $ do
   it "should generate sCrypt code for `Parens` correctly"  $ do
     genCode (Just $ Scr.Parens (Scr.IntLiteral False 0 Nothing) Nothing) `shouldBe` "(0)"
 
-  it "should generate sCrypt code for `UnaryExpr Negate` correctly"  $ do
+  it "should generate sCrypt code for `UnaryExpr -` correctly"  $ do
     genCode (Just $ Scr.UnaryExpr Negate (Scr.IntLiteral False 15 Nothing) Nothing) `shouldBe` "-15"
     genCode (Just $ Scr.UnaryExpr Negate (Scr.IntLiteral True 15 Nothing) Nothing) `shouldBe` "-0xf"
     genCode (Just $ Scr.UnaryExpr Negate (Scr.Parens (Scr.IntLiteral True 15 Nothing) Nothing) Nothing) `shouldBe` "-(0xf)"
+
+  
+  it "should generate sCrypt code for `BinaryExpr +` correctly"  $ do
+    genCode (Just $ Scr.BinaryExpr Scr.Add (Scr.IntLiteral False 15 Nothing) (Scr.IntLiteral False 15 Nothing) Nothing) `shouldBe` "15 + 15"
+
+  it "should generate sCrypt code for `BinaryExpr -` correctly"  $ do
+    genCode (Just $ Scr.BinaryExpr Scr.Sub (Scr.IntLiteral False 15 Nothing) (Scr.IntLiteral False 15 Nothing) Nothing) `shouldBe` "15 - 15"
+
+  it "should generate sCrypt code for `BinaryExpr *` correctly"  $ do
+    genCode (Just $ Scr.BinaryExpr Scr.Mul (Scr.IntLiteral False 15 Nothing) (Scr.IntLiteral False 15 Nothing) Nothing) `shouldBe` "15 * 15"
+
+  it "should generate sCrypt code for `BinaryExpr /` correctly"  $ do
+    genCode (Just $ Scr.BinaryExpr Scr.Div (Scr.IntLiteral False 15 Nothing) (Scr.IntLiteral False 15 Nothing) Nothing) `shouldBe` "15 / 15"
+
+  it "should generate sCrypt code for `BinaryExpr %` correctly"  $ do
+    genCode (Just $ Scr.BinaryExpr Scr.Mod (Scr.IntLiteral False 15 Nothing) (Scr.IntLiteral False 15 Nothing) Nothing) `shouldBe` "15 % 15"
+
+    
+  -- it "should generate sCrypt code for `BinaryExpr +=` correctly"  $ do
+  -- it "should generate sCrypt code for `BinaryExpr -=` correctly"  $ do
+  -- it "should generate sCrypt code for `BinaryExpr *=` correctly"  $ do
+  -- it "should generate sCrypt code for `BinaryExpr /=` correctly"  $ do
+  -- it "should generate sCrypt code for `BinaryExpr %=` correctly"  $ do
+
+  it "should generate sCrypt code for `BinaryExpr ==` correctly"  $ do
+    genCode (Just $ Scr.BinaryExpr Scr.Equal (Scr.IntLiteral False 15 Nothing) (Scr.IntLiteral False 15 Nothing) Nothing) `shouldBe` "15 == 15"
+
+  it "should generate sCrypt code for `BinaryExpr !=` correctly"  $ do
+    genCode (Just $ Scr.BinaryExpr Scr.Neq (Scr.IntLiteral False 15 Nothing) (Scr.IntLiteral False 15 Nothing) Nothing) `shouldBe` "15 != 15"
+
+  it "should generate sCrypt code for `BinaryExpr ||` correctly"  $ do
+    genCode (Just $ Scr.BinaryExpr Scr.BoolOr (Scr.BoolLiteral True Nothing) (Scr.BoolLiteral False Nothing) Nothing) `shouldBe` "true || false"
+
+  it "should generate sCrypt code for `BinaryExpr &&` correctly"  $ do
+    genCode (Just $ Scr.BinaryExpr Scr.BoolAnd (Scr.BoolLiteral True Nothing) (Scr.BoolLiteral False Nothing) Nothing) `shouldBe` "true && false"
+
+  it "should generate sCrypt code for `BinaryExpr <` correctly"  $ do
+    genCode (Just $ Scr.BinaryExpr Scr.LessThan (Scr.IntLiteral False 1 Nothing) (Scr.IntLiteral False 15 Nothing) Nothing) `shouldBe` "1 < 15"
+
+  it "should generate sCrypt code for `BinaryExpr <=` correctly"  $ do
+    genCode (Just $ Scr.BinaryExpr Scr.LessThanOrEqual (Scr.IntLiteral False 1 Nothing) (Scr.IntLiteral False 15 Nothing) Nothing) `shouldBe` "1 <= 15"
+
+  it "should generate sCrypt code for `BinaryExpr >` correctly"  $ do
+    genCode (Just $ Scr.BinaryExpr Scr.GreaterThan (Scr.IntLiteral False 1 Nothing) (Scr.IntLiteral False 15 Nothing) Nothing) `shouldBe` "1 > 15"
+
+  it "should generate sCrypt code for `BinaryExpr >=` correctly"  $ do
+    genCode (Just $ Scr.BinaryExpr Scr.GreaterThanOrEqual (Scr.IntLiteral False 1 Nothing) (Scr.IntLiteral False 15 Nothing) Nothing) `shouldBe` "1 >= 15"
 

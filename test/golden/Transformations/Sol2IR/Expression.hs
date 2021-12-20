@@ -31,3 +31,79 @@ spec = testSpec "instance ToIRTransformable Sol.Expression IExpr'" $ do
   it "should transfrom Solidity `Unary ()` to IR Expression correctly" $ do
     r1 <- transform2IR TransformState (Unary "()" (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "100" Nothing))))
     r1 `shouldBe` Just ( Parens (LiteralExpr $ IR.IntLiteral False 100))
+
+
+
+  it "should transfrom Solidity `Binary +` to IR Expression correctly" $ do
+    r1 <- transform2IR TransformState (Binary "+" (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "100" Nothing))) (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "1" Nothing))))
+    r1 `shouldBe` Just ( BinaryExpr IR.Add (LiteralExpr $ IR.IntLiteral False 100) (LiteralExpr $ IR.IntLiteral False 1))
+
+  it "should transfrom Solidity `Binary -` to IR Expression correctly" $ do
+    r1 <- transform2IR TransformState (Binary "-" (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "100" Nothing))) (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "1" Nothing))))
+    r1 `shouldBe` Just ( BinaryExpr IR.Sub (LiteralExpr $ IR.IntLiteral False 100) (LiteralExpr $ IR.IntLiteral False 1))
+
+  it "should transfrom Solidity `Binary *` to IR Expression correctly" $ do
+    r1 <- transform2IR TransformState (Binary "*" (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "100" Nothing))) (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "1" Nothing))))
+    r1 `shouldBe` Just ( BinaryExpr IR.Mul (LiteralExpr $ IR.IntLiteral False 100) (LiteralExpr $ IR.IntLiteral False 1))
+
+  it "should transfrom Solidity `Binary /` to IR Expression correctly" $ do
+    r1 <- transform2IR TransformState (Binary "/" (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "100" Nothing))) (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "1" Nothing))))
+    r1 `shouldBe` Just ( BinaryExpr IR.Div (LiteralExpr $ IR.IntLiteral False 100) (LiteralExpr $ IR.IntLiteral False 1))
+
+  it "should transfrom Solidity `Binary %` to IR Expression correctly" $ do
+    r1 <- transform2IR TransformState (Binary "%" (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "100" Nothing))) (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "1" Nothing))))
+    r1 `shouldBe` Just ( BinaryExpr IR.Mod (LiteralExpr $ IR.IntLiteral False 100) (LiteralExpr $ IR.IntLiteral False 1))
+
+
+  -- it "should transfrom Solidity `Binary +=` to IR Expression correctly" $ do
+  --   r1 <- transform2IR TransformState (Binary "+=" (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "100" Nothing))) (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "1" Nothing))))
+  --   r1 `shouldBe` Just ( BinaryExpr IR.Add (LiteralExpr $ IR.IntLiteral False 100) (LiteralExpr $ IR.IntLiteral False 1))
+
+  -- it "should transfrom Solidity `Binary -=` to IR Expression correctly" $ do
+  --   r1 <- transform2IR TransformState (Binary "-=" (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "100" Nothing))) (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "1" Nothing))))
+  --   r1 `shouldBe` Just ( BinaryExpr IR.Sub (LiteralExpr $ IR.IntLiteral False 100) (LiteralExpr $ IR.IntLiteral False 1))
+
+  -- it "should transfrom Solidity `Binary *=` to IR Expression correctly" $ do
+  --   r1 <- transform2IR TransformState (Binary "*=" (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "100" Nothing))) (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "1" Nothing))))
+  --   r1 `shouldBe` Just ( BinaryExpr IR.Mul (LiteralExpr $ IR.IntLiteral False 100) (LiteralExpr $ IR.IntLiteral False 1))
+
+  -- it "should transfrom Solidity `Binary /=` to IR Expression correctly" $ do
+  --   r1 <- transform2IR TransformState (Binary "/=" (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "100" Nothing))) (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "1" Nothing))))
+  --   r1 `shouldBe` Just ( BinaryExpr IR.Div (LiteralExpr $ IR.IntLiteral False 100) (LiteralExpr $ IR.IntLiteral False 1))
+
+  -- it "should transfrom Solidity `Binary %=` to IR Expression correctly" $ do
+  --   r1 <- transform2IR TransformState (Binary "%=" (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "100" Nothing))) (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "1" Nothing))))
+  --   r1 `shouldBe` Just ( BinaryExpr IR.Mod (LiteralExpr $ IR.IntLiteral False 100) (LiteralExpr $ IR.IntLiteral False 1))
+
+
+  it "should transfrom Solidity `Binary ==` to IR Expression correctly" $ do
+    r1 <- transform2IR TransformState (Binary "==" (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "100" Nothing))) (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "1" Nothing))))
+    r1 `shouldBe` Just ( BinaryExpr IR.Equal (LiteralExpr $ IR.IntLiteral False 100) (LiteralExpr $ IR.IntLiteral False 1))
+
+  it "should transfrom Solidity `Binary !=` to IR Expression correctly" $ do
+    r1 <- transform2IR TransformState (Binary "!=" (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "100" Nothing))) (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "1" Nothing))))
+    r1 `shouldBe` Just ( BinaryExpr IR.Neq (LiteralExpr $ IR.IntLiteral False 100) (LiteralExpr $ IR.IntLiteral False 1))
+
+  it "should transfrom Solidity `Binary <` to IR Expression correctly" $ do
+    r1 <- transform2IR TransformState (Binary "<" (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "100" Nothing))) (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "1" Nothing))))
+    r1 `shouldBe` Just ( BinaryExpr IR.LessThan (LiteralExpr $ IR.IntLiteral False 100) (LiteralExpr $ IR.IntLiteral False 1))
+
+  it "should transfrom Solidity `Binary <=` to IR Expression correctly" $ do
+    r1 <- transform2IR TransformState (Binary "<=" (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "100" Nothing))) (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "1" Nothing))))
+    r1 `shouldBe` Just ( BinaryExpr IR.LessThanOrEqual (LiteralExpr $ IR.IntLiteral False 100) (LiteralExpr $ IR.IntLiteral False 1))
+
+  it "should transfrom Solidity `Binary >` to IR Expression correctly" $ do
+    r1 <- transform2IR TransformState (Binary ">" (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "100" Nothing))) (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "1" Nothing))))
+    r1 `shouldBe` Just ( BinaryExpr IR.GreaterThan (LiteralExpr $ IR.IntLiteral False 100) (LiteralExpr $ IR.IntLiteral False 1))
+
+  it "should transfrom Solidity `Binary >=` to IR Expression correctly" $ do
+    r1 <- transform2IR TransformState (Binary ">=" (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "100" Nothing))) (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "1" Nothing))))
+    r1 `shouldBe` Just ( BinaryExpr IR.GreaterThanOrEqual (LiteralExpr $ IR.IntLiteral False 100) (LiteralExpr $ IR.IntLiteral False 1))
+
+  it "should transfrom Solidity `Binary &&` to IR Expression correctly" $ do
+    r1 <- transform2IR TransformState (Binary "&&" (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "100" Nothing))) (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "1" Nothing))))
+    r1 `shouldBe` Just ( BinaryExpr IR.BoolAnd (LiteralExpr $ IR.IntLiteral False 100) (LiteralExpr $ IR.IntLiteral False 1))
+
+  it "should transfrom Solidity `Binary ||` to IR Expression correctly" $ do
+    r1 <- transform2IR TransformState (Binary "||" (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "100" Nothing))) (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "1" Nothing))))
+    r1 `shouldBe` Just ( BinaryExpr IR.BoolOr (LiteralExpr $ IR.IntLiteral False 100) (LiteralExpr $ IR.IntLiteral False 1))

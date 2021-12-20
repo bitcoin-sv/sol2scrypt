@@ -28,4 +28,20 @@ toScryptUnaryOp op = error $ "unimplemented tranform from IR op `" ++ show op ++
 
 toScryptBinaryOp :: IR.IBinaryOp -> Scr.BinaryOp
 toScryptBinaryOp IR.Add = Scr.Add
+toScryptBinaryOp IR.Sub = Scr.Sub
+toScryptBinaryOp IR.Mul = Scr.Mul
+toScryptBinaryOp IR.Div = Scr.Div
+toScryptBinaryOp IR.Mod = Scr.Mod
+toScryptBinaryOp IR.SubAssign = Scr.SubAssign
+toScryptBinaryOp IR.MulAssign = Scr.MulAssign
+toScryptBinaryOp IR.DivAssign = Scr.DivAssign
+toScryptBinaryOp IR.ModAssign = Scr.ModAssign
+toScryptBinaryOp IR.Equal = Scr.Equal
+toScryptBinaryOp IR.Neq = Scr.Neq
+toScryptBinaryOp IR.LessThan = Scr.LessThan
+toScryptBinaryOp IR.LessThanOrEqual = Scr.LessThanOrEqual
+toScryptBinaryOp IR.GreaterThan = Scr.GreaterThan
+toScryptBinaryOp IR.GreaterThanOrEqual = Scr.GreaterThanOrEqual
+toScryptBinaryOp IR.BoolAnd = Scr.BoolAnd
+toScryptBinaryOp IR.BoolOr = Scr.BoolOr
 toScryptBinaryOp op = error $ "unimplemented tranform from IR op `" ++ show op ++ "` to scrypt"
