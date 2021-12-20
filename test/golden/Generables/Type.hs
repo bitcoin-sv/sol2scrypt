@@ -13,3 +13,12 @@ spec = testSpec "instance Generable Scr.Type" $ do
 
   it "should generate sCrypt code for `Int` correctly" $ do
     genCode (Just Scr.Int) `shouldBe` "int"
+
+  it "should generate sCrypt code for `Bytes` correctly" $ do
+    genCode (Just Scr.Bytes) `shouldBe` "bytes"
+
+  it "should generate sCrypt code for `Any` correctly" $ do
+    genCode (Just Scr.Any) `shouldBe` "auto"
+
+  it "should generate sCrypt code for `Address` correctly" $ do
+    genCode (Just $ Scr.SubBytes Scr.Ripemd160) `shouldBe` "Ripemd160"

@@ -13,6 +13,7 @@ data IElementaryTypeName
   | Bytes
   | String
   | Address
+  | Any
   deriving (Show, Eq, Ord)
 
 newtype IUserDefinedTypeName = IUserDefinedTypeName [IIdentifier] deriving (Show, Eq, Ord)

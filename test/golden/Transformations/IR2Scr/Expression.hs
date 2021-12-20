@@ -23,3 +23,8 @@ spec = testSpec "instance ToScryptTransformable IExpr (Scr.Expr IExpr)" $ do
     let e2 = LiteralExpr $ IR.IntLiteral False 15
     r2 <- transform2Scrypt $ Just e2 
     r2 `shouldBe` Just (Scr.IntLiteral False 15 e2)
+
+  it "should transform IR `BytesLiteral` to sCrypt Type correctly" $ do
+    let e1 = LiteralExpr $ IR.BytesLiteral [1,1,19]
+    r1 <- transform2Scrypt $ Just e1 
+    r1 `shouldBe` Just (Scr.BytesLiteral [1,1,19] e1)

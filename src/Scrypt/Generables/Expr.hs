@@ -6,11 +6,32 @@ module Scrypt.Generables.Expr where
 import Numeric
 import Scrypt.Generables.Base
 import Scrypt.Spec as Scr
+import Utils (showHexWithPadded)
+import Scrypt.Spec (Expr(binaryOp))
 
 instance Generable (Maybe (Scr.Expr a)) where
-  genCode (Just (Scr.BoolLiteral b _)) = if b then "true" else "false"
-  genCode (Just (Scr.IntLiteral _isHex i _)) = if _isHex then "0x" ++ hexWithPadding else showInt i ""
+  genCode Nothing = ""
+  genCode (Just e) = genCodeExpr e
+
+genCodeExpr :: Scr.Expr a -> String
+genCodeExpr (Scr.BoolLiteral b _) = if b then "true" else "false"
+genCodeExpr (Scr.IntLiteral _isHex i _) = if _isHex then showHex_ else showInt_
     where
-      hex = showHex i ""
-      hexWithPadding = if even (length hex) then hex else "0" ++ hex
-  genCode _ = error "unimplemented show scrypt expr"
+      showHex_ = "0x" ++ showHex i ""
+      showInt_ = showInt i ""
+genCodeExpr (Scr.BytesLiteral b _) = "b'" ++ concatMap showHexWithPadded b ++ "'"
+-- UnaryExpr
+genCodeExpr (Scr.UnaryExpr Scr.Negate e@(Scr.IntLiteral True _ _) _) = unaryOp2Str Scr.Negate ++ "(" ++ genCodeExpr e ++ ")"
+genCodeExpr (Scr.UnaryExpr op e _) | op `notElem` [Scr.PostIncrement, Scr.PostDecrement] = unaryOp2Str op ++ genCodeExpr e
+genCodeExpr (Scr.UnaryExpr op e _) | op `elem` [Scr.PostIncrement, Scr.PostDecrement] = genCodeExpr e ++ unaryOp2Str op
+-- BinaryExpr
+genCodeExpr (Scr.BinaryExpr op e1 e2 _) | op `elem` [Add, Sub, Mul, Div] = genCodeExpr e1 ++ binaryOp2Str op ++ genCodeExpr e2
+genCodeExpr _ = error "unimplemented show scrypt expr"
+
+unaryOp2Str :: Scr.UnaryOp -> String 
+unaryOp2Str Scr.Not = "!"
+unaryOp2Str Scr.Negate = "-"
+unaryOp2Str op = error $ "unimplemented genCode for unary op `" ++ show op ++ "`"
+
+binaryOp2Str :: Scr.BinaryOp -> String
+binaryOp2Str op =  error $ "unimplemented genCode for unary op `" ++ show op ++ "`"
