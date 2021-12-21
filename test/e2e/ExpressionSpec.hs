@@ -39,7 +39,10 @@ spec = testSpec "Transpile Expression" $ do
   describe "#Unary Expression" $ do
     describe "#Unary" $ do
       itexpr "-" "-(0xf)" "-(0xf)"
+      itexpr "-" "-0xf" "-(0xf)"
+      itexpr "-" "-1" "-1"
       itexpr "()" "(0xf)" "(0xf)"
+      itexpr "()" "((-0xf))" "((-(0xf)))"
 
   describe "#Binary Expression" $ do
     let itBinary op = itexpr ("Binary:" ++ op) ("1 " ++ op ++ " 3") ("1 " ++ op ++ " 3")
