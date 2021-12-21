@@ -32,7 +32,25 @@ spec = testSpec "instance ToIRTransformable Sol.Expression IExpr'" $ do
     r1 <- transform2IR TransformState (Unary "()" (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "100" Nothing))))
     r1 `shouldBe` Just ( Parens (LiteralExpr $ IR.IntLiteral False 100))
 
+  it "should transfrom Solidity `Unary ++` to IR Expression correctly" $ do
+    r1 <- transform2IR TransformState (Unary "++" (Literal (PrimaryExpressionIdentifier (Identifier "a"))))
+    r1 `shouldBe` Just ( UnaryExpr PreIncrement (IR.IdentifierExpr $ IR.IIdentifier "a"))
 
+  it "should transfrom Solidity `Unary ()++` to IR Expression correctly" $ do
+    r1 <- transform2IR TransformState (Unary "()++" (Literal (PrimaryExpressionIdentifier (Identifier "a"))))
+    r1 `shouldBe` Just ( UnaryExpr PostIncrement (IR.IdentifierExpr $ IR.IIdentifier "a"))
+
+  it "should transfrom Solidity `Unary --` to IR Expression correctly" $ do
+    r1 <- transform2IR TransformState (Unary "--" (Literal (PrimaryExpressionIdentifier (Identifier "a"))))
+    r1 `shouldBe` Just ( UnaryExpr PreDecrement (IR.IdentifierExpr $ IR.IIdentifier "a"))
+
+  it "should transfrom Solidity `Unary ()--` to IR Expression correctly" $ do
+    r1 <- transform2IR TransformState (Unary "()--" (Literal (PrimaryExpressionIdentifier (Identifier "a"))))
+    r1 `shouldBe` Just ( UnaryExpr PostDecrement (IR.IdentifierExpr $ IR.IIdentifier "a"))
+
+  it "should transfrom Solidity `Unary !` to IR Expression correctly" $ do
+    r1 <- transform2IR TransformState (Unary "!" (Literal (PrimaryExpressionIdentifier (Identifier "a"))))
+    r1 `shouldBe` Just ( UnaryExpr Not (IR.IdentifierExpr $ IR.IIdentifier "a"))
 
   it "should transfrom Solidity `Binary +` to IR Expression correctly" $ do
     r1 <- transform2IR TransformState (Binary "+" (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "100" Nothing))) (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "1" Nothing))))

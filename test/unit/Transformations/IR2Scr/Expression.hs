@@ -43,6 +43,36 @@ spec = testSpec "instance ToScryptTransformable IExpr (Scr.Expr Ann)" $ do
     r1 <- transform2Scrypt $ Just e2
     r1 `shouldBe` Just (Scr.UnaryExpr Scr.Negate (Scr.IntLiteral True 15 nil) nil)
 
+  it "should transform IR `UnaryExpr ++` to sCrypt Type correctly" $ do
+    let e1 = IR.IdentifierExpr $ IR.IIdentifier "a"
+    let e2 = IR.UnaryExpr IR.PreIncrement e1
+    r1 <- transform2Scrypt $ Just e2
+    r1 `shouldBe` Just (Scr.UnaryExpr Scr.PreIncrement (Scr.Var "a" False e1) e2)
+
+  it "should transform IR `UnaryExpr ()++` to sCrypt Type correctly" $ do
+    let e1 = IR.IdentifierExpr $ IR.IIdentifier "a"
+    let e2 = IR.UnaryExpr IR.PostIncrement e1
+    r1 <- transform2Scrypt $ Just e2
+    r1 `shouldBe` Just (Scr.UnaryExpr Scr.PostIncrement (Scr.Var "a" False e1) e2)
+
+  it "should transform IR `UnaryExpr --` to sCrypt Type correctly" $ do
+    let e1 = IR.IdentifierExpr $ IR.IIdentifier "a"
+    let e2 = IR.UnaryExpr IR.PreDecrement e1
+    r1 <- transform2Scrypt $ Just e2
+    r1 `shouldBe` Just (Scr.UnaryExpr Scr.PreDecrement (Scr.Var "a" False e1) e2)
+
+  it "should transform IR `UnaryExpr ()--` to sCrypt Type correctly" $ do
+    let e1 = IR.IdentifierExpr $ IR.IIdentifier "a"
+    let e2 = IR.UnaryExpr IR.PostDecrement e1
+    r1 <- transform2Scrypt $ Just e2
+    r1 `shouldBe` Just (Scr.UnaryExpr Scr.PostDecrement (Scr.Var "a" False e1) e2)
+
+  it "should transform IR `UnaryExpr !` to sCrypt Type correctly" $ do
+    let e1 = IR.IdentifierExpr $ IR.IIdentifier "a"
+    let e2 = IR.UnaryExpr IR.Not e1
+    r1 <- transform2Scrypt $ Just e2
+    r1 `shouldBe` Just (Scr.UnaryExpr Scr.Not (Scr.Var "a" False e1) e2)
+
   it "should transform IR `BinaryExpr +` to sCrypt Type correctly" $ do
     let e1 = LiteralExpr $ IR.IntLiteral True 15
     let e2 = LiteralExpr $ IR.IntLiteral True 15

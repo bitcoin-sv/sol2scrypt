@@ -28,7 +28,7 @@ instance ToIRTransformable Sol.Expression IExpr' where
     return $ transformUnaryExpr opStr e'
   _toIR (Binary opStr e1 e2) = do 
     e1' :: IExpr' <- _toIR e1
-    e2' :: IExpr'  <- _toIR e2 
+    e2' :: IExpr' <- _toIR e2 
     return $ BinaryExpr (str2BinaryOp opStr) <$> e1' <*> e2' 
   _toIR _ = return Nothing -- ignore those which can not be transformed
 
@@ -38,7 +38,12 @@ transformUnaryExpr opStr e' =
   case opStr of
     "-" -> UnaryExpr Negate <$> e' 
     "()" -> Parens <$> e'
-    s -> error $ "unsupported op `" ++ s ++ "`"
+    "()++" -> UnaryExpr PostIncrement <$> e'
+    "++" -> UnaryExpr PreIncrement <$> e'
+    "()--" -> UnaryExpr PostDecrement <$> e'
+    "--" -> UnaryExpr PreDecrement <$> e'
+    "!" -> UnaryExpr Not <$> e'
+    s -> error $ "unsupported op `" ++ s ++ "`" ++ show e'
 
 str2BinaryOp :: String -> IBinaryOp
 str2BinaryOp "+" = Add

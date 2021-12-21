@@ -36,7 +36,12 @@ spec = testSpec "instance Generable (Expr a)" $ do
       itcode "-" (Scr.UnaryExpr Scr.Negate (Scr.IntLiteral False 15 Nothing) Nothing) "-15"
       itcode "-" (Scr.UnaryExpr Scr.Negate (Scr.IntLiteral True 15 Nothing) Nothing) "-(0xf)"
       itcode "-" (Scr.UnaryExpr Scr.Negate (Scr.Parens (Scr.IntLiteral True 15 Nothing) Nothing) Nothing) "-(0xf)"
-
+      itcode "++" (Scr.UnaryExpr Scr.PreIncrement (Scr.Var "a" False Nothing) Nothing) "++a"
+      itcode "++" (Scr.UnaryExpr Scr.PostIncrement (Scr.Var "a" False Nothing) Nothing) "a++"
+      itcode "--" (Scr.UnaryExpr Scr.PreDecrement (Scr.Var "a" False Nothing) Nothing) "--a"
+      itcode "--" (Scr.UnaryExpr Scr.PostDecrement (Scr.Var "a" False Nothing) Nothing) "a--"
+      itcode "!" (Scr.UnaryExpr Scr.Not (Scr.Var "a" False Nothing) Nothing) "!a"
+      
     describe "#BinaryExpr" $ do
       let itBinary title op e1 e2 code = it ("should generate sCrypt code for `" ++ title ++ "` correctly") $ do
             genCode (Just $ Scr.BinaryExpr op e1 e2 Nothing) `shouldBe` code

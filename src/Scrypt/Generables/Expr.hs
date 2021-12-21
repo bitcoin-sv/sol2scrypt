@@ -34,6 +34,10 @@ instance Generable (Scr.Expr a) where
 unaryOp2Str :: Scr.UnaryOp -> String 
 unaryOp2Str Scr.Not = "!"
 unaryOp2Str Scr.Negate = "-"
+unaryOp2Str Scr.PostIncrement = "++"
+unaryOp2Str Scr.PreIncrement = "++"
+unaryOp2Str Scr.PreDecrement = "--"
+unaryOp2Str Scr.PostDecrement = "--"
 unaryOp2Str op = error $ "unimplemented genCode for unary op `" ++ show op ++ "`"
 
 binaryOp2Str :: Scr.BinaryOp -> String

@@ -26,6 +26,11 @@ instance ToScryptTransformable IExpr (Scr.Expr Ann) where
 
 toScryptUnaryOp :: IR.IUnaryOp -> Scr.UnaryOp
 toScryptUnaryOp IR.Negate = Scr.Negate
+toScryptUnaryOp IR.Not = Scr.Not 
+toScryptUnaryOp IR.PostIncrement = Scr.PostIncrement
+toScryptUnaryOp IR.PreIncrement = Scr.PreIncrement
+toScryptUnaryOp IR.PreDecrement = Scr.PreDecrement
+toScryptUnaryOp IR.PostDecrement = Scr.PostDecrement
 toScryptUnaryOp op = error $ "unimplemented tranform from IR op `" ++ show op ++ "` to scrypt"
 
 toScryptBinaryOp :: IR.IBinaryOp -> Scr.BinaryOp
