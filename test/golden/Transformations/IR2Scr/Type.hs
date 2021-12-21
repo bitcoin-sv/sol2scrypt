@@ -19,11 +19,11 @@ spec = testSpec "instance ToScryptTransformable IType Type" $ do
   it "should transform IR `Bytes` to sCrypt Type correctly" $ do
     r <- transform2Scrypt (Just $ ElementaryType IR.Bytes)
     r `shouldBe` Just Scr.Bytes
-  
+
   it "should transform IR `Any` to sCrypt Type correctly" $ do
     r <- transform2Scrypt (Just $ ElementaryType IR.Any)
     r `shouldBe` Just Scr.Any
 
   it "should transform IR `Address` to sCrypt Type correctly" $ do
     r <- transform2Scrypt (Just $ ElementaryType IR.Address)
-    r `shouldBe` (Just $ Scr.SubBytes Scr.Ripemd160)
+    r `shouldBe` Just (Scr.SubBytes Scr.Ripemd160)

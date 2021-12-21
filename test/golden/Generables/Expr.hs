@@ -1,26 +1,83 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleContexts #-}
 module Generables.Expr where
 
 import Scrypt.Generables.Base
-import Scrypt.Generables.Expr ()
+import Scrypt.Generables.Expr (binaryOp2Str)
 import Scrypt.Spec as Scr
 import Test.Tasty
 import Test.Tasty.Hspec
 
 spec :: IO TestTree
 spec = testSpec "instance Generable (Expr a)" $ do
-  it "should generate sCrypt code for `BoolLiteral` correctly" $ do
-    genCode (Just $ Scr.BoolLiteral True Nothing) `shouldBe` "true"
-    genCode (Just $ Scr.BoolLiteral False Nothing) `shouldBe` "false"
 
-  it "should generate sCrypt code for `IntLiteral` correctly" $ do
-    genCode (Just $ Scr.IntLiteral True 15 Nothing) `shouldBe` "0xf"
-    genCode (Just $ Scr.IntLiteral False 15 Nothing) `shouldBe` "15"
-    genCode (Just $ Scr.IntLiteral True 32 Nothing) `shouldBe` "0x20"
+  let itcode title e c = it ("should generate sCrypt code for `" ++ title ++ "` correctly") $ do
+        genCode (Just e) `shouldBe` c
 
-  it "should generate sCrypt code for `BytesLiteral` correctly" $ do
-    genCode (Just $ Scr.BytesLiteral [1,1,19] Nothing) `shouldBe` "b'010113'"
+  describe "#Expr" $ do
+    describe "#Literal" $ do
 
-  it "should generate sCrypt code for `UnaryExpr` correctly"  $ do
-    genCode (Just $ Scr.UnaryExpr Negate (Scr.IntLiteral False 15 Nothing) Nothing) `shouldBe` "-15"
-    genCode (Just $ Scr.UnaryExpr Negate (Scr.IntLiteral True 15 Nothing) Nothing) `shouldBe` "-(0xf)"
+      itcode "BoolLiteral" (Scr.BoolLiteral True Nothing) "true"
+
+      itcode "IntLiteral" (Scr.IntLiteral True 15 Nothing) "0xf"
+      itcode "IntLiteral" (Scr.IntLiteral False 15 Nothing) "15"
+      itcode "IntLiteral" (Scr.IntLiteral True 32 Nothing) "0x20"
+
+      itcode "BytesLiteral" (Scr.BytesLiteral [1,1,19] Nothing) "b'010113'"
+      itcode "BytesLiteral" (Scr.BytesLiteral [] Nothing) "b''"
+
+    describe "#Parens" $ do
+
+      itcode "Parens" (Scr.Parens (Scr.IntLiteral False 0 Nothing) Nothing) "(0)"
+      itcode "Parens" (Scr.Parens (Scr.BoolLiteral True Nothing) Nothing) "(true)"
+
+    describe "#UnaryExpr" $ do
+
+      itcode "-" (Scr.UnaryExpr Scr.Negate (Scr.IntLiteral False 15 Nothing) Nothing) "-15"
+      itcode "-" (Scr.UnaryExpr Scr.Negate (Scr.IntLiteral True 15 Nothing) Nothing) "-(0xf)"
+      itcode "-" (Scr.UnaryExpr Scr.Negate (Scr.Parens (Scr.IntLiteral True 15 Nothing) Nothing) Nothing) "-(0xf)"
+
+    describe "#BinaryExpr" $ do
+      let itBinary title op e1 e2 code = it ("should generate sCrypt code for `" ++ title ++ "` correctly") $ do
+            genCode (Just $ Scr.BinaryExpr op e1 e2 Nothing) `shouldBe` code
+
+      let itBinaryCode title op = itBinary title op (Scr.IntLiteral False 1 Nothing) (Scr.IntLiteral False 15 Nothing) ("1" ++ binaryOp2Str op ++ "15")
+
+      let itBinaryCode' title op = itBinary title op (Scr.Var "a" False Nothing) (Scr.IntLiteral False 15 Nothing) ("a" ++ binaryOp2Str op ++ "15")
+
+      itBinaryCode "+" Scr.Add
+
+      itBinaryCode "-" Scr.Sub
+
+      itBinaryCode "*" Scr.Mul
+
+      itBinaryCode "/" Scr.Div
+
+      itBinaryCode "%" Scr.Mod
+
+      itBinaryCode' "+=" Scr.AddAssign
+
+      itBinaryCode' "-=" Scr.SubAssign
+
+      itBinaryCode' "*=" Scr.MulAssign
+
+      itBinaryCode' "/=" Scr.DivAssign
+
+      itBinaryCode' "%=" Scr.ModAssign
+
+      itBinaryCode "==" Scr.Equal
+
+      itBinaryCode "!=" Scr.Neq
+
+      itBinaryCode "<" Scr.LessThan
+
+      itBinaryCode "<=" Scr.LessThanOrEqual
+
+      itBinaryCode ">" Scr.GreaterThan
+
+      itBinaryCode ">=" Scr.GreaterThanOrEqual
+
+      itBinary "||" Scr.BoolOr (Scr.BoolLiteral True Nothing) (Scr.BoolLiteral False Nothing) "true || false"
+
+      itBinary "&&" Scr.BoolAnd (Scr.BoolLiteral True Nothing) (Scr.BoolLiteral False Nothing) "true && false"
 

@@ -22,7 +22,7 @@ instance ToIRTransformable Sol.Expression IExpr' where
   _toIR (Literal (PrimaryExpressionIdentifier (Identifier i))) = return $ Just $ IdentifierExpr (IIdentifier i)
   _toIR (Unary opStr e) = do 
     e' <- _toIR e 
-    return $ UnaryExpr (str2UnaryOp opStr) <$> e'
+    return $ transformUnaryExpr opStr e'
   _toIR (Binary opStr e1 e2) = do 
     e1' :: IExpr' <- _toIR e1
     e2' :: IExpr'  <- _toIR e2 
@@ -30,12 +30,30 @@ instance ToIRTransformable Sol.Expression IExpr' where
   _toIR _ = return Nothing -- ignore those which can not be transformed
 
 
-str2UnaryOp :: String -> IUnaryOp
-str2UnaryOp opStr = 
+transformUnaryExpr :: String -> IExpr' -> IExpr'
+transformUnaryExpr opStr e' = 
   case opStr of
-    "-" -> Negate
+    "-" -> UnaryExpr Negate <$> e' 
+    "()" -> Parens <$> e'
     s -> error $ "unsupported op `" ++ s ++ "`"
 
 str2BinaryOp :: String -> IBinaryOp
 str2BinaryOp "+" = Add
+str2BinaryOp "-" = Sub
+str2BinaryOp "*" = Mul
+str2BinaryOp "/" = Div
+str2BinaryOp "%" = Mod
+str2BinaryOp "+=" = AddAssign
+str2BinaryOp "-=" = SubAssign
+str2BinaryOp "*=" = MulAssign
+str2BinaryOp "/=" = DivAssign
+str2BinaryOp "%=" = ModAssign
+str2BinaryOp "==" = IR.Equal
+str2BinaryOp "!=" = Neq
+str2BinaryOp "<" = LessThan
+str2BinaryOp "<=" = LessThanOrEqual
+str2BinaryOp ">" = GreaterThan
+str2BinaryOp ">=" = GreaterThanOrEqual
+str2BinaryOp "&&" = BoolAnd
+str2BinaryOp "||" = BoolOr
 str2BinaryOp s = error $ "unsupported op `" ++ s ++ "`"

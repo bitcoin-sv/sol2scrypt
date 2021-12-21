@@ -10,48 +10,76 @@ import Test.Tasty.Hspec
 
 spec :: IO TestTree
 spec = testSpec "Transpile Expression" $ do
+
+  let itexpr title sol scrypt = it ("should transpile Solidity `" ++ title ++ "` correctly") $ do
+          tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile sol
+          scryptCode tr `shouldBe` scrypt
   describe "#PrimaryExpression" $ do
     describe "Identifier" $ do
-      it "should transpile Solidity `Identifier` correctly" $ do
-        tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "aZ_$0"
-        scryptCode tr `shouldBe` "aZ__0"
+      itexpr "Identifier" "aZ_$0" "aZ__0"
+      itexpr "Identifier" "a" "a"
+      itexpr "Identifier" "Af" "Af"
 
     describe "#BooleanLiteral" $ do
-      it "should transpile Solidity `BooleanLiteral` correctly" $ do
-        tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "true"
-        scryptCode tr `shouldBe` "true"
-        tr1 :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "false"
-        scryptCode tr1 `shouldBe` "false"
+
+      itexpr "BooleanLiteral true" "true" "true"
+      itexpr "BooleanLiteral false" "false" "false"
 
     describe "#NumberLiteral" $ do
-      it "should transpile Solidity `NumberLiteralHex` correctly" $ do
-        tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "0x123a"
-        scryptCode tr `shouldBe` "0x123a"
-      
-      it "should transpile Solidity `NumberLiteralDec` non-negative Integer correctly" $ do
-        tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "255"
-        scryptCode tr `shouldBe` "255"
 
-      it "should transpile Solidity `NumberLiteralDec` negative Integer  correctly" $ do
-        tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "-255"
-        scryptCode tr `shouldBe` "-255"
+      itexpr "NumberLiteralHex" "0x123a" "0x123a"
+      itexpr "NumberLiteralDec" "255" "255"
+      itexpr "NumberLiteralDec" "-255" "-255"
 
     describe "#HexLiteral" $ do
-      it "should transpile Solidity `HexLiteral` correctly" $ do
-        tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "hex\"010113\""
-        scryptCode tr `shouldBe` "b'010113'"
-      
-      it "should transpile Solidity `HexLiteral` correctly" $ do
-        tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "hex\"0aAD\""
-        scryptCode tr `shouldBe` "b'0aad'"
-      
-      it "should transpile Solidity `HexLiteral` empty hex correctly" $ do
-        tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "hex\"\""
-        scryptCode tr `shouldBe` "b''"
+      itexpr "HexLiteral" "hex\"010113\"" "b'010113'"
+      itexpr "HexLiteral" "hex\"0aAD\"" "b'0aad'"
+      itexpr "empty HexLiteral" "hex\"\"" "b''"
+
+  describe "#Unary Expression" $ do
+    describe "#Unary" $ do
+      itexpr "-" "-(0xf)" "-(0xf)"
+      itexpr "-" "-0xf" "-(0xf)"
+      itexpr "-" "-1" "-1"
+      itexpr "()" "(0xf)" "(0xf)"
+      itexpr "()" "((-0xf))" "((-(0xf)))"
+
+  describe "#Binary Expression" $ do
+    let itBinary op = itexpr ("Binary:" ++ op) ("1 " ++ op ++ " 3") ("1 " ++ op ++ " 3")
+    describe "#Binary" $ do
+
+      itBinary "+"
+
+      itBinary "-"
+
+      itBinary "*"
+
+      itBinary "/"
+
+      itBinary "%"
+
+      itexpr "+=" "a += 1" "a += 1"
+
+      itexpr "-=" "a -= 1" "a -= 1"
+
+      itexpr "*=" "a *= 1" "a *= 1"
+
+      itexpr "/=" "a /= 1" "a /= 1"
+
+      itexpr "Binary: &&" "true && false" "true && false"
+      itexpr "Binary: ||" "true || false" "true || false"
 
 
+      itBinary "!="
+
+      itBinary "=="
+
+      itBinary "<"
+
+      itBinary "<="
+
+      itBinary ">"
+
+      itBinary ">="
 
 
-            
-
- 
