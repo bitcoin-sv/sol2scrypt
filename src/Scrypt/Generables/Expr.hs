@@ -24,13 +24,12 @@ genCodeExpr (Scr.Var v _ _) = map (\c -> if c == '$' then '_' else c) v
 -- Parens
 genCodeExpr (Scr.Parens e _)  = "(" ++ genCodeExpr e ++ ")"
 -- UnaryExpr
-genCodeExpr (Scr.UnaryExpr Scr.Negate e _) = unaryOp2Str Scr.Negate  ++ genCodeExpr e
+genCodeExpr (Scr.UnaryExpr Scr.Negate e@(Scr.IntLiteral True _ _) _) = unaryOp2Str Scr.Negate ++ "(" ++ genCodeExpr e ++ ")"
 genCodeExpr (Scr.UnaryExpr op e _) | op `notElem` [Scr.PostIncrement, Scr.PostDecrement] = unaryOp2Str op ++ genCodeExpr e
 genCodeExpr (Scr.UnaryExpr op e _) | op `elem` [Scr.PostIncrement, Scr.PostDecrement] = genCodeExpr e ++ unaryOp2Str op
 -- BinaryExpr
-genCodeExpr (Scr.BinaryExpr op e1 e2 _) | op `elem` [Add, Sub, Mul, Div, Mod] = genCodeExpr e1 ++ binaryOp2Str op ++ genCodeExpr e2
-  | op `elem` [AddAssign, SubAssign, MulAssign, DivAssign, ModAssign] = genCodeExpr e1 ++ binaryOp2Str op ++ genCodeExpr e2
-  | op `elem` [Equal, Neq, LessThan, LessThanOrEqual, GreaterThan, GreaterThanOrEqual, BoolAnd, BoolOr] = genCodeExpr e1 ++ binaryOp2Str op ++ genCodeExpr e2
+genCodeExpr (Scr.BinaryExpr op e1 e2 _) = genCodeExpr e1 ++ binaryOp2Str op ++ genCodeExpr e2
+
 genCodeExpr _ = error "unimplemented show scrypt expr"
 
 unaryOp2Str :: Scr.UnaryOp -> String 
