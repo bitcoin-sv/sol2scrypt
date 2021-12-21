@@ -20,6 +20,8 @@ genCodeExpr (Scr.IntLiteral _isHex i _) = if _isHex then showHex_ else showInt_
       showHex_ = "0x" ++ showHex i ""
       showInt_ = showInt i ""
 genCodeExpr (Scr.BytesLiteral b _) = "b'" ++ concatMap showHexWithPadded b ++ "'"
+-- Var
+genCodeExpr (Scr.Var v _ _) = map (\c -> if c == '$' then '_' else c) v
 -- UnaryExpr
 genCodeExpr (Scr.UnaryExpr Scr.Negate e@(Scr.IntLiteral True _ _) _) = unaryOp2Str Scr.Negate ++ "(" ++ genCodeExpr e ++ ")"
 genCodeExpr (Scr.UnaryExpr op e _) | op `notElem` [Scr.PostIncrement, Scr.PostDecrement] = unaryOp2Str op ++ genCodeExpr e

@@ -11,6 +11,11 @@ import Test.Tasty.Hspec
 spec :: IO TestTree
 spec = testSpec "Transpile Expression" $ do
   describe "#PrimaryExpression" $ do
+    describe "Identifier" $ do
+      it "should transpile Solidity `Identifier` correctly" $ do
+        tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "aZ_$0"
+        scryptCode tr `shouldBe` "aZ__0"
+
     describe "#BooleanLiteral" $ do
       it "should transpile Solidity `BooleanLiteral` correctly" $ do
         tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "true"
