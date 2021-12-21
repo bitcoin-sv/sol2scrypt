@@ -16,9 +16,9 @@ spec = testSpec "Transpile Expression" $ do
           scryptCode tr `shouldBe` scrypt
   describe "#PrimaryExpression" $ do
     describe "Identifier" $ do
-      it "should transpile Solidity `Identifier` correctly" $ do
-        tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "aZ_$0"
-        scryptCode tr `shouldBe` "aZ__0"
+      itexpr "Identifier" "aZ_$0" "aZ__0"
+      itexpr "Identifier" "a" "a"
+      itexpr "Identifier" "Af" "Af"
 
     describe "#BooleanLiteral" $ do
 
@@ -55,12 +55,13 @@ spec = testSpec "Transpile Expression" $ do
 
       itBinary "%"
 
-      -- it "should transpile Solidity `+=`  correctly" $ do
-      -- it "should transpile Solidity `-=`  correctly" $ do
-      -- it "should transpile Solidity `*=`  correctly" $ do
-      -- it "should transpile Solidity `/=`  correctly" $ do
-      -- it "should transpile Solidity `%=`  correctly" $ do
+      itexpr "+=" "a += 1" "a += 1"
 
+      itexpr "-=" "a -= 1" "a -= 1"
+
+      itexpr "*=" "a *= 1" "a *= 1"
+
+      itexpr "/=" "a /= 1" "a /= 1"
 
       itexpr "Binary: &&" "true && false" "true && false"
       itexpr "Binary: ||" "true || false" "true || false"

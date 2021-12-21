@@ -32,6 +32,7 @@ toScryptBinaryOp IR.Sub = Scr.Sub
 toScryptBinaryOp IR.Mul = Scr.Mul
 toScryptBinaryOp IR.Div = Scr.Div
 toScryptBinaryOp IR.Mod = Scr.Mod
+toScryptBinaryOp IR.AddAssign = Scr.AddAssign
 toScryptBinaryOp IR.SubAssign = Scr.SubAssign
 toScryptBinaryOp IR.MulAssign = Scr.MulAssign
 toScryptBinaryOp IR.DivAssign = Scr.DivAssign
