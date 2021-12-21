@@ -10,6 +10,10 @@ import Test.Tasty.Hspec
 
 spec :: IO TestTree
 spec = testSpec "Transpile Expression" $ do
+
+  let itexpr title sol scrypt = it ("should transpile Solidity `" ++ title ++ "` correctly") $ do
+          tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile sol
+          scryptCode tr `shouldBe` scrypt
   describe "#PrimaryExpression" $ do
     describe "Identifier" $ do
       it "should transpile Solidity `Identifier` correctly" $ do
@@ -17,72 +21,39 @@ spec = testSpec "Transpile Expression" $ do
         scryptCode tr `shouldBe` "aZ__0"
 
     describe "#BooleanLiteral" $ do
-      it "should transpile Solidity `BooleanLiteral` correctly" $ do
-        tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "true"
-        scryptCode tr `shouldBe` "true"
-        tr1 :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "false"
-        scryptCode tr1 `shouldBe` "false"
+
+      itexpr "BooleanLiteral true" "true" "true"
+      itexpr "BooleanLiteral false" "false" "false"
 
     describe "#NumberLiteral" $ do
-      it "should transpile Solidity `NumberLiteralHex` correctly" $ do
-        tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "0x123a"
-        scryptCode tr `shouldBe` "0x123a"
-      
-      it "should transpile Solidity `NumberLiteralDec` non-negative Integer correctly" $ do
-        tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "255"
-        scryptCode tr `shouldBe` "255"
 
-      it "should transpile Solidity `NumberLiteralDec` negative Integer  correctly" $ do
-        tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "-255"
-        scryptCode tr `shouldBe` "-255"
+      itexpr "NumberLiteralHex" "0x123a" "0x123a"
+      itexpr "NumberLiteralDec" "255" "255"
+      itexpr "NumberLiteralDec" "-255" "-255"
 
     describe "#HexLiteral" $ do
-      it "should transpile Solidity `HexLiteral` correctly" $ do
-        tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "hex\"010113\""
-        scryptCode tr `shouldBe` "b'010113'"
-      
-      it "should transpile Solidity `HexLiteral` correctly" $ do
-        tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "hex\"0aAD\""
-        scryptCode tr `shouldBe` "b'0aad'"
-      
-      it "should transpile Solidity `HexLiteral` empty hex correctly" $ do
-        tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "hex\"\""
-        scryptCode tr `shouldBe` "b''"
-
-
+      itexpr "HexLiteral" "hex\"010113\"" "b'010113'"
+      itexpr "HexLiteral" "hex\"0aAD\"" "b'0aad'"
+      itexpr "empty HexLiteral" "hex\"\"" "b''"
 
   describe "#Unary Expression" $ do
     describe "#Unary" $ do
-      it "should transpile Solidity `-`  correctly" $ do
-        tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "-(0xf)"
-        scryptCode tr `shouldBe` "-(0xf)"
-
-      it "should transpile Solidity `()`  correctly" $ do
-        tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "(0xf)"
-        scryptCode tr `shouldBe` "(0xf)"
-
+      itexpr "-" "-(0xf)" "-(0xf)"
+      itexpr "()" "(0xf)" "(0xf)"
 
   describe "#Binary Expression" $ do
+    let itBinary op = itexpr ("Binary:" ++ op) ("1 " ++ op ++ " 3") ("1 " ++ op ++ " 3")
     describe "#Binary" $ do
-      it "should transpile Solidity `+`  correctly" $ do
-        tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "1 + 3"
-        scryptCode tr `shouldBe` "1 + 3"
 
-      it "should transpile Solidity `-`  correctly" $ do
-        tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "1 - 3"
-        scryptCode tr `shouldBe` "1 - 3"
+      itBinary "+"
 
-      it "should transpile Solidity `*`  correctly" $ do
-        tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "1 * 3"
-        scryptCode tr `shouldBe` "1 * 3"
+      itBinary "-"
 
-      it "should transpile Solidity `/`  correctly" $ do
-        tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "1 / 3"
-        scryptCode tr `shouldBe` "1 / 3"
+      itBinary "*"
 
-      it "should transpile Solidity `%`  correctly" $ do
-        tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "1 % 3"
-        scryptCode tr `shouldBe` "1 % 3"
+      itBinary "/"
+
+      itBinary "%"
 
       -- it "should transpile Solidity `+=`  correctly" $ do
       -- it "should transpile Solidity `-=`  correctly" $ do
@@ -91,37 +62,20 @@ spec = testSpec "Transpile Expression" $ do
       -- it "should transpile Solidity `%=`  correctly" $ do
 
 
-      it "should transpile Solidity `&&`  correctly" $ do
-        tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "true && false"
-        scryptCode tr `shouldBe` "true && false"
-
-      it "should transpile Solidity `||`  correctly" $ do
-        tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "true || false"
-        scryptCode tr `shouldBe` "true || false"
-
-      it "should transpile Solidity `!=`  correctly" $ do
-        tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "1 != 3"
-        scryptCode tr `shouldBe` "1 != 3"
-
-      it "should transpile Solidity `==`  correctly" $ do
-        tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "1 == 3"
-        scryptCode tr `shouldBe` "1 == 3"
-
-      it "should transpile Solidity `<`  correctly" $ do
-        tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "1 < 3"
-        scryptCode tr `shouldBe` "1 < 3"
-
-      it "should transpile Solidity `<=`  correctly" $ do
-        tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "1 <= 3"
-        scryptCode tr `shouldBe` "1 <= 3"
+      itexpr "Binary: &&" "true && false" "true && false"
+      itexpr "Binary: ||" "true || false" "true || false"
 
 
-      it "should transpile Solidity `>`  correctly" $ do
-        tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "1 > 3"
-        scryptCode tr `shouldBe` "1 > 3"
+      itBinary "!="
 
-      it "should transpile Solidity `>=`  correctly" $ do
-        tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile "1 >= 3"
-        scryptCode tr `shouldBe` "1 >= 3"
+      itBinary "=="
 
- 
+      itBinary "<"
+
+      itBinary "<="
+
+      itBinary ">"
+
+      itBinary ">="
+
+
