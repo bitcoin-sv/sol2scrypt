@@ -47,9 +47,9 @@ executables:
     - sol2scrypt
 
 tests:
-  golden:
+  unit:
     main:                Main.hs
-    source-dirs:         test/golden
+    source-dirs:         test/unit
     ghc-options:
     - -threaded
     - -rtsopts

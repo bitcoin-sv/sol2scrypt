@@ -3,9 +3,9 @@ import Test.Tasty
 import TransformerSpec
 
 main :: IO ()
-main = defaultMain =<< goldenTests
+main = defaultMain =<< unitTests
 
-goldenTests :: IO TestTree
-goldenTests =
-  testGroup "golden tests"
+unitTests :: IO TestTree
+unitTests =
+  testGroup "unit tests"
     <$> sequence [TransformerSpec.spec, GeneratorSpec.spec]
