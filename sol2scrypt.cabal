@@ -40,9 +40,11 @@ library
       IR.Specs.Type
       IR.Transformations.Base
       IR.Transformations.IR2Scr.Expression
+      IR.Transformations.IR2Scr.Identifier
       IR.Transformations.IR2Scr.Statement
       IR.Transformations.IR2Scr.Type
       IR.Transformations.Sol2IR.Expression
+      IR.Transformations.Sol2IR.Identifier
       IR.Transformations.Sol2IR.Statement
       IR.Transformations.Sol2IR.Type
       IR.Transformer
