@@ -9,8 +9,7 @@ import IR.Spec as IR
 import Scrypt.Spec as Scr
 
 instance ToScryptTransformable IType' (Maybe Type) where
-  _toScrypt Nothing = Nothing
-  _toScrypt (Just t) = Just $ toScryptType t
+  _toScrypt = (<$>) toScryptType
 
 toScryptType :: IType -> Type
 toScryptType (ElementaryType IR.Bool) = Scr.Bool

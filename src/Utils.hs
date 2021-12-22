@@ -5,6 +5,11 @@ import Data.Char as C
 import Data.Word
 import Numeric (showHex)
 
+-- annotation: placeholder, to be instantiated
+newtype Ann = Ann { unAnn :: Maybe String } deriving (Eq, Ord, Show)
+nil :: Ann 
+nil = Ann Nothing
+
 toLower :: String -> String
 toLower = map C.toLower
 

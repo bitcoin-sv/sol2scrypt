@@ -8,19 +8,19 @@ import IR.Transformations.Base
 import IR.Transformations.IR2Scr.Identifier ()
 import IR.Spec as IR
 import Scrypt.Spec as Scr
+import Utils
 
-instance ToScryptTransformable IExpr' (Maybe (Scr.Expr IExpr)) where
-  _toScrypt Nothing = Nothing
-  _toScrypt (Just e) = Just $ toScryptExpr e
+instance ToScryptTransformable IExpr' (Maybe (Scr.Expr Ann)) where
+  _toScrypt = (<$>) toScryptExpr
 
-toScryptExpr :: IExpr -> Scr.Expr IExpr
-toScryptExpr e@(LiteralExpr (IR.BoolLiteral b)) = Scr.BoolLiteral b e
-toScryptExpr e@(LiteralExpr (IR.IntLiteral _isHex i)) = Scr.IntLiteral _isHex i e
-toScryptExpr e@(LiteralExpr (IR.BytesLiteral b)) = Scr.BytesLiteral b e
+toScryptExpr :: IExpr -> Scr.Expr Ann
+toScryptExpr (LiteralExpr (IR.BoolLiteral b)) = Scr.BoolLiteral b nil
+toScryptExpr (LiteralExpr (IR.IntLiteral _isHex i)) = Scr.IntLiteral _isHex i nil
+toScryptExpr (LiteralExpr (IR.BytesLiteral b)) = Scr.BytesLiteral b nil
 toScryptExpr (IdentifierExpr i) = _toScrypt i
-toScryptExpr e@(IR.Parens ie) = Scr.Parens (toScryptExpr ie) e
-toScryptExpr e@(IR.UnaryExpr op ie) = Scr.UnaryExpr (toScryptUnaryOp op) (toScryptExpr ie) e
-toScryptExpr e@(IR.BinaryExpr op ie1 ie2) = Scr.BinaryExpr (toScryptBinaryOp op) (toScryptExpr ie1) (toScryptExpr ie2) e
+toScryptExpr (IR.Parens ie) = Scr.Parens (toScryptExpr ie) nil
+toScryptExpr (IR.UnaryExpr op ie) = Scr.UnaryExpr (toScryptUnaryOp op) (toScryptExpr ie) nil
+toScryptExpr (IR.BinaryExpr op ie1 ie2) = Scr.BinaryExpr (toScryptBinaryOp op) (toScryptExpr ie1) (toScryptExpr ie2) nil
 toScryptExpr e = error $ "IExpr `" ++ show e ++ "` not implemented in scrypt"
 
 toScryptUnaryOp :: IR.IUnaryOp -> Scr.UnaryOp

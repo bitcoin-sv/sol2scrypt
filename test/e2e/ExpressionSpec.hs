@@ -7,12 +7,13 @@ import IR
 import Scrypt as Scr
 import Test.Tasty
 import Test.Tasty.Hspec
+import Utils
 
 spec :: IO TestTree
 spec = testSpec "Transpile Expression" $ do
 
   let itexpr title sol scrypt = it ("should transpile Solidity `" ++ title ++ "` correctly") $ do
-          tr :: TranspileResult Expression IExpr' (Maybe (Expr IExpr)) <- transpile sol
+          tr :: TranspileResult Expression IExpr' (Maybe (Expr Ann)) <- transpile sol
           scryptCode tr `shouldBe` scrypt
   describe "#PrimaryExpression" $ do
     describe "Identifier" $ do
