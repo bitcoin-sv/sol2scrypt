@@ -6,6 +6,7 @@ module IR.Transformations.Sol2IR.Expression where
 
 import Numeric
 import IR.Transformations.Base
+import IR.Transformations.Sol2IR.Identifier ()
 import Solidity.Spec as Sol
 import IR.Spec as IR
 import Utils
@@ -19,7 +20,9 @@ instance ToIRTransformable Sol.Expression IExpr' where
     return $ Just $ LiteralExpr $ IR.IntLiteral False (fst $ head $ readDec n)
   _toIR (Literal (PrimaryExpressionHexLiteral (HexLiteral h))) =
     return $ Just $ LiteralExpr $ IR.BytesLiteral $ parseHex h
-  _toIR (Literal (PrimaryExpressionIdentifier (Sol.Identifier i))) = return $ Just $ IdentifierExpr (IR.Identifier i)
+  _toIR (Literal (PrimaryExpressionIdentifier i)) = do
+    i' <- _toIR i
+    return $ IdentifierExpr <$> i'
   _toIR (Unary opStr e) = do 
     e' <- _toIR e 
     return $ transformUnaryExpr opStr e'
