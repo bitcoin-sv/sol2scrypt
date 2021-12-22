@@ -16,4 +16,4 @@ data IElementaryTypeName
   | Any
   deriving (Show, Eq, Ord)
 
-newtype IUserDefinedTypeName = IUserDefinedTypeName [IIdentifier] deriving (Show, Eq, Ord)
+newtype IUserDefinedTypeName = UserDefinedTypeName [IIdentifier] deriving (Show, Eq, Ord)

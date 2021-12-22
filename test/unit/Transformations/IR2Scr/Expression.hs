@@ -79,35 +79,35 @@ spec = testSpec "instance ToScryptTransformable IExpr (Scr.Expr IExpr)" $ do
     r1 `shouldBe` Just (Scr.BinaryExpr Scr.Mod (Scr.IntLiteral True 15 e1) (Scr.IntLiteral True 15 e2) e)
 
   it "should transform IR `BinaryExpr +=` to sCrypt Type correctly" $ do
-    let e1 = IdentifierExpr $ IR.IIdentifier "a"
+    let e1 = IdentifierExpr $ IR.Identifier "a"
     let e2 = LiteralExpr $ IR.IntLiteral True 15
     let e = IR.BinaryExpr IR.AddAssign e1 e2
     r1 <- transform2Scrypt $ Just e
     r1 `shouldBe` Just (Scr.BinaryExpr Scr.AddAssign (Scr.Var "a" False e1) (Scr.IntLiteral True 15 e2) e)
 
   it "should transform IR `BinaryExpr -=` to sCrypt Type correctly" $ do
-    let e1 = IdentifierExpr $ IR.IIdentifier "a"
+    let e1 = IdentifierExpr $ IR.Identifier "a"
     let e2 = LiteralExpr $ IR.IntLiteral True 15
     let e = IR.BinaryExpr IR.SubAssign e1 e2
     r1 <- transform2Scrypt $ Just e
     r1 `shouldBe` Just (Scr.BinaryExpr Scr.SubAssign (Scr.Var "a" False e1) (Scr.IntLiteral True 15 e2) e)
 
   it "should transform IR `BinaryExpr *=` to sCrypt Type correctly" $ do
-    let e1 = IdentifierExpr $ IR.IIdentifier "a"
+    let e1 = IdentifierExpr $ IR.Identifier "a"
     let e2 = LiteralExpr $ IR.IntLiteral True 15
     let e = IR.BinaryExpr IR.MulAssign e1 e2
     r1 <- transform2Scrypt $ Just e
     r1 `shouldBe` Just (Scr.BinaryExpr Scr.MulAssign (Scr.Var "a" False e1) (Scr.IntLiteral True 15 e2) e)
 
   it "should transform IR `BinaryExpr /=` to sCrypt Type correctly" $ do
-    let e1 = IdentifierExpr $ IR.IIdentifier "a"
+    let e1 = IdentifierExpr $ IR.Identifier "a"
     let e2 = LiteralExpr $ IR.IntLiteral True 15
     let e = IR.BinaryExpr IR.MulAssign e1 e2
     r1 <- transform2Scrypt $ Just e
     r1 `shouldBe` Just (Scr.BinaryExpr Scr.MulAssign (Scr.Var "a" False e1) (Scr.IntLiteral True 15 e2) e)
 
   it "should transform IR `BinaryExpr %=` to sCrypt Type correctly" $ do
-    let e1 = IdentifierExpr $ IR.IIdentifier "a"
+    let e1 = IdentifierExpr $ IR.Identifier "a"
     let e2 = LiteralExpr $ IR.IntLiteral True 15
     let e = IR.BinaryExpr IR.ModAssign e1 e2
     r1 <- transform2Scrypt $ Just e

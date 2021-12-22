@@ -12,4 +12,4 @@ data IExpr
   deriving (Eq, Show, Ord)
 
 
-newtype IExprList = IExprList { unExpressionList :: [IExpr] } deriving (Eq, Ord, Show)
+newtype IExprList = ExprList { unExprList :: [IExpr] } deriving (Eq, Ord, Show)

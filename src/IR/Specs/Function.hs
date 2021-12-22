@@ -4,7 +4,7 @@ import IR.Specs.Lexical
 import IR.Specs.Statement
 import IR.Specs.Type
 
-data IFunction = IFunction
+data IFunction = Function
   { funcName :: IIdentifier,
     funcParams :: IParamList,
     funcBody :: IBlock,
@@ -14,7 +14,7 @@ data IFunction = IFunction
   }
   deriving (Show, Eq, Ord)
 
-data IConstructor = IConstructor
+data IConstructor = Constructor
   { ctorParams :: IParamList,
     ctorBody :: IBlock
   }
@@ -26,7 +26,7 @@ data IParam = Param
   }
   deriving (Show, Eq, Ord)
 
-newtype IParamList = IParamList [IParam] deriving (Show, Eq, Ord)
+newtype IParamList = ParamList [IParam] deriving (Show, Eq, Ord)
 
 data IVisibility
   = Public
@@ -35,4 +35,4 @@ data IVisibility
   | External
   deriving (Show, Eq, Ord)
 
-newtype IStatic = IStatic {unIStatic :: Bool} deriving (Show, Eq, Ord)
+newtype IStatic = Static {unIStatic :: Bool} deriving (Show, Eq, Ord)
