@@ -132,7 +132,7 @@ data UnaryOp
   | PostIncrement
   | PreDecrement
   | PostDecrement
-  deriving (Eq, Show, Generic, ToJSON)
+  deriving (Eq, Show, Read, Generic, ToJSON)
 
 data BinaryOp
   = Add
