@@ -25,7 +25,7 @@ instance ToScryptTransformable IExpr (Scr.Expr Ann) where
   _toScrypt e = error $ "IExpr `" ++ show e ++ "` not implemented in scrypt"
 
 toScryptUnaryOp :: IR.IUnaryOp -> Scr.UnaryOp
-toScryptUnaryOp op = read $ show op
+toScryptUnaryOp = read . show
 
 toScryptBinaryOp :: IR.IBinaryOp -> Scr.BinaryOp
-toScryptBinaryOp op = read $ show op
+toScryptBinaryOp = read . show

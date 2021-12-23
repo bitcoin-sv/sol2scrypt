@@ -12,5 +12,5 @@ spec :: IO TestTree
 spec = testSpec "Transpile Pragma" $ do
 
     it "should transpile Solidity `Pragma` correctly" $ do
-        tr :: TranspileResult Sol.PragmaDirective IEmpty' (Maybe Scr.Empty) <- transpile "pragma solidity ^0.8.10;"
+        tr :: TranspileResult Sol.PragmaDirective IR.IEmpty Scr.Empty <- transpile "pragma solidity ^0.8.10;"
         scryptCode tr `shouldBe` ""

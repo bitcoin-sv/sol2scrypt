@@ -6,5 +6,5 @@ module Scrypt.Generables.Empty where
 import Scrypt.Generables.Base
 import Scrypt.Spec as Scr
 
-instance Generable (Maybe Scr.Empty) where
+instance Generable Scr.Empty where
   genCode _ = ""

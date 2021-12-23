@@ -20,7 +20,7 @@ import IR.Spec
 import IR.Transformations.Base
 import IR.Transformations.IR2Scr.Expression
 import IR.Transformations.IR2Scr.Statement
-import IR.Transformations.IR2Scr.Contract
+import IR.Transformations.IR2Scr.Empty
 import IR.Transformations.IR2Scr.Identifier
 import IR.Transformations.IR2Scr.Type
 import IR.Transformations.Sol2IR.Expression

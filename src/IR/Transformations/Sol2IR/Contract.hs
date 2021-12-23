@@ -11,5 +11,5 @@ import IR.Spec as IR
 import Protolude.Functor
 
 
-instance ToIRTransformable Sol.PragmaDirective (Maybe a) where
-  _toIR _ = return Nothing
+instance ToIRTransformable Sol.PragmaDirective IR.IEmpty where
+  _toIR _ = return IR.Empty
