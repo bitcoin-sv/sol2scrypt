@@ -38,6 +38,7 @@ spec = testSpec "instance Generable (Expr a)" $ do
       itcode "-" (Scr.UnaryExpr Scr.Negate (Scr.Parens (Scr.IntLiteral True 15 Nothing) Nothing) Nothing) "-(0xf)"
       itcode "++" (Scr.UnaryExpr Scr.PreIncrement (Scr.Var "a" False Nothing) Nothing) "++a"
       itcode "++" (Scr.UnaryExpr Scr.PostIncrement (Scr.Var "a" False Nothing) Nothing) "a++"
+      itcode "++" (Scr.UnaryExpr Scr.PreIncrement (Scr.Var "a" True Nothing) Nothing) "++a"
       itcode "--" (Scr.UnaryExpr Scr.PreDecrement (Scr.Var "a" False Nothing) Nothing) "--a"
       itcode "--" (Scr.UnaryExpr Scr.PostDecrement (Scr.Var "a" False Nothing) Nothing) "a--"
       itcode "!" (Scr.UnaryExpr Scr.Not (Scr.Var "a" False Nothing) Nothing) "!a"
