@@ -13,7 +13,7 @@ spec :: IO TestTree
 spec = testSpec "Transpile Statement" $ do
 
   let itstmt title sol scrypt = it ("should transpile Solidity `" ++ title ++ "` correctly") $ do
-        tr :: TranspileResult Sol.Statement IStatement' (Maybe (Scr.Statement IExpr)) <- transpile sol
+        tr :: TranspileResult Sol.Statement IStatement' (Maybe (Scr.Statement Ann)) <- transpile sol
         scryptCode tr `shouldBe` scrypt
 
   describe "#SimpleStatementExpression" $ do
