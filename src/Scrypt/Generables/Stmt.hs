@@ -8,5 +8,8 @@ import Scrypt.Generables.Expr ()
 import Scrypt.Spec as Scr
 
 instance Generable (Maybe (Scr.Statement a)) where
-  genCode (Just (ExprStmt expr _)) = genCode (Just expr) ++ ";"
+  genCode = maybe "" genCode
+
+instance Generable (Scr.Statement a) where
+  genCode (ExprStmt expr _) = genCode expr ++ ";"
   genCode _ = error "unimplemented show scrypt expr"

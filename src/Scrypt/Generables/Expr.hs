@@ -9,28 +9,27 @@ import Scrypt.Spec as Scr
 import Utils (showHexWithPadded)
 
 instance Generable (Maybe (Scr.Expr a)) where
-  genCode Nothing = ""
-  genCode (Just e) = genCodeExpr e
+  genCode = maybe "" genCode
 
-genCodeExpr :: Scr.Expr a -> String
-genCodeExpr (Scr.BoolLiteral b _) = if b then "true" else "false"
-genCodeExpr (Scr.IntLiteral _isHex i _) = if _isHex then showHex_ else showInt_
-    where
-      showHex_ = "0x" ++ showHex i ""
-      showInt_ = showInt i ""
-genCodeExpr (Scr.BytesLiteral b _) = "b'" ++ concatMap showHexWithPadded b ++ "'"
--- Var
-genCodeExpr (Scr.Var v _ _) = v
--- Parens
-genCodeExpr (Scr.Parens e _)  = "(" ++ genCodeExpr e ++ ")"
--- UnaryExpr
-genCodeExpr (Scr.UnaryExpr Scr.Negate e@(Scr.IntLiteral True _ _) _) = unaryOp2Str Scr.Negate ++ "(" ++ genCodeExpr e ++ ")"
-genCodeExpr (Scr.UnaryExpr op e _) | op `notElem` [Scr.PostIncrement, Scr.PostDecrement] = unaryOp2Str op ++ genCodeExpr e
-genCodeExpr (Scr.UnaryExpr op e _) | op `elem` [Scr.PostIncrement, Scr.PostDecrement] = genCodeExpr e ++ unaryOp2Str op
--- BinaryExpr
-genCodeExpr (Scr.BinaryExpr op e1 e2 _) = genCodeExpr e1 ++ binaryOp2Str op ++ genCodeExpr e2
+instance Generable (Scr.Expr a) where
+  genCode (Scr.BoolLiteral b _) = if b then "true" else "false"
+  genCode (Scr.IntLiteral _isHex i _) = if _isHex then showHex_ else showInt_
+      where
+        showHex_ = "0x" ++ showHex i ""
+        showInt_ = showInt i ""
+  genCode (Scr.BytesLiteral b _) = "b'" ++ concatMap showHexWithPadded b ++ "'"
+  -- Var
+  genCode (Scr.Var v _ _) = v
+  -- Parens
+  genCode (Scr.Parens e _)  = "(" ++ genCode e ++ ")"
+  -- UnaryExpr
+  genCode (Scr.UnaryExpr Scr.Negate e@(Scr.IntLiteral True _ _) _) = unaryOp2Str Scr.Negate ++ "(" ++ genCode e ++ ")"
+  genCode (Scr.UnaryExpr op e _) | op `notElem` [Scr.PostIncrement, Scr.PostDecrement] = unaryOp2Str op ++ genCode e
+  genCode (Scr.UnaryExpr op e _) | op `elem` [Scr.PostIncrement, Scr.PostDecrement] = genCode e ++ unaryOp2Str op
+  -- BinaryExpr
+  genCode (Scr.BinaryExpr op e1 e2 _) = genCode e1 ++ binaryOp2Str op ++ genCode e2
 
-genCodeExpr _ = error "unimplemented show scrypt expr"
+  genCode _ = error "unimplemented show scrypt expr"
 
 unaryOp2Str :: Scr.UnaryOp -> String 
 unaryOp2Str Scr.Not = "!"

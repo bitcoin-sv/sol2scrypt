@@ -7,9 +7,8 @@ import Scrypt.Generables.Base
 import Scrypt.Spec as Scr
 
 instance Generable (Maybe Scr.Type) where
-  genCode Nothing = ""
-  genCode (Just t) = genCodeType t
+  genCode = maybe "" genCode
   
-genCodeType :: Type -> String
-genCodeType Scr.Any = "auto"
-genCodeType t = show t
+instance Generable Scr.Type where
+  genCode Scr.Any = "auto"
+  genCode t = show t
