@@ -1,0 +1,18 @@
+contract SimpleStorage {
+    @state
+    int storedData;
+
+    public function set(int x, SigHashPreimage preimage)  {
+        this.storedData = x;
+
+        // inserted code
+        require(Tx.checkPreimage(preimage));
+        bytes outputScript = this.getStateScript();
+        bytes output = Utils.buildOutput(outputScript, SigHash.value(preimage));
+        require(hash256(output) == SigHash.hashOutputs(preimage));
+    }
+
+    function get(): int {
+        return this.storedData;
+    }
+}
