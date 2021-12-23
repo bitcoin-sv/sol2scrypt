@@ -1,8 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.4.
+-- This file has been generated from package.yaml by hpack version 0.33.0.
 --
 -- see: https://github.com/sol/hpack
+--
+-- hash: 05017a9757e5b4474395617a74769225ae4c7cb51673497d811ec2db92072dd4
 
 name:           sol2scrypt
 version:        0.1.0
@@ -28,6 +30,7 @@ library
       IR
       IR.Spec
       IR.Specs.Contract
+      IR.Specs.Empty
       IR.Specs.Expression
       IR.Specs.Function
       IR.Specs.Interface
@@ -39,10 +42,12 @@ library
       IR.Specs.Statement
       IR.Specs.Type
       IR.Transformations.Base
+      IR.Transformations.IR2Scr.Contract
       IR.Transformations.IR2Scr.Expression
       IR.Transformations.IR2Scr.Identifier
       IR.Transformations.IR2Scr.Statement
       IR.Transformations.IR2Scr.Type
+      IR.Transformations.Sol2IR.Contract
       IR.Transformations.Sol2IR.Expression
       IR.Transformations.Sol2IR.Identifier
       IR.Transformations.Sol2IR.Statement
@@ -50,6 +55,7 @@ library
       IR.Transformer
       Scrypt
       Scrypt.Generables.Base
+      Scrypt.Generables.Empty
       Scrypt.Generables.Expr
       Scrypt.Generables.Stmt
       Scrypt.Generables.Type
@@ -91,6 +97,7 @@ test-suite e2e
   main-is: Main.hs
   other-modules:
       ExpressionSpec
+      PragmaSpec
       StmtSpec
       TypeSpec
       Paths_sol2scrypt
