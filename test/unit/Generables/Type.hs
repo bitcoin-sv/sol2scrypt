@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 module Generables.Type where
 
 import Scrypt.Generables.Base
@@ -8,17 +9,17 @@ import Test.Tasty.Hspec
 
 spec :: IO TestTree
 spec = testSpec "instance Generable Scr.Type" $ do
-  it "should generate sCrypt code for `Bool` correctly" $ do
-    genCode (Just Scr.Bool) `shouldBe` "bool"
+  let itcode title e c = it ("should generate sCrypt code for `" ++ title ++ "` correctly") $ do
+        genCode (Just e) `shouldBe` c
 
-  it "should generate sCrypt code for `Int` correctly" $ do
-    genCode (Just Scr.Int) `shouldBe` "int"
+  describe "#Type" $ do
 
-  it "should generate sCrypt code for `Bytes` correctly" $ do
-    genCode (Just Scr.Bytes) `shouldBe` "bytes"
+    itcode "Bool" Scr.Bool "bool"
 
-  it "should generate sCrypt code for `Any` correctly" $ do
-    genCode (Just Scr.Any) `shouldBe` "auto"
+    itcode "Int" Scr.Int "int"
 
-  it "should generate sCrypt code for `Address` correctly" $ do
-    genCode (Just $ Scr.SubBytes Scr.Ripemd160) `shouldBe` "Ripemd160"
+    itcode "Bytes" Scr.Bytes "bytes"
+
+    itcode "Any" Scr.Any "auto"
+
+    itcode "Address" (Scr.SubBytes Scr.Ripemd160) "Ripemd160"

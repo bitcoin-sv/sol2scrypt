@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module Transformations.IR2Scr.Type where
 
 import IR.Spec as IR
@@ -8,22 +10,17 @@ import Test.Tasty.Hspec
 
 spec :: IO TestTree
 spec = testSpec "instance ToScryptTransformable IType Type" $ do
-  it "should transform IR `Bool` to sCrypt Type correctly" $ do
-    r <- transform2Scrypt (Just $ ElementaryType IR.Bool)
-    r `shouldBe` Just Scr.Bool
+  let itType title e1 e2 = it ("should transfrom IR `" ++ title ++ "` to sCrypt Type correctly") $ do
+        r <- transform2Scrypt (Just $ IR.ElementaryType e1)
+        r `shouldBe` Just e2
 
-  it "should transform IR `Int` to sCrypt Type correctly" $ do
-    r <- transform2Scrypt (Just $ ElementaryType IR.Int)
-    r `shouldBe` Just Scr.Int
+  describe "#ElementaryType" $ do
+    itType "Bool" IR.Bool Scr.Bool
 
-  it "should transform IR `Bytes` to sCrypt Type correctly" $ do
-    r <- transform2Scrypt (Just $ ElementaryType IR.Bytes)
-    r `shouldBe` Just Scr.Bytes
+    itType "Int" IR.Int Scr.Int
 
-  it "should transform IR `Any` to sCrypt Type correctly" $ do
-    r <- transform2Scrypt (Just $ ElementaryType IR.Any)
-    r `shouldBe` Just Scr.Any
+    itType "Bytes" IR.Bytes Scr.Bytes
 
-  it "should transform IR `Address` to sCrypt Type correctly" $ do
-    r <- transform2Scrypt (Just $ ElementaryType IR.Address)
-    r `shouldBe` Just (Scr.SubBytes Scr.Ripemd160)
+    itType "Bytes" IR.Any Scr.Any
+
+    itType "Bytes" IR.Address (Scr.SubBytes Scr.Ripemd160)
