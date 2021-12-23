@@ -24,8 +24,8 @@ instance Generable (Scr.Expr a) where
   genCode (Scr.Parens e _)  = "(" ++ genCode e ++ ")"
   -- UnaryExpr
   genCode (Scr.UnaryExpr Scr.Negate e@(Scr.IntLiteral True _ _) _) = unaryOp2Str Scr.Negate ++ "(" ++ genCode e ++ ")"
-  genCode (Scr.UnaryExpr op e _) | op `notElem` [Scr.PostIncrement, Scr.PostDecrement] = unaryOp2Str op ++ genCode e
   genCode (Scr.UnaryExpr op e _) | op `elem` [Scr.PostIncrement, Scr.PostDecrement] = genCode e ++ unaryOp2Str op
+  genCode (Scr.UnaryExpr op e _) = unaryOp2Str op ++ genCode e 
   -- BinaryExpr
   genCode (Scr.BinaryExpr op e1 e2 _) = genCode e1 ++ binaryOp2Str op ++ genCode e2
 
