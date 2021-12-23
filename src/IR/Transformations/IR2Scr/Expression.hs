@@ -1,6 +1,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module IR.Transformations.IR2Scr.Expression where
 
@@ -17,7 +18,7 @@ toScryptExpr :: IExpr -> Scr.Expr Ann
 toScryptExpr (LiteralExpr (IR.BoolLiteral b)) = Scr.BoolLiteral b nil
 toScryptExpr (LiteralExpr (IR.IntLiteral _isHex i)) = Scr.IntLiteral _isHex i nil
 toScryptExpr (LiteralExpr (IR.BytesLiteral b)) = Scr.BytesLiteral b nil
-toScryptExpr (IdentifierExpr i) = _toScrypt i
+toScryptExpr (IdentifierExpr i) = let (NameAnn n a) :: NameAnn Ann = _toScrypt i in Scr.Var n False a
 toScryptExpr (IR.Parens ie) = Scr.Parens (toScryptExpr ie) nil
 toScryptExpr (IR.UnaryExpr op ie) = Scr.UnaryExpr (toScryptUnaryOp op) (toScryptExpr ie) nil
 toScryptExpr (IR.BinaryExpr op ie1 ie2) = Scr.BinaryExpr (toScryptBinaryOp op) (toScryptExpr ie1) (toScryptExpr ie2) nil

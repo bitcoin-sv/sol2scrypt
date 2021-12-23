@@ -9,10 +9,10 @@ import IR.Spec as IR
 import Scrypt.Spec as Scr
 import Utils
 
-instance ToScryptTransformable IIdentifier (Expr Ann) where
-  _toScrypt (Identifier i) = Var v False nil
+instance ToScryptTransformable IIdentifier (NameAnn Ann) where
+  _toScrypt (Identifier i) = NameAnn n nil
                                         where
-                                          v = map (\c -> if c == '$' then '_' else c) i
+                                          n = map (\c -> if c == '$' then '_' else c) i
 
-instance ToScryptTransformable IIdentifier' (Maybe (Expr Ann)) where
+instance ToScryptTransformable IIdentifier' (Maybe (NameAnn Ann)) where
   _toScrypt = (<$>) _toScrypt
