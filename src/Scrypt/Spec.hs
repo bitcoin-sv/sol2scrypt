@@ -61,6 +61,8 @@ instance Show CTC where
 data FuncParam = FuncParam { pCtc :: Bool, pType :: Type, pName:: Name}
   deriving (Show, Eq)
 
+data Empty = Empty deriving (Show, Eq, Ord, Read)
+
 data Type
   = Bool
   | Int
@@ -132,7 +134,7 @@ data UnaryOp
   | PostIncrement
   | PreDecrement
   | PostDecrement
-  deriving (Eq, Show, Generic, ToJSON)
+  deriving (Eq, Show, Read, Generic, ToJSON)
 
 data BinaryOp
   = Add

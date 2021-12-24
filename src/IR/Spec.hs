@@ -5,6 +5,7 @@ module IR.Spec
     module IR.Specs.Statement,
     module IR.Specs.Function,
     module IR.Specs.Contract,
+    module IR.Specs.Empty,
     module IR.Specs.Program,
     IIdentifier', IType', IExpr', IStatement',
   )
@@ -17,6 +18,7 @@ import IR.Specs.Statement
 import IR.Specs.Function
 import IR.Specs.Contract
 import IR.Specs.Program
+import IR.Specs.Empty
 
 type IIdentifier' = Maybe IIdentifier
 
