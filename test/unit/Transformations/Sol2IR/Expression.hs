@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 module Transformations.Sol2IR.Expression where
 
 import IR.Spec as IR
@@ -8,9 +9,10 @@ import Test.Tasty.Hspec
 
 spec :: IO TestTree
 spec = testSpec "instance ToIRTransformable Sol.Expression IExpr'" $ do
-  let itExpr title e1 e2 = it ("should transfrom Solidity `" ++ title ++ "` to IR Expression correctly") $ do
-        r1 <- transform2IR TransformState (Literal e1)
-        r1 `shouldBe` Just (LiteralExpr e2)
+  let itExpr title solidityCode e = it ("should transfrom Solidity `" ++ title ++ "` to IR Expression correctly") $ do
+        expr :: Sol.Expression <- parseIO solidityCode
+        r1 <- transform2IR TransformState expr
+        r1 `shouldBe` Just (LiteralExpr e)
 
   let itUnary op = it ("should transfrom Solidity `" ++ op ++ "` to IR Expression correctly") $ do
         r1 <- transform2IR TransformState (Unary op (Literal (PrimaryExpressionIdentifier (Sol.Identifier "a"))))
@@ -23,25 +25,25 @@ spec = testSpec "instance ToIRTransformable Sol.Expression IExpr'" $ do
   describe "#PrimaryExpressionBooleanLiteral" $ do
     itExpr
       "BoolLiteral"
-      (PrimaryExpressionBooleanLiteral (Sol.BooleanLiteral "true"))
+      "true"
       (IR.BoolLiteral True)
     itExpr
       "BoolLiteral"
-      (PrimaryExpressionBooleanLiteral (Sol.BooleanLiteral "false"))
+      "false"
       (IR.BoolLiteral False)
 
     itExpr
       "NumberLiteralHex"
-      (PrimaryExpressionNumberLiteral (NumberLiteralHex "0123abcdef" Nothing))
+      "0x0123abcdef"
       (IR.IntLiteral True 4893429231)
     itExpr
       "NumberLiteralDec"
-      (PrimaryExpressionNumberLiteral (NumberLiteralDec "12345" Nothing))
+      "12345"
       (IR.IntLiteral False 12345)
 
     itExpr
       "HexLiteral"
-      (PrimaryExpressionHexLiteral (HexLiteral "010113"))
+      "hex\"010113\""
       (IR.BytesLiteral [01, 01, 19])
 
     itUnary "-"
