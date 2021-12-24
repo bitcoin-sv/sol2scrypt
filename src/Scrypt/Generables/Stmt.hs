@@ -4,7 +4,9 @@
 module Scrypt.Generables.Stmt where
 
 import Scrypt.Generables.Base
-import Scrypt.Generables.Expr ()
+import Scrypt.Generables.Expr
+import Scrypt.Generables.Variable 
+
 import Scrypt.Spec as Scr
 
 instance Generable (Maybe (Scr.Statement a)) where
