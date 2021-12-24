@@ -8,6 +8,7 @@ import Test.Tasty.Hspec
 import qualified Generables.Type
 import qualified Generables.Expr
 import qualified Generables.Stmt
+import qualified Generables.Variable
 
 baseSpec :: IO TestTree
 baseSpec = testSpec "#generateScrypt" $ do
@@ -22,5 +23,6 @@ spec =
       [ baseSpec,
         Generables.Type.spec,
         Generables.Stmt.spec,
-        Generables.Expr.spec
+        Generables.Expr.spec,
+        Generables.Variable.spec
       ]
