@@ -39,17 +39,20 @@ library
       IR.Specs.Program
       IR.Specs.Statement
       IR.Specs.Type
+      IR.Specs.Variable
       IR.Transformations.Base
       IR.Transformations.IR2Scr.Empty
       IR.Transformations.IR2Scr.Expression
       IR.Transformations.IR2Scr.Identifier
       IR.Transformations.IR2Scr.Statement
       IR.Transformations.IR2Scr.Type
+      IR.Transformations.IR2Scr.Variable
       IR.Transformations.Sol2IR.Contract
       IR.Transformations.Sol2IR.Expression
       IR.Transformations.Sol2IR.Identifier
       IR.Transformations.Sol2IR.Statement
       IR.Transformations.Sol2IR.Type
+      IR.Transformations.Sol2IR.Variable
       IR.Transformer
       Scrypt
       Scrypt.Generables.Base
@@ -57,6 +60,7 @@ library
       Scrypt.Generables.Expr
       Scrypt.Generables.Stmt
       Scrypt.Generables.Type
+      Scrypt.Generables.Variable
       Scrypt.Generator
       Scrypt.Spec
       Solidity
@@ -98,6 +102,7 @@ test-suite e2e
       PragmaSpec
       StmtSpec
       TypeSpec
+      VariableSpec
       Paths_sol2scrypt
   hs-source-dirs:
       test/e2e
@@ -117,15 +122,18 @@ test-suite unit
       Generables.Expr
       Generables.Stmt
       Generables.Type
+      Generables.Variable
       GeneratorSpec
       Transformations.IR2Scr.Expression
       Transformations.IR2Scr.Main
       Transformations.IR2Scr.Stmt
       Transformations.IR2Scr.Type
+      Transformations.IR2Scr.Variable
       Transformations.Sol2IR.Expression
       Transformations.Sol2IR.Main
       Transformations.Sol2IR.Statement
       Transformations.Sol2IR.Type
+      Transformations.Sol2IR.Variable
       TransformerSpec
       Paths_sol2scrypt
   hs-source-dirs:

@@ -4,6 +4,7 @@ import Test.Tasty
 import qualified Transformations.Sol2IR.Expression
 import qualified Transformations.Sol2IR.Statement
 import qualified Transformations.Sol2IR.Type
+import qualified Transformations.Sol2IR.Variable
 
 spec :: IO TestTree
 spec =
@@ -11,5 +12,6 @@ spec =
     <$> sequence
       [ Transformations.Sol2IR.Type.spec,
         Transformations.Sol2IR.Statement.spec,
-        Transformations.Sol2IR.Expression.spec
+        Transformations.Sol2IR.Expression.spec,
+        Transformations.Sol2IR.Variable.spec
       ]

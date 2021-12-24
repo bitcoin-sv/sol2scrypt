@@ -7,7 +7,7 @@ module IR.Spec
     module IR.Specs.Contract,
     module IR.Specs.Empty,
     module IR.Specs.Program,
-    IIdentifier', IType', IExpr', IStatement',
+    IIdentifier', IType', IExpr', IStatement', IParam', IParamList'
   )
 where
 
@@ -27,3 +27,7 @@ type IType' = Maybe IType
 type IExpr' = Maybe IExpr
 
 type IStatement' = Maybe IStatement
+
+type IParam' = Maybe IParam 
+
+type IParamList' = Maybe IParamList

@@ -2,6 +2,7 @@ module IR.Specs.Contract where
 
 import IR.Specs.Lexical
 import IR.Specs.Type
+import IR.Specs.Variable
 import IR.Specs.Function
 import IR.Specs.Expression
 
@@ -16,14 +17,6 @@ data ILibrary = Library
   {
     libraryName :: IIdentifier,
     libraryBody :: [IContractBodyElement]
-  }
-  deriving (Show, Eq, Ord)
-
-data IStateVariable = StateVariable
-  {
-    stateVarName :: IIdentifier,
-    stateVarType :: IType,
-    stateInitialValue :: Maybe IExpr
   }
   deriving (Show, Eq, Ord)
 
