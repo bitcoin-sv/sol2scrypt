@@ -1,8 +1,8 @@
 module IR.Specs.Function where
 
 import IR.Specs.Lexical
+import IR.Specs.Param
 import IR.Specs.Statement
-import IR.Specs.Type
 
 data IFunction = Function
   { funcName :: IIdentifier,
@@ -19,14 +19,6 @@ data IConstructor = Constructor
     ctorBody :: IBlock
   }
   deriving (Show, Eq, Ord)
-
-data IParam = Param
-  { paramType :: IType,
-    paramName :: IIdentifier
-  }
-  deriving (Show, Eq, Ord)
-
-newtype IParamList = ParamList [IParam] deriving (Show, Eq, Ord)
 
 data IVisibility
   = Public

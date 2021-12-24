@@ -14,6 +14,7 @@ where
 import IR.Specs.Lexical
 import IR.Specs.Expression
 import IR.Specs.Type
+import IR.Specs.Param
 import IR.Specs.Statement
 import IR.Specs.Function
 import IR.Specs.Contract

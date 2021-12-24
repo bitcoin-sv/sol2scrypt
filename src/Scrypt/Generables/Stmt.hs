@@ -13,4 +13,5 @@ instance Generable (Maybe (Scr.Statement a)) where
 instance Generable (Scr.Statement a) where
   genCode (ExprStmt expr _) = genCode expr ++ ";"
   genCode (Assign lhs expr _) = genCode lhs ++ " = " ++ genCode expr ++ ";"
+  genCode (Declare declare expr _) = genCode declare ++ " = " ++ genCode expr ++ ";"
   genCode _ = error "unimplemented show scrypt expr"

@@ -36,6 +36,7 @@ library
       IR.Specs.Lexicals.Identifier
       IR.Specs.Lexicals.Literal
       IR.Specs.Lexicals.Operator
+      IR.Specs.Param
       IR.Specs.Program
       IR.Specs.Statement
       IR.Specs.Type

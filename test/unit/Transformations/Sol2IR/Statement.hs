@@ -71,3 +71,14 @@ spec = testSpec "instance ToIRTransformable Sol.Statement IExpr'" $ do
         "BooleanLiteral"
         (SimpleStatementVariableAssignmentList [Just (Sol.Identifier {Sol.unIdentifier = "x"})] [Literal (PrimaryExpressionBooleanLiteral (Sol.BooleanLiteral "true"))])
         (IR.AssignStmt [Just $ IR.Identifier "x"] [LiteralExpr $ IR.BoolLiteral True])
+    describe "#AssignStmt" $ do
+      it "should transfrom Solidity `BoolLiteral` to IR Statement correctly" $ do
+        r1 <- transform2IR TransformState $ SimpleStatementVariableAssignmentList [Just (Sol.Identifier {Sol.unIdentifier = "x"})] [Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "11" Nothing))]
+        r1 `shouldBe` Just (AssignStmt [Just $ IR.Identifier "x"] [LiteralExpr $ IR.IntLiteral False 11])
+
+    describe "#DeclareStmt" $ do
+      it "should transfrom Solidity `BoolLiteral` to IR Statement correctly" $ do
+        let declare = Sol.VariableDeclaration (TypeNameElementaryTypeName BoolType) Nothing (Sol.Identifier {Sol.unIdentifier = "x"})
+            e = Literal (PrimaryExpressionBooleanLiteral (Sol.BooleanLiteral "true"))
+        r1 <- transform2IR TransformState $ SimpleStatementVariableDeclarationList [Just declare] [e]
+        r1 `shouldBe` Just (DeclareStmt [Just $ IR.Param (ElementaryType Bool) (IR.Identifier "x")] [LiteralExpr $ IR.BoolLiteral True])

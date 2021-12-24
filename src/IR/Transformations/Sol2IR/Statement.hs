@@ -18,4 +18,9 @@ instance ToIRTransformable Sol.Statement IStatement' where
     es' <- mapM _toIR es
     let s = AssignStmt ids' $ catMaybes es'
     return $ Just s
+  _toIR (SimpleStatementVariableDeclarationList declares es) = do
+    declares' <- mapM _toIR $ catMaybes declares
+    es' <- mapM _toIR es
+    let s = DeclareStmt declares' $ catMaybes es'
+    return $ Just s
   _toIR _ = return Nothing
