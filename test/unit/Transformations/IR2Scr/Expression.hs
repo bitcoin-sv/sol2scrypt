@@ -14,7 +14,7 @@ spec :: IO TestTree
 spec = testSpec "instance ToScryptTransformable IExpr (Scr.Expr Ann)" $ do
   let itExpr title e c = it ("should transform IR  `" ++ title ++ "` to sCrypt Type correctly") $ do
         r1 <- transform2Scrypt $ Just e
-        r1 `shouldBe` Just (c)
+        r1 `shouldBe` Just c
 
   describe "#BoolLiteral" $ do
     itExpr
