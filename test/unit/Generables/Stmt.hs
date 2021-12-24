@@ -32,8 +32,13 @@ spec = testSpec "instance Generable (Stmt a)" $ do
       "15 * 15;"
 
     describe "#AssignStmt" $ do
-      it "should generate sCrypt code for `BoolLiteral` correctly" $ do
-        genCode (Just $ Scr.Assign (Scr.Var "x" False Nothing) (Scr.BoolLiteral True Nothing) Nothing) `shouldBe` "x = true;"
+      let itAssignStmt title e c = it ("should generate sCrypt code for AssignStmt: `" ++ title ++ "` correctly") $ do
+            genCode (Just $ Scr.Assign (Scr.Var "x" False Nothing) e Nothing) `shouldBe` c
 
-      it "should generate sCrypt code for `IntLiteral` correctly" $ do
-        genCode (Just $ Scr.Assign (Scr.Var "x" False Nothing) (Scr.IntLiteral False 15 Nothing) Nothing) `shouldBe` "x = 15;"
+      itAssignStmt "BoolLiteral" (Scr.BoolLiteral True Nothing) "x = true;"
+
+      itAssignStmt "IntLiteral" (Scr.IntLiteral False 15 Nothing) "x = 15;"
+
+      itAssignStmt "IntLiteral" (Scr.IntLiteral True 15 Nothing) "x = 0xf;"
+
+      itAssignStmt "BytesLiteral" (Scr.BytesLiteral [1, 1, 19] Nothing) "x = b'010113';"

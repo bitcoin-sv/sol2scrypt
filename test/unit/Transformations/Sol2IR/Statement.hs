@@ -57,6 +57,17 @@ spec = testSpec "instance ToIRTransformable Sol.Statement IExpr'" $ do
       (ExprStmt (BinaryExpr IR.Mul (LiteralExpr $ IR.IntLiteral False 100) (LiteralExpr $ IR.IntLiteral False 1)))
 
     describe "#AssignStmt" $ do
-      it "should transfrom Solidity `BoolLiteral` to IR Statement correctly" $ do
-        r1 <- transform2IR TransformState $ SimpleStatementVariableAssignmentList [Just (Sol.Identifier {Sol.unIdentifier = "x"})] [Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "11" Nothing))]
-        r1 `shouldBe` Just (AssignStmt [Just $ IR.Identifier "x"] [LiteralExpr $ IR.IntLiteral False 11])
+      itstmt 
+        "IntLiteral"
+        (SimpleStatementVariableAssignmentList [Just (Sol.Identifier {Sol.unIdentifier = "x"})] [Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "11" Nothing))])
+        (IR.AssignStmt [Just $ IR.Identifier "x"] [LiteralExpr $ IR.IntLiteral False 11])
+
+      itstmt 
+        "IntLiteral"
+        (SimpleStatementVariableAssignmentList [Just (Sol.Identifier {Sol.unIdentifier = "x"})] [Literal (PrimaryExpressionNumberLiteral (NumberLiteralHex "11" Nothing))])
+        (IR.AssignStmt [Just $ IR.Identifier "x"] [LiteralExpr $ IR.IntLiteral True 17])
+
+      itstmt
+        "BooleanLiteral"
+        (SimpleStatementVariableAssignmentList [Just (Sol.Identifier {Sol.unIdentifier = "x"})] [Literal (PrimaryExpressionBooleanLiteral (Sol.BooleanLiteral "true"))])
+        (IR.AssignStmt [Just $ IR.Identifier "x"] [LiteralExpr $ IR.BoolLiteral True])
