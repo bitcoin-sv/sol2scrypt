@@ -1,6 +1,4 @@
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# OPTIONS_GHC -Wno-overlapping-patterns #-}
 
 module Scrypt.Generables.Variable where
 
@@ -14,4 +12,3 @@ instance Generable (Maybe (Scr.Param Ann)) where
 
 instance Generable (Scr.Param a) where
   genCode (Param (TypeAnn pt _) pn _ _ _ _ _) = genCode pt ++ " " ++ genCode pn
-  genCode _ = error "unimplemented show scrypt expr"
