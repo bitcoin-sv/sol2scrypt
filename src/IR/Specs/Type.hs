@@ -4,6 +4,7 @@ import IR.Specs.Lexical
 
 data IType
   = ElementaryType IElementaryTypeName
+  | BuiltinType String
   | UserDefinedType IUserDefinedTypeName
   deriving (Show, Eq, Ord)
 

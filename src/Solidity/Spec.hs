@@ -406,7 +406,10 @@ newtype StringLiteral = StringLiteral String deriving (Show, Eq, Ord)
 -------------------------------------------------------------------------------
 -- Identifier = [a-zA-Z_$] [a-zA-Z_$0-9]*
 
-newtype Identifier = Identifier { unIdentifier :: String } deriving (Show, Eq, Ord)
+newtype Identifier = Identifier { unIdentifier :: String } deriving (Eq, Ord)
+
+instance Show Identifier where
+  show i = "(Identifier \"" ++ unIdentifier i ++ "\")"
 
 -- -------------------------------------------------------------------------------
 -- TupleExpression = '(' ( Expression ( ',' Expression )*  )? ')'

@@ -14,7 +14,9 @@ module IR.Transformer
     module IR.Transformations.IR2Scr.Identifier,
     module IR.Transformations.Sol2IR.Variable,
     module IR.Transformations.IR2Scr.Variable,
-    module IR.Transformations.Sol2IR.Contract
+    module IR.Transformations.Sol2IR.Function,
+    module IR.Transformations.IR2Scr.Function,
+    module IR.Transformations.Sol2IR.Contract,
   )
 where
 
@@ -22,12 +24,14 @@ import IR.Spec
 import IR.Transformations.Base
 import IR.Transformations.IR2Scr.Empty
 import IR.Transformations.IR2Scr.Expression
+import IR.Transformations.IR2Scr.Function
 import IR.Transformations.IR2Scr.Identifier
 import IR.Transformations.IR2Scr.Statement
 import IR.Transformations.IR2Scr.Type
 import IR.Transformations.IR2Scr.Variable
 import IR.Transformations.Sol2IR.Contract
 import IR.Transformations.Sol2IR.Expression
+import IR.Transformations.Sol2IR.Function
 import IR.Transformations.Sol2IR.Identifier
 import IR.Transformations.Sol2IR.Statement
 import IR.Transformations.Sol2IR.Type ()

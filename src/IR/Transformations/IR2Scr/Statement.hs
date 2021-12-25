@@ -28,4 +28,6 @@ instance ToScryptTransformable IStatement (Scr.Statement Ann) where
     let declare' :: Scr.Param Ann = _toScrypt declare
         e' = _toScrypt e
     in Scr.Declare declare' e' nil
+  _toScrypt (IR.ReturnStmt e) = Scr.ReturnStmt (_toScrypt e) nil
+  _toScrypt (IR.RequireStmt e) = Scr.Require (_toScrypt e) nil
   _toScrypt e = error $ "_toScrypt for `" ++ show e ++ "` not implemented in scrypt"
