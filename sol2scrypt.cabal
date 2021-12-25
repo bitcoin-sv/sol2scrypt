@@ -134,6 +134,7 @@ test-suite unit
       Generables.Type
       Generables.Variable
       GeneratorSpec
+      Transformations.Helper
       Transformations.IR2Scr.Expression
       Transformations.IR2Scr.Function
       Transformations.IR2Scr.Main

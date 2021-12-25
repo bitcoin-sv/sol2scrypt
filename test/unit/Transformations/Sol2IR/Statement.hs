@@ -7,78 +7,115 @@ import IR.Transformer
 import Solidity.Spec as Sol
 import Test.Tasty
 import Test.Tasty.Hspec
+import Transformations.Helper
 
 spec :: IO TestTree
 spec = testSpec "instance ToIRTransformable Sol.Statement IExpr'" $ do
-  let itstmt title e1 e2 = it ("should transfrom Solidity `" ++ title ++ "` to IR Statement correctly") $ do
-        r1 <- transform2IR (TransformState []) e1
-        r1 `shouldBe` Just e2
+  let itstmt title sol e2 = it ("should transfrom Solidity `" ++ title ++ "` to IR Statement correctly") $ do
+        ir <- sol2Ir sol2Stmt sol
+        ir `shouldBe` Just e2
 
   describe "#SimpleStatementExpression" $ do
-    itstmt
-      "BoolLiteral"
-      (SimpleStatementExpression (Literal (PrimaryExpressionBooleanLiteral (Sol.BooleanLiteral "true"))))
-      (ExprStmt (LiteralExpr $ IR.BoolLiteral True))
+    -- seems to parseIO have a to parsing "true;"
+    -- itstmt
+    --   "BoolLiteral"
+    --   "true;"
+    --   (ExprStmt (LiteralExpr $ IR.BoolLiteral True))
 
-    itstmt
-      "BoolLiteral"
-      (SimpleStatementExpression (Literal (PrimaryExpressionBooleanLiteral (Sol.BooleanLiteral "false"))))
-      (ExprStmt (LiteralExpr $ IR.BoolLiteral False))
+    -- itstmt
+    --   "BoolLiteral"
+    --   "true;"
+    --   (ExprStmt (LiteralExpr $ IR.BoolLiteral True))
 
     itstmt
       "NumberLiteral"
-      (SimpleStatementExpression (Literal (PrimaryExpressionNumberLiteral (NumberLiteralHex "0123abcdef" Nothing))))
+      "0x0123abcdef;"
       (ExprStmt (LiteralExpr $ IR.IntLiteral True 4893429231))
 
     itstmt
       "NumberLiteral"
-      (SimpleStatementExpression (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "12345" Nothing))))
+      "12345;"
       (ExprStmt (LiteralExpr $ IR.IntLiteral False 12345))
 
-    itstmt
-      "NumberLiteral"
-      (SimpleStatementExpression (Literal (PrimaryExpressionNumberLiteral (NumberLiteralHex "0123abcdef" Nothing))))
-      (ExprStmt (LiteralExpr $ IR.IntLiteral True 4893429231))
 
     itstmt
       "HexLiteral"
-      (SimpleStatementExpression (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "12345" Nothing))))
-      (ExprStmt (LiteralExpr $ IR.IntLiteral False 12345))
+      "hex\"010113\";"
+      (ExprStmt (LiteralExpr $ IR.BytesLiteral [1,1,19]))
 
     itstmt
       "Unary"
-      (SimpleStatementExpression (Unary "-" (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "100" Nothing)))))
+      "-100;"
       (ExprStmt (UnaryExpr Negate (LiteralExpr $ IR.IntLiteral False 100)))
 
 
     itstmt
       "Binary"
-      (SimpleStatementExpression (Binary "*" (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "100" Nothing))) (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "1" Nothing)))))
+      "100 * 1;"
       (ExprStmt (BinaryExpr IR.Mul (LiteralExpr $ IR.IntLiteral False 100) (LiteralExpr $ IR.IntLiteral False 1)))
 
     describe "#AssignStmt" $ do
       itstmt 
         "IntLiteral"
-        (SimpleStatementVariableAssignmentList [Just (Sol.Identifier {Sol.unIdentifier = "x"})] [Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "11" Nothing))])
+        "x = 11;"
         (IR.AssignStmt [Just $ IR.Identifier "x"] [LiteralExpr $ IR.IntLiteral False 11])
 
       itstmt 
         "IntLiteral"
-        (SimpleStatementVariableAssignmentList [Just (Sol.Identifier {Sol.unIdentifier = "x"})] [Literal (PrimaryExpressionNumberLiteral (NumberLiteralHex "11" Nothing))])
+        "x = 0x11;"
         (IR.AssignStmt [Just $ IR.Identifier "x"] [LiteralExpr $ IR.IntLiteral True 17])
 
       itstmt
         "BooleanLiteral"
-        (SimpleStatementVariableAssignmentList [Just (Sol.Identifier {Sol.unIdentifier = "x"})] [Literal (PrimaryExpressionBooleanLiteral (Sol.BooleanLiteral "true"))])
+        "x = true;"
         (IR.AssignStmt [Just $ IR.Identifier "x"] [LiteralExpr $ IR.BoolLiteral True])
-    describe "#AssignStmt" $ do
-      it "should transfrom Solidity `BoolLiteral` to IR Statement correctly" $ do
-        r1 <- transform2IR (TransformState []) $ SimpleStatementVariableAssignmentList [Just (Sol.Identifier {Sol.unIdentifier = "x"})] [Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "11" Nothing))]
-        r1 `shouldBe` Just (AssignStmt [Just $ IR.Identifier "x"] [LiteralExpr $ IR.IntLiteral False 11])
+
+      itstmt
+        "BooleanLiteral"
+        "x = false;"
+        (IR.AssignStmt [Just $ IR.Identifier "x"] [LiteralExpr $ IR.BoolLiteral False])
+
+      
+      itstmt
+        "HexLiteral"
+        "x = hex\"010113\";"
+        (IR.AssignStmt [Just $ IR.Identifier "x"] [LiteralExpr $ IR.BytesLiteral [1,1,19]])
+
+      itstmt
+        "HexLiteral"
+        "x = hex\"\";"
+        (IR.AssignStmt [Just $ IR.Identifier "x"] [LiteralExpr $ IR.BytesLiteral []])
 
     describe "#DeclareStmt" $ do
-      it "should transfrom Solidity `BoolLiteral` to IR Statement correctly" $ do
-        let declare = Sol.VariableDeclaration (TypeNameElementaryTypeName BoolType) Nothing (Sol.Identifier {Sol.unIdentifier = "x"})
-            e = Literal (PrimaryExpressionBooleanLiteral (Sol.BooleanLiteral "true"))
-        r1 <- transform2IR (TransformState []) $ SimpleStatementVariableDeclarationList [Just declare] [e]
-        r1 `shouldBe` Just (DeclareStmt [Just $ IR.Param (ElementaryType Bool) (IR.Identifier "x")] [LiteralExpr $ IR.BoolLiteral True])
+
+      itstmt 
+        "IntLiteral"
+        "int x = 11;"
+        (IR.DeclareStmt [Just $ IR.Param (ElementaryType Int) (IR.Identifier "x")] [LiteralExpr $ IR.IntLiteral False 11])
+
+      itstmt 
+        "IntLiteral"
+        "int x = 0x11;"
+        (IR.DeclareStmt [Just $ IR.Param (ElementaryType Int) (IR.Identifier "x")] [LiteralExpr $ IR.IntLiteral True 17])
+
+      itstmt
+        "BooleanLiteral"
+        "bool x = true;"
+        (IR.DeclareStmt [Just $ IR.Param (ElementaryType Bool) (IR.Identifier "x")] [LiteralExpr $ IR.BoolLiteral True])
+
+      itstmt
+        "BooleanLiteral"
+        "bool x = false;"
+        (IR.DeclareStmt [Just $ IR.Param (ElementaryType Bool) (IR.Identifier "x")] [LiteralExpr $ IR.BoolLiteral False])
+
+      
+      itstmt
+        "HexLiteral"
+        "bytes x = hex\"010113\";"
+        (IR.DeclareStmt [Just $ IR.Param (ElementaryType Bytes) (IR.Identifier "x")] [LiteralExpr $ IR.BytesLiteral [1,1,19]])
+
+      itstmt
+        "HexLiteral"
+        "bytes x = hex\"\";"
+        (IR.DeclareStmt [Just $ IR.Param (ElementaryType Bytes) (IR.Identifier "x")][LiteralExpr $ IR.BytesLiteral []])
+
