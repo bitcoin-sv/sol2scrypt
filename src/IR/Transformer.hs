@@ -14,8 +14,7 @@ module IR.Transformer
     module IR.Transformations.IR2Scr.Identifier,
     module IR.Transformations.Sol2IR.Variable,
     module IR.Transformations.IR2Scr.Variable,
-    module IR.Transformations.Sol2IR.Contract,
-    module IR.Transformations.Sol2IR.VariableDeclaration,
+    module IR.Transformations.Sol2IR.Contract
   )
 where
 
@@ -33,7 +32,6 @@ import IR.Transformations.Sol2IR.Identifier
 import IR.Transformations.Sol2IR.Statement
 import IR.Transformations.Sol2IR.Type ()
 import IR.Transformations.Sol2IR.Variable
-import IR.Transformations.Sol2IR.VariableDeclaration
 
 class Node a where
   nodeType :: Show a => a -> String
