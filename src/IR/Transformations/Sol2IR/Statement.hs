@@ -5,7 +5,8 @@
 module IR.Transformations.Sol2IR.Statement where
 
 import IR.Transformations.Base
-import IR.Transformations.Sol2IR.Expression ()
+import IR.Transformations.Sol2IR.Expression 
+import IR.Transformations.Sol2IR.VariableDeclaration
 import Solidity.Spec as Sol
 import IR.Spec as IR
 import Protolude.Functor
@@ -17,5 +18,10 @@ instance ToIRTransformable Sol.Statement IStatement' where
     ids' <- mapM _toIR $ catMaybes ids
     es' <- mapM _toIR es
     let s = AssignStmt ids' $ catMaybes es'
+    return $ Just s
+  _toIR (SimpleStatementVariableDeclarationList declares es) = do
+    declares' <- mapM _toIR $ catMaybes declares
+    es' <- mapM _toIR es
+    let s = DeclareStmt declares' $ catMaybes es'
     return $ Just s
   _toIR _ = return Nothing

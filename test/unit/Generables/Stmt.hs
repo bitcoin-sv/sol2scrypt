@@ -5,7 +5,7 @@ import Scrypt.Generables.Stmt ()
 import Scrypt.Spec as Scr
 import Test.Tasty
 import Test.Tasty.Hspec
-import Utils (nil)
+import Utils
 
 spec :: IO TestTree
 spec = testSpec "instance Generable (Stmt a)" $ do
@@ -43,3 +43,11 @@ spec = testSpec "instance Generable (Stmt a)" $ do
       itAssignStmt "IntLiteral" (Scr.IntLiteral True 15 nil) "x = 0xf;"
 
       itAssignStmt "BytesLiteral" (Scr.BytesLiteral [1, 1, 19] nil) "x = b'010113';"
+
+  describe "#DeclareStmt" $ do
+    let param typ = Scr.Param (TypeAnn typ nil) (NameAnn "x" nil) (Const False) Nothing Public (IsStateProp False) nil
+    it "should generate sCrypt code for `BoolLiteral` correctly" $ do
+      genCode (Just $ Scr.Declare (param Scr.Bool) (Scr.BoolLiteral True nil) nil) `shouldBe` "bool x = true;"
+
+    it "should generate sCrypt code for `IntLiteral` correctly" $ do
+      genCode (Just $ Scr.Declare (param Scr.Int) (Scr.IntLiteral False 15 nil) nil) `shouldBe` "int x = 15;"

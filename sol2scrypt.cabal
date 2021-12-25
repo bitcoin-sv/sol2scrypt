@@ -36,6 +36,7 @@ library
       IR.Specs.Lexicals.Identifier
       IR.Specs.Lexicals.Literal
       IR.Specs.Lexicals.Operator
+      IR.Specs.Param
       IR.Specs.Program
       IR.Specs.Statement
       IR.Specs.Type
@@ -53,6 +54,7 @@ library
       IR.Transformations.Sol2IR.Statement
       IR.Transformations.Sol2IR.Type
       IR.Transformations.Sol2IR.Variable
+      IR.Transformations.Sol2IR.VariableDeclaration
       IR.Transformer
       Scrypt
       Scrypt.Generables.Base

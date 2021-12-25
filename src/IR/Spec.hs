@@ -7,6 +7,8 @@ module IR.Spec
     module IR.Specs.Contract,
     module IR.Specs.Empty,
     module IR.Specs.Program,
+    module IR.Specs.Param,
+    module IR.Specs.Variable,
     IIdentifier', IType', IExpr', IStatement', IParam', IParamList'
   )
 where
@@ -14,11 +16,13 @@ where
 import IR.Specs.Lexical
 import IR.Specs.Expression
 import IR.Specs.Type
+import IR.Specs.Param
 import IR.Specs.Statement
 import IR.Specs.Function
 import IR.Specs.Contract
 import IR.Specs.Program
 import IR.Specs.Empty
+import IR.Specs.Variable
 
 type IIdentifier' = Maybe IIdentifier
 

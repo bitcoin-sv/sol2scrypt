@@ -8,6 +8,7 @@ module IR.Transformations.IR2Scr.Statement where
 import IR.Transformations.Base
 import IR.Spec as IR
 import IR.Transformations.IR2Scr.Expression ()
+import IR.Transformations.IR2Scr.Variable ()
 import Scrypt.Spec as Scr
 import Utils
 
@@ -22,4 +23,9 @@ instance ToScryptTransformable IStatement (Scr.Statement Ann) where
         lhs = Var (unName idtf') False nil
         e' = _toScrypt e
     in Scr.Assign lhs e' nil
+  -- declare only allows one declared identifier and expr on the left & right, respectively
+  _toScrypt (IR.DeclareStmt [Just declare] [e]) =
+    let declare' :: Scr.Param Ann = _toScrypt declare
+        e' = _toScrypt e
+    in Scr.Declare declare' e' nil
   _toScrypt e = error $ "_toScrypt for `" ++ show e ++ "` not implemented in scrypt"

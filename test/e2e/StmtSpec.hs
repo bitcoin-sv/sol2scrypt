@@ -41,3 +41,20 @@ spec = testSpec "Transpile Statement" $ do
 
     describe "#SimpleStatementVariableAssignmentList" $ do
       itstmt "assignment"  "x = 11;"  "x = 11;"
+      
+    describe "#SimpleStatementVariableAssignmentList" $ do
+        it "should transpile Solidity assignment correctly" $ do
+          tr :: TranspileResult Sol.Statement IStatement' (Maybe (Scr.Statement Ann)) <- transpile "x = 11;"
+          scryptCode tr `shouldBe` "x = 11;"
+
+    describe "#SimpleStatementVariableDeclarationList" $ do
+      itstmt "int"  "int x = 11;"  "int x = 11;"
+      itstmt "int"  "int x = 1 + 2;"  "int x = 1 + 2;"
+      itstmt "int"  "int x = a + b;"  "int x = a + b;"
+      itstmt "int"  "int x = -1;"  "int x = -1;"
+      itstmt "int"  "int x = -(0x1);"  "int x = -(0x1);"
+      itstmt "int"  "int x = -0x1;"  "int x = -(0x1);"
+      itstmt "uint"  "uint x = 11;"  "int x = 11;"
+      itstmt "bool"  "bool x = true;"  "bool x = true;"
+      itstmt "bytes"  "bytes x = hex\"010113\";"  "bytes x = b'010113';"
+

@@ -65,3 +65,13 @@ spec = testSpec "instance ToScryptTransformable IStatment (Scr.Statement IExpr)"
       itAssignStmt "HexLiteral" (LiteralExpr $ IR.BytesLiteral [1,1,19])
         (Scr.BytesLiteral [1,1,19] nil)
 
+
+
+    -- describe "#DeclareStmt" $ do
+    --   it "should transform IR `IntLiteral` to sCrypt Statment correctly" $ do
+    --     let idtf = Identifier "x"
+    --         declare = IR.Param (ElementaryType IR.Bool) idtf
+    --         e1 = LiteralExpr $ IR.BoolLiteral True
+    --         param = Scr.Param (TypeAnn Scr.Bool nil) (NameAnn "x" nil) (Const False) Nothing Scr.Public (IsStateProp False) nil
+    --     r1 <- transform2Scrypt $ Just $ IR.DeclareStmt [Just declare] [e1]
+    --     r1 `shouldBe` Just (Scr.Declare param (IR.BoolLiteral True) nil)
