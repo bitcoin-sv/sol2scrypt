@@ -20,6 +20,7 @@ spec = testSpec "Transpile Expression" $ do
       itexpr "Identifier" "aZ_$0" "aZ__0"
       itexpr "Identifier" "a" "a"
       itexpr "Identifier" "Af" "Af"
+      itexpr "Identifier" "SigHashPreimage" "userDefined_SigHashPreimage"
 
     describe "#BooleanLiteral" $ do
 

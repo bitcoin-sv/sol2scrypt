@@ -33,6 +33,7 @@ library:
   - containers
   - aeson
   - protolude
+  - text
 
 executables:
   sol2scrypt:

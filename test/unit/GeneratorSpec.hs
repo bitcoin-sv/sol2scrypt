@@ -9,6 +9,7 @@ import qualified Generables.Type
 import qualified Generables.Expr
 import qualified Generables.Stmt
 import qualified Generables.Variable
+import qualified Generables.Function
 
 baseSpec :: IO TestTree
 baseSpec = testSpec "#generateScrypt" $ do
@@ -24,5 +25,6 @@ spec =
         Generables.Type.spec,
         Generables.Stmt.spec,
         Generables.Expr.spec,
-        Generables.Variable.spec
+        Generables.Variable.spec,
+        Generables.Function.spec
       ]

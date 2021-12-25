@@ -36,7 +36,6 @@ library
       IR.Specs.Lexicals.Identifier
       IR.Specs.Lexicals.Literal
       IR.Specs.Lexicals.Operator
-      IR.Specs.Param
       IR.Specs.Program
       IR.Specs.Statement
       IR.Specs.Type
@@ -44,12 +43,14 @@ library
       IR.Transformations.Base
       IR.Transformations.IR2Scr.Empty
       IR.Transformations.IR2Scr.Expression
+      IR.Transformations.IR2Scr.Function
       IR.Transformations.IR2Scr.Identifier
       IR.Transformations.IR2Scr.Statement
       IR.Transformations.IR2Scr.Type
       IR.Transformations.IR2Scr.Variable
       IR.Transformations.Sol2IR.Contract
       IR.Transformations.Sol2IR.Expression
+      IR.Transformations.Sol2IR.Function
       IR.Transformations.Sol2IR.Identifier
       IR.Transformations.Sol2IR.Statement
       IR.Transformations.Sol2IR.Type
@@ -59,6 +60,7 @@ library
       Scrypt.Generables.Base
       Scrypt.Generables.Empty
       Scrypt.Generables.Expr
+      Scrypt.Generables.Function
       Scrypt.Generables.Stmt
       Scrypt.Generables.Type
       Scrypt.Generables.Variable
@@ -81,6 +83,7 @@ library
     , mtl
     , parsec
     , protolude
+    , text
   default-language: Haskell2010
 
 executable sol2scrypt
@@ -100,6 +103,7 @@ test-suite e2e
   main-is: Main.hs
   other-modules:
       ExpressionSpec
+      FunctionSpec
       PragmaSpec
       StmtSpec
       TypeSpec
@@ -121,16 +125,19 @@ test-suite unit
   main-is: Main.hs
   other-modules:
       Generables.Expr
+      Generables.Function
       Generables.Stmt
       Generables.Type
       Generables.Variable
       GeneratorSpec
       Transformations.IR2Scr.Expression
+      Transformations.IR2Scr.Function
       Transformations.IR2Scr.Main
       Transformations.IR2Scr.Stmt
       Transformations.IR2Scr.Type
       Transformations.IR2Scr.Variable
       Transformations.Sol2IR.Expression
+      Transformations.Sol2IR.Function
       Transformations.Sol2IR.Main
       Transformations.Sol2IR.Statement
       Transformations.Sol2IR.Type

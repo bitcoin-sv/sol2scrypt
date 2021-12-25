@@ -2,21 +2,19 @@ module IR.Spec
   ( module IR.Specs.Lexical,
     module IR.Specs.Type,
     module IR.Specs.Expression,
+    module IR.Specs.Variable,
     module IR.Specs.Statement,
     module IR.Specs.Function,
     module IR.Specs.Contract,
     module IR.Specs.Empty,
     module IR.Specs.Program,
-    module IR.Specs.Param,
-    module IR.Specs.Variable,
-    IIdentifier', IType', IExpr', IStatement', IParam', IParamList'
+    IIdentifier', IType', IExpr', IStatement', IParam', IParamList', IVisibility', IBlock', IFunction'
   )
 where
 
 import IR.Specs.Lexical
 import IR.Specs.Expression
 import IR.Specs.Type
-import IR.Specs.Param
 import IR.Specs.Statement
 import IR.Specs.Function
 import IR.Specs.Contract
@@ -32,6 +30,12 @@ type IExpr' = Maybe IExpr
 
 type IStatement' = Maybe IStatement
 
-type IParam' = Maybe IParam 
+type IVisibility' = Maybe IVisibility
+
+type IBlock' = Maybe IBlock
+
+type IParam' = Maybe IParam
 
 type IParamList' = Maybe IParamList
+
+type IFunction' = Maybe IFunction

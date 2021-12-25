@@ -124,7 +124,7 @@ instance Show BytesType where
   show OpCodeType = "OpCodeType"
   show SigHashPreimage = "SigHashPreimage"
 
-data Visibility = Public | Private | Default deriving (Eq, Show, Generic, ToJSON)
+data Visibility = Public | Private | Default deriving (Eq, Show, Generic, Read, ToJSON)
 
 data UnaryOp
   = Not
@@ -203,6 +203,7 @@ data Statement a
   | Block {blockStmts :: [Statement a], annot :: a}
   | Loop { loopCount :: Expr a, loopVar :: Maybe (NameAnn a), loopBody :: Statement a, annot :: a}
   | CodeSeparator {annot :: a}
+  | ReturnStmt {retExpr :: Expr a, annot :: a}
   deriving (Eq, Show, Functor, Foldable, Traversable)
 
 instance Annotated Statement a where

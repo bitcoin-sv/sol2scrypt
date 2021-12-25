@@ -13,6 +13,9 @@ instance ToScryptTransformable IIdentifier' (Maybe (NameAnn Ann)) where
   _toScrypt = (<$>) _toScrypt
 
 instance ToScryptTransformable IIdentifier (NameAnn Ann) where
-  _toScrypt (Identifier i) = NameAnn n nil
+  _toScrypt (Identifier i) = NameAnn (transformReserved n) nil
                                         where
                                           n = map (\c -> if c == '$' then '_' else c) i
+                                          transformReserved s = if s `elem` reservedKeywords  
+                                                                    then "userDefined_" ++ s
+                                                                    else s

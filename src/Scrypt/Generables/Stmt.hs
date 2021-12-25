@@ -16,4 +16,6 @@ instance Generable (Scr.Statement a) where
   genCode (ExprStmt expr _) = genCode expr ++ ";"
   genCode (Assign lhs expr _) = genCode lhs ++ " = " ++ genCode expr ++ ";"
   genCode (Declare declare expr _) = genCode declare ++ " = " ++ genCode expr ++ ";"
+  genCode (ReturnStmt e _) = "return " ++ genCode e ++ ";"
+  genCode (Require e _) = "require(" ++ genCode e ++ ");"
   genCode _ = error "unimplemented show scrypt expr"

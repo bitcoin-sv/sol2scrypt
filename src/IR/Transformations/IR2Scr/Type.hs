@@ -17,4 +17,5 @@ instance ToScryptTransformable IType Type where
   _toScrypt (ElementaryType IR.Bytes) = Scr.Bytes
   _toScrypt (ElementaryType IR.Any) = Scr.Any
   _toScrypt (ElementaryType IR.Address) = Scr.SubBytes Scr.Ripemd160
+  _toScrypt (BuiltinType "SigHashPreimage") = Scr.SubBytes Scr.SigHashPreimage 
   _toScrypt t = error $ "IType `" ++ show t ++ "` not implemented in scrypt"
