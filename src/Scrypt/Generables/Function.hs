@@ -30,8 +30,3 @@ instance Generable (Scr.Function Ann) where
           ++ unwords (map (genCode . Just ) stmts)
           ++ " } "
   genCode _ = ""
-
-instance Generable Scr.Visibility where
-  genCode Public = " public"
-  genCode Private = " private"
-  genCode Default = ""

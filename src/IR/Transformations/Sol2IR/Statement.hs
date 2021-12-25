@@ -25,7 +25,7 @@ instance ToIRTransformable Sol.Statement IStatement' where
     e' <- _toIR e
     declare' <- _toIR declare
     return $ Just $ DeclareStmt [declare'] [fromJust e']
-  _toIR (SimpleStatementVariableDeclarationList declares es) = error "unsupported SimpleStatementVariableDeclarationList"
+  _toIR (SimpleStatementVariableDeclarationList _ _) = error "unsupported SimpleStatementVariableDeclarationList"
   _toIR (Return e) = do
     e' <- case e of
             Just re -> _toIR re

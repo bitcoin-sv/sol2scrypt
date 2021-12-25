@@ -21,3 +21,5 @@ spec = testSpec "Transpile Contract" $ do
       itProperty "int storedData;" "@state int storedData;"
       itProperty "bool a;" "@state bool a;"
       itProperty "bytes a;" "@state bytes a;"
+      itProperty "bytes private a;" "@state private bytes a;"
+      itProperty "bytes public a;" "@state public bytes a;"

@@ -28,8 +28,16 @@ instance ToIRTransformable VariableDeclaration IParam' where
 
 
 instance ToIRTransformable Sol.StateVariableDeclaration IStateVariable' where
-  _toIR (Sol.StateVariableDeclaration a _ (Sol.Identifier pn) v) = do
+  _toIR (Sol.StateVariableDeclaration a vis (Sol.Identifier pn) expr) = do
     a' :: IType' <- _toIR a
-    v' :: IExpr' <- _toIR v
-    return $ Just $ IR.StateVariable (IR.Identifier pn) (fromJust a') v'
+    expr' :: IExpr' <- _toIR expr
+    vis' <- toIRVisibility vis
+    return $ Just $ IR.StateVariable (IR.Identifier pn) (fromJust a') vis' expr'
+
+
+toIRVisibility :: [String ] -> Transformation IVisibility
+toIRVisibility tags
+  | "private" `elem` tags = return Private
+  | "public" `elem` tags = return Public
+  | otherwise = return Default
 

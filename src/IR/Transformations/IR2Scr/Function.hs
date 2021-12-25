@@ -27,9 +27,6 @@ instance ToScryptTransformable IFunction (Scr.Function Ann) where
       (Scr.Stc False)
       nil
 
-instance ToScryptTransformable IVisibility Scr.Visibility where
-  _toScrypt = read . show
-
 -- check whether the last statement (require or return) is consistant with visibility (public or non-public)
 funcRetGuard :: Scr.Function Ann -> Scr.Function Ann
 funcRetGuard f@(Scr.Function _ _ _ (RegularBody stmts _ _) vis _ _) =

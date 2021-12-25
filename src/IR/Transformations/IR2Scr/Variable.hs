@@ -20,6 +20,9 @@ instance ToScryptTransformable IParam (Scr.Param Ann) where
   _toScrypt (IR.Param pt pn) = Scr.Param (TypeAnn (_toScrypt pt) nil) (_toScrypt pn) (Const False) Nothing Scr.Default (IsStateProp False) nil
 
 
+instance ToScryptTransformable IVisibility Scr.Visibility where
+  _toScrypt = read . show
+
 
 instance ToScryptTransformable IStateVariable (Scr.Param Ann) where
-  _toScrypt (IR.StateVariable name varType Nothing) = Scr.Param (TypeAnn (_toScrypt varType) nil) (_toScrypt name) (Const False) Nothing Scr.Default (IsStateProp True) nil
+  _toScrypt (IR.StateVariable name varType vis _) = Scr.Param (TypeAnn (_toScrypt varType) nil) (_toScrypt name) (Const False) Nothing (_toScrypt vis) (IsStateProp True) nil
