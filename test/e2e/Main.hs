@@ -5,6 +5,7 @@ import StmtSpec
 import PragmaSpec
 import VariableSpec
 import FunctionSpec
+import ContractSpec
 
 main :: IO ()
 main = defaultMain =<< e2eTests
@@ -12,4 +13,6 @@ main = defaultMain =<< e2eTests
 e2eTests :: IO TestTree
 e2eTests =
   testGroup "e2e tests"
-    <$> sequence [TypeSpec.spec, StmtSpec.spec, ExpressionSpec.spec, PragmaSpec.spec, VariableSpec.spec, FunctionSpec.spec]
+
+    <$> sequence [TypeSpec.spec, StmtSpec.spec, ExpressionSpec.spec, PragmaSpec.spec, VariableSpec.spec, FunctionSpec.spec, ContractSpec.spec]
+

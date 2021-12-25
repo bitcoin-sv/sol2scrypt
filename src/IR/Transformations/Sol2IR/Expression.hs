@@ -11,6 +11,11 @@ import Solidity.Spec as Sol
 import IR.Spec as IR
 import Utils
 
+
+instance ToIRTransformable (Maybe Sol.Expression) IExpr' where
+  _toIR Nothing  = return Nothing
+  _toIR a  = _toIR a
+
 instance ToIRTransformable Sol.Expression IExpr' where
   _toIR (Literal (PrimaryExpressionBooleanLiteral (Sol.BooleanLiteral b))) = 
     return $ Just $ LiteralExpr $ IR.BoolLiteral ("true" == toLower b)

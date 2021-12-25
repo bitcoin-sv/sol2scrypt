@@ -17,6 +17,7 @@ module IR.Transformer
     module IR.Transformations.Sol2IR.Function,
     module IR.Transformations.IR2Scr.Function,
     module IR.Transformations.Sol2IR.Contract,
+    module IR.Transformations.IR2Scr.Contract,
   )
 where
 
@@ -29,6 +30,7 @@ import IR.Transformations.IR2Scr.Identifier
 import IR.Transformations.IR2Scr.Statement
 import IR.Transformations.IR2Scr.Type
 import IR.Transformations.IR2Scr.Variable
+import IR.Transformations.IR2Scr.Contract
 import IR.Transformations.Sol2IR.Contract
 import IR.Transformations.Sol2IR.Expression
 import IR.Transformations.Sol2IR.Function

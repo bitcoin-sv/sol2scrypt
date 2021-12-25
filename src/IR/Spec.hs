@@ -8,7 +8,9 @@ module IR.Spec
     module IR.Specs.Contract,
     module IR.Specs.Empty,
     module IR.Specs.Program,
-    IIdentifier', IType', IExpr', IStatement', IParam', IParamList', IVisibility', IBlock', IFunction'
+    IIdentifier', IType', IExpr', IStatement', IParam', IParamList',
+    IVisibility', IBlock', IFunction',
+    IContractBodyElement', IStateVariable',
   )
 where
 
@@ -39,3 +41,7 @@ type IParam' = Maybe IParam
 type IParamList' = Maybe IParamList
 
 type IFunction' = Maybe IFunction
+
+type IStateVariable' = Maybe IStateVariable
+
+type IContractBodyElement' = Maybe IContractBodyElement
