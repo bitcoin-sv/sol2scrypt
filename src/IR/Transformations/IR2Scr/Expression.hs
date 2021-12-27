@@ -1,13 +1,13 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# OPTIONS_GHC -Wno-orphans #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 
 module IR.Transformations.IR2Scr.Expression where
 
+import IR.Spec as IR
 import IR.Transformations.Base
 import IR.Transformations.IR2Scr.Identifier ()
-import IR.Spec as IR
 import Scrypt.Spec as Scr
 import Utils
 
@@ -22,6 +22,13 @@ instance ToScryptTransformable IExpr (Scr.Expr Ann) where
   _toScrypt (IR.Parens ie) = Scr.Parens (_toScrypt ie) nil
   _toScrypt (IR.UnaryExpr op ie) = Scr.UnaryExpr (toScryptUnaryOp op) (_toScrypt ie) nil
   _toScrypt (IR.BinaryExpr op ie1 ie2) = Scr.BinaryExpr (toScryptBinaryOp op) (_toScrypt ie1) (_toScrypt ie2) nil
+  _toScrypt (IR.MemberAccess ins m) = Scr.BinaryExpr Scr.Dot (_toScrypt ins) (_toScrypt m) nil
+  _toScrypt (IR.FunctionCall (IdentifierExpr fn) ps) = let (NameAnn n _) :: NameAnn Ann = _toScrypt fn in Scr.Call n (map _toScrypt ps) nil
+  _toScrypt (IR.FunctionCall (MemberAccess (IdentifierExpr ins) m) ps) = Scr.Dispatch ins' [] m' ps' nil
+    where
+      ins' :: NameAnn Ann = _toScrypt ins
+      (NameAnn m' _) :: NameAnn Ann = _toScrypt m
+      ps' = map _toScrypt ps
   _toScrypt e = error $ "IExpr `" ++ show e ++ "` not implemented in scrypt"
 
 toScryptUnaryOp :: IR.IUnaryOp -> Scr.UnaryOp

@@ -3,6 +3,7 @@
 
 module Scrypt.Generables.Expr where
 
+import Data.List
 import Numeric
 import Scrypt.Generables.Base
 import Scrypt.Spec as Scr
@@ -28,7 +29,8 @@ instance Generable (Scr.Expr a) where
   genCode (Scr.UnaryExpr op e _) = unaryOp2Str op ++ genCode e 
   -- BinaryExpr
   genCode (Scr.BinaryExpr op e1 e2 _) = genCode e1 ++ binaryOp2Str op ++ genCode e2
-
+  genCode (Scr.Call n ps _) = n ++ "(" ++ intercalate ", " (map genCode ps) ++ ")"
+  genCode (Scr.Dispatch fn _ mn ps _) = genCode fn ++ "." ++ mn ++ "(" ++ intercalate ", " (map genCode ps) ++ ")"
   genCode _ = error "unimplemented show scrypt expr"
 
 unaryOp2Str :: Scr.UnaryOp -> String 
@@ -59,4 +61,5 @@ binaryOp2Str Scr.GreaterThan = " > "
 binaryOp2Str Scr.GreaterThanOrEqual = " >= "
 binaryOp2Str Scr.BoolAnd = " && "
 binaryOp2Str Scr.BoolOr = " || "
+binaryOp2Str Scr.Dot = "."
 binaryOp2Str op =  error $ "unimplemented genCode for unary op `" ++ show op ++ "`"

@@ -90,4 +90,10 @@ spec = testSpec "Transpile Expression" $ do
 
       itBinary ">="
 
-
+  describe "#MemberAccess" $ do
+    itexpr "plain MemberAccess" "a.b" "a.b"
+    itexpr "embeded MemberAccess" "a.b.c" "a.b.c"
+  
+  describe "#FunctionCallExpressionList" $ do
+    itexpr "FunctionCallExpressionList with identifer expr as function name" "a(b, c)" "a(b, c)"
+    itexpr "FunctionCallExpressionList with member-access expr as function name" "a.b(c, d)" "a.b(c, d)"

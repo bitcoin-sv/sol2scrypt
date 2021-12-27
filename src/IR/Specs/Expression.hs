@@ -9,6 +9,8 @@ data IExpr
   | UnaryExpr {unaryOp :: IUnaryOp, uExpr :: IExpr}
   | BinaryExpr {binaryOp :: IBinaryOp, lExpr :: IExpr, rExpr :: IExpr}
   | TernaryExpr {ternaryCond :: IExpr, ternaryTrueBranch :: IExpr, ternaryFalseBranch :: IExpr}
+  | MemberAccess {instanceExpr :: IExpr, member :: IIdentifier}
+  | FunctionCall {funcExpr :: IExpr, funcParamExprs :: [IExpr]}
   deriving (Eq, Show, Ord)
 
 
