@@ -10,8 +10,6 @@ import Transpiler
 import Utils
 import Solidity.Spec as Sol
 import Scrypt.Spec as Scr
-import Solidity (Parseable)
-
 
 
 sol2Stmt :: String -> IO Sol.Statement
@@ -29,6 +27,11 @@ sol2Type solidityCode = do
     e :: Sol.TypeName <- parseIO solidityCode
     return e
 
+sol2Identifier :: String -> IO Identifier
+sol2Identifier solidityCode = do
+    e :: Sol.Identifier <- parseIO solidityCode
+    return e
+
 sol2Parameter :: String -> IO Parameter
 sol2Parameter solidityCode = do
     e :: Sol.Parameter <- parseIO solidityCode
@@ -38,6 +41,8 @@ sol2ContractPart :: String -> IO ContractPart
 sol2ContractPart solidityCode = do
     e :: Sol.ContractPart <- parseIO solidityCode
     return e
+
+
 
 sol2Ir :: ToIRTransformable sol b => (String -> IO sol) -> String -> IO b
 sol2Ir f solidityCode = do

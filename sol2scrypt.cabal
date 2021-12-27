@@ -138,6 +138,7 @@ test-suite unit
       Transformations.IR2Scr.Contract
       Transformations.IR2Scr.Expression
       Transformations.IR2Scr.Function
+      Transformations.IR2Scr.Identifier
       Transformations.IR2Scr.Main
       Transformations.IR2Scr.Stmt
       Transformations.IR2Scr.Type
@@ -145,6 +146,7 @@ test-suite unit
       Transformations.Sol2IR.Contract
       Transformations.Sol2IR.Expression
       Transformations.Sol2IR.Function
+      Transformations.Sol2IR.Identifier
       Transformations.Sol2IR.Main
       Transformations.Sol2IR.Statement
       Transformations.Sol2IR.Type

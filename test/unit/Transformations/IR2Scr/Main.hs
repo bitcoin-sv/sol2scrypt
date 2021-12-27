@@ -7,6 +7,7 @@ import qualified Transformations.IR2Scr.Stmt
 import qualified Transformations.IR2Scr.Type
 import qualified Transformations.IR2Scr.Variable
 import qualified Transformations.IR2Scr.Contract
+import qualified Transformations.IR2Scr.Identifier
 
 spec :: IO TestTree
 spec =
@@ -17,6 +18,6 @@ spec =
         Transformations.IR2Scr.Expression.spec,
         Transformations.IR2Scr.Variable.spec,
         Transformations.IR2Scr.Function.spec,
-        Transformations.IR2Scr.Contract.spec
-
+        Transformations.IR2Scr.Contract.spec,
+        Transformations.IR2Scr.Identifier.spec
       ]
