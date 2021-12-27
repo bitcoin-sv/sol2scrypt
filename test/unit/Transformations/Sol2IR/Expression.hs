@@ -25,6 +25,10 @@ spec = testSpec "instance ToIRTransformable Sol.Expression IExpr'" $ do
         r1 <- sol2Ir sol2Expr solidityCode
         r1 `shouldBe` Just (BinaryExpr (str2BinaryOp op) (LiteralExpr $ IR.IntLiteral False 1) (LiteralExpr $ IR.IntLiteral False 2))
 
+  let itBinary' op solidityCode = it ("should transfrom Solidity `" ++ solidityCode ++ "` to IR Expression correctly") $ do
+        r1 <- sol2Ir sol2Expr solidityCode
+        r1 `shouldBe` Just (BinaryExpr (str2BinaryOp op) (LiteralExpr $ IR.BoolLiteral False) (LiteralExpr $ IR.BoolLiteral True))
+
   describe "#PrimaryExpressionBooleanLiteral" $ do
     itExpr "true" (IR.BoolLiteral True)
     itExpr "false" (IR.BoolLiteral False)
@@ -59,5 +63,5 @@ spec = testSpec "instance ToIRTransformable Sol.Expression IExpr'" $ do
     itBinary "<=" "1 <= 2"
     itBinary ">" "1 > 2"
     itBinary ">=" "1 >= 2"
-    itBinary "||" "1 || 2"
-    itBinary "&&" "1 && 2"
+    itBinary' "||" "false || true"
+    itBinary' "&&" "false && true"
