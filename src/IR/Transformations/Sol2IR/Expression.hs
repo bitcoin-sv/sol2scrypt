@@ -9,13 +9,12 @@ import IR.Transformations.Base
 import IR.Transformations.Sol2IR.Identifier ()
 import Solidity.Spec as Sol
 import IR.Spec as IR
-import Data.Maybe (fromJust)
 import Utils
 
 
 instance ToIRTransformable (Maybe Sol.Expression) IExpr' where
+  _toIR (Just e)  = _toIR e
   _toIR Nothing  = return Nothing
-  _toIR a  = _toIR $ fromJust a
 
 instance ToIRTransformable Sol.Expression IExpr' where
   _toIR (Literal (PrimaryExpressionBooleanLiteral (Sol.BooleanLiteral b))) = 
