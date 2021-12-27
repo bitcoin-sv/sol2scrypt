@@ -1,6 +1,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module IR.Transformations.IR2Scr.Identifier where
 
@@ -19,3 +20,7 @@ instance ToScryptTransformable IIdentifier (NameAnn Ann) where
                                           transformReserved s = if s `elem` reservedKeywords  
                                                                     then "userDefined_" ++ s
                                                                     else s
+
+instance ToScryptTransformable IIdentifier (Expr Ann) where
+  _toScrypt i = let (NameAnn v _) :: NameAnn Ann = _toScrypt i in Var v False nil
+                                

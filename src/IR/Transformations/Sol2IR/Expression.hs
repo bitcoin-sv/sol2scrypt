@@ -35,8 +35,18 @@ instance ToIRTransformable Sol.Expression IExpr' where
   _toIR (Binary opStr e1 e2) = do 
     e1' :: IExpr' <- _toIR e1
     e2' :: IExpr' <- _toIR e2 
-    return $ BinaryExpr (str2BinaryOp opStr) <$> e1' <*> e2' 
-  _toIR _ = return Nothing -- ignore those which can not be transformed
+    return $ BinaryExpr (str2BinaryOp opStr) <$> e1' <*> e2'
+  _toIR (Sol.MemberAccess e i) = do
+    e' <- _toIR e
+    i' <- _toIR i
+    return $ IR.MemberAccess <$> e' <*> i'
+  _toIR (FunctionCallExpressionList fe pl) = do
+    fe' <- _toIR fe
+    ps' <- case pl of
+            Nothing -> return []
+            Just (ExpressionList ps) -> mapM _toIR ps
+    return $ FunctionCall <$> fe' <*> sequence ps'
+  _toIR e = error $ "not supported expression : `" ++ show e ++ "`"
 
 
 transformUnaryExpr :: String -> IExpr' -> IExpr'
