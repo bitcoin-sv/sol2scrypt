@@ -12,14 +12,13 @@ import Utils
 
 spec :: IO TestTree
 spec = testSpec "Transpile Contract" $ do
-  let itProperty sol scrypt = it ("should transpile Solidity `" ++ sol ++ "` correctly") $ do
-        tr :: TranspileResult ContractPart IContractBodyElement' (Maybe (Scr.Param Ann)) <- transpile sol
+  let itTransContract sol scrypt = it "should transpile Solidity contract correctly" $ do
+        tr :: TranspileResult ContractDefinition IContract' (Maybe (Scr.Contract Ann)) <- transpile sol
         scryptCode tr `shouldBe` scrypt
+
   describe "#Contract" $ do
-    describe "#Property" $ do
-      itProperty "uint storedData;" "@state int storedData;"
-      itProperty "int storedData;" "@state int storedData;"
-      itProperty "bool a;" "@state bool a;"
-      itProperty "bytes a;" "@state bytes a;"
-      itProperty "bytes private a;" "@state private bytes a;"
-      itProperty "bytes public a;" "@state public bytes a;"
+    itTransContract
+     "contract A { uint a; function set(uint x) external { a = x; } }"
+     "contract A { @state int a; public function set(int x, SigHashPreimage txPreimage) { this.a = x; require(Tx.checkPreimage(txPreimage)); bytes outputScript = this.getStateScript(); bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage)); require(hash256(output) == SigHash.hashOutputs(txPreimage)); } }"
+  
+
