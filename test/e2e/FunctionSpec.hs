@@ -84,6 +84,11 @@ spec = testSpec "Transpile Function" $ do
       "function get() public payable { return x; }"
       "function get() : bool { return x; }"
 
+    itTranspile
+      "public function with returns"
+      "function privateFunc() public pure returns (bool memory) { return true; }"
+      "function privateFunc() : bool { return true; }"
+
   describe "#private " $ do
 
     itTranspile
@@ -110,6 +115,11 @@ spec = testSpec "Transpile Function" $ do
       "payable function"
       "function get() private payable { return x; }"
       "private function get() : bool { return x; }"
+
+    itTranspile
+      "private function with returns"
+      "function privateFunc() private pure returns (bool memory) { return true; }"
+      "private function privateFunc() : bool { return true; }"
 
   describe "#internal " $ do
 
@@ -138,7 +148,10 @@ spec = testSpec "Transpile Function" $ do
       "function get() internal payable { return x; }"
       "private function get() : bool { return x; }"
 
-
+    itTranspile
+      "internal function with returns"
+      "function privateFunc() internal pure returns (bool memory) { return true; }"
+      "private function privateFunc() : bool { return true; }"
 
   describe "#external " $ do
 
@@ -197,4 +210,8 @@ spec = testSpec "Transpile Function" $ do
       "function get() public view returns (uint) { return storedData; }"
       "function get() : int { return storedData; }"
 
+    itTranspile
+      "external function with returns"
+      "function get() external view returns (uint) { return storedData; }"
+      "public function get(SigHashPreimage txPreimage, int retVal) { require(Tx.checkPreimage(txPreimage)); bytes outputScript = this.getStateScript(); bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage)); require(hash256(output) == SigHash.hashOutputs(txPreimage)); require(storedData == retVal); }"
 

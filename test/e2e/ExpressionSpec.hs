@@ -103,5 +103,13 @@ spec = testSpec "Transpile Expression" $ do
     itComplex "(48 + _i % 10) * 1" "(48 + _i % 10) * 1"
     itComplex "a % 4 == 0" "a % 4 == 0"
     itComplex "now >= start + daysAfter * 1 days" "now >= start + daysAfter * 1"
+    itComplex "now >= start + daysAfter * 1 days" "now >= start + daysAfter * 1"
+    itComplex "a + b * c" "a + b * c"
+    itComplex "a + (b * c)" "a + (b * c)"
+    itComplex "(a + b) * c" "(a + b) * c"
+    itComplex "a * c + b * c" "a * c + b * c"
     itComplex "amount <= msg.value / 2" "amount <= msg.value / 2"
+      
 
+      
+      
