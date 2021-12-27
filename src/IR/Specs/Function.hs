@@ -19,9 +19,3 @@ data IConstructor = Constructor
     ctorBody :: IBlock
   }
   deriving (Show, Eq, Ord)
-
-data IVisibility
-  = Public
-  | Private
-  | Default
-  deriving (Show, Eq, Ord)

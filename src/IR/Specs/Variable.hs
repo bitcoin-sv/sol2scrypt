@@ -12,10 +12,17 @@ data IParam = Param
 
 newtype IParamList = ParamList [IParam] deriving (Show, Eq, Ord)
 
+data IVisibility
+  = Public
+  | Private
+  | Default
+  deriving (Show, Eq, Ord)
+  
 data IStateVariable = StateVariable
   {
     stateVarName :: IIdentifier,
     stateVarType :: IType,
+    visibility :: IVisibility,
     stateInitialValue :: Maybe IExpr
   }
   deriving (Show, Eq, Ord)

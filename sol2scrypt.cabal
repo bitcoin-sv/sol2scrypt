@@ -41,6 +41,7 @@ library
       IR.Specs.Type
       IR.Specs.Variable
       IR.Transformations.Base
+      IR.Transformations.IR2Scr.Contract
       IR.Transformations.IR2Scr.Empty
       IR.Transformations.IR2Scr.Expression
       IR.Transformations.IR2Scr.Function
@@ -58,6 +59,7 @@ library
       IR.Transformer
       Scrypt
       Scrypt.Generables.Base
+      Scrypt.Generables.Contract
       Scrypt.Generables.Empty
       Scrypt.Generables.Expr
       Scrypt.Generables.Function
@@ -102,6 +104,7 @@ test-suite e2e
   type: exitcode-stdio-1.0
   main-is: Main.hs
   other-modules:
+      ContractSpec
       ExpressionSpec
       FunctionSpec
       PragmaSpec

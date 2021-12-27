@@ -20,6 +20,7 @@ main = do
   tr2 :: TranspileResult Expression IExpr' (Maybe (Expr Ann)) <- transpile solidityCode2
   putStrLn $ "Transpile `" ++ solidityCode2 ++ "` to `" ++ scryptCode tr2 ++ "`"
 
+
   let solidityCode = "function set(uint x) external { x; }"
   f :: ContractPart <- parseIO solidityCode
   print f
@@ -27,3 +28,8 @@ main = do
   let solidityCode3 = "function set(uint x) external { 1; }"
   tr3 :: TranspileResult ContractPart IFunction' (Maybe (Scr.Function Ann)) <- transpile solidityCode3
   putStrLn $ "Transpile `" ++ solidityCode3 ++ "` to `" ++ scryptCode tr3 ++ "`"
+
+
+  let solidityCode4 = "uint storedData;"
+  e :: ContractPart <- parseIO solidityCode4
+  print e
