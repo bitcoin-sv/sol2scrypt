@@ -55,3 +55,146 @@ spec = testSpec "Transpile Function" $ do
     "public view function with unnamed return"
     "function get() public view returns (uint) { return storedData; }"
     "function get() : int { return storedData; }"
+
+
+  describe "#public " $ do
+
+    itTranspile
+      "public function"
+      "function get() public { return x; }"
+      "function get() : bool { return x; }"
+
+    itTranspile
+      "pure function"
+      "function get() public pure { return x; }"
+      "function get() : bool { return x; }"
+
+    itTranspile
+      "constant function"
+      "function get() public constant { return x; }"
+      "function get() : bool { return x; }"
+
+    itTranspile
+      "view function"
+      "function get() public view { return x; }"
+      "function get() : bool { return x; }"
+
+    itTranspile
+      "payable function"
+      "function get() public payable { return x; }"
+      "function get() : bool { return x; }"
+
+  describe "#private " $ do
+
+    itTranspile
+      "private function"
+      "function get() private { return x; }"
+      "private function get() : bool { return x; }"
+
+    itTranspile
+      "pure function"
+      "function get() private pure { return x; }"
+      "private function get() : bool { return x; }"
+
+    itTranspile
+      "constant function"
+      "function get() private constant { return x; }"
+      "private function get() : bool { return x; }"
+
+    itTranspile
+      "view function"
+      "function get() private view { return x; }"
+      "private function get() : bool { return x; }"
+
+    itTranspile
+      "payable function"
+      "function get() private payable { return x; }"
+      "private function get() : bool { return x; }"
+
+  describe "#internal " $ do
+
+    itTranspile
+      "internal function"
+      "function get() internal { return x; }"
+      "private function get() : bool { return x; }"
+
+    itTranspile
+      "pure function"
+      "function get() internal pure { return x; }"
+      "private function get() : bool { return x; }"
+
+    itTranspile
+      "constant function"
+      "function get() internal constant { return x; }"
+      "private function get() : bool { return x; }"
+
+    itTranspile
+      "view function"
+      "function get() internal view { return x; }"
+      "private function get() : bool { return x; }"
+
+    itTranspile
+      "payable function"
+      "function get() internal payable { return x; }"
+      "private function get() : bool { return x; }"
+
+
+
+  describe "#external " $ do
+
+    itTranspile
+      "get function"
+      "function get() external payable { return x; }"
+      "public function get(SigHashPreimage txPreimage) { require(Tx.checkPreimage(txPreimage)); bytes outputScript = this.getStateScript(); bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage)); require(hash256(output) == SigHash.hashOutputs(txPreimage)); require(x == retVal); }"
+
+    itTranspile
+      "pure get function"
+      "function get() external pure { return x; }"
+      "public function get() { require(x == retVal); }"
+
+    itTranspile
+      "constant get function"
+      "function get() external constant { return x; }"
+      "public function get(SigHashPreimage txPreimage) { require(Tx.checkPreimage(txPreimage)); bytes outputScript = this.getStateScript(); bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage)); require(hash256(output) == SigHash.hashOutputs(txPreimage)); require(x == retVal); }"
+
+    itTranspile
+      "view get function"
+      "function get() external view { return x; }"
+      "public function get(SigHashPreimage txPreimage) { require(Tx.checkPreimage(txPreimage)); bytes outputScript = this.getStateScript(); bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage)); require(hash256(output) == SigHash.hashOutputs(txPreimage)); require(x == retVal); }"
+
+    itTranspile
+      "payable get function"
+      "function get() external payable { return x; }"
+      "public function get(SigHashPreimage txPreimage) { require(Tx.checkPreimage(txPreimage)); bytes outputScript = this.getStateScript(); bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage)); require(hash256(output) == SigHash.hashOutputs(txPreimage)); require(x == retVal); }"
+
+    itTranspile
+      "set function"
+      "function set(uint x) external { storedData = x; }"
+      "public function set(int x, SigHashPreimage txPreimage) { storedData = x; require(Tx.checkPreimage(txPreimage)); bytes outputScript = this.getStateScript(); bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage)); require(hash256(output) == SigHash.hashOutputs(txPreimage)); }"
+
+    itTranspile
+      "constant set function"
+      "function set(uint x) external constant { storedData = x; }"
+      "public function set(int x, SigHashPreimage txPreimage) { storedData = x; require(Tx.checkPreimage(txPreimage)); bytes outputScript = this.getStateScript(); bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage)); require(hash256(output) == SigHash.hashOutputs(txPreimage)); }"
+
+    itTranspile
+      "pure set function"
+      "function set(uint x) external pure { storedData = x; }"
+      "public function set(int x) { storedData = x; require(true); }"
+
+    itTranspile
+      "view set function"
+      "function set(uint x) external view { storedData = x; }"
+      "public function set(int x, SigHashPreimage txPreimage) { storedData = x; require(Tx.checkPreimage(txPreimage)); bytes outputScript = this.getStateScript(); bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage)); require(hash256(output) == SigHash.hashOutputs(txPreimage)); }"
+
+    itTranspile
+      "payable set function"
+      "function set(uint x) external payable { storedData = x; }"
+      "public function set(int x, SigHashPreimage txPreimage) { storedData = x; require(Tx.checkPreimage(txPreimage)); bytes outputScript = this.getStateScript(); bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage)); require(hash256(output) == SigHash.hashOutputs(txPreimage)); }"
+
+    itTranspile
+      "public view function with returns"
+      "function get() public view returns (uint) { return storedData; }"
+      "function get() : int { return storedData; }"
+
+

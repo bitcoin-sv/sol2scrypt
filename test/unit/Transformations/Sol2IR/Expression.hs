@@ -33,11 +33,14 @@ spec = testSpec "instance ToIRTransformable Sol.Expression IExpr'" $ do
     itExpr "true" (IR.BoolLiteral True)
     itExpr "false" (IR.BoolLiteral False)
 
+  describe "#PrimaryExpressionNumberLiteral" $ do
     itExpr "0x0123abcdef" (IR.IntLiteral True 4893429231)
     itExpr "12345" (IR.IntLiteral False 12345)
 
+  describe "#PrimaryExpressionHexLiteral" $ do
     itExpr "hex\"010113\"" (IR.BytesLiteral [01, 01, 19])
 
+  describe "#Unary" $ do
     itUnary "-" "-a"
     itUnary "()" "(a)"
 
@@ -47,6 +50,7 @@ spec = testSpec "instance ToIRTransformable Sol.Expression IExpr'" $ do
     itUnary "()--" "a--"
     itUnary "!" "!a"
 
+  describe "#Binary" $ do
     itBinary "+" "1 + 2"
     itBinary "-" "1 - 2"
     itBinary "*" "1 * 2"
