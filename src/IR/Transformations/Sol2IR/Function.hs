@@ -54,12 +54,21 @@ toIRFuncRet vis (Just (ParameterList [x])) = do
   return $ FuncRetTransResult t' t n
 toIRFuncRet _ _ = return $ FuncRetTransResult Nothing Nothing Nothing -- error "mutiple-returns function not implemented"
 
-toIRFuncParams :: ParameterList -> [FunctionDefinitionTag] -> FuncRetTransResult -> IVisibility -> Transformation (IParamList', Maybe TransformationOnBlock)
+toIRFuncParams :: ParameterList -> [FunctionDefinitionTag] -> FuncRetTransResult -> IVisibility -> Transformation (IParamList', TransformationOnBlock)
 toIRFuncParams (ParameterList pl) tags (FuncRetTransResult rt ort rn) vis = do
   params <- mapM _toIR pl
-  -- mirror parameter of the named return param whose type has been changed (due to in public fucntion)
-  let extraParams = [IR.Param <$> ort <*> Just (mirror rn') | isJust ort && ort /= rt]
-                    where rn' = Just $ fromMaybe (IR.Identifier "retVal") rn
+
+  -- add parameter for public function whose original return type is not `Bool`
+  let extraParams = [IR.Param <$> ort <*> rn' | vis == Public && isJust ort && ort /= rt]
+        where
+          rn' = Just $ if isJust rn then mirror rn else IR.Identifier "retVal"
+
+  let blkT = TransformationOnBlock prepends []
+        where
+          prepends = case rn of
+            -- add initialize statement for named return param
+            Just _ -> declareLocalVarStmt $ IR.Param <$> ort <*> rn
+            _ -> []
 
   let needPreimageParam
         | FunctionDefinitionTagStateMutability Pure `elem` tags = False -- pure function do ont need preimage
@@ -67,15 +76,16 @@ toIRFuncParams (ParameterList pl) tags (FuncRetTransResult rt ort rn) vis = do
         | otherwise = False
   let (extraParams', blkT') =
         if needPreimageParam
-          then let (ps, blkT) = transForStateAccessableFunc in (extraParams ++ map Just ps, Just blkT)
-          else (extraParams, Nothing)
+          then let (ps, blkT_) = transForPreimageFunc in (map Just ps ++ extraParams, mergeTransOnBlock blkT blkT_)
+          else (extraParams, blkT)
   let params' = params ++ extraParams'
   let pl' = IR.ParamList <$> sequence params'
   return (pl', blkT')
 
-toIRFuncBody :: Block -> IVisibility -> Maybe TransformationOnBlock -> FuncRetTransResult -> Transformation IBlock'
-toIRFuncBody (Sol.Block ss) vis blkT (FuncRetTransResult _ ort rn) = do
+toIRFuncBody :: Block -> IVisibility -> TransformationOnBlock -> FuncRetTransResult -> Transformation IBlock'
+toIRFuncBody (Sol.Block ss) vis (TransformationOnBlock prepends appends) (FuncRetTransResult _ ort rn) = do
   stmts <- mapM _toIR ss
+
   let hasRetStmt =
         not (null stmts)
           && case last stmts of
@@ -88,13 +98,14 @@ toIRFuncBody (Sol.Block ss) vis blkT (FuncRetTransResult _ ort rn) = do
             -- use `require(boolExpr);` to replace `return boolExpr;`
             Just (ElementaryType IR.Bool) -> init stmts ++ [Just $ RequireStmt r]
             -- use `require(nonBoolExpr == injectedParamName);` to replace `return nonBoolExpr;`
-            _ -> init stmts ++ [Just $ requireEqualStmt r $ mirror $ Just $ fromMaybe (IR.Identifier "retVal") rn]
+            _ ->
+              let e = fromMaybe (IR.Identifier "retVal") rn
+               in init stmts ++ [Just $ requireEqualStmt r e]
           _ -> error "last statement is not return statement"
-        (True, False) -> case rn of
-          -- append `require(returnName == injectedParamName)`
-          Just n -> stmts ++ [Just $ requireEqualStmt (IdentifierExpr n) $ mirror rn]
-          -- append `require(true);`
-          _ -> stmts ++ [Just $ RequireStmt trueExpr]
+        (True, False) ->
+          stmts ++ case rn of
+            Just r -> [Just $ requireEqualStmt (IdentifierExpr r) $ mirror rn]
+            _ -> [Just $ RequireStmt trueExpr]
         (False, False) -> case rn of
           -- append `return returnName;`
           Just n -> stmts ++ [Just $ ReturnStmt $ IdentifierExpr n]
@@ -102,12 +113,14 @@ toIRFuncBody (Sol.Block ss) vis blkT (FuncRetTransResult _ ort rn) = do
           _ -> stmts ++ [Just $ ReturnStmt trueExpr]
         _ -> stmts
 
-  let stmts'' = case blkT of
-        -- keep return/require statement at the end & apply other prepends/appends
-        Just (TransformationOnBlock prepends appends) -> map Just prepends ++ init stmts' ++ map Just appends ++ [last stmts']
-        _ -> stmts'
+  let stmts'' = map Just prepends ++ init stmts' ++ map Just appends ++ [last stmts']
 
-  return $ IR.Block <$> sequence stmts''
+  let stmts''' = case reverse stmts'' of
+        -- ignore the last `require(true)` if the penultimate is already a `require` stmt
+        (Just (RequireStmt (LiteralExpr (BoolLiteral True)))) : (Just (RequireStmt _)) : _ -> init stmts''
+        _ -> stmts''
+
+  return $ IR.Block <$> sequence stmts'''
 
 mirror :: IIdentifier' -> IIdentifier
 mirror (Just (IR.Identifier i)) = IR.Identifier ("_" ++ i)
@@ -119,10 +132,54 @@ requireEqualStmt e i = RequireStmt $ BinaryExpr IR.Equal e $ IdentifierExpr i
 trueExpr :: IExpr
 trueExpr = LiteralExpr $ BoolLiteral True
 
-transForStateAccessableFunc :: ([IParam], TransformationOnBlock)
-transForStateAccessableFunc =
+mergeTransOnBlock :: TransformationOnBlock -> TransformationOnBlock -> TransformationOnBlock
+mergeTransOnBlock (TransformationOnBlock preA appA) (TransformationOnBlock preB appB) =
+  TransformationOnBlock (preA ++ preB) (appA ++ appB)
+
+declareLocalVarStmt :: IParam' -> [IStatement]
+declareLocalVarStmt Nothing = []
+declareLocalVarStmt (Just p@(IR.Param (IR.ElementaryType IR.Bool) _)) = [IR.DeclareStmt [Just p] [LiteralExpr (IR.BoolLiteral False)]]
+declareLocalVarStmt (Just p@(IR.Param (IR.ElementaryType IR.Int) _)) = [IR.DeclareStmt [Just p] [LiteralExpr (IR.IntLiteral False 0)]]
+declareLocalVarStmt (Just p@(IR.Param (IR.ElementaryType IR.Bytes) _)) = [IR.DeclareStmt [Just p] [LiteralExpr (IR.BytesLiteral [])]]
+declareLocalVarStmt (Just (IR.Param t _)) = error $ "unimpmented init statement for type `" ++ show t ++ "`"
+
+-- transformations for functions that need access preimage
+transForPreimageFunc :: ([IParam], TransformationOnBlock)
+transForPreimageFunc =
   ( [IR.Param (BuiltinType "SigHashPreimage") $ IR.Identifier "txPreimage"],
     TransformationOnBlock
-      [] -- TODO: add stmts
       []
+      -- appends statements
+      [ -- add `require(Tx.checkPreimage(txPreimage));`
+        IR.RequireStmt $
+          IR.FunctionCall
+            (IR.MemberAccess (IdentifierExpr (IR.Identifier "Tx")) (IR.Identifier "checkPreimage"))
+            [IdentifierExpr (IR.Identifier "txPreimage")],
+        -- add `bytes outputScript = this.getStateScript();`
+        IR.DeclareStmt
+          [Just $ IR.Param (ElementaryType IR.Bytes) (IR.Identifier "outputScript")]
+          [ IR.FunctionCall
+              (IR.MemberAccess (IdentifierExpr (IR.Identifier "this")) (IR.Identifier "getStateScript"))
+              []
+          ],
+        -- add `bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));`
+        IR.DeclareStmt
+          [Just $ IR.Param (ElementaryType IR.Bytes) (IR.Identifier "output")]
+          [ IR.FunctionCall
+              (IR.MemberAccess (IdentifierExpr (IR.Identifier "Utils")) (IR.Identifier "buildOutput"))
+              [ IdentifierExpr (IR.Identifier "outputScript"),
+                IR.FunctionCall
+                  (IR.MemberAccess (IdentifierExpr (IR.Identifier "SigHash")) (IR.Identifier "value"))
+                  [IdentifierExpr (IR.Identifier "txPreimage")]
+              ]
+          ],
+        -- add `require(hash256(output) == SigHash.hashOutputs(txPreimage));`
+        IR.RequireStmt $
+          IR.BinaryExpr
+            IR.Equal
+            (IR.FunctionCall (IdentifierExpr (IR.Identifier "hash256")) [IdentifierExpr (IR.Identifier "output")])
+            $ IR.FunctionCall
+              (IR.MemberAccess (IdentifierExpr (IR.Identifier "SigHash")) (IR.Identifier "hashOutputs"))
+              [IdentifierExpr (IR.Identifier "txPreimage")]
+      ]
   )

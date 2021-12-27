@@ -25,7 +25,7 @@ reservedKeywords =
     "return",
     "new",
     "import",
-    "this",
+    -- "this", -- `this` can be used without literal change
     "auto",
     "struct",
     "library",
