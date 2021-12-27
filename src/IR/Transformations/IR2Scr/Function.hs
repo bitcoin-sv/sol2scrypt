@@ -33,5 +33,5 @@ funcRetGuard f@(Scr.Function _ _ _ (RegularBody stmts _ _) vis _ _) =
   case reverse stmts of
     ((Scr.Require _ _) : _) | vis == Scr.Public -> f
     ((Scr.ReturnStmt _ _) : _) | vis == Scr.Private || vis == Scr.Default -> f
-    s -> error $ "function `" ++  unName (Scr.funcName f) ++ "` have inconsistant visibility `" ++ show vis ++ "` with the last statement `" ++ show s
+    s -> error $ "function `" ++  unName (Scr.funcName f) ++ "` have inconsistant visibility `" ++ show vis ++ "` with the last statement `" ++ show (head s)
 funcRetGuard _ = error "to scrypt asm function body not implemented yet"
