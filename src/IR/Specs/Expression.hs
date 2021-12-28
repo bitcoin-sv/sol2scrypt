@@ -11,6 +11,7 @@ data IExpr
   | TernaryExpr {ternaryCond :: IExpr, ternaryTrueBranch :: IExpr, ternaryFalseBranch :: IExpr}
   | MemberAccess {instanceExpr :: IExpr, member :: IIdentifier}
   | FunctionCall {funcExpr :: IExpr, funcParamExprs :: [IExpr]}
+  | ArrayLiteral {arrayVal :: [IExpr]}
   deriving (Eq, Show, Ord)
 
 

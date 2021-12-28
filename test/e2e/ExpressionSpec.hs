@@ -110,6 +110,15 @@ spec = testSpec "Transpile Expression" $ do
     itComplex "a * c + b * c" "a * c + b * c"
     itComplex "amount <= msg.value / 2" "amount <= msg.value / 2"
     itComplex "uint(1)" "uint(1)"
+
+  describe "#PrimaryExpressionTupleExpression" $ do
+    itexpr "number array" "[1,3,1,3]" "[1,3,1,3]"
+    itexpr "number array" "[1,-3,1,0,0,0]" "[1,-3,1,0,0,0]"
+    itexpr "number array" "[1,-0x3,-11,0,0,0]" "[1,-(0x3),-11,0,0,0]"
+    itexpr "number array" "[1+3,1-3,1*3,1/3,1%3]" "[1 + 3,1 - 3,1 * 3,1 / 3,1 % 3]"
+    itexpr "bool array" "[true, true, false]" "[true,true,false]"
+    itexpr "bytes array" "[hex\"010113\", hex\"\"]" "[b'010113',b'']"
+
       
 
       

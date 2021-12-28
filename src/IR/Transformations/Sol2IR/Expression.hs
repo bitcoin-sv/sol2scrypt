@@ -10,6 +10,7 @@ import IR.Transformations.Sol2IR.Identifier (maybeStateVarId)
 import Solidity.Spec as Sol
 import IR.Spec as IR
 import Utils
+import Data.Maybe (catMaybes)
 
 instance ToIRTransformable (Maybe Sol.Expression) IExpr' where
   _toIR (Just e)  = _toIR e
@@ -45,8 +46,10 @@ instance ToIRTransformable Sol.Expression IExpr' where
             Nothing -> return []
             Just (ExpressionList ps) -> mapM _toIR ps
     return $ FunctionCall <$> fe' <*> sequence ps'
+  _toIR (Literal (PrimaryExpressionTupleExpression (SquareBrackets array))) = do
+    array'::[IExpr'] <- mapM _toIR array
+    return $ Just $ ArrayLiteral $ catMaybes array'
   _toIR e = error $ "unsupported expression : `" ++ headWord (show e) ++ "`"
-
 
 transformUnaryExpr :: String -> IExpr' -> IExpr'
 transformUnaryExpr opStr e' = 
