@@ -14,13 +14,17 @@ import IR.Transformations.Sol2IR.Variable ()
 import IR.Transformations.Sol2IR.Function ()
 import Solidity.Spec as Sol
 import Data.Maybe (fromJust)
+import Utils
 
 instance ToIRTransformable ContractDefinition IContract' where
   _toIR (Sol.ContractDefinition "contract" cn [] cps) = do
     cn' <- _toIR cn
+    addSym $ Symbol <$> cn' <*> Just contractSymType <*> Just False
+    enterScope
     cps' <- mapM _toIR cps
+    leaveScope
     return $ IR.Contract <$> cn' <*> sequence cps'
-  _toIR _ = error "unimplemented contract definition"
+  _toIR c = error $ "unsupported contract definition `" ++ headWord (show c) ++ "`"
 
 instance ToIRTransformable Sol.PragmaDirective IR.IEmpty where
   _toIR _ = return IR.Empty
@@ -28,8 +32,13 @@ instance ToIRTransformable Sol.PragmaDirective IR.IEmpty where
 instance ToIRTransformable Sol.ContractPart IContractBodyElement' where
   _toIR (Sol.ContractPartStateVariableDeclaration e) = do
     e' :: IStateVariable' <- _toIR e
+    addSym $ Symbol <$> (stateVarName <$> e') <*> (stateVarType <$> e') <*> Just True
     return $ Just $ IR.StateVariableDeclaration (fromJust e')
-  _toIR func@Sol.ContractPartFunctionDefinition {} = do
+  _toIR func@(Sol.ContractPartFunctionDefinition (Just fn) _ _ _ _) = do
+    fn' <- _toIR fn
+    addSym $ Symbol <$> fn' <*> Just functionSymType <*> Just False
+    enterScope
     func' <- _toIR func
+    leaveScope
     return $ IR.FunctionDefinition <$> func'
-  _toIR _ = error "unimplemented contract part"
+  _toIR c = error $ "unsupported contract part `" ++ headWord (show c) ++ "`"

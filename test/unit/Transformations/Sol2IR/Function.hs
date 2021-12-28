@@ -12,7 +12,7 @@ spec :: IO TestTree
 spec = testSpec "instance ToIRTransformable Contractpart IFunction'" $ do
   let itTransformFunc solidityCode target = it "should transfrom Solidity `ContractPartFunctionDefinition` to IR Function correctly" $ do
         func :: Sol.ContractPart <- parseIO solidityCode
-        r :: IFunction' <- transform2IR TransformState func
+        r :: IFunction' <- transform2IR (TransformState []) func
         r `shouldBe` target
 
   let funcWithoutRet vis mut = "function add(uint x, uint y) " ++ vis ++ " " ++ mut ++ " {}"

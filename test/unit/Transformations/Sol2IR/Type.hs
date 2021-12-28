@@ -11,7 +11,7 @@ import Test.Tasty.Hspec
 spec :: IO TestTree
 spec = testSpec "instance ToIRTransformable TypeName IType'" $ do
   let itType title e1 e2 = it ("should transfrom Solidity `" ++ title ++ "` to IR Type correctly") $ do
-        r1 <- transform2IR TransformState (TypeNameElementaryTypeName e1)
+        r1 <- transform2IR (TransformState []) (TypeNameElementaryTypeName e1)
         r1 `shouldBe` Just (ElementaryType e2)
 
   describe "#TypeNameElementaryTypeName" $ do

@@ -11,6 +11,7 @@ data IStatement
   | DeclareStmt [Maybe IParam] [IExpr]
   | RequireStmt {verifyExpr :: IExpr}
   | ReturnStmt {retExpr :: IExpr}
+  | BlockStatement IBlock
   deriving (Show, Eq, Ord)
 
 newtype IBlock = Block [IStatement] deriving (Show, Eq, Ord)

@@ -6,29 +6,42 @@ module IR.Transformations.Sol2IR.Statement where
 
 import Data.Maybe
 import IR.Transformations.Base
+import IR.Transformations.Sol2IR.Identifier
 import IR.Transformations.Sol2IR.Expression
 import IR.Transformations.Sol2IR.Variable
 import Solidity.Spec as Sol
 import IR.Spec as IR
 import IR.Transformations.Sol2IR.Type ()
 import Protolude.Functor
-import Data.Maybe (fromJust)
+import Utils
 
 instance ToIRTransformable Sol.Statement IStatement' where
   _toIR (SimpleStatementExpression e) = ExprStmt <<$>> _toIR e
-  _toIR (SimpleStatementVariableAssignmentList [Just idtf] [e]) = do
+  _toIR (SimpleStatementVariableAssignmentList [Just i] [e]) = do
     e' <- _toIR e
-    idtf' <- _toIR idtf
-    return $ Just $ AssignStmt [idtf'] [fromJust e']
+    i' <- _toIR i
+    i'' <- maybeStateVarId i'
+    return $ Just $ AssignStmt [i''] [fromJust e']
   _toIR (SimpleStatementVariableAssignmentList _ _) = error "unsupported SimpleStatementVariableAssignmentList"
-  _toIR (SimpleStatementVariableDeclarationList [Just declare] [e]) = do
+  _toIR (SimpleStatementVariableDeclarationList [Just localVar] [e]) = do
     e' <- _toIR e
-    declare' <- _toIR declare
-    return $ Just $ DeclareStmt [declare'] [fromJust e']
+    localVar' <- _toIR localVar
+    addSym $ Symbol <$> (paramName <$> localVar') <*> (paramType <$> localVar') <*> Just False
+    return $ Just $ DeclareStmt [localVar'] [fromJust e']
   _toIR (SimpleStatementVariableDeclarationList _ _) = error "unsupported SimpleStatementVariableDeclarationList"
   _toIR (Return e) = do
     e' <- case e of
             Just re -> _toIR re
             _ -> return $ Just $ LiteralExpr (BoolLiteral True)
     return $ ReturnStmt <$> e'
-  _toIR _ = return Nothing
+  _toIR (Sol.BlockStatement blk) = do
+    blk' <- _toIR blk
+    return $ IR.BlockStatement <$> blk'
+  _toIR s = error $ "unsupported statement `" ++ headWord (show s) ++ "`"
+
+instance ToIRTransformable Sol.Block IBlock' where
+  _toIR (Sol.Block stmts) = do
+    enterScope
+    stmts' <- mapM _toIR stmts
+    leaveScope
+    return $ IR.Block <$> sequence stmts'

@@ -5,6 +5,7 @@
 module IR.Transformations.Sol2IR.Function where
 
 import Data.Maybe
+import Data.Foldable
 import IR.Spec as IR
 import IR.Transformations.Base
 import IR.Transformations.Sol2IR.Identifier ()
@@ -78,9 +79,12 @@ toIRFuncParams (ParameterList pl) tags (FuncRetTransResult rt ort rn) vis = do
         if needPreimageParam
           then let (ps, blkT_) = transForPreimageFunc in (map Just ps ++ extraParams, mergeTransOnBlock blkT blkT_)
           else (extraParams, blkT)
-  let params' = params ++ extraParams'
-  let pl' = IR.ParamList <$> sequence params'
-  return (pl', blkT')
+  
+  let params' = sequence $ params ++ extraParams'
+  
+  forM_ params' $ mapM_ (\p -> addSym $ Just $ Symbol (paramName p) (paramType p) False)
+
+  return (IR.ParamList <$> params', blkT')
 
 toIRFuncBody :: Block -> IVisibility -> TransformationOnBlock -> FuncRetTransResult -> Transformation IBlock'
 toIRFuncBody (Sol.Block ss) vis (TransformationOnBlock prepends appends) (FuncRetTransResult _ ort rn) = do
