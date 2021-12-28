@@ -230,3 +230,13 @@ spec = testSpec "Transpile Type" $ do
     describe "#VarType" $ do
 
       itType "var" "auto"
+
+    describe "#Array Type" $ do
+
+      itType "int[20]" "int[20]"
+      itType "uint[20]" "int[20]"
+      itType "bool[20]" "bool[20]"
+      itType "bytes[20]" "bytes[20]"
+
+
+
