@@ -94,6 +94,16 @@ spec = testSpec "Transpile Function" $ do
       "function get() public view returns (uint) { return storedData; }"
       "function get() : int { return storedData; }"
 
+    itTranspile
+      "function empty"
+      "function g() public { }"
+      "function g() : bool { return true; }"
+
+    itTranspile
+      "function with Expression"
+      "function g(uint a) public pure returns (uint ret) { return a + f(); }"
+      "function g(int a) : int { int ret = 0; return a + f(); }"
+
   describe "#private " $ do
 
     itTranspile
@@ -214,4 +224,9 @@ spec = testSpec "Transpile Function" $ do
       "external function with returns"
       "function get() external view returns (uint) { return storedData; }"
       "public function get(SigHashPreimage txPreimage, int retVal) { require(Tx.checkPreimage(txPreimage)); bytes outputScript = this.getStateScript(); bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage)); require(hash256(output) == SigHash.hashOutputs(txPreimage)); require(storedData == retVal); }"
+
+
+      
+
+
 

@@ -109,6 +109,7 @@ spec = testSpec "Transpile Expression" $ do
     itComplex "(a + b) * c" "(a + b) * c"
     itComplex "a * c + b * c" "a * c + b * c"
     itComplex "amount <= msg.value / 2" "amount <= msg.value / 2"
+    itComplex "uint(1)" "uint(1)"
       
 
       
