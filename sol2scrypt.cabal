@@ -107,6 +107,7 @@ test-suite e2e
       ContractSpec
       ExpressionSpec
       FunctionSpec
+      IdentifierSpec
       PragmaSpec
       StmtSpec
       TypeSpec

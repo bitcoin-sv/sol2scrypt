@@ -37,6 +37,11 @@ sol2Parameter solidityCode = do
     e :: Sol.Parameter <- parseIO solidityCode
     return e
 
+sol2StateVariable :: String -> IO StateVariableDeclaration
+sol2StateVariable solidityCode = do
+    e :: Sol.StateVariableDeclaration <- parseIO solidityCode
+    return e
+
 sol2ContractPart :: String -> IO ContractPart
 sol2ContractPart solidityCode = do
     e :: Sol.ContractPart <- parseIO solidityCode

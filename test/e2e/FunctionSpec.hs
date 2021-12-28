@@ -89,6 +89,11 @@ spec = testSpec "Transpile Function" $ do
       "function privateFunc() public pure returns (bool memory) { return true; }"
       "function privateFunc() : bool { return true; }"
 
+    itTranspile
+      "public view function with returns"
+      "function get() public view returns (uint) { return storedData; }"
+      "function get() : int { return storedData; }"
+
   describe "#private " $ do
 
     itTranspile
@@ -204,11 +209,6 @@ spec = testSpec "Transpile Function" $ do
       "payable set function"
       "function set(uint x) external payable { storedData = x; }"
       "public function set(int x, SigHashPreimage txPreimage) { storedData = x; require(Tx.checkPreimage(txPreimage)); bytes outputScript = this.getStateScript(); bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage)); require(hash256(output) == SigHash.hashOutputs(txPreimage)); }"
-
-    itTranspile
-      "public view function with returns"
-      "function get() public view returns (uint) { return storedData; }"
-      "function get() : int { return storedData; }"
 
     itTranspile
       "external function with returns"
