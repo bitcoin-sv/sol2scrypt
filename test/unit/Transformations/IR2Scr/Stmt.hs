@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Transformations.IR2Scr.Stmt where
 
@@ -17,6 +18,15 @@ spec = testSpec "instance ToScryptTransformable IStatment (Scr.Statement IExpr)"
   let itBlockStmt title e1 e2 = it ("should transfrom IR `" ++ title ++ "` to sCrypt Statement correctly") $ do
         r1 <- transform2Scrypt $ Just . IR.BlockStatement $ IR.Block [e1]
         r1 `shouldBe` Just (Scr.Block [e2] nil)
+
+  let itReturnStmt title e1 e2 = it ("should transfrom IR `" ++ title ++ "` to sCrypt Statement correctly") $ do
+        r1 <- transform2Scrypt $ Just $ IR.ReturnStmt e1
+        r1 `shouldBe` Just (Scr.ReturnStmt e2 nil)
+
+  let itRequireStmt title e1 e2 = it ("should transfrom IR `" ++ title ++ "` to sCrypt Statement correctly") $ do
+        r1 <- transform2Scrypt $ Just $ IR.RequireStmt e1
+        r1 `shouldBe` Just (Scr.Require e2 nil)
+
 
   describe "#ExprStmt" $ do
     itExprStmt
@@ -101,3 +111,26 @@ spec = testSpec "instance ToScryptTransformable IStatment (Scr.Statement IExpr)"
       itBlockStmt "DeclareStmt" (IR.DeclareStmt [Just declare] [e1]) (Scr.Declare param (Scr.IntLiteral False 1 nil) nil)
 
       itBlockStmt "ExprStmt" (IR.ExprStmt (LiteralExpr $ IR.IntLiteral True 15)) (Scr.ExprStmt (Scr.IntLiteral True 15 nil) nil)
+
+    
+    describe "#ReturnStmt" $ do
+      itReturnStmt "BoolLiteral" (LiteralExpr $ IR.BoolLiteral True) 
+        (Scr.BoolLiteral True nil)
+      itReturnStmt "UnaryExpr" (IR.UnaryExpr IR.Not (IR.IdentifierExpr $ IR.Identifier "a")) 
+        (Scr.UnaryExpr Scr.Not (Scr.Var "a" False nil) nil)
+      itReturnStmt "BinaryExpr" (IR.BinaryExpr IR.BoolOr (LiteralExpr $ IR.BoolLiteral True) (LiteralExpr $ IR.BoolLiteral False)) 
+        (Scr.BinaryExpr Scr.BoolOr (Scr.BoolLiteral True nil) (Scr.BoolLiteral False nil) nil)
+
+      itReturnStmt "BinaryExpr" (IR.BinaryExpr IR.Equal (IR.IdentifierExpr $ IR.Identifier "a") (LiteralExpr $ IR.BoolLiteral False)) 
+        (Scr.BinaryExpr Scr.Equal (Scr.Var "a" False nil) (Scr.BoolLiteral False nil) nil)
+
+    describe "#RequireStmt" $ do
+      itRequireStmt "BoolLiteral" (LiteralExpr $ IR.BoolLiteral True) 
+        (Scr.BoolLiteral True nil)
+      itRequireStmt "UnaryExpr" (IR.UnaryExpr IR.Not (IR.IdentifierExpr $ IR.Identifier "a")) 
+        (Scr.UnaryExpr Scr.Not (Scr.Var "a" False nil) nil)
+      itRequireStmt "BinaryExpr" (IR.BinaryExpr IR.BoolOr (LiteralExpr $ IR.BoolLiteral True) (LiteralExpr $ IR.BoolLiteral False)) 
+        (Scr.BinaryExpr Scr.BoolOr (Scr.BoolLiteral True nil) (Scr.BoolLiteral False nil) nil)
+
+      itRequireStmt "BinaryExpr" (IR.BinaryExpr IR.Equal (IR.IdentifierExpr $ IR.Identifier "a") (LiteralExpr $ IR.BoolLiteral False)) 
+        (Scr.BinaryExpr Scr.Equal (Scr.Var "a" False nil) (Scr.BoolLiteral False nil) nil)
