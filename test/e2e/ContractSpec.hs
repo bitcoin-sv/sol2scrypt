@@ -91,16 +91,3 @@ spec = testSpec "Transpile Contract" $ do
     }
 }|]
     "contract flipper { @state private bool value; public function flip(SigHashPreimage txPreimage) { this.value = !this.value; require(Tx.checkPreimage(txPreimage)); bytes outputScript = this.getStateScript(); bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage)); require(hash256(output) == SigHash.hashOutputs(txPreimage)); } function get() : bool { return this.value; } }"
-
-
-
-  describe "#Contract" $ do
-    describe "#Property" $ do
-      itProperty "uint storedData;" "@state int storedData;"
-      itProperty "int storedData;" "@state int storedData;"
-      itProperty "bool a;" "@state bool a;"
-      itProperty "bytes a;" "@state bytes a;"
-      itProperty "bytes private a;" "@state private bytes a;"
-      itProperty "bytes public a;" "@state public bytes a;"
-      itProperty "int storedData = 1;" "@state int storedData;"
-      itProperty "bool x = true;" "@state bool x;"
