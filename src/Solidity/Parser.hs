@@ -759,7 +759,7 @@ instance Parseable Statement where
                           optional (char ')')
                           whitespace <* char ';'
                           return mes)
-                  <|> return [] <$> whitespace <* char ';'
+                  -- <|> return [] <$> whitespace <* char ';'
             return (SimpleStatementVariableAssignmentList vd r)
           )
         <|>
