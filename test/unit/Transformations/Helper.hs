@@ -47,6 +47,11 @@ sol2ContractPart solidityCode = do
     e :: Sol.ContractPart <- parseIO solidityCode
     return e
 
+sol2Contract :: String -> IO ContractDefinition
+sol2Contract solidityCode = do
+    e :: Sol.ContractDefinition <- parseIO solidityCode
+    return e
+
 
 
 sol2Ir :: ToIRTransformable sol b => (String -> IO sol) -> String -> IO b
