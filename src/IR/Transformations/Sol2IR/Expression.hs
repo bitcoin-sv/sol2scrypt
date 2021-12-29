@@ -6,11 +6,10 @@ module IR.Transformations.Sol2IR.Expression where
 
 import Numeric
 import IR.Transformations.Base
-import IR.Transformations.Sol2IR.Identifier ()
+import IR.Transformations.Sol2IR.Identifier (maybeStateVarId)
 import Solidity.Spec as Sol
 import IR.Spec as IR
 import Utils
-
 
 instance ToIRTransformable (Maybe Sol.Expression) IExpr' where
   _toIR (Just e)  = _toIR e
@@ -27,7 +26,8 @@ instance ToIRTransformable Sol.Expression IExpr' where
     return $ Just $ LiteralExpr $ IR.BytesLiteral $ parseHex h
   _toIR (Literal (PrimaryExpressionIdentifier i)) = do
     i' <- _toIR i
-    return $ IdentifierExpr <$> i'
+    i'' <- maybeStateVarId i'
+    return $ IdentifierExpr <$> i''
   _toIR (Unary opStr e) = do 
     e' <- _toIR e 
     return $ transformUnaryExpr opStr e'
@@ -45,7 +45,7 @@ instance ToIRTransformable Sol.Expression IExpr' where
             Nothing -> return []
             Just (ExpressionList ps) -> mapM _toIR ps
     return $ FunctionCall <$> fe' <*> sequence ps'
-  _toIR e = error $ "not supported expression : `" ++ show e ++ "`"
+  _toIR e = error $ "unsupported expression : `" ++ headWord (show e) ++ "`"
 
 
 transformUnaryExpr :: String -> IExpr' -> IExpr'
@@ -58,7 +58,7 @@ transformUnaryExpr opStr e' =
     "()--" -> UnaryExpr PostDecrement <$> e'
     "--" -> UnaryExpr PreDecrement <$> e'
     "!" -> UnaryExpr Not <$> e'
-    s -> error $ "unsupported op `" ++ s ++ "`" ++ show e'
+    s -> error $ "unsupported unary operator `" ++ s ++ "`"
 
 str2BinaryOp :: String -> IBinaryOp
 str2BinaryOp "+" = Add
@@ -79,4 +79,4 @@ str2BinaryOp ">" = GreaterThan
 str2BinaryOp ">=" = GreaterThanOrEqual
 str2BinaryOp "&&" = BoolAnd
 str2BinaryOp "||" = BoolOr
-str2BinaryOp s = error $ "unsupported op `" ++ s ++ "`"
+str2BinaryOp s = error $ "unsupported binary operator `" ++ s ++ "`"

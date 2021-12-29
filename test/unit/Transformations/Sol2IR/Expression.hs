@@ -11,15 +11,15 @@ spec :: IO TestTree
 spec = testSpec "instance ToIRTransformable Sol.Expression IExpr'" $ do
   let itExpr title solidityCode e = it ("should transfrom Solidity `" ++ title ++ "` to IR Expression correctly") $ do
         expr :: Sol.Expression <- parseIO solidityCode
-        r1 <- transform2IR TransformState expr
+        r1 <- transform2IR (TransformState []) expr
         r1 `shouldBe` Just (LiteralExpr e)
 
   let itUnary op = it ("should transfrom Solidity `" ++ op ++ "` to IR Expression correctly") $ do
-        r1 <- transform2IR TransformState (Unary op (Literal (PrimaryExpressionIdentifier (Sol.Identifier "a"))))
+        r1 <- transform2IR (TransformState []) (Unary op (Literal (PrimaryExpressionIdentifier (Sol.Identifier "a"))))
         r1 `shouldBe` transformUnaryExpr op (Just (IR.IdentifierExpr $ IR.Identifier "a"))
 
   let itBinary op = it ("should transfrom Solidity `" ++ op ++ "` to IR Expression correctly") $ do
-        r1 <- transform2IR TransformState (Binary op (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "1" Nothing))) (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "2" Nothing))))
+        r1 <- transform2IR (TransformState []) (Binary op (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "1" Nothing))) (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "2" Nothing))))
         r1 `shouldBe` Just (BinaryExpr (str2BinaryOp op) (LiteralExpr $ IR.IntLiteral False 1) (LiteralExpr $ IR.IntLiteral False 2))
 
   describe "#PrimaryExpressionBooleanLiteral" $ do

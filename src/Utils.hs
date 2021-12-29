@@ -49,3 +49,5 @@ parseHex (x:y:xs) = hexChar x * 16 + hexChar y: parseHex xs
 showHexWithPadded :: (Integral n, Show n) => n -> String
 showHexWithPadded n = if n > 15 then showHex n "" else "0" ++ showHex n ""
 
+headWord :: String -> String
+headWord = head . words

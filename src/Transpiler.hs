@@ -18,7 +18,7 @@ data TranspileResult a b c = TranspileResult {scryptCode :: String, tranpilePath
 transpile :: (Parseable a, ToIRTransformable a b, ToScryptTransformable b c, Generable c) => String -> IO (TranspileResult a b c)
 transpile solidityCode = do
   sol :: a <- parseIO solidityCode
-  itmd :: b <- transform2IR TransformState sol
+  itmd :: b <- transform2IR (TransformState []) sol
   scr :: c <- transform2Scrypt itmd
   code <- generateScrypt scr
   -- the purpose of including `TranspilePath` is to provide the type values of `a`, `b`, `c` to Haskell compiler

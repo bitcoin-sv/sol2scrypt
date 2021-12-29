@@ -11,7 +11,7 @@ import Test.Tasty.Hspec
 spec :: IO TestTree
 spec = testSpec "instance ToIRTransformable Sol.Statement IExpr'" $ do
   let itstmt title e1 e2 = it ("should transfrom Solidity `" ++ title ++ "` to IR Statement correctly") $ do
-        r1 <- transform2IR TransformState e1
+        r1 <- transform2IR (TransformState []) e1
         r1 `shouldBe` Just e2
 
   describe "#SimpleStatementExpression" $ do
@@ -73,12 +73,12 @@ spec = testSpec "instance ToIRTransformable Sol.Statement IExpr'" $ do
         (IR.AssignStmt [Just $ IR.Identifier "x"] [LiteralExpr $ IR.BoolLiteral True])
     describe "#AssignStmt" $ do
       it "should transfrom Solidity `BoolLiteral` to IR Statement correctly" $ do
-        r1 <- transform2IR TransformState $ SimpleStatementVariableAssignmentList [Just (Sol.Identifier {Sol.unIdentifier = "x"})] [Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "11" Nothing))]
+        r1 <- transform2IR (TransformState []) $ SimpleStatementVariableAssignmentList [Just (Sol.Identifier {Sol.unIdentifier = "x"})] [Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "11" Nothing))]
         r1 `shouldBe` Just (AssignStmt [Just $ IR.Identifier "x"] [LiteralExpr $ IR.IntLiteral False 11])
 
     describe "#DeclareStmt" $ do
       it "should transfrom Solidity `BoolLiteral` to IR Statement correctly" $ do
         let declare = Sol.VariableDeclaration (TypeNameElementaryTypeName BoolType) Nothing (Sol.Identifier {Sol.unIdentifier = "x"})
             e = Literal (PrimaryExpressionBooleanLiteral (Sol.BooleanLiteral "true"))
-        r1 <- transform2IR TransformState $ SimpleStatementVariableDeclarationList [Just declare] [e]
+        r1 <- transform2IR (TransformState []) $ SimpleStatementVariableDeclarationList [Just declare] [e]
         r1 `shouldBe` Just (DeclareStmt [Just $ IR.Param (ElementaryType Bool) (IR.Identifier "x")] [LiteralExpr $ IR.BoolLiteral True])

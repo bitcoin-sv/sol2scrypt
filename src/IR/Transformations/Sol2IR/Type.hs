@@ -7,6 +7,7 @@ module IR.Transformations.Sol2IR.Type where
 import IR.Transformations.Base
 import Solidity.Spec as Sol
 import IR.Spec as IR
+import Utils
 
 -- from TypeName to IType'
 instance ToIRTransformable TypeName IType' where
@@ -18,4 +19,4 @@ instance ToIRTransformable TypeName IType' where
   _toIR (TypeNameElementaryTypeName Sol.StringType) = return $ Just $ ElementaryType String
   _toIR (TypeNameElementaryTypeName Sol.AddressType) = return $ Just $ ElementaryType Address
   _toIR (TypeNameElementaryTypeName Sol.VarType) = return $ Just $ ElementaryType Any
-  _toIR _ = return Nothing -- ignore those which can not be transformed
+  _toIR t = error $ "unsupported type `" ++ headWord (show t) ++ "`"
