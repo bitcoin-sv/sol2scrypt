@@ -16,16 +16,15 @@ spec = testSpec "instance ToIRTransformable Sol.Statement IExpr'" $ do
         ir `shouldBe` Just e2
 
   describe "#SimpleStatementExpression" $ do
-    -- seems to parseIO have a to parsing "true;"
-    -- itstmt
-    --   "BoolLiteral"
-    --   "true;"
-    --   (ExprStmt (LiteralExpr $ IR.BoolLiteral True))
+    itstmt
+      "BoolLiteral"
+      "true;"
+      (ExprStmt (LiteralExpr $ IR.BoolLiteral True))
 
-    -- itstmt
-    --   "BoolLiteral"
-    --   "true;"
-    --   (ExprStmt (LiteralExpr $ IR.BoolLiteral True))
+    itstmt
+      "BoolLiteral"
+      "true;"
+      (ExprStmt (LiteralExpr $ IR.BoolLiteral True))
 
     itstmt
       "NumberLiteral"

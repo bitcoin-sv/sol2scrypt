@@ -88,4 +88,17 @@ spec = testSpec "Transpile Statement" $ do
         bool b = !a;
       }|]   "{count += 1; bytes x = b'010113'; Ripemd160 nameReg = 0xdcad3a6d3569df655070ded06cb7a1b2ccd1d3af; count++; count--; --count; ++count; bool a = true; bool b = !a;}"
 
-          
+      
+
+    describe "#Sol Parser bug? #9" $ do
+      itstmt "SimpleStatementExpression"  "true;"  "true;"
+      itstmt "SimpleStatementExpression"  "false;"  "false;"
+      itstmt "SimpleStatementExpression"  "false || true;"  "false || true;"
+      itstmt "SimpleStatementExpression"  "false && true;"  "false && true;"
+      itstmt "BlockStatement"  [r|{
+        true;
+        false;
+        false || true;
+        false && true;
+      }|]   "{true; false; false || true; false && true;}"
+
