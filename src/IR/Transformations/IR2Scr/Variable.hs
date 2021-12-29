@@ -25,4 +25,5 @@ instance ToScryptTransformable IVisibility Scr.Visibility where
 
 
 instance ToScryptTransformable IStateVariable (Scr.Param Ann) where
-  _toScrypt (IR.StateVariable name varType vis _) = Scr.Param (TypeAnn (_toScrypt varType) nil) (_toScrypt name) (Const False) Nothing (_toScrypt vis) (IsStateProp True) nil
+  _toScrypt (IR.StateVariable name varType vis Nothing) = Scr.Param (TypeAnn (_toScrypt varType) nil) (_toScrypt name) (Const False) Nothing (_toScrypt vis) (IsStateProp True) nil
+  _toScrypt t = error $ "IType `" ++ show t ++ "` not implemented in scrypt"
