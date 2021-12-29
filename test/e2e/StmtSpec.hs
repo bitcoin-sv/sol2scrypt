@@ -58,3 +58,9 @@ spec = testSpec "Transpile Statement" $ do
       itstmt "bool"  "bool x = true;"  "bool x = true;"
       itstmt "bytes"  "bytes x = hex\"010113\";"  "bytes x = b'010113';"
 
+    describe "#BlockStatement" $ do
+      itstmt "BlockStatement"  "{bytes x = hex\"010113\";}"  "{bytes x = b'010113';}"
+      itstmt "BlockStatement"  "{1 + 2;}"  "{1 + 2;}"
+      itstmt "BlockStatement"  "{1;}"  "{1;}"
+      itstmt "BlockStatement"  "{}"  "{}"
+

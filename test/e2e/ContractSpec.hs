@@ -28,3 +28,26 @@ spec = testSpec "Transpile Contract" $ do
     "contract A { uint a; function set(uint x) public { a = x; { uint a = 2; a = x; x = a; } a = 3; x = a; } function add(uint a) { a = 1; uint b = a;} }"
     "contract A { @state int a; function set(int x) : bool { this.a = x; {int a = 2; a = x; x = a;} this.a = 3; x = this.a; return true; } function add(int a) : bool { a = 1; int b = a; return true; } }"
 
+  itTransContract
+    "contract flipper { \
+    \bool private value;\
+    \function flip() public {\
+    \value = !value;\
+    \}\
+    \function get() public view returns (bool) {\
+    \return value;\
+    \}\
+    \}"
+    "contract flipper { @state private bool value; function flip() : bool { this.value = !this.value; return true; } function get() : bool { return this.value; } }"
+
+  itTransContract
+    "contract flipper { \
+    \bool private value;\
+    \function flip() external {\
+    \value = !value;\
+    \}\
+    \function get() public view returns (bool) {\
+    \return value;\
+    \}\
+    \}"
+    "contract flipper { @state private bool value; public function flip(SigHashPreimage txPreimage) { this.value = !this.value; require(Tx.checkPreimage(txPreimage)); bytes outputScript = this.getStateScript(); bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage)); require(hash256(output) == SigHash.hashOutputs(txPreimage)); } function get() : bool { return this.value; } }"
