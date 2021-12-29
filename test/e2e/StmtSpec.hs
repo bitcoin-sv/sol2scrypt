@@ -1,4 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 module StmtSpec where
 import Transpiler
@@ -7,6 +8,7 @@ import IR
 import Scrypt as Scr
 import Test.Tasty
 import Test.Tasty.Hspec
+import Text.RawString.QQ
 import Utils
 
 spec :: IO TestTree
@@ -63,4 +65,22 @@ spec = testSpec "Transpile Statement" $ do
       itstmt "BlockStatement"  "{1 + 2;}"  "{1 + 2;}"
       itstmt "BlockStatement"  "{1;}"  "{1;}"
       itstmt "BlockStatement"  "{}"  "{}"
+      itstmt "BlockStatement"  [r|{
+        1 + 2;
+        int x = 3;
+        x = x * 4 + 1;
+      }|]   "{1 + 2; int x = 3; x = x * 4 + 1;}"
 
+      itstmt "BlockStatement"  [r|{
+        count += 1;
+        bytes x = hex"010113";
+        address nameReg = 0xdCad3a6d3569DF655070DEd06cb7A1b2Ccd1D3AF;
+        count++;
+        count--;
+        --count;
+        ++count;
+        bool a = true;
+        bool b = !a;
+      }|]   "{count += 1; bytes x = b'010113'; Ripemd160 nameReg = 0xdcad3a6d3569df655070ded06cb7a1b2ccd1d3af; count++; count--; --count; ++count; bool a = true; bool b = !a;}"
+
+          

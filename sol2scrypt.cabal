@@ -118,6 +118,7 @@ test-suite e2e
   build-depends:
       base >=4.7 && <5
     , hspec
+    , raw-strings-qq
     , sol2scrypt
     , tasty
     , tasty-hspec
@@ -153,6 +154,7 @@ test-suite unit
   build-depends:
       base >=4.7 && <5
     , hspec
+    , raw-strings-qq
     , sol2scrypt
     , tasty
     , tasty-hspec
