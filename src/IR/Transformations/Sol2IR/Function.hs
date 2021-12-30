@@ -156,23 +156,23 @@ transForPreimageFunc =
       -- appends statements
       [ -- add `require(Tx.checkPreimage(txPreimage));`
         IR.RequireStmt $
-          IR.FunctionCall
+          IR.FunctionCallExpr
             (IR.MemberAccessExpr (IdentifierExpr (IR.Identifier "Tx")) (IR.Identifier "checkPreimage"))
             [IdentifierExpr (IR.Identifier "txPreimage")],
         -- add `bytes outputScript = this.getStateScript();`
         IR.DeclareStmt
           [Just $ IR.Param (ElementaryType IR.Bytes) (IR.Identifier "outputScript")]
-          [ IR.FunctionCall
+          [ IR.FunctionCallExpr
               (IR.MemberAccessExpr (IdentifierExpr (IR.Identifier "this")) (IR.Identifier "getStateScript"))
               []
           ],
         -- add `bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));`
         IR.DeclareStmt
           [Just $ IR.Param (ElementaryType IR.Bytes) (IR.Identifier "output")]
-          [ IR.FunctionCall
+          [ IR.FunctionCallExpr
               (IR.MemberAccessExpr (IdentifierExpr (IR.Identifier "Utils")) (IR.Identifier "buildOutput"))
               [ IdentifierExpr (IR.Identifier "outputScript"),
-                IR.FunctionCall
+                IR.FunctionCallExpr
                   (IR.MemberAccessExpr (IdentifierExpr (IR.Identifier "SigHash")) (IR.Identifier "value"))
                   [IdentifierExpr (IR.Identifier "txPreimage")]
               ]
@@ -181,8 +181,8 @@ transForPreimageFunc =
         IR.RequireStmt $
           IR.BinaryExpr
             IR.Equal
-            (IR.FunctionCall (IdentifierExpr (IR.Identifier "hash256")) [IdentifierExpr (IR.Identifier "output")])
-            $ IR.FunctionCall
+            (IR.FunctionCallExpr (IdentifierExpr (IR.Identifier "hash256")) [IdentifierExpr (IR.Identifier "output")])
+            $ IR.FunctionCallExpr
               (IR.MemberAccessExpr (IdentifierExpr (IR.Identifier "SigHash")) (IR.Identifier "hashOutputs"))
               [IdentifierExpr (IR.Identifier "txPreimage")]
       ]

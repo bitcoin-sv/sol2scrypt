@@ -57,7 +57,7 @@ instance ToIRTransformable Sol.Expression IExpression' where
     ps' <- case pl of
             Nothing -> return []
             Just (ExpressionList ps) -> mapM _toIR ps
-    return $ FunctionCall <$> fe' <*> sequence ps'
+    return $ FunctionCallExpr <$> fe' <*> sequence ps'
   _toIR (Literal (PrimaryExpressionTupleExpression (SquareBrackets array))) = do
     array' <- mapM _toIR array
     return $ Just $ ArrayLiteral $ catMaybes array'
