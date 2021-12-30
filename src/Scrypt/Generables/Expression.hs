@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE FlexibleInstances #-}
 
-module Scrypt.Generables.Expr where
+module Scrypt.Generables.Expression where
 
 import Data.List
 import Numeric

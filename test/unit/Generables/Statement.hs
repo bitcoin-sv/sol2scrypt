@@ -1,7 +1,7 @@
-module Generables.Stmt where
+module Generables.Statement where
 
 import Scrypt.Generables.Base
-import Scrypt.Generables.Stmt ()
+import Scrypt.Generables.Statement ()
 import Scrypt.Spec as Scr
 import Test.Tasty
 import Test.Tasty.Hspec

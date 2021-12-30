@@ -6,8 +6,8 @@ import Test.Tasty
 import Test.Tasty.Hspec
 
 import qualified Generables.Type
-import qualified Generables.Expr
-import qualified Generables.Stmt
+import qualified Generables.Expression
+import qualified Generables.Statement
 import qualified Generables.Variable
 import qualified Generables.Function
 
@@ -23,8 +23,8 @@ spec =
     <$> sequence
       [ baseSpec,
         Generables.Type.spec,
-        Generables.Stmt.spec,
-        Generables.Expr.spec,
+        Generables.Statement.spec,
+        Generables.Expression.spec,
         Generables.Variable.spec,
         Generables.Function.spec
       ]

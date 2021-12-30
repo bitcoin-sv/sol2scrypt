@@ -61,9 +61,9 @@ library
       Scrypt.Generables.Base
       Scrypt.Generables.Contract
       Scrypt.Generables.Empty
-      Scrypt.Generables.Expr
+      Scrypt.Generables.Expression
       Scrypt.Generables.Function
-      Scrypt.Generables.Stmt
+      Scrypt.Generables.Statement
       Scrypt.Generables.Type
       Scrypt.Generables.Variable
       Scrypt.Generator
@@ -129,9 +129,9 @@ test-suite unit
   type: exitcode-stdio-1.0
   main-is: Main.hs
   other-modules:
-      Generables.Expr
+      Generables.Expression
       Generables.Function
-      Generables.Stmt
+      Generables.Statement
       Generables.Type
       Generables.Variable
       GeneratorSpec
@@ -141,7 +141,7 @@ test-suite unit
       Transformations.IR2Scr.Function
       Transformations.IR2Scr.Identifier
       Transformations.IR2Scr.Main
-      Transformations.IR2Scr.Stmt
+      Transformations.IR2Scr.Statement
       Transformations.IR2Scr.Type
       Transformations.IR2Scr.Variable
       Transformations.Sol2IR.Contract

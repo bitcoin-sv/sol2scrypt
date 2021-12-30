@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Transformations.IR2Scr.Stmt where
+module Transformations.IR2Scr.Statement where
 
 import IR.Spec as IR
 import IR.Transformer

@@ -1,10 +1,10 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Generables.Expr where
+module Generables.Expression where
 
 import Scrypt.Generables.Base
-import Scrypt.Generables.Expr (binaryOp2Str)
+import Scrypt.Generables.Expression (binaryOp2Str)
 import Scrypt.Spec as Scr
 import Test.Tasty
 import Test.Tasty.Hspec
