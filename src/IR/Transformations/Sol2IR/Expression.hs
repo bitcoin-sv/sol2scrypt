@@ -60,7 +60,7 @@ instance ToIRTransformable Sol.Expression IExpression' where
     return $ FunctionCallExpr <$> fe' <*> sequence ps'
   _toIR (Literal (PrimaryExpressionTupleExpression (SquareBrackets array))) = do
     array' <- mapM _toIR array
-    return $ Just $ ArrayLiteral $ catMaybes array'
+    return $ Just $ ArrayLiteralExpr $ catMaybes array'
   _toIR e = error $ "unsupported expression : `" ++ headWord (show e) ++ "`"
 
 transformUnaryExpr :: String -> IExpression' -> IExpression'

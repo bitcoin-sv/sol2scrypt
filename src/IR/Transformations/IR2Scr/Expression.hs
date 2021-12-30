@@ -29,7 +29,7 @@ instance ToScryptTransformable IExpression (Scr.Expr Ann) where
       ins' :: NameAnn Ann = _toScrypt ins
       (NameAnn m' _) :: NameAnn Ann = _toScrypt m
       ps' = map _toScrypt ps
-  _toScrypt (IR.ArrayLiteral array) =  let arr = map _toScrypt array in Scr.ArrayLiteral arr nil
+  _toScrypt (IR.ArrayLiteralExpr array) =  let arr = map _toScrypt array in Scr.ArrayLiteral arr nil
   _toScrypt e = error $ "IExpr `" ++ show e ++ "` not implemented in scrypt"
 
 toScryptUnaryOp :: IR.IUnaryOp -> Scr.UnaryOp
