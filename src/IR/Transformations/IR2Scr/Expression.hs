@@ -32,10 +32,6 @@ instance ToScryptTransformable IExpr (Scr.Expr Ann) where
   _toScrypt (IR.ArrayLiteral array) =  let arr = map _toScrypt array in Scr.ArrayLiteral arr nil
   _toScrypt e = error $ "IExpr `" ++ show e ++ "` not implemented in scrypt"
 
-instance ToScryptTransformable IExpr Integer where
-  _toScrypt (LiteralExpr (IR.IntLiteral _ v)) = v
-  _toScrypt e = error $ "IExpr `" ++ show e ++ "` not implemented in scrypt"
-
 toScryptUnaryOp :: IR.IUnaryOp -> Scr.UnaryOp
 toScryptUnaryOp = read . show
 

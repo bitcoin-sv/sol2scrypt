@@ -32,7 +32,7 @@ instance Generable (Scr.Expr a) where
   genCode (Scr.Call n ps _) = n ++ "(" ++ intercalate ", " (map genCode ps) ++ ")"
   genCode (Scr.Dispatch fn _ mn ps _) = genCode fn ++ "." ++ mn ++ "(" ++ intercalate ", " (map genCode ps) ++ ")"
   -- ArrayLiteral
-  genCode (Scr.ArrayLiteral array _) = "[" ++ intercalate "," (map genCode array )  ++ "]"
+  genCode (Scr.ArrayLiteral array _) = "[" ++ intercalate ", " (map genCode array )  ++ "]"
   genCode _ = error "unimplemented show scrypt expr"
 
 unaryOp2Str :: Scr.UnaryOp -> String

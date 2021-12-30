@@ -1,14 +1,13 @@
 module IR.Specs.Type where
 
 import IR.Specs.Lexical
-import IR.Specs.Expression
 
 
 data IType
   = ElementaryType IElementaryTypeName
   | BuiltinType String
   | UserDefinedType IUserDefinedTypeName
-  | Array IType IExpr
+  | Array IType Int
   deriving (Show, Eq, Ord)
 
 data IElementaryTypeName 
