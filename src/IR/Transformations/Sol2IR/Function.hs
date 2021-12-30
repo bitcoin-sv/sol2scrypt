@@ -130,10 +130,10 @@ mirror :: IIdentifier' -> IIdentifier
 mirror (Just (IR.Identifier i)) = IR.Identifier ("_" ++ i)
 mirror _ = error "try to mirror an identifier from nothing"
 
-requireEqualStmt :: IExpr -> IIdentifier -> IStatement
+requireEqualStmt :: IExpression -> IIdentifier -> IStatement
 requireEqualStmt e i = RequireStmt $ BinaryExpr IR.Equal e $ IdentifierExpr i
 
-trueExpr :: IExpr
+trueExpr :: IExpression
 trueExpr = LiteralExpr $ BoolLiteral True
 
 mergeTransOnBlock :: TransformationOnBlock -> TransformationOnBlock -> TransformationOnBlock

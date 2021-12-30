@@ -11,10 +11,10 @@ import IR.Transformations.IR2Scr.Identifier ()
 import Scrypt.Spec as Scr
 import Utils
 
-instance ToScryptTransformable IExpr' (Maybe (Scr.Expr Ann)) where
+instance ToScryptTransformable IExpression' (Maybe (Scr.Expr Ann)) where
   _toScrypt = (<$>) _toScrypt
 
-instance ToScryptTransformable IExpr (Scr.Expr Ann) where
+instance ToScryptTransformable IExpression (Scr.Expr Ann) where
   _toScrypt (LiteralExpr (IR.BoolLiteral b)) = Scr.BoolLiteral b nil
   _toScrypt (LiteralExpr (IR.IntLiteral _isHex i)) = Scr.IntLiteral _isHex i nil
   _toScrypt (LiteralExpr (IR.BytesLiteral b)) = Scr.BytesLiteral b nil

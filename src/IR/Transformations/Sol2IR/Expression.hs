@@ -24,11 +24,11 @@ instance ToIRTransformable (Maybe Sol.Expression) Int where
   _toIR (Just e)  = _toIR e
   _toIR e = error $ "unsupported expression to Integer : `" ++ show e ++ "`"
 
-instance ToIRTransformable (Maybe Sol.Expression) IExpr' where
+instance ToIRTransformable (Maybe Sol.Expression) IExpression' where
   _toIR (Just e)  = _toIR e
   _toIR Nothing  = return Nothing
 
-instance ToIRTransformable Sol.Expression IExpr' where
+instance ToIRTransformable Sol.Expression IExpression' where
   _toIR (Literal (PrimaryExpressionBooleanLiteral (Sol.BooleanLiteral b))) =
     return $ Just $ LiteralExpr $ IR.BoolLiteral ("true" == toLower b)
   _toIR (Literal (PrimaryExpressionNumberLiteral (NumberLiteralHex n Nothing))) =
@@ -63,7 +63,7 @@ instance ToIRTransformable Sol.Expression IExpr' where
     return $ Just $ ArrayLiteral $ catMaybes array'
   _toIR e = error $ "unsupported expression : `" ++ headWord (show e) ++ "`"
 
-transformUnaryExpr :: String -> IExpr' -> IExpr'
+transformUnaryExpr :: String -> IExpression' -> IExpression'
 transformUnaryExpr opStr e' =
   case opStr of
     "-" -> UnaryExpr Negate <$> e'

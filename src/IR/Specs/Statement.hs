@@ -5,12 +5,12 @@ import IR.Specs.Lexicals.Identifier (IIdentifier)
 import IR.Specs.Variable
 
 data IStatement 
-  = IfStmt {cond :: IExpr, trueBranch :: IStatement, falseBranch :: Maybe IStatement}
-  | ExprStmt IExpr
-  | AssignStmt [Maybe IIdentifier] [IExpr]
-  | DeclareStmt [Maybe IParam] [IExpr]
-  | RequireStmt {verifyExpr :: IExpr}
-  | ReturnStmt {retExpr :: IExpr}
+  = IfStmt {cond :: IExpression, trueBranch :: IStatement, falseBranch :: Maybe IStatement}
+  | ExprStmt IExpression
+  | AssignStmt [Maybe IIdentifier] [IExpression]
+  | DeclareStmt [Maybe IParam] [IExpression]
+  | RequireStmt {verifyExpr :: IExpression}
+  | ReturnStmt {retExpr :: IExpression}
   | BlockStatement IBlock
   deriving (Show, Eq, Ord)
 
