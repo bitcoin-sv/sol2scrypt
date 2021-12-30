@@ -26,14 +26,16 @@ instance Generable (Scr.Expr a) where
   -- UnaryExpr
   genCode (Scr.UnaryExpr Scr.Negate e@(Scr.IntLiteral True _ _) _) = unaryOp2Str Scr.Negate ++ "(" ++ genCode e ++ ")"
   genCode (Scr.UnaryExpr op e _) | op `elem` [Scr.PostIncrement, Scr.PostDecrement] = genCode e ++ unaryOp2Str op
-  genCode (Scr.UnaryExpr op e _) = unaryOp2Str op ++ genCode e 
+  genCode (Scr.UnaryExpr op e _) = unaryOp2Str op ++ genCode e
   -- BinaryExpr
   genCode (Scr.BinaryExpr op e1 e2 _) = genCode e1 ++ binaryOp2Str op ++ genCode e2
   genCode (Scr.Call n ps _) = n ++ "(" ++ intercalate ", " (map genCode ps) ++ ")"
   genCode (Scr.Dispatch fn _ mn ps _) = genCode fn ++ "." ++ mn ++ "(" ++ intercalate ", " (map genCode ps) ++ ")"
+  -- ArrayLiteral
+  genCode (Scr.ArrayLiteral array _) = "[" ++ intercalate ", " (map genCode array )  ++ "]"
   genCode _ = error "unimplemented show scrypt expr"
 
-unaryOp2Str :: Scr.UnaryOp -> String 
+unaryOp2Str :: Scr.UnaryOp -> String
 unaryOp2Str Scr.Not = "!"
 unaryOp2Str Scr.Negate = "-"
 unaryOp2Str Scr.PostIncrement = "++"
