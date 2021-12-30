@@ -6,7 +6,7 @@ module Scrypt.Generables.Function where
 
 import Scrypt.Generables.Base
 import Scrypt.Generables.Type ()
-import Scrypt.Generables.Stmt ()
+import Scrypt.Generables.Statement ()
 import Scrypt.Generables.Variable ()
 
 import Scrypt.Spec as Scr

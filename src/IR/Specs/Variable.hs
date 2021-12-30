@@ -23,6 +23,6 @@ data IStateVariable = StateVariable
     stateVarName :: IIdentifier,
     stateVarType :: IType,
     stateVisibility :: IVisibility,
-    stateInitialValue :: Maybe IExpr
+    stateInitialValue :: Maybe IExpression
   }
   deriving (Show, Eq, Ord)

@@ -8,7 +8,7 @@ module IR.Spec
     module IR.Specs.Contract,
     module IR.Specs.Empty,
     module IR.Specs.Program,
-    IIdentifier', IType', IExpr', IStatement', IParam', IParamList',
+    IIdentifier', IType', IExpression', IStatement', IParam', IParamList',
     IVisibility', IBlock', IFunction',
     IContractBodyElement', IStateVariable', IContract'
   )
@@ -28,7 +28,7 @@ type IIdentifier' = Maybe IIdentifier
 
 type IType' = Maybe IType
 
-type IExpr' = Maybe IExpr
+type IExpression' = Maybe IExpression
 
 type IStatement' = Maybe IStatement
 

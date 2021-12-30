@@ -49,7 +49,7 @@ spec = testSpec "instance ToScryptTransformable IExpr (Scr.Expr Ann)" $ do
   describe "#Parens" $ do
     itExpr
       "Parens"
-      (IR.Parens $ LiteralExpr $ IR.IntLiteral True 15)
+      (IR.ParensExpr $ LiteralExpr $ IR.IntLiteral True 15)
       (Scr.Parens (Scr.IntLiteral True 15 nil) nil)
 
   describe "#UnaryExpr" $ do

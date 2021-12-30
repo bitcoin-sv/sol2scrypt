@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Transformations.IR2Scr.Stmt where
+module Transformations.IR2Scr.Statement where
 
 import IR.Spec as IR
 import IR.Transformer
@@ -16,7 +16,7 @@ spec = testSpec "instance ToScryptTransformable IStatment (Scr.Statement IExpr)"
         r1 <- transform2Scrypt $ Just . IR.ExprStmt $ e1
         r1 `shouldBe` Just (Scr.ExprStmt e2 nil)
   let itBlockStmt title e1 e2 = it ("should transfrom IR `" ++ title ++ "` to sCrypt Statement correctly") $ do
-        r1 <- transform2Scrypt $ Just . IR.BlockStatement $ IR.Block [e1]
+        r1 <- transform2Scrypt $ Just . IR.BlockStmt $ IR.Block [e1]
         r1 `shouldBe` Just (Scr.Block [e2] nil)
 
   let itReturnStmt title e1 e2 = it ("should transfrom IR `" ++ title ++ "` to sCrypt Statement correctly") $ do

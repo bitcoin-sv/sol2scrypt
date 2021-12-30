@@ -1,10 +1,10 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE FlexibleInstances #-}
 
-module Scrypt.Generables.Stmt where
+module Scrypt.Generables.Statement where
 
 import Scrypt.Generables.Base
-import Scrypt.Generables.Expr
+import Scrypt.Generables.Expression
 import Scrypt.Generables.Variable 
 
 import Scrypt.Spec as Scr

@@ -17,7 +17,7 @@ main = do
   putStrLn $ "Transpile `" ++ solidityCode1 ++ "` to `" ++ scryptCode tr1 ++ "`"
 
   let solidityCode2 = "0x123a"
-  tr2 :: TranspileResult Expression IExpr' (Maybe (Expr Ann)) <- transpile solidityCode2
+  tr2 :: TranspileResult Expression IExpression' (Maybe (Expr Ann)) <- transpile solidityCode2
   putStrLn $ "Transpile `" ++ solidityCode2 ++ "` to `" ++ scryptCode tr2 ++ "`"
 
 

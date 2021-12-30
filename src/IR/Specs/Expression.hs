@@ -2,17 +2,17 @@ module IR.Specs.Expression where
 
 import IR.Specs.Lexical
 
-data IExpr
+data IExpression
   = LiteralExpr ILiteral
   | IdentifierExpr IIdentifier
-  | Parens {enclosedExpr :: IExpr}
-  | UnaryExpr {unaryOp :: IUnaryOp, uExpr :: IExpr}
-  | BinaryExpr {binaryOp :: IBinaryOp, lExpr :: IExpr, rExpr :: IExpr}
-  | TernaryExpr {ternaryCond :: IExpr, ternaryTrueBranch :: IExpr, ternaryFalseBranch :: IExpr}
-  | MemberAccess {instanceExpr :: IExpr, member :: IIdentifier}
-  | FunctionCall {funcExpr :: IExpr, funcParamExprs :: [IExpr]}
-  | ArrayLiteral {arrayVal :: [IExpr]}
+  | ParensExpr {enclosedExpr :: IExpression}
+  | UnaryExpr {unaryOp :: IUnaryOp, uExpr :: IExpression}
+  | BinaryExpr {binaryOp :: IBinaryOp, lExpr :: IExpression, rExpr :: IExpression}
+  | TernaryExpr {ternaryCond :: IExpression, ternaryTrueBranch :: IExpression, ternaryFalseBranch :: IExpression}
+  | MemberAccessExpr {instanceExpr :: IExpression, member :: IIdentifier}
+  | FunctionCallExpr {funcExpr :: IExpression, funcParamExprs :: [IExpression]}
+  | ArrayLiteralExpr {arrayVal :: [IExpression]}
   deriving (Eq, Show, Ord)
 
 
-newtype IExprList = ExprList { unExprList :: [IExpr] } deriving (Eq, Ord, Show)
+newtype IExprList = ExprList { unExprList :: [IExpression] } deriving (Eq, Ord, Show)

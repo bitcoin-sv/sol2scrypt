@@ -24,11 +24,11 @@ instance ToIRTransformable (Maybe Sol.Expression) Int where
   _toIR (Just e)  = _toIR e
   _toIR e = error $ "unsupported expression to Integer : `" ++ show e ++ "`"
 
-instance ToIRTransformable (Maybe Sol.Expression) IExpr' where
+instance ToIRTransformable (Maybe Sol.Expression) IExpression' where
   _toIR (Just e)  = _toIR e
   _toIR Nothing  = return Nothing
 
-instance ToIRTransformable Sol.Expression IExpr' where
+instance ToIRTransformable Sol.Expression IExpression' where
   _toIR (Literal (PrimaryExpressionBooleanLiteral (Sol.BooleanLiteral b))) =
     return $ Just $ LiteralExpr $ IR.BoolLiteral ("true" == toLower b)
   _toIR (Literal (PrimaryExpressionNumberLiteral (NumberLiteralHex n Nothing))) =
@@ -51,23 +51,23 @@ instance ToIRTransformable Sol.Expression IExpr' where
   _toIR (Sol.MemberAccess e i) = do
     e' <- _toIR e
     i' <- _toIR i
-    return $ IR.MemberAccess <$> e' <*> i'
+    return $ IR.MemberAccessExpr <$> e' <*> i'
   _toIR (FunctionCallExpressionList fe pl) = do
     fe' <- _toIR fe
     ps' <- case pl of
             Nothing -> return []
             Just (ExpressionList ps) -> mapM _toIR ps
-    return $ FunctionCall <$> fe' <*> sequence ps'
+    return $ FunctionCallExpr <$> fe' <*> sequence ps'
   _toIR (Literal (PrimaryExpressionTupleExpression (SquareBrackets array))) = do
     array' <- mapM _toIR array
-    return $ Just $ ArrayLiteral $ catMaybes array'
+    return $ Just $ ArrayLiteralExpr $ catMaybes array'
   _toIR e = error $ "unsupported expression : `" ++ headWord (show e) ++ "`"
 
-transformUnaryExpr :: String -> IExpr' -> IExpr'
+transformUnaryExpr :: String -> IExpression' -> IExpression'
 transformUnaryExpr opStr e' =
   case opStr of
     "-" -> UnaryExpr Negate <$> e'
-    "()" -> Parens <$> e'
+    "()" -> ParensExpr <$> e'
     "()++" -> UnaryExpr PostIncrement <$> e'
     "++" -> UnaryExpr PreIncrement <$> e'
     "()--" -> UnaryExpr PostDecrement <$> e'
