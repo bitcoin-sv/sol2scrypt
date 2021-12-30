@@ -9,7 +9,7 @@ data IExpression
   | UnaryExpr {unaryOp :: IUnaryOp, uExpr :: IExpression}
   | BinaryExpr {binaryOp :: IBinaryOp, lExpr :: IExpression, rExpr :: IExpression}
   | TernaryExpr {ternaryCond :: IExpression, ternaryTrueBranch :: IExpression, ternaryFalseBranch :: IExpression}
-  | MemberAccess {instanceExpr :: IExpression, member :: IIdentifier}
+  | MemberAccessExpr {instanceExpr :: IExpression, member :: IIdentifier}
   | FunctionCall {funcExpr :: IExpression, funcParamExprs :: [IExpression]}
   | ArrayLiteral {arrayVal :: [IExpression]}
   deriving (Eq, Show, Ord)

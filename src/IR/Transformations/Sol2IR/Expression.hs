@@ -51,7 +51,7 @@ instance ToIRTransformable Sol.Expression IExpression' where
   _toIR (Sol.MemberAccess e i) = do
     e' <- _toIR e
     i' <- _toIR i
-    return $ IR.MemberAccess <$> e' <*> i'
+    return $ IR.MemberAccessExpr <$> e' <*> i'
   _toIR (FunctionCallExpressionList fe pl) = do
     fe' <- _toIR fe
     ps' <- case pl of

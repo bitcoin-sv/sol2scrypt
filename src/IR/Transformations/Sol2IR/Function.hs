@@ -157,23 +157,23 @@ transForPreimageFunc =
       [ -- add `require(Tx.checkPreimage(txPreimage));`
         IR.RequireStmt $
           IR.FunctionCall
-            (IR.MemberAccess (IdentifierExpr (IR.Identifier "Tx")) (IR.Identifier "checkPreimage"))
+            (IR.MemberAccessExpr (IdentifierExpr (IR.Identifier "Tx")) (IR.Identifier "checkPreimage"))
             [IdentifierExpr (IR.Identifier "txPreimage")],
         -- add `bytes outputScript = this.getStateScript();`
         IR.DeclareStmt
           [Just $ IR.Param (ElementaryType IR.Bytes) (IR.Identifier "outputScript")]
           [ IR.FunctionCall
-              (IR.MemberAccess (IdentifierExpr (IR.Identifier "this")) (IR.Identifier "getStateScript"))
+              (IR.MemberAccessExpr (IdentifierExpr (IR.Identifier "this")) (IR.Identifier "getStateScript"))
               []
           ],
         -- add `bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));`
         IR.DeclareStmt
           [Just $ IR.Param (ElementaryType IR.Bytes) (IR.Identifier "output")]
           [ IR.FunctionCall
-              (IR.MemberAccess (IdentifierExpr (IR.Identifier "Utils")) (IR.Identifier "buildOutput"))
+              (IR.MemberAccessExpr (IdentifierExpr (IR.Identifier "Utils")) (IR.Identifier "buildOutput"))
               [ IdentifierExpr (IR.Identifier "outputScript"),
                 IR.FunctionCall
-                  (IR.MemberAccess (IdentifierExpr (IR.Identifier "SigHash")) (IR.Identifier "value"))
+                  (IR.MemberAccessExpr (IdentifierExpr (IR.Identifier "SigHash")) (IR.Identifier "value"))
                   [IdentifierExpr (IR.Identifier "txPreimage")]
               ]
           ],
@@ -183,7 +183,7 @@ transForPreimageFunc =
             IR.Equal
             (IR.FunctionCall (IdentifierExpr (IR.Identifier "hash256")) [IdentifierExpr (IR.Identifier "output")])
             $ IR.FunctionCall
-              (IR.MemberAccess (IdentifierExpr (IR.Identifier "SigHash")) (IR.Identifier "hashOutputs"))
+              (IR.MemberAccessExpr (IdentifierExpr (IR.Identifier "SigHash")) (IR.Identifier "hashOutputs"))
               [IdentifierExpr (IR.Identifier "txPreimage")]
       ]
   )
