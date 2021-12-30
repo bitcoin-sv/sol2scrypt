@@ -29,7 +29,7 @@ spec = testSpec "Transpile Statement" $ do
 
     describe "#Parans" $ do
       itstmt "Parans number"  "(0);"  "(0);"
-      -- itstmt "Parans bool"  "(true);"  "(true);"
+      itstmt "Parans bool"  "(true);"  "(true);"
 
     describe "#Unary" $ do
       itstmt "++"  "a++;"  "a++;"
@@ -90,9 +90,10 @@ spec = testSpec "Transpile Statement" $ do
 
       
 
-    describe "#Sol Parser bug? #9" $ do
+    describe "#Fix Sol Parser bug #9" $ do
       itstmt "SimpleStatementExpression"  "true;"  "true;"
       itstmt "SimpleStatementExpression"  "false;"  "false;"
+      itstmt "SimpleStatementExpression"  "(false);"  "(false);"
       itstmt "SimpleStatementExpression"  "false || true;"  "false || true;"
       itstmt "SimpleStatementExpression"  "false && true;"  "false && true;"
       itstmt "BlockStatement"  [r|{
