@@ -48,6 +48,11 @@ instance ToIRTransformable Sol.Expression IExpression' where
     e1' <- _toIR e1
     e2' <- _toIR e2
     return $ BinaryExpr (str2BinaryOp opStr) <$> e1' <*> e2'
+  _toIR (Ternary _ e1 e2 e3) = do 
+    e1' <- _toIR e1
+    e2' <- _toIR e2 
+    e3' <- _toIR e3 
+    return $ TernaryExpr  <$> e1' <*> e2' <*> e3'
   _toIR (Sol.MemberAccess e i) = do
     e' <- _toIR e
     i' <- _toIR i

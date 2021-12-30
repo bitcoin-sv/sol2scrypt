@@ -12,10 +12,13 @@ import Transformations.Helper
 
 spec :: IO TestTree
 spec = testSpec "instance ToIRTransformable Sol.Expression IExpr'" $ do
-
   let itExpr solidityCode e = it ("should transfrom Solidity `" ++ solidityCode ++ "` to IR Expression correctly") $ do
         ir <- sol2Ir sol2Expr solidityCode
         ir `shouldBe` Just (LiteralExpr e)
+
+  let itExpr' solidityCode e = it ("should transfrom Solidity `" ++ solidityCode ++ "` to IR Expression correctly") $ do
+        ir <- sol2Ir sol2Expr solidityCode
+        ir `shouldBe` Just e
 
   let itUnary op solidityCode = it ("should transfrom Solidity `" ++ solidityCode ++ "` to IR Expression correctly") $ do
         r1 <- sol2Ir sol2Expr solidityCode
@@ -69,3 +72,12 @@ spec = testSpec "instance ToIRTransformable Sol.Expression IExpr'" $ do
     itBinary ">=" "1 >= 2"
     itBinary' "||" "false || true"
     itBinary' "&&" "false && true"
+
+  describe "#Ternary" $ do
+    itExpr' "true? 1: 2" (TernaryExpr {ternaryCond = LiteralExpr (BoolLiteral True), ternaryTrueBranch = LiteralExpr (IntLiteral {isHex = False, intVal = 1}), ternaryFalseBranch = LiteralExpr (IntLiteral {isHex = False, intVal = 2})})
+    itExpr' "true? (a + 1): a++" (TernaryExpr {ternaryCond = LiteralExpr (BoolLiteral True), ternaryTrueBranch = IR.ParensExpr {enclosedExpr = BinaryExpr {binaryOp = Add, lExpr = IdentifierExpr (IR.Identifier "a"), rExpr = LiteralExpr (IntLiteral {isHex = False, intVal = 1})}}, ternaryFalseBranch = UnaryExpr {unaryOp = PostIncrement, uExpr = IdentifierExpr (IR.Identifier "a")}})
+
+  describe "#MemberAccess" $ do
+    itExpr' "a.b" (IR.MemberAccessExpr {instanceExpr = IdentifierExpr (IR.Identifier "a"), member = IR.Identifier "b"})
+    itExpr' "a.b.c" (IR.MemberAccessExpr {instanceExpr = IR.MemberAccessExpr {instanceExpr = IdentifierExpr (IR.Identifier "a"), member = IR.Identifier "b"}, member = IR.Identifier "c"})
+    itExpr' "msg.sender" (IR.MemberAccessExpr {instanceExpr = IdentifierExpr (IR.Identifier "msg"), member = IR.Identifier "sender"})
