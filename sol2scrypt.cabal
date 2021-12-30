@@ -107,6 +107,7 @@ test-suite e2e
       ContractSpec
       ExpressionSpec
       FunctionSpec
+      IdentifierSpec
       PragmaSpec
       StmtSpec
       TypeSpec
@@ -134,14 +135,19 @@ test-suite unit
       Generables.Type
       Generables.Variable
       GeneratorSpec
+      Transformations.Helper
+      Transformations.IR2Scr.Contract
       Transformations.IR2Scr.Expression
       Transformations.IR2Scr.Function
+      Transformations.IR2Scr.Identifier
       Transformations.IR2Scr.Main
       Transformations.IR2Scr.Stmt
       Transformations.IR2Scr.Type
       Transformations.IR2Scr.Variable
+      Transformations.Sol2IR.Contract
       Transformations.Sol2IR.Expression
       Transformations.Sol2IR.Function
+      Transformations.Sol2IR.Identifier
       Transformations.Sol2IR.Main
       Transformations.Sol2IR.Statement
       Transformations.Sol2IR.Type

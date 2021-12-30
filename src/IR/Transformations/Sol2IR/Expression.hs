@@ -10,13 +10,26 @@ import IR.Transformations.Sol2IR.Identifier (maybeStateVarId)
 import Solidity.Spec as Sol
 import IR.Spec as IR
 import Utils
+import Data.Maybe (catMaybes)
+
+
+
+-- only used by Transfer array sub. eg. int[20]
+instance ToIRTransformable Sol.Expression Int where
+  _toIR (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec n _))) = return (fst $ head $ readDec n)
+  _toIR (Literal (PrimaryExpressionNumberLiteral (NumberLiteralHex n _))) = return (fst $ head $ readHex n)
+  _toIR e = error $ "unsupported expression to Integer : `" ++ show e ++ "`"
+
+instance ToIRTransformable (Maybe Sol.Expression) Int where
+  _toIR (Just e)  = _toIR e
+  _toIR e = error $ "unsupported expression to Integer : `" ++ show e ++ "`"
 
 instance ToIRTransformable (Maybe Sol.Expression) IExpr' where
   _toIR (Just e)  = _toIR e
   _toIR Nothing  = return Nothing
 
 instance ToIRTransformable Sol.Expression IExpr' where
-  _toIR (Literal (PrimaryExpressionBooleanLiteral (Sol.BooleanLiteral b))) = 
+  _toIR (Literal (PrimaryExpressionBooleanLiteral (Sol.BooleanLiteral b))) =
     return $ Just $ LiteralExpr $ IR.BoolLiteral ("true" == toLower b)
   _toIR (Literal (PrimaryExpressionNumberLiteral (NumberLiteralHex n Nothing))) =
     return $ Just $ LiteralExpr $ IR.IntLiteral True (fst $ head $ readHex n)
@@ -28,12 +41,12 @@ instance ToIRTransformable Sol.Expression IExpr' where
     i' <- _toIR i
     i'' <- maybeStateVarId i'
     return $ IdentifierExpr <$> i''
-  _toIR (Unary opStr e) = do 
-    e' <- _toIR e 
+  _toIR (Unary opStr e) = do
+    e' <- _toIR e
     return $ transformUnaryExpr opStr e'
-  _toIR (Binary opStr e1 e2) = do 
-    e1' :: IExpr' <- _toIR e1
-    e2' :: IExpr' <- _toIR e2 
+  _toIR (Binary opStr e1 e2) = do
+    e1' <- _toIR e1
+    e2' <- _toIR e2
     return $ BinaryExpr (str2BinaryOp opStr) <$> e1' <*> e2'
   _toIR (Sol.MemberAccess e i) = do
     e' <- _toIR e
@@ -45,13 +58,15 @@ instance ToIRTransformable Sol.Expression IExpr' where
             Nothing -> return []
             Just (ExpressionList ps) -> mapM _toIR ps
     return $ FunctionCall <$> fe' <*> sequence ps'
+  _toIR (Literal (PrimaryExpressionTupleExpression (SquareBrackets array))) = do
+    array' <- mapM _toIR array
+    return $ Just $ ArrayLiteral $ catMaybes array'
   _toIR e = error $ "unsupported expression : `" ++ headWord (show e) ++ "`"
 
-
 transformUnaryExpr :: String -> IExpr' -> IExpr'
-transformUnaryExpr opStr e' = 
+transformUnaryExpr opStr e' =
   case opStr of
-    "-" -> UnaryExpr Negate <$> e' 
+    "-" -> UnaryExpr Negate <$> e'
     "()" -> Parens <$> e'
     "()++" -> UnaryExpr PostIncrement <$> e'
     "++" -> UnaryExpr PreIncrement <$> e'

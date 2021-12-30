@@ -30,6 +30,8 @@ main = do
   putStrLn $ "Transpile `" ++ solidityCode3 ++ "` to `" ++ scryptCode tr3 ++ "`"
 
 
+
   let solidityCode4 = "uint storedData;"
   e :: ContractPart <- parseIO solidityCode4
   print e
+

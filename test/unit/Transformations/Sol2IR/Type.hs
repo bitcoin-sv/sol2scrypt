@@ -7,24 +7,23 @@ import IR.Transformer
 import Solidity.Spec
 import Test.Tasty
 import Test.Tasty.Hspec
+import Transformations.Helper
 
 spec :: IO TestTree
 spec = testSpec "instance ToIRTransformable TypeName IType'" $ do
-  let itType title e1 e2 = it ("should transfrom Solidity `" ++ title ++ "` to IR Type correctly") $ do
-        r1 <- transform2IR (TransformState []) (TypeNameElementaryTypeName e1)
-        r1 `shouldBe` Just (ElementaryType e2)
+  let itType sol e = it ("should transfrom Solidity `" ++ sol ++ "` to IR Type correctly") $ do
+        r1 <- sol2Ir sol2Type sol
+        r1 `shouldBe` Just (ElementaryType e)
 
   describe "#TypeNameElementaryTypeName" $ do
-    itType "BoolType" BoolType Bool
-
-    itType "IntType" (IntType $ Just 8) Int
-
-    itType "UintType" (UintType $ Just 256) Int
-
-    itType "BytesType" (BytesType $ Just 1) Bytes
-
-    itType "BytesType" ByteType Bytes
-
-    itType "BytesType" VarType Any
-
-    itType "BytesType" AddressType Address
+    itType "bool" Bool
+    itType "int" Int
+    itType "int8" Int
+    itType "int256" Int
+    itType "uint" Int
+    itType "uint8" Int
+    itType "uint256" Int
+    itType "bytes" Bytes
+    itType "byte" Bytes
+    itType "var" Any
+    itType "address" Address
