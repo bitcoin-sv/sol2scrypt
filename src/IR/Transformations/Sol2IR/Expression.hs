@@ -67,7 +67,7 @@ transformUnaryExpr :: String -> IExpression' -> IExpression'
 transformUnaryExpr opStr e' =
   case opStr of
     "-" -> UnaryExpr Negate <$> e'
-    "()" -> Parens <$> e'
+    "()" -> ParensExpr <$> e'
     "()++" -> UnaryExpr PostIncrement <$> e'
     "++" -> UnaryExpr PreIncrement <$> e'
     "()--" -> UnaryExpr PostDecrement <$> e'

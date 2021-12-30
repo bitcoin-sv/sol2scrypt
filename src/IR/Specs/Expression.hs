@@ -5,7 +5,7 @@ import IR.Specs.Lexical
 data IExpression
   = LiteralExpr ILiteral
   | IdentifierExpr IIdentifier
-  | Parens {enclosedExpr :: IExpression}
+  | ParensExpr {enclosedExpr :: IExpression}
   | UnaryExpr {unaryOp :: IUnaryOp, uExpr :: IExpression}
   | BinaryExpr {binaryOp :: IBinaryOp, lExpr :: IExpression, rExpr :: IExpression}
   | TernaryExpr {ternaryCond :: IExpression, ternaryTrueBranch :: IExpression, ternaryFalseBranch :: IExpression}
