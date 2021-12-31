@@ -125,3 +125,23 @@ spec = testSpec "Transpile Statement" $ do
   false && true;
 }|]
 
+  describe "#indent" $ do
+    describe "#should indent when print block statement. #64" $ do
+      itstmt "SimpleStatementExpression"  "{ true;{ true; {true; a=a+1; {a++;}}}}"  
+        [r|
+{
+  true;
+  {
+    true;
+    {
+      true;
+      a = a + 1;
+      {
+        a++;
+      }
+    }
+  }
+}|]
+
+
+

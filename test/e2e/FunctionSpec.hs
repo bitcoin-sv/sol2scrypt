@@ -341,6 +341,28 @@ public function get(SigHashPreimage txPreimage, int retVal) {
 }|]
 
 
+  describe "#indent" $ do
+    describe "#should indent when print block statement. #64" $ do
+      itTranspile
+        "external function with returns"
+        "function get() external view returns (uint) { {true; {true;} } return storedData; }"
+        [r|
+public function get(SigHashPreimage txPreimage, int retVal) {
+  {
+    true;
+    {
+      true;
+    }
+  }
+  require(Tx.checkPreimage(txPreimage));
+  bytes outputScript = this.getStateScript();
+  bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+  require(hash256(output) == SigHash.hashOutputs(txPreimage));
+  require(storedData == retVal);
+}|]
+
+
+
       
 
 
