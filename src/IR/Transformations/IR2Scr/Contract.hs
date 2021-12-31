@@ -46,3 +46,6 @@ instance ToScryptTransformable IR.IContractBodyElement (Scr.Param Ann) where
 
 instance ToScryptTransformable IR.IContractBodyElement (Scr.Function Ann) where
   _toScrypt (IR.FunctionDefinition function) = _toScrypt function
+
+instance ToScryptTransformable IR.IContractBodyElement' Scr.Empty where
+  _toScrypt (Just IR.EventDefinition) = Scr.Empty

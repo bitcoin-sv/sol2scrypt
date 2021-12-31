@@ -2,6 +2,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
+{-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 
 module IR.Transformations.IR2Scr.Statement where
 
@@ -31,4 +32,6 @@ instance ToScryptTransformable IStatement (Scr.Statement Ann) where
   _toScrypt (IR.ReturnStmt e) = Scr.ReturnStmt (_toScrypt e) nil
   _toScrypt (IR.RequireStmt e) = Scr.Require (_toScrypt e) nil
   _toScrypt (IR.BlockStmt (IR.Block stmts)) = Scr.Block (map _toScrypt stmts) nil
+  _toScrypt IR.EmptyStmt = Scr.EmptyStmt
   _toScrypt e = error $ "_toScrypt for `" ++ show e ++ "` not implemented in scrypt"
+  

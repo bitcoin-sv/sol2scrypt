@@ -15,6 +15,7 @@ spec = testSpec "instance ToIRTransformable Sol.Statement IExpr'" $ do
   let itstmt title sol e2 = it ("should transfrom Solidity `" ++ title ++ "` to IR Statement correctly") $ do
         ir <- sol2Ir sol2Stmt sol
         ir `shouldBe` Just e2
+
   let itstmt' title sol = it ("should transfrom Solidity `" ++ title ++ "` to IR Statement correctly") $ do
         ir :: IStatement' <- sol2Ir sol2Stmt sol
         ir `shouldBe` Nothing

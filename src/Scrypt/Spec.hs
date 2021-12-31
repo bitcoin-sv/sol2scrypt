@@ -204,6 +204,7 @@ data Statement a
   | Loop { loopCount :: Expr a, loopVar :: Maybe (NameAnn a), loopBody :: Statement a, annot :: a}
   | CodeSeparator {annot :: a}
   | ReturnStmt {retExpr :: Expr a, annot :: a}
+  | EmptyStmt
   deriving (Eq, Show, Functor, Foldable, Traversable)
 
 instance Annotated Statement a where
