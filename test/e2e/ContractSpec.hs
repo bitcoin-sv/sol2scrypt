@@ -160,3 +160,42 @@ spec = testSpec "Transpile Contract" $ do
     return this.value;
   }
 }|]
+
+  itTransContract
+    [r|contract Counter {
+    uint public count;
+
+    // Function to get the current count
+    function get() public view returns (uint) {
+        return count;
+    }
+
+    // Function to increment count by 1
+    function inc() public {
+        count += 1;
+    }
+
+    // from https://solidity-by-example.org/state-variables/
+    // You need to send a transaction to write to a state variable.
+    function set(uint _count) public {
+        count = _count;
+    }
+}|]
+    [r|contract Counter {
+  @state public int count;
+
+  function get() : int {
+    return this.count;
+  }
+
+  function inc() : bool {
+    this.count += 1;
+    return true;
+  }
+
+  function set(int _count) : bool {
+    this.count = _count;
+    return true;
+  }
+}|]
+
