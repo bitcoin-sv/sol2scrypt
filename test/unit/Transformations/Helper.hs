@@ -10,6 +10,7 @@ import Transpiler
 import Utils
 import Solidity.Spec as Sol
 import Scrypt.Spec as Scr
+import Scrypt.Generables.Base
 
 
 sol2Stmt :: String -> IO Sol.Statement

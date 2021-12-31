@@ -4,7 +4,7 @@
 module Generables.Expression where
 
 import Scrypt.Generables.Base
-import Scrypt.Generables.Expression (binaryOp2Str)
+import Scrypt.Generables.Expression
 import Scrypt.Spec as Scr
 import Test.Tasty
 import Test.Tasty.Hspec
@@ -13,7 +13,8 @@ import Utils (nil)
 spec :: IO TestTree
 spec = testSpec "instance Generable (Expr a)" $ do
   let itcode title e c = it ("should generate sCrypt code for `" ++ title ++ "` correctly") $ do
-        genCode (Just e) `shouldBe` c
+        e' <- generateScrypt (CodeGenState 0) (Just e)
+        e' `shouldBe` c
 
   describe "#Expr" $ do
     describe "#Literal" $ do
@@ -70,7 +71,8 @@ spec = testSpec "instance Generable (Expr a)" $ do
 
     describe "#BinaryExpr" $ do
       let itBinary title op e1 e2 code = it ("should generate sCrypt code for `" ++ title ++ "` correctly") $ do
-            genCode (Just $ Scr.BinaryExpr op e1 e2 nil) `shouldBe` code
+            r <- generateScrypt (CodeGenState 0) (Just $ Scr.BinaryExpr op e1 e2 nil)
+            r `shouldBe` code
 
       let itBinaryCode title op = itBinary title op (Scr.IntLiteral False 1 nil) (Scr.IntLiteral False 15 nil) ("1" ++ binaryOp2Str op ++ "15")
 

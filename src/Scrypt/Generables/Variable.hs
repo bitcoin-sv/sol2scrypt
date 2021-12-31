@@ -9,18 +9,23 @@ import Scrypt.Spec as Scr
 import Utils
 
 instance Generable (Maybe (Scr.Param Ann)) where
-  genCode = maybe "" genCode
+  genCode Nothing = return ""
+  genCode (Just t) = genCode t
 
 
 instance Generable Scr.Visibility where
-  genCode Public = "public"
-  genCode Private = "private"
-  genCode Default = ""
+  genCode Public = return "public"
+  genCode Private = return "private"
+  genCode Default = return ""
 
 
 instance Generable (Scr.Param a) where
   genCode (Param (TypeAnn pt _) pn _ _ vis (IsStateProp True) _) = do
-    let visstr  = if vis == Default then "" else genCode vis ++ " "
-    "@state " ++ visstr ++ genCode pt ++ " " ++ genCode pn ++ ";"
+    vis' <- genCode vis
+    pt' <- genCode pt
+    pn' <- genCode pn
+    withIndent $ "@state " ++ (if vis /= Default then vis' ++ " " else "") ++  pt' ++ " " ++ pn' ++ ";"
   genCode (Param (TypeAnn pt _) pn _ _ _ _ _) = do
-    genCode pt ++ " " ++ genCode pn
+    pt' <- genCode pt
+    pn' <- genCode pn
+    return $ pt' ++ " " ++ pn'

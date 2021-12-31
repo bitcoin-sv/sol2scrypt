@@ -4,6 +4,7 @@ module Utils where
 import Data.Char as C
 import Data.Word
 import Numeric (showHex)
+import qualified Data.Text as T
 
 -- annotation: placeholder, to be instantiated
 newtype Ann = Ann { unAnn :: Maybe String } deriving (Eq, Ord, Show)
@@ -51,3 +52,6 @@ showHexWithPadded n = if n > 15 then showHex n "" else "0" ++ showHex n ""
 
 headWord :: String -> String
 headWord = head . words
+
+trim :: String -> String
+trim = T.unpack . T.strip . T.pack

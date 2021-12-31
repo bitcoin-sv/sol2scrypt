@@ -11,19 +11,20 @@ import Utils
 spec :: IO TestTree
 spec = testSpec "instance Generable (Scr.Function Ann)" $ do
   let itGenCode title e c = it ("should generate sCrypt code for `" ++ title ++ "` correctly") $ do
-        genCode e `shouldBe` c
+        e' <- generateScrypt (CodeGenState 0) e
+        e' `shouldBe` c
 
   itGenCode "public function"
     (pubFunc1 Public) 
-    "public function add(int x, int y) { require(true); }"
+    "\npublic function add(int x, int y) {\n  require(true);\n}"
 
   itGenCode "private function"
     (nonPubFunc1 Private) 
-    "private function add(int x, int y) : bool { return true; }"
+    "\nprivate function add(int x, int y) : bool {\n  return true;\n}"
 
   itGenCode "function"
     (nonPubFunc1 Default) 
-    "function add(int x, int y) : bool { return true; }"
+    "\nfunction add(int x, int y) : bool {\n  return true;\n}"
   
   where
     nonPubFunc1 vis =

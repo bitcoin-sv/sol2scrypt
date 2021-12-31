@@ -10,11 +10,12 @@ import qualified Generables.Expression
 import qualified Generables.Statement
 import qualified Generables.Variable
 import qualified Generables.Function
+import Scrypt
 
 baseSpec :: IO TestTree
 baseSpec = testSpec "#generateScrypt" $ do
   it "should generate empty code if nothing is given" $ do
-    r <- generateScrypt (Nothing :: Maybe Scr.Type)
+    r <- generateScrypt (CodeGenState 0) (Nothing :: Maybe Scr.Type)
     r `shouldBe` ""
 
 spec :: IO TestTree

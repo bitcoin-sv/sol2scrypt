@@ -18,12 +18,12 @@ spec = testSpec "Transpile Variable" $ do
         scryptCode tr `shouldBe` scrypt
 
   describe "#Property" $ do
-      itProperty "uint storedData;" "@state int storedData;"
-      itProperty "int storedData;" "@state int storedData;"
-      itProperty "bool a;" "@state bool a;"
-      itProperty "bytes a;" "@state bytes a;"
-      itProperty "bytes private a;" "@state private bytes a;"
-      itProperty "bytes public a;" "@state public bytes a;"
+      itProperty "uint storedData;" "\n@state int storedData;"
+      itProperty "int storedData;" "\n@state int storedData;"
+      itProperty "bool a;" "\n@state bool a;"
+      itProperty "bytes a;" "\n@state bytes a;"
+      itProperty "bytes private a;" "\n@state private bytes a;"
+      itProperty "bytes public a;" "\n@state public bytes a;"
 
   let itParameter sol scrypt = it ("should transpile Solidity `" ++ sol ++ "` correctly") $ do
         tr :: TranspileResult Parameter IParam' (Maybe (Scr.Param Ann)) <- transpile sol

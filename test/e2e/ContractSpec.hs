@@ -26,7 +26,17 @@ spec = testSpec "Transpile Contract" $ do
         a = x;
     }
 }|]
-    "contract A { @state int a; public function set(int x, SigHashPreimage txPreimage) { this.a = x; require(Tx.checkPreimage(txPreimage)); bytes outputScript = this.getStateScript(); bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage)); require(hash256(output) == SigHash.hashOutputs(txPreimage)); } }"
+    [r|contract A {
+  @state int a;
+
+  public function set(int x, SigHashPreimage txPreimage) {
+    this.a = x;
+    require(Tx.checkPreimage(txPreimage));
+    bytes outputScript = this.getStateScript();
+    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    require(hash256(output) == SigHash.hashOutputs(txPreimage));
+  }
+}|]
 
   itTransContract
     [r|contract SimpleStorage {
@@ -40,7 +50,21 @@ spec = testSpec "Transpile Contract" $ do
         return storedData;
     }
 }|]
-    "contract SimpleStorage { @state int storedData; public function set(int x, SigHashPreimage txPreimage) { this.storedData = x; require(Tx.checkPreimage(txPreimage)); bytes outputScript = this.getStateScript(); bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage)); require(hash256(output) == SigHash.hashOutputs(txPreimage)); } function get() : int { return this.storedData; } }"
+    [r|contract SimpleStorage {
+  @state int storedData;
+
+  public function set(int x, SigHashPreimage txPreimage) {
+    this.storedData = x;
+    require(Tx.checkPreimage(txPreimage));
+    bytes outputScript = this.getStateScript();
+    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    require(hash256(output) == SigHash.hashOutputs(txPreimage));
+  }
+
+  function get() : int {
+    return this.storedData;
+  }
+}|]
 
   itTransContract
     [r|contract A {
@@ -62,7 +86,27 @@ spec = testSpec "Transpile Contract" $ do
         uint b = a;
     }
 }|]
-    "contract A { @state int a; function set(int x) : bool { this.a = x; {int a = 2; a = x; x = a;} this.a = 3; x = this.a; return true; } function add(int a) : bool { a = 1; int b = a; return true; } }"
+    [r|contract A {
+  @state int a;
+
+  function set(int x) : bool {
+    this.a = x;
+    {
+      int a = 2;
+      a = x;
+      x = a;
+    }
+    this.a = 3;
+    x = this.a;
+    return true;
+  }
+
+  function add(int a) : bool {
+    a = 1;
+    int b = a;
+    return true;
+  }
+}|]
 
   itTransContract
     [r|contract flipper {
@@ -76,7 +120,18 @@ spec = testSpec "Transpile Contract" $ do
         return value;
     }
 }|]
-    "contract flipper { @state private bool value; function flip() : bool { this.value = !this.value; return true; } function get() : bool { return this.value; } }"
+    [r|contract flipper {
+  @state private bool value;
+
+  function flip() : bool {
+    this.value = !this.value;
+    return true;
+  }
+
+  function get() : bool {
+    return this.value;
+  }
+}|]
 
   itTransContract
     [r|contract flipper {
@@ -90,4 +145,18 @@ spec = testSpec "Transpile Contract" $ do
         return value;
     }
 }|]
-    "contract flipper { @state private bool value; public function flip(SigHashPreimage txPreimage) { this.value = !this.value; require(Tx.checkPreimage(txPreimage)); bytes outputScript = this.getStateScript(); bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage)); require(hash256(output) == SigHash.hashOutputs(txPreimage)); } function get() : bool { return this.value; } }"
+    [r|contract flipper {
+  @state private bool value;
+
+  public function flip(SigHashPreimage txPreimage) {
+    this.value = !this.value;
+    require(Tx.checkPreimage(txPreimage));
+    bytes outputScript = this.getStateScript();
+    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    require(hash256(output) == SigHash.hashOutputs(txPreimage));
+  }
+
+  function get() : bool {
+    return this.value;
+  }
+}|]
