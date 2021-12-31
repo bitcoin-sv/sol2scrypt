@@ -12,6 +12,7 @@ data IStatement
   | RequireStmt {verifyExpr :: IExpression}
   | ReturnStmt {retExpr :: IExpression}
   | BlockStmt IBlock
+  | EmptyStmt
   deriving (Show, Eq, Ord)
 
 newtype IBlock = Block [IStatement] deriving (Show, Eq, Ord)

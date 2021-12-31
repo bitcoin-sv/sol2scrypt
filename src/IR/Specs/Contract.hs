@@ -24,4 +24,5 @@ data IContractBodyElement
   = StateVariableDeclaration IStateVariable
   | ConstructorDefinition IConstructor
   | FunctionDefinition IFunction
+  | EventDefinition
   deriving (Show, Eq, Ord)

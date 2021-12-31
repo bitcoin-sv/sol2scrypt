@@ -39,4 +39,5 @@ instance Generable (Scr.Statement a) where
     decIndent
     closeBrace <- withIndent "}"
     return $ openBrace ++ intercalate "" stmts' ++ closeBrace
+  genCode EmptyStmt = return ""
   genCode _ = error "unimplemented show scrypt expr"

@@ -199,3 +199,35 @@ spec = testSpec "Transpile Contract" $ do
   }
 }|]
 
+
+  describe "#ContractPartEventDefinition" $ do
+    let itEvent sol = it "should transpile Solidity event correctly" $ do
+          tr :: TranspileResult Sol.ContractPart IR.IContractBodyElement' Scr.Empty <- transpile sol 
+          scryptCode tr `shouldBe` ""
+
+    itEvent "event Sent(address from, address to, uint amount);"
+    itEvent "event EventName(address bidder, uint amount);"
+    itEvent "event Deposit(address indexed _from, bytes32 indexed _id, uint _value);"
+    itEvent "event Log(address indexed sender, string message);"
+    itEvent "event AnotherLog();"
+
+
+    itTransContract
+      [r|contract Event {
+    // Event declaration
+    // Up to 3 parameters can be indexed.
+    // Indexed parameters helps you filter the logs by the indexed parameter
+    event Log(address indexed sender, string message);
+    event AnotherLog();
+
+    function test() public {
+        emit Log(msg.sender, "Hello World!");
+        emit Log(msg.sender, "Hello EVM!");
+        emit AnotherLog();
+    }
+}|]
+      [r|contract Event {
+  function test() : bool {
+    return true;
+  }
+}|]

@@ -14,7 +14,7 @@ import Text.RawString.QQ
 
 spec :: IO TestTree
 spec = testSpec "instance ToIRTransformable Contractpart IContractBodyElement'" $ do
-  let itProperty solidityCode target = it "should transfrom Solidity `ContractPartStateVariableDeclaration` to IR Function correctly" $ do
+  let itContractPart solidityCode target = it "should transfrom Solidity `ContractPartStateVariableDeclaration` to IR Function correctly" $ do
         ir :: IContractBodyElement' <- sol2Ir sol2ContractPart solidityCode
         ir `shouldBe` target
 
@@ -22,13 +22,17 @@ spec = testSpec "instance ToIRTransformable Contractpart IContractBodyElement'" 
         ir :: IContract' <- sol2Ir sol2Contract solidityCode
         ir `shouldBe` target
 
+
   describe "when the function is `public pure`" $ do
-    itProperty "uint a;" $ Just (IR.StateVariableDeclaration (IR.StateVariable (IR.Identifier "a") (ElementaryType Int) Default Nothing))
-    itProperty "uint private a;" $ Just (IR.StateVariableDeclaration (IR.StateVariable (IR.Identifier "a") (ElementaryType Int) Private Nothing))
-    itProperty "uint public a;" $ Just (IR.StateVariableDeclaration (IR.StateVariable (IR.Identifier "a") (ElementaryType Int) Public Nothing))
-    itProperty "int public a;" $ Just (IR.StateVariableDeclaration (IR.StateVariable (IR.Identifier "a") (ElementaryType Int) Public Nothing))
-    itProperty "int public a = 1;" $ Just (IR.StateVariableDeclaration (IR.StateVariable (IR.Identifier "a") (ElementaryType Int) Public 
+    itContractPart "uint a;" $ Just (IR.StateVariableDeclaration (IR.StateVariable (IR.Identifier "a") (ElementaryType Int) Default Nothing))
+    itContractPart "uint private a;" $ Just (IR.StateVariableDeclaration (IR.StateVariable (IR.Identifier "a") (ElementaryType Int) Private Nothing))
+    itContractPart "uint public a;" $ Just (IR.StateVariableDeclaration (IR.StateVariable (IR.Identifier "a") (ElementaryType Int) Public Nothing))
+    itContractPart "int public a;" $ Just (IR.StateVariableDeclaration (IR.StateVariable (IR.Identifier "a") (ElementaryType Int) Public Nothing))
+    itContractPart "int public a = 1;" $ Just (IR.StateVariableDeclaration (IR.StateVariable (IR.Identifier "a") (ElementaryType Int) Public 
       (Just (LiteralExpr (IntLiteral {isHex = False, intVal = 1})))))
-    itProperty "bool a;" $ Just (IR.StateVariableDeclaration (IR.StateVariable (IR.Identifier "a") (ElementaryType Bool) Default Nothing))
-    itProperty "bool a = true;" $ Just (IR.StateVariableDeclaration (IR.StateVariable (IR.Identifier "a") (ElementaryType Bool) Default 
+    itContractPart "bool a;" $ Just (IR.StateVariableDeclaration (IR.StateVariable (IR.Identifier "a") (ElementaryType Bool) Default Nothing))
+    itContractPart "bool a = true;" $ Just (IR.StateVariableDeclaration (IR.StateVariable (IR.Identifier "a") (ElementaryType Bool) Default 
       (Just (LiteralExpr (BoolLiteral True)))))
+
+  describe "Event" $ do
+    itContractPart "event Log(address indexed sender, string message);" (Just IR.EventDefinition)

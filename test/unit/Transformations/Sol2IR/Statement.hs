@@ -14,6 +14,9 @@ spec = testSpec "instance ToIRTransformable Sol.Statement IExpr'" $ do
   let itstmt title sol e2 = it ("should transfrom Solidity `" ++ title ++ "` to IR Statement correctly") $ do
         ir <- sol2Ir sol2Stmt sol
         ir `shouldBe` Just e2
+  let itstmt' title sol e2 = it ("should transfrom Solidity `" ++ title ++ "` to IR Statement correctly") $ do
+        ir <- sol2Ir sol2Stmt sol
+        ir `shouldBe` e2
 
   describe "#SimpleStatementExpression" $ do
     itstmt
@@ -135,3 +138,19 @@ spec = testSpec "instance ToIRTransformable Sol.Statement IExpr'" $ do
           "{ }"
           (IR.BlockStmt (IR.Block []))
 
+      describe "#EmitStatement" $ do
+
+        itstmt
+          "EmitStatement"
+          "emit Log(msg.sender, \"Hello World!\");"
+          IR.EmptyStmt
+
+        itstmt
+          "EmitStatement"
+          "emit AnotherLog();"
+          IR.EmptyStmt
+
+        itstmt
+          "EmitStatement"
+          "emit Sent(msg.sender, receiver, amount);"
+          IR.EmptyStmt
