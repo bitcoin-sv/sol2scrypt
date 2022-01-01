@@ -38,6 +38,15 @@ instance ToIRTransformable Sol.Statement IStatement' where
     blk' <- _toIR blk
     return $ IR.BlockStmt <$> blk'
   _toIR Sol.EmitStatement {} = return Nothing 
+  _toIR (Sol.IfStatement e ifstmt (Just elsestmt)) = do
+    e' <- _toIR e
+    ifstmt' :: IStatement' <- _toIR ifstmt
+    elsestmt'  <- _toIR elsestmt
+    return $ IR.IfStmt <$> e' <*> ifstmt' <*> Just elsestmt'
+  _toIR (Sol.IfStatement e ifstmt Nothing) = do
+    e' <- _toIR e
+    ifstmt' :: IStatement' <- _toIR ifstmt
+    return $ IR.IfStmt <$> e' <*> ifstmt' <*> Just Nothing
   _toIR s = error $ "unsupported statement `" ++ headWord (show s) ++ "`"
 
 instance ToIRTransformable Sol.Block IBlock' where
