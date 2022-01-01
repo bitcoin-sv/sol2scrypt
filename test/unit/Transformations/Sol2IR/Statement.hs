@@ -153,3 +153,16 @@ spec = testSpec "instance ToIRTransformable Sol.Statement IExpr'" $ do
         itstmt'
           "EmitStatement"
           "emit Sent(msg.sender, receiver, amount);"
+
+      describe "#IfStatement" $ do
+
+        itstmt
+          "IfStatement"
+          "if(true) {true;}"
+          (IfStmt {cond = LiteralExpr (BoolLiteral True), trueBranch = BlockStmt (IR.Block [ExprStmt (LiteralExpr (BoolLiteral True))]), falseBranch = Nothing})
+
+
+        itstmt
+          "IfStatement"
+          "if(true) {true;} else { false;}"
+          (IfStmt {cond = LiteralExpr (BoolLiteral True), trueBranch = BlockStmt (IR.Block [ExprStmt (LiteralExpr (BoolLiteral True))]), falseBranch = Just (BlockStmt (IR.Block [ExprStmt (LiteralExpr (BoolLiteral False))]))})
