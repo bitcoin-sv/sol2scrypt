@@ -146,18 +146,15 @@ spec = testSpec "Transpile Statement" $ do
   describe "#IfStmt" $ do
     itstmt "IfStmt without else statement "  "if(true){true;}"  
       [r|
-if(true) 
-{
+if(true) {
   true;
 }|]
 
     itstmt "IfStmt with else statement "  "if(true){true;}else{false;}"  
       [r|
-if(true) 
-{
+if(true) {
   true;
-} else 
-{
+} else {
   false;
 }|]
 
@@ -172,19 +169,13 @@ if(true)
     int x  = 3;
 }|]
       [r|
-if(true) 
-{
+if(true) {
   1 + 3;
-} else 
-if(1 == a) 
-{
+} else if(1 == a) {
   a++;
-} else 
-if(!c != (c || d)) 
-{
+} else if(!c != (c || d)) {
   e = b * 2;
-} else 
-{
+} else {
   int x = 3;
 }|]
 
