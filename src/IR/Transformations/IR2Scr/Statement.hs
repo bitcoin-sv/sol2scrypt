@@ -31,4 +31,9 @@ instance ToScryptTransformable IStatement (Scr.Statement Ann) where
   _toScrypt (IR.ReturnStmt e) = Scr.ReturnStmt (_toScrypt e) nil
   _toScrypt (IR.RequireStmt e) = Scr.Require (_toScrypt e) nil
   _toScrypt (IR.BlockStmt (IR.Block stmts)) = Scr.Block (map _toScrypt stmts) nil
+  _toScrypt (IR.IfStmt e ifstmt elsestmt) =
+    let e'  = _toScrypt e
+        ifstmt' = _toScrypt ifstmt
+        elsestmt' = _toScrypt elsestmt
+    in Scr.If e' ifstmt' elsestmt' nil 
   _toScrypt e = error $ "_toScrypt for `" ++ show e ++ "` not implemented in scrypt"
