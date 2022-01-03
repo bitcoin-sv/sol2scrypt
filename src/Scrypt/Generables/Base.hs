@@ -47,3 +47,11 @@ withIndent :: String -> CodeGenerator String
 withIndent s = do
   ind <- getIndent
   return $ "\n" ++ ind ++ trim s
+
+removeIndent :: String -> String
+removeIndent (s:xs) = case s of
+                      '\n' -> removeIndent xs
+                      ' ' -> removeIndent xs
+                      _ -> s:xs
+removeIndent [] = ""
+

@@ -150,6 +150,9 @@ if(true) {
   true;
 }|]
 
+
+    itstmt "IfStmt without else statement "  "if(true) true;"  "\nif(true) true;"
+
     itstmt "IfStmt with else statement "  "if(true){true;}else{false;}"  
       [r|
 if(true) {
@@ -178,6 +181,49 @@ if(true) {
 } else {
   int x = 3;
 }|]
+
+    itstmt "IfStmt with nested if/else"  
+      [r|if (true) {
+  if (true) {
+    a++;
+    if (c) {
+      --a;
+    } else {
+      a--;
+    }
+  } else {
+    a--;
+  }
+
+} else {
+    int x  = 3;
+    if(false) {
+      a++;
+    } else {
+      a--;
+    }
+}|]
+      [r|
+if(true) {
+  if(true) {
+    a++;
+    if(c) {
+      --a;
+    } else {
+      a--;
+    }
+  } else {
+    a--;
+  }
+} else {
+  int x = 3;
+  if(false) {
+    a++;
+  } else {
+    a--;
+  }
+}|]
+
 
 
 
