@@ -86,11 +86,15 @@ spec = testSpec "Transpile Expression" $ do
 
       itBinary ">="
 
+  describe "#Ternary Expression" $ do
+    itexpr "Ternary" "true ? 1 : 2" "true ? 1 : 2"
+    itexpr "Ternary" "false ? (1 + a) : a++" "false ? (1 + a) : a++"
+    itexpr "Ternary" "(true ? 1 == a : 2 == a) ? (1 + a) : a++" "(true ? 1 == a : 2 == a) ? (1 + a) : a++"
 
   describe "#MemberAccess" $ do
     itexpr "plain MemberAccess" "a.b" "a.b"
     itexpr "embeded MemberAccess" "a.b.c" "a.b.c"
-  
+
   describe "#FunctionCallExpressionList" $ do
     itexpr "FunctionCallExpressionList with identifer expr as function name" "a(b, c)" "a(b, c)"
     itexpr "FunctionCallExpressionList with member-access expr as function name" "a.b(c, d)" "a.b(c, d)"

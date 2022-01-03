@@ -131,3 +131,9 @@ spec = testSpec "instance ToScryptTransformable IExpr (Scr.Expr Ann)" $ do
     itBinary'' "&&"
 
     itBinary'' "||"
+
+  describe "#Ternary" $ do
+    itExpr
+      "Ternary"
+      (IR.TernaryExpr {IR.ternaryCond = LiteralExpr (IR.BoolLiteral True), IR.ternaryTrueBranch = LiteralExpr (IR.IntLiteral {IR.isHex = False, IR.intVal = 1}), IR.ternaryFalseBranch = LiteralExpr (IR.IntLiteral {IR.isHex = False, IR.intVal = 2})})
+      (Scr.TernaryExpr (Scr.BoolLiteral True nil) (Scr.IntLiteral False  1 nil) (Scr.IntLiteral False 2 nil) nil)

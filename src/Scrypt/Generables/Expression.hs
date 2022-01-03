@@ -29,8 +29,13 @@ instance Generable (Scr.Expr a) where
   genCode (Scr.UnaryExpr op e _) = unaryOp2Str op ++ genCode e
   -- BinaryExpr
   genCode (Scr.BinaryExpr op e1 e2 _) = genCode e1 ++ binaryOp2Str op ++ genCode e2
+  -- TernaryExpr
+  genCode (Scr.TernaryExpr e1 e2 e3 _) = genCode e1 ++ " ? " ++ genCode e2 ++ " : " ++ genCode e3
+  -- Call
   genCode (Scr.Call n ps _) = n ++ "(" ++ intercalate ", " (map genCode ps) ++ ")"
+  -- Dispatch
   genCode (Scr.Dispatch fn _ mn ps _) = genCode fn ++ "." ++ mn ++ "(" ++ intercalate ", " (map genCode ps) ++ ")"
+  
   -- ArrayLiteral
   genCode (Scr.ArrayLiteral array _) = "[" ++ intercalate ", " (map genCode array )  ++ "]"
   genCode _ = error "unimplemented show scrypt expr"
