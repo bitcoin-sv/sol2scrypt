@@ -6,7 +6,7 @@ import Scrypt.Spec
 import Utils
 import Data.List (intercalate)
 
-newtype CodeGenState = CodeGenState { stateIndentCount :: Int } deriving (Show, Eq, Ord)
+newtype CodeGenState = CodeGenState { unCodeGenState :: Int } deriving (Show, Eq, Ord)
 
 type CodeGenerator a = StateT CodeGenState IO a
 
@@ -26,18 +26,20 @@ instance Generable (Maybe (NameAnn Ann)) where
 
 incIndent :: CodeGenerator ()
 incIndent = do
-  ind <- gets stateIndentCount
-  modify $ \s -> s {stateIndentCount = ind + 1}
+  ind <- gets unCodeGenState
+  modify $ \s -> s {unCodeGenState = ind + 1}
 
 decIndent :: CodeGenerator ()
 decIndent = do
-  ind <- gets stateIndentCount
-  modify $ \s -> s {stateIndentCount = if ind < 1 then 0 else ind - 1}
+  ind <- gets unCodeGenState
+  modify $ \s -> s {unCodeGenState = if ind < 1 then error "negative indents" else ind - 1}
 
 getIndent :: CodeGenerator String
 getIndent = do
-  ind <- gets stateIndentCount
-  return $ intercalate "" $ replicate (2 * ind) " " {-- 2 space for a tab --}
+  ind <- gets unCodeGenState
+  return $ intercalate "" $ replicate (tabWidth * ind) " " {-- 2 space for a tab --}
+tabWidth :: Int
+tabWidth = 2
 
 withIndent :: String -> CodeGenerator String
 withIndent s = do
