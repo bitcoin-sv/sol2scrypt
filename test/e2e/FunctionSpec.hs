@@ -342,7 +342,7 @@ public function get(SigHashPreimage txPreimage, int retVal) {
 
 
   describe "#indent" $ do
-    describe "#should indent when print block statement. #64" $ do
+    describe "#should indent when printing block statement." $ do
       itTranspile
         "external function with returns"
         "function get() external view returns (uint) { {true; {true;} } return storedData; }"

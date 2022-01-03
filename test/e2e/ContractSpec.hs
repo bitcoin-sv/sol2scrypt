@@ -165,7 +165,6 @@ spec = testSpec "Transpile Contract" $ do
     [r|contract Counter {
     uint public count;
 
-    // Function to get the current count
     function get() public view returns (uint) {
         return count;
     }
@@ -175,8 +174,6 @@ spec = testSpec "Transpile Contract" $ do
         count += 1;
     }
 
-    // from https://solidity-by-example.org/state-variables/
-    // You need to send a transaction to write to a state variable.
     function set(uint _count) public {
         count = _count;
     }
@@ -214,9 +211,6 @@ spec = testSpec "Transpile Contract" $ do
 
     itTransContract
       [r|contract Event {
-    // Event declaration
-    // Up to 3 parameters can be indexed.
-    // Indexed parameters helps you filter the logs by the indexed parameter
     event Log(address indexed sender, string message);
     event AnotherLog();
 
