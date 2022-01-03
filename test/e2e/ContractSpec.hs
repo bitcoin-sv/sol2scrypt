@@ -165,7 +165,6 @@ spec = testSpec "Transpile Contract" $ do
     [r|contract Counter {
     uint public count;
 
-    // Function to get the current count
     function get() public view returns (uint) {
         return count;
     }
@@ -175,8 +174,6 @@ spec = testSpec "Transpile Contract" $ do
         count += 1;
     }
 
-    // from https://solidity-by-example.org/state-variables/
-    // You need to send a transaction to write to a state variable.
     function set(uint _count) public {
         count = _count;
     }
@@ -199,3 +196,32 @@ spec = testSpec "Transpile Contract" $ do
   }
 }|]
 
+
+  describe "#ContractPartEventDefinition" $ do
+    let itEvent sol = it "should transpile Solidity event correctly" $ do
+          tr :: TranspileResult Sol.ContractPart IR.IContractBodyElement' (Maybe (Scr.Param Ann)) <- transpile sol 
+          scryptCode tr `shouldBe` ""
+
+    itEvent "event Sent(address from, address to, uint amount);"
+    itEvent "event EventName(address bidder, uint amount);"
+    itEvent "event Deposit(address indexed _from, bytes32 indexed _id, uint _value);"
+    itEvent "event Log(address indexed sender, string message);"
+    itEvent "event AnotherLog();"
+
+
+    itTransContract
+      [r|contract Event {
+    event Log(address indexed sender, string message);
+    event AnotherLog();
+
+    function test() public {
+        emit Log(msg.sender, "Hello World!");
+        emit Log(msg.sender, "Hello EVM!");
+        emit AnotherLog();
+    }
+}|]
+      [r|contract Event {
+  function test() : bool {
+    return true;
+  }
+}|]
