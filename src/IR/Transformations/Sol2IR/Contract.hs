@@ -13,7 +13,7 @@ import IR.Transformations.Sol2IR.Expression ()
 import IR.Transformations.Sol2IR.Variable ()
 import IR.Transformations.Sol2IR.Function ()
 import Solidity.Spec as Sol
-import Data.Maybe (fromJust)
+import Data.Maybe (catMaybes, fromJust)
 import Utils
 
 instance ToIRTransformable ContractDefinition IContract' where
@@ -23,7 +23,7 @@ instance ToIRTransformable ContractDefinition IContract' where
     enterScope
     cps' <- mapM _toIR cps
     leaveScope
-    return $ IR.Contract <$> cn' <*> sequence cps'
+    return $ Just $ IR.Contract (fromJust cn') (catMaybes  cps')
   _toIR c = error $ "unsupported contract definition `" ++ headWord (show c) ++ "`"
 
 instance ToIRTransformable Sol.PragmaDirective IR.IEmpty where
@@ -34,6 +34,7 @@ instance ToIRTransformable Sol.ContractPart IContractBodyElement' where
     e' :: IStateVariable' <- _toIR e
     addSym $ Symbol <$> (stateVarName <$> e') <*> (stateVarType <$> e') <*> Just True
     return $ Just $ IR.StateVariableDeclaration (fromJust e')
+  _toIR Sol.ContractPartEventDefinition {} = return Nothing
   _toIR func@(Sol.ContractPartFunctionDefinition (Just fn) _ _ _ _) = do
     fn' <- _toIR fn
     addSym $ Symbol <$> fn' <*> Just functionSymType <*> Just False

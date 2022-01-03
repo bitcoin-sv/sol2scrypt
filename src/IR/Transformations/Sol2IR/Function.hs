@@ -124,7 +124,7 @@ toIRFuncBody (Sol.Block ss) vis (TransformationOnBlock prepends appends) (FuncRe
         (Just (RequireStmt (LiteralExpr (BoolLiteral True)))) : (Just (RequireStmt _)) : _ -> init stmts''
         _ -> stmts''
 
-  return $ IR.Block <$> sequence stmts'''
+  return $ Just $ IR.Block $ catMaybes stmts'''
 
 mirror :: IIdentifier' -> IIdentifier
 mirror (Just (IR.Identifier i)) = IR.Identifier ("_" ++ i)
