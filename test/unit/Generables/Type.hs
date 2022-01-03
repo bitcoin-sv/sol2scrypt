@@ -10,7 +10,8 @@ import Test.Tasty.Hspec
 spec :: IO TestTree
 spec = testSpec "instance Generable Scr.Type" $ do
   let itcode title e c = it ("should generate sCrypt code for `" ++ title ++ "` correctly") $ do
-        genCode (Just e) `shouldBe` c
+        e' <- generateScrypt (CodeGenState 0) (Just e)
+        e' `shouldBe` c
 
   describe "#Type" $ do
 

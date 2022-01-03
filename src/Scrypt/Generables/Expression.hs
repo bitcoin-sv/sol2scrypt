@@ -10,34 +10,53 @@ import Scrypt.Spec as Scr
 import Utils (showHexWithPadded)
 
 instance Generable (Maybe (Scr.Expr a)) where
-  genCode = maybe "" genCode
+  genCode Nothing = return ""
+  genCode (Just t) = genCode t
 
 instance Generable (Scr.Expr a) where
-  genCode (Scr.BoolLiteral b _) = if b then "true" else "false"
-  genCode (Scr.IntLiteral _isHex i _) = if _isHex then showHex_ else showInt_
+  genCode (Scr.BoolLiteral b _) = return $ if b then "true" else "false"
+  genCode (Scr.IntLiteral _isHex i _) = return $ if _isHex then showHex_ else showInt_
       where
         showHex_ = "0x" ++ showHex i ""
         showInt_ = showInt i ""
-  genCode (Scr.BytesLiteral b _) = "b'" ++ concatMap showHexWithPadded b ++ "'"
+  genCode (Scr.BytesLiteral b _) = return $ "b'" ++ concatMap showHexWithPadded b ++ "'"
   -- Var
-  genCode (Scr.Var v _ _) = v
+  genCode (Scr.Var v _ _) = return v
   -- Parens
-  genCode (Scr.Parens e _)  = "(" ++ genCode e ++ ")"
+  genCode (Scr.Parens e _)  = do
+    e' <- genCode e
+    return $ "(" ++ e' ++ ")"
   -- UnaryExpr
-  genCode (Scr.UnaryExpr Scr.Negate e@(Scr.IntLiteral True _ _) _) = unaryOp2Str Scr.Negate ++ "(" ++ genCode e ++ ")"
-  genCode (Scr.UnaryExpr op e _) | op `elem` [Scr.PostIncrement, Scr.PostDecrement] = genCode e ++ unaryOp2Str op
-  genCode (Scr.UnaryExpr op e _) = unaryOp2Str op ++ genCode e
+  genCode (Scr.UnaryExpr Scr.Negate e@(Scr.IntLiteral True _ _) _) = do
+    e' <- genCode e
+    return $ unaryOp2Str Scr.Negate ++ "(" ++ e' ++ ")"
+  genCode (Scr.UnaryExpr op e _) | op `elem` [Scr.PostIncrement, Scr.PostDecrement] = do
+    e' <- genCode e
+    return $ e' ++ unaryOp2Str op
+  genCode (Scr.UnaryExpr op e _) = do
+    e' <- genCode e
+    return $ unaryOp2Str op ++ e'
   -- BinaryExpr
-  genCode (Scr.BinaryExpr op e1 e2 _) = genCode e1 ++ binaryOp2Str op ++ genCode e2
-  -- TernaryExpr
-  genCode (Scr.TernaryExpr e1 e2 e3 _) = genCode e1 ++ " ? " ++ genCode e2 ++ " : " ++ genCode e3
-  -- Call
-  genCode (Scr.Call n ps _) = n ++ "(" ++ intercalate ", " (map genCode ps) ++ ")"
-  -- Dispatch
-  genCode (Scr.Dispatch fn _ mn ps _) = genCode fn ++ "." ++ mn ++ "(" ++ intercalate ", " (map genCode ps) ++ ")"
-  
+  genCode (Scr.BinaryExpr op e1 e2 _) = do
+    e1' <- genCode e1
+    e2' <- genCode e2
+    return $ e1' ++ binaryOp2Str op ++ e2'
+  genCode (Scr.TernaryExpr e1 e2 e3 _) = do
+    e1' <- genCode e1
+    e2' <- genCode e2
+    e3' <- genCode e3
+    return $ e1' ++ " ? " ++ e2' ++ " : " ++ e3'
+  genCode (Scr.Call n ps _) = do
+    ps' <- mapM genCode ps
+    return $  n ++ "(" ++ intercalate ", " ps' ++ ")"
+  genCode (Scr.Dispatch fn _ mn ps _) = do
+    fn' <- genCode fn
+    ps' <- mapM genCode ps
+    return $ fn' ++ "." ++ mn ++ "(" ++ intercalate ", " ps' ++ ")"
   -- ArrayLiteral
-  genCode (Scr.ArrayLiteral array _) = "[" ++ intercalate ", " (map genCode array )  ++ "]"
+  genCode (Scr.ArrayLiteral array _) = do
+    array' <- mapM genCode array
+    return $ "[" ++ intercalate ", " array' ++ "]"
   genCode _ = error "unimplemented show scrypt expr"
 
 unaryOp2Str :: Scr.UnaryOp -> String

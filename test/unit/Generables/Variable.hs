@@ -11,5 +11,5 @@ spec :: IO TestTree
 spec = testSpec "Variables" $ do
   describe "#Parameter" $ do
     it "instance Generable (Maybe (Scr.Param Ann))" $ do
-      genCode (Just (Scr.Param (TypeAnn Scr.Bool nil) (NameAnn "p" nil) (Const False) Nothing Default (IsStateProp False) nil)) 
-        `shouldBe` "bool p"
+      r <- generateScrypt (CodeGenState 0) (Just (Scr.Param (TypeAnn Scr.Bool nil) (NameAnn "p" nil) (Const False) Nothing Default (IsStateProp False) nil))
+      r `shouldBe` "bool p"

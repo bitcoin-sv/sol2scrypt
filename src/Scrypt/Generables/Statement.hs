@@ -8,15 +8,35 @@ import Scrypt.Generables.Expression
 import Scrypt.Generables.Variable 
 
 import Scrypt.Spec as Scr
+import Data.List (intercalate)
 
 instance Generable (Maybe (Scr.Statement a)) where
-  genCode = maybe "" genCode
+  genCode Nothing = return ""
+  genCode (Just t) = genCode t
 
 instance Generable (Scr.Statement a) where
-  genCode (ExprStmt expr _) = genCode expr ++ ";"
-  genCode (Assign lhs expr _) = genCode lhs ++ " = " ++ genCode expr ++ ";"
-  genCode (Declare declare expr _) = genCode declare ++ " = " ++ genCode expr ++ ";"
-  genCode (ReturnStmt e _) = "return " ++ genCode e ++ ";"
-  genCode (Require e _) = "require(" ++ genCode e ++ ");"
-  genCode (Block stmts _) = "{" ++ unwords (map genCode stmts) ++ "}"
+  genCode (ExprStmt expr _) = do
+    expr' <- genCode expr
+    withIndent $ expr' ++ ";"
+  genCode (Assign lhs expr _) = do
+    lhs' <- genCode lhs
+    expr' <- genCode expr
+    withIndent $ lhs' ++ " = " ++ expr' ++ ";"
+  genCode (Declare var expr _) = do
+    var' <- genCode var
+    expr' <- genCode expr
+    withIndent $ var' ++ " = " ++ expr' ++ ";"
+  genCode (ReturnStmt e _) = do
+    e' <- genCode e
+    withIndent $ "return " ++ e' ++ ";"
+  genCode (Require e _) = do
+    e' <- genCode e
+    withIndent $ "require(" ++ e' ++ ");"
+  genCode (Block stmts _) = do
+    openBrace <- withIndent "{"
+    incIndent
+    stmts' <- mapM genCode stmts
+    decIndent
+    closeBrace <- withIndent "}"
+    return $ openBrace ++ intercalate "" stmts' ++ closeBrace
   genCode _ = error "unimplemented show scrypt expr"

@@ -20,6 +20,6 @@ transpile solidityCode = do
   sol :: a <- parseIO solidityCode
   itmd :: b <- transform2IR (TransformState []) sol
   scr :: c <- transform2Scrypt itmd
-  code <- generateScrypt scr
+  code <- generateScrypt (CodeGenState 0) scr
   -- the purpose of including `TranspilePath` is to provide the type values of `a`, `b`, `c` to Haskell compiler
   return $ TranspileResult code $ TranspilePath sol itmd scr

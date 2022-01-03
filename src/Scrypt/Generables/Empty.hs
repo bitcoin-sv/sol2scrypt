@@ -7,4 +7,4 @@ import Scrypt.Generables.Base
 import Scrypt.Spec as Scr
 
 instance Generable Scr.Empty where
-  genCode _ = ""
+  genCode _ = return ""
