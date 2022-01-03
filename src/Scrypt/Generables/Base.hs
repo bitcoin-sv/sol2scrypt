@@ -34,12 +34,14 @@ decIndent = do
   ind <- gets unCodeGenState
   modify $ \s -> s {unCodeGenState = if ind < 1 then error "negative indents" else ind - 1}
 
+-- 2 spaces for a tab
+tabWidth :: Int
+tabWidth = 2
+
 getIndent :: CodeGenerator String
 getIndent = do
   ind <- gets unCodeGenState
-  return $ intercalate "" $ replicate (tabWidth * ind) " " {-- 2 space for a tab --}
-tabWidth :: Int
-tabWidth = 2
+  return $ intercalate "" $ replicate (tabWidth * ind) " "
 
 withIndent :: String -> CodeGenerator String
 withIndent s = do
