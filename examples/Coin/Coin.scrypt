@@ -1,0 +1,41 @@
+
+contract Coin {
+
+    @state
+    public PubKeyHash minter;
+    @state
+    public bytes balances;
+
+
+    public function mint(PubKeyHash receiver, int amount, Sig sig, PubKey pubKey, SigHashPreimage preimage, int oldbalance, int keyIndex)  {
+        require(hash160(pubKey) == this.minter);
+        require(checkSig(sig, pubKey));
+
+        HashedMap<PubKeyHash, int> balanceMap = new HashedMap(this.balances);
+        require(balanceMap.canGet(receiver, oldbalance, keyIndex));
+        require(balanceMap.set(receiver, oldbalance + amount, keyIndex));
+        this.balances = balanceMap.data();
+        require(Tx.checkPreimage(preimage));
+        bytes outputScript = this.getStateScript();
+        bytes output = Utils.buildOutput(outputScript, SigHash.value(preimage));
+        require(hash256(output) == SigHash.hashOutputs(preimage));
+    }
+
+    public function send(PubKeyHash receiver, int amount, Sig sig, PubKey pubKey, SigHashPreimage preimage, int senderOldbalance, int senderkeyIndex, 
+        int receiverOldbalance, int receiverkeyIndex) {
+        PubKeyHash sender = hash160(pubKey);
+        require(checkSig(sig, pubKey));
+
+        HashedMap<PubKeyHash, int> balanceMap = new HashedMap(this.balances);
+        require(balanceMap.canGet(sender, senderOldbalance, senderkeyIndex));
+        require(balanceMap.canGet(receiver, receiverOldbalance, receiverkeyIndex));
+        if (senderOldbalance < amount) exit(false);
+        require(balanceMap.set(sender, senderOldbalance - amount, senderkeyIndex));
+        require(balanceMap.set(receiver, receiverOldbalance - amount, receiverkeyIndex));
+        this.balances = balanceMap.data();
+        require(Tx.checkPreimage(preimage));
+        bytes outputScript = this.getStateScript();
+        bytes output = Utils.buildOutput(outputScript, SigHash.value(preimage));
+        require(hash256(output) == SigHash.hashOutputs(preimage));
+    }
+}
