@@ -36,3 +36,7 @@ spec = testSpec "instance ToIRTransformable Contractpart IContractBodyElement'" 
 
   describe "Event" $ do
     itContractPart "event Log(address indexed sender, string message);" Nothing
+    itContractPart "event Log();" Nothing
+
+  describe "constructor" $ do
+    itContractPart "constructor(bool initvalue) {  value = initvalue;  }" $ Just (ConstructorDefinition (Constructor {ctorParams = ParamList [Param {paramType = ElementaryType Bool, paramName = (IR.Identifier "initvalue")}], ctorBody = IR.Block [AssignStmt [Just (IR.Identifier "value")] [IdentifierExpr (IR.Identifier "initvalue")]]}))

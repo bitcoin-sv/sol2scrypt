@@ -225,3 +225,39 @@ spec = testSpec "Transpile Contract" $ do
     return true;
   }
 }|]
+
+    itTransContract
+      [r|contract SimpleStorage {
+    uint storedData;
+
+    constructor(uint sd) {
+        storedData = sd;
+    }
+
+    function set(uint x) external {
+        storedData = x;
+    }
+
+    function get() public view returns (uint) {
+        return storedData;
+    }
+}|]
+      [r|contract SimpleStorage {
+  @state int storedData;
+
+  constructor(int sd) {
+    this.storedData = sd;
+  }
+
+  public function set(int x, SigHashPreimage txPreimage) {
+    this.storedData = x;
+    require(Tx.checkPreimage(txPreimage));
+    bytes outputScript = this.getStateScript();
+    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    require(hash256(output) == SigHash.hashOutputs(txPreimage));
+  }
+
+  function get() : int {
+    return this.storedData;
+  }
+}|]
