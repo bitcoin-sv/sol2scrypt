@@ -151,7 +151,7 @@ if(true) {
 }|]
 
 
-    itstmt "IfStmt without else statement "  "if(true) true;"  "\nif(true) true;"
+    itstmt "IfStmt without else statement "  "if(true) true;"  "\nif(true)\n  true;"
 
     itstmt "IfStmt with else statement "  "if(true){true;}else{false;}"  
       [r|
@@ -234,22 +234,26 @@ else {
 
     itstmt "IfStmt with assign Stmt"  "if (x > 0) storedData = x +1;"
        [r|
-if(x > 0) storedData = x + 1;|]
+if(x > 0)
+  storedData = x + 1;|]
 
     itstmt "IfStmt with assign Stmt"  "if (x > 0) storedData = x +1; else { uint a = 3; }"
        [r|
-if(x > 0) storedData = x + 1;
+if(x > 0)
+  storedData = x + 1;
 else {
   int a = 3;
 }|]
 
     itstmt "IfStmt with Declare Stmt"  "if (x > 0) int x = x3 +1;"
        [r|
-if(x > 0) int x = x3 + 1;|]
+if(x > 0)
+  int x = x3 + 1;|]
 
     itstmt "IfStmt with Declare Stmt"  "if (x > 0) int x = x3 +1; else { uint a = 3; }"
        [r|
-if(x > 0) int x = x3 + 1;
+if(x > 0)
+  int x = x3 + 1;
 else {
   int a = 3;
 }|]

@@ -5,7 +5,7 @@ module Scrypt.Generables.Statement where
 
 import Scrypt.Generables.Base
 import Scrypt.Generables.Expression
-import Scrypt.Generables.Variable 
+import Scrypt.Generables.Variable
 
 import Scrypt.Spec as Scr
 import Data.List (intercalate)
@@ -42,8 +42,22 @@ instance Generable (Scr.Statement a) where
 
   genCode (If e ifstmts elsestmt _) = do
     e' <- genCode e
-    ifstmts' <- genCode ifstmts
+
     elsestmt' <- genCode elsestmt
-    elsePart <- withIndent $ "\nelse " ++ removeIndent elsestmt'
-    withIndent $ "if(" ++ e' ++ ") " ++ removeIndent ifstmts' ++ (if elsestmt' == "" then "" else elsePart )
+    let isBlock = case ifstmts of
+          Scr.Block _ _ -> True
+          _ -> False
+    ifPart <-
+      if isBlock
+        then do
+          ifstmts' <- genCode ifstmts
+          return $ " " ++ removeIndent ifstmts'
+        else do
+          incIndent
+          ifstmts' <- genCode ifstmts
+          decIndent
+          return ifstmts'
+    elsePart <- if elsestmt' == "" then withEmptyIndent else withIndent $ "\nelse " ++ removeIndent elsestmt'
+
+    withIndent $ "if(" ++ e' ++ ")" ++ ifPart ++ elsePart
   genCode _ = error "unimplemented show scrypt expr"
