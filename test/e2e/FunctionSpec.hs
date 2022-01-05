@@ -364,12 +364,35 @@ public function get(SigHashPreimage txPreimage, int retVal) {
   describe "msg" $ do
     itTranspile
       "msg.sender"
-      "function get(address addr) external view { address addr1 = msg.sender; }"
+      [r|function get(address addr) external view {
+  if (msg.sender == addr)
+    addr1 = msg.sender;
+  else {
+    address addr1 = msg.sender;
+  }
+  msg.sender;
+}|]
       [r|
 public function get(PubKeyHash addr, SigHashPreimage txPreimage, Sig sig, PubKey pubKey) {
   PubKeyHash msgSender = hash160(pubKey);
   require(checkSig(sig, pubKey));
-  PubKeyHash addr1 = msgSender;
+  if(msgSender == addr) addr1 = msgSender; else {
+    PubKeyHash addr1 = msgSender;
+  }
+  msgSender;
+  require(Tx.checkPreimage(txPreimage));
+  bytes outputScript = this.getStateScript();
+  bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+  require(hash256(output) == SigHash.hashOutputs(txPreimage));
+}|]
+
+    itTranspile
+      "msg.value"
+      "function get() external view {uint amt = msg.value;}"
+      [r|
+public function get(SigHashPreimage txPreimage) {
+  int msgValue = SigHash.value(txPreimage);
+  int amt = msgValue;
   require(Tx.checkPreimage(txPreimage));
   bytes outputScript = this.getStateScript();
   bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));

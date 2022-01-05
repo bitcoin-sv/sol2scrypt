@@ -61,40 +61,51 @@ toIRFuncParams (ParameterList pl) tags (FuncRetTransResult rt ort rn) vis funcBl
   params <- mapM _toIR pl
 
   -- add parameter for public function whose original return type is not `Bool`
-  let extraParams = [IR.Param <$> ort <*> rn' | vis == Public && isJust ort && ort /= rt]
+  let extraParams0 = [IR.Param <$> ort <*> rn' | vis == Public && isJust ort && ort /= rt]
         where
           rn' = Just $ if isJust rn then mirror rn else IR.Identifier "retVal"
 
-  let blkT = TransformationOnBlock prepends []
+  let blkT0 = TransformationOnBlock prepends []
         where
           prepends = case rn of
             -- add initialize statement for named return param
             Just _ -> declareLocalVarStmt $ IR.Param <$> ort <*> rn
             _ -> []
 
-  -- add parameters for function accessing msg.sender
-  let (extraParams', blkT') =
+  -- for function that got `msg.sender`
+  let (extraParams1, blkT1) =
         if exprExist msgSenderExpr (Sol.BlockStatement funcBlk)
           then
             if vis == Public
-              then let (ps, blkT_) = transForFuncWithMsgSender in (map Just ps ++ extraParams, mergeTransOnBlock blkT blkT_)
+              then let (ps, blkT_) = transForFuncWithMsgSender in (map Just ps ++ extraParams0, mergeTransOnBlock blkT0 blkT_)
               else error "using `msg.sender` in non-external function is not supported yet"
-          else (extraParams, blkT)
+          else (extraParams0, blkT0)
+
+  -- for function that got `msg.sender`
+  let msgValueExist = exprExist msgValueExpr (Sol.BlockStatement funcBlk)
+  let (extraParams2, blkT2) =
+        if msgValueExist
+          then
+            if vis == Public
+              then let (ps, blkT_) = transForFuncWithMsgValue in (map Just ps ++ extraParams1, mergeTransOnBlock blkT1 blkT_)
+              else error "using `msg.value` in non-external function is not supported yet"
+          else (extraParams1, blkT1)
 
   let needPreimageParam
         | FunctionDefinitionTagStateMutability Pure `elem` tags = False -- pure function do ont need preimage
         | vis == IR.Public = True
+        | msgValueExist = True
         | otherwise = False
-  let (extraParams'', blkT'') =
+  let (extraParams3, blkT3) =
         if needPreimageParam
-          then let (ps, blkT_) = transForPreimageFunc in (map Just ps ++ extraParams', mergeTransOnBlock blkT' blkT_)
-          else (extraParams', blkT')
+          then let (ps, blkT_) = transForPreimageFunc in (map Just ps ++ extraParams2, mergeTransOnBlock blkT2 blkT_)
+          else (extraParams2, blkT2)
 
-  let params' = sequence $ params ++ extraParams''
+  let params' = sequence $ params ++ extraParams3
 
   forM_ params' $ mapM_ (\p -> addSym $ Just $ Symbol (paramName p) (paramType p) False)
 
-  return (IR.ParamList <$> params', blkT'')
+  return (IR.ParamList <$> params', blkT3)
 
 toIRFuncBody :: Block -> IVisibility -> TransformationOnBlock -> FuncRetTransResult -> Transformation IBlock'
 toIRFuncBody (Sol.Block ss) vis (TransformationOnBlock prepends appends) (FuncRetTransResult _ ort rn) = do
@@ -198,7 +209,7 @@ transForPreimageFunc =
       ]
   )
 
--- transformations for functions that has accessing of `msg.sender`
+-- transformations for functions that got `msg.sender`
 transForFuncWithMsgSender :: ([IParam], TransformationOnBlock)
 transForFuncWithMsgSender =
   ( [ IR.Param (BuiltinType "Sig") $ IR.Identifier sigVarName,
@@ -219,5 +230,23 @@ transForFuncWithMsgSender =
     sigVarName = "sig"
     pubkeyVarName = "pubKey"
 
+-- transformations for functions that got `msg.value`
+transForFuncWithMsgValue :: ([IParam], TransformationOnBlock)
+transForFuncWithMsgValue =
+  ( [],
+    TransformationOnBlock
+      [
+        IR.DeclareStmt
+          [Just $ IR.Param (ElementaryType IR.Int) (IR.Identifier "msgValue")]
+          [IR.FunctionCallExpr
+              (IR.MemberAccessExpr (IdentifierExpr (IR.Identifier "SigHash")) (IR.Identifier "value"))
+              [IdentifierExpr (IR.Identifier "txPreimage")]]
+      ]
+      []
+  )
+
 msgSenderExpr :: Sol.Expression
 msgSenderExpr = Sol.MemberAccess (Sol.Literal (PrimaryExpressionIdentifier (Sol.Identifier "msg"))) (Sol.Identifier "sender")
+
+msgValueExpr :: Sol.Expression
+msgValueExpr = Sol.MemberAccess (Sol.Literal (PrimaryExpressionIdentifier (Sol.Identifier "msg"))) (Sol.Identifier "value")
