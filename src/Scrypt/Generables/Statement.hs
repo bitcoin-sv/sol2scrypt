@@ -44,5 +44,6 @@ instance Generable (Scr.Statement a) where
     e' <- genCode e
     ifstmts' <- genCode ifstmts
     elsestmt' <- genCode elsestmt
-    withIndent $ "if(" ++ e' ++ ") " ++ removeIndent ifstmts' ++ (if elsestmt' == "" then "" else " else " ++ removeIndent elsestmt')
+    elsePart <- withIndent $ "\nelse " ++ removeIndent elsestmt'
+    withIndent $ "if(" ++ e' ++ ") " ++ removeIndent ifstmts' ++ (if elsestmt' == "" then "" else elsePart )
   genCode _ = error "unimplemented show scrypt expr"

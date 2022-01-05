@@ -157,7 +157,8 @@ if(true) {
       [r|
 if(true) {
   true;
-} else {
+}
+else {
   false;
 }|]
 
@@ -174,11 +175,14 @@ if(true) {
       [r|
 if(true) {
   1 + 3;
-} else if(1 == a) {
+}
+else if(1 == a) {
   a++;
-} else if(!c != (c || d)) {
+}
+else if(!c != (c || d)) {
   e = b * 2;
-} else {
+}
+else {
   int x = 3;
 }|]
 
@@ -209,21 +213,46 @@ if(true) {
     a++;
     if(c) {
       --a;
-    } else {
+    }
+    else {
       a--;
     }
-  } else {
+  }
+  else {
     a--;
   }
-} else {
+}
+else {
   int x = 3;
   if(false) {
     a++;
-  } else {
+  }
+  else {
     a--;
   }
 }|]
 
+    itstmt "IfStmt with assign Stmt"  "if (x > 0) storedData = x +1;"
+       [r|
+if(x > 0) storedData = x + 1;|]
+
+    itstmt "IfStmt with assign Stmt"  "if (x > 0) storedData = x +1; else { uint a = 3; }"
+       [r|
+if(x > 0) storedData = x + 1;
+else {
+  int a = 3;
+}|]
+
+    itstmt "IfStmt with Declare Stmt"  "if (x > 0) int x = x3 +1;"
+       [r|
+if(x > 0) int x = x3 + 1;|]
+
+    itstmt "IfStmt with Declare Stmt"  "if (x > 0) int x = x3 +1; else { uint a = 3; }"
+       [r|
+if(x > 0) int x = x3 + 1;
+else {
+  int a = 3;
+}|]
 
 
 
