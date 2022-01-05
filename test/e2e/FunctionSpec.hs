@@ -361,6 +361,20 @@ public function get(SigHashPreimage txPreimage, int retVal) {
   require(storedData == retVal);
 }|]
 
+  describe "msg" $ do
+    itTranspile
+      "msg.sender"
+      "function get(address addr) external view { address addr1 = msg.sender; }"
+      [r|
+public function get(PubKeyHash addr, SigHashPreimage txPreimage, Sig sig, PubKey pubKey) {
+  PubKeyHash msgSender = hash160(pubKey);
+  require(checkSig(sig, pubKey));
+  PubKeyHash addr1 = msgSender;
+  require(Tx.checkPreimage(txPreimage));
+  bytes outputScript = this.getStateScript();
+  bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+  require(hash256(output) == SigHash.hashOutputs(txPreimage));
+}|]
 
 
       

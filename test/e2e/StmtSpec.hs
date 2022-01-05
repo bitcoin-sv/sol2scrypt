@@ -95,7 +95,7 @@ spec = testSpec "Transpile Statement" $ do
 {
   count += 1;
   bytes x = b'010113';
-  Ripemd160 nameReg = 0xdcad3a6d3569df655070ded06cb7a1b2ccd1d3af;
+  PubKeyHash nameReg = 0xdcad3a6d3569df655070ded06cb7a1b2ccd1d3af;
   count++;
   count--;
   --count;

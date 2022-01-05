@@ -225,7 +225,7 @@ spec = testSpec "Transpile Type" $ do
 
     describe "#Address" $ do
 
-      itType "address" "Ripemd160"
+      itType "address" "PubKeyHash"
 
     describe "#VarType" $ do
 

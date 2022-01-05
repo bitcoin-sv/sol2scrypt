@@ -4,10 +4,11 @@
 
 module IR.Transformations.Sol2IR.Function where
 
-import Data.Maybe
 import Data.Foldable
+import Data.Maybe
 import IR.Spec as IR
 import IR.Transformations.Base
+import IR.Transformations.Sol2IR.Helper
 import IR.Transformations.Sol2IR.Identifier ()
 import IR.Transformations.Sol2IR.Statement ()
 import IR.Transformations.Sol2IR.Type ()
@@ -31,7 +32,7 @@ instance ToIRTransformable ContractPart IFunction' where
   _toIR (ContractPartFunctionDefinition (Just (Sol.Identifier fn)) pl tags maybeRets (Just block)) = do
     vis <- toIRFuncVis tags
     retTransResult <- toIRFuncRet vis maybeRets
-    (ps, blkTfromParam) <- toIRFuncParams pl tags retTransResult vis
+    (ps, blkTfromParam) <- toIRFuncParams pl tags retTransResult vis block
     body <- toIRFuncBody block vis blkTfromParam retTransResult
     return $ Function (IR.Identifier fn) <$> ps <*> body <*> targetType retTransResult <*> Just vis
   _toIR _ = return Nothing
@@ -55,8 +56,8 @@ toIRFuncRet vis (Just (ParameterList [x])) = do
   return $ FuncRetTransResult t' t n
 toIRFuncRet _ _ = return $ FuncRetTransResult Nothing Nothing Nothing -- error "mutiple-returns function not implemented"
 
-toIRFuncParams :: ParameterList -> [FunctionDefinitionTag] -> FuncRetTransResult -> IVisibility -> Transformation (IParamList', TransformationOnBlock)
-toIRFuncParams (ParameterList pl) tags (FuncRetTransResult rt ort rn) vis = do
+toIRFuncParams :: ParameterList -> [FunctionDefinitionTag] -> FuncRetTransResult -> IVisibility -> Block -> Transformation (IParamList', TransformationOnBlock)
+toIRFuncParams (ParameterList pl) tags (FuncRetTransResult rt ort rn) vis funcBlk = do
   params <- mapM _toIR pl
 
   -- add parameter for public function whose original return type is not `Bool`
@@ -71,20 +72,29 @@ toIRFuncParams (ParameterList pl) tags (FuncRetTransResult rt ort rn) vis = do
             Just _ -> declareLocalVarStmt $ IR.Param <$> ort <*> rn
             _ -> []
 
+  -- add parameters for function accessing msg.sender
+  let (extraParams', blkT') =
+        if exprExist msgSenderExpr (Sol.BlockStatement funcBlk)
+          then
+            if vis == Public
+              then let (ps, blkT_) = transForFuncWithMsgSender in (map Just ps ++ extraParams, mergeTransOnBlock blkT blkT_)
+              else error "using `msg.sender` in non-external function is not supported yet"
+          else (extraParams, blkT)
+
   let needPreimageParam
         | FunctionDefinitionTagStateMutability Pure `elem` tags = False -- pure function do ont need preimage
         | vis == IR.Public = True
         | otherwise = False
-  let (extraParams', blkT') =
+  let (extraParams'', blkT'') =
         if needPreimageParam
-          then let (ps, blkT_) = transForPreimageFunc in (map Just ps ++ extraParams, mergeTransOnBlock blkT blkT_)
-          else (extraParams, blkT)
-  
-  let params' = sequence $ params ++ extraParams'
-  
+          then let (ps, blkT_) = transForPreimageFunc in (map Just ps ++ extraParams', mergeTransOnBlock blkT' blkT_)
+          else (extraParams', blkT')
+
+  let params' = sequence $ params ++ extraParams''
+
   forM_ params' $ mapM_ (\p -> addSym $ Just $ Symbol (paramName p) (paramType p) False)
 
-  return (IR.ParamList <$> params', blkT')
+  return (IR.ParamList <$> params', blkT'')
 
 toIRFuncBody :: Block -> IVisibility -> TransformationOnBlock -> FuncRetTransResult -> Transformation IBlock'
 toIRFuncBody (Sol.Block ss) vis (TransformationOnBlock prepends appends) (FuncRetTransResult _ ort rn) = do
@@ -187,3 +197,27 @@ transForPreimageFunc =
               [IdentifierExpr (IR.Identifier "txPreimage")]
       ]
   )
+
+-- transformations for functions that has accessing of `msg.sender`
+transForFuncWithMsgSender :: ([IParam], TransformationOnBlock)
+transForFuncWithMsgSender =
+  ( [ IR.Param (BuiltinType "Sig") $ IR.Identifier sigVarName,
+      IR.Param (BuiltinType "PubKey") $ IR.Identifier pubkeyVarName
+    ],
+    TransformationOnBlock
+      [ -- PubKeyHash msgSender = hash160(pubKey);
+        IR.DeclareStmt
+          [Just $ IR.Param (ElementaryType IR.Address) (IR.Identifier "msgSender")]
+          [IR.FunctionCallExpr (IdentifierExpr (IR.Identifier "hash160")) [IdentifierExpr (IR.Identifier pubkeyVarName)]],
+        -- require(checkSig(sig, pubKey));
+        IR.RequireStmt $
+          IR.FunctionCallExpr (IdentifierExpr (IR.Identifier "checkSig")) [IdentifierExpr (IR.Identifier sigVarName), IdentifierExpr (IR.Identifier pubkeyVarName)]
+      ] -- end of prepends
+      [] -- appends
+  )
+  where
+    sigVarName = "sig"
+    pubkeyVarName = "pubKey"
+
+msgSenderExpr :: Sol.Expression
+msgSenderExpr = Sol.MemberAccess (Sol.Literal (PrimaryExpressionIdentifier (Sol.Identifier "msg"))) (Sol.Identifier "sender")

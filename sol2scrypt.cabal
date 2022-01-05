@@ -52,6 +52,7 @@ library
       IR.Transformations.Sol2IR.Contract
       IR.Transformations.Sol2IR.Expression
       IR.Transformations.Sol2IR.Function
+      IR.Transformations.Sol2IR.Helper
       IR.Transformations.Sol2IR.Identifier
       IR.Transformations.Sol2IR.Statement
       IR.Transformations.Sol2IR.Type
