@@ -27,7 +27,8 @@ spec = testSpec "Transpile Contract" $ do
     }
 }|]
     [r|contract A {
-  @state int a;
+  @state
+  int a;
 
   public function set(int x, SigHashPreimage txPreimage) {
     this.a = x;
@@ -51,7 +52,8 @@ spec = testSpec "Transpile Contract" $ do
     }
 }|]
     [r|contract SimpleStorage {
-  @state int storedData;
+  @state
+  int storedData;
 
   public function set(int x, SigHashPreimage txPreimage) {
     this.storedData = x;
@@ -87,7 +89,8 @@ spec = testSpec "Transpile Contract" $ do
     }
 }|]
     [r|contract A {
-  @state int a;
+  @state
+  int a;
 
   function set(int x) : bool {
     this.a = x;
@@ -121,7 +124,8 @@ spec = testSpec "Transpile Contract" $ do
     }
 }|]
     [r|contract flipper {
-  @state private bool value;
+  @state
+  private bool value;
 
   function flip() : bool {
     this.value = !this.value;
@@ -146,7 +150,8 @@ spec = testSpec "Transpile Contract" $ do
     }
 }|]
     [r|contract flipper {
-  @state private bool value;
+  @state
+  private bool value;
 
   public function flip(SigHashPreimage txPreimage) {
     this.value = !this.value;
@@ -179,7 +184,8 @@ spec = testSpec "Transpile Contract" $ do
     }
 }|]
     [r|contract Counter {
-  @state public int count;
+  @state
+  public int count;
 
   function get() : int {
     return this.count;
@@ -225,3 +231,122 @@ spec = testSpec "Transpile Contract" $ do
     return true;
   }
 }|]
+
+  describe "#test contract constructor" $ do
+
+    itTransContract
+      [r|contract SimpleStorage {
+    uint storedData;
+
+    constructor(uint sd) {
+        storedData = sd;
+    }
+
+    function set(uint x) external {
+        storedData = x;
+    }
+
+    function get() public view returns (uint) {
+        return storedData;
+    }
+}|]
+      [r|contract SimpleStorage {
+  @state
+  int storedData;
+
+  constructor(int sd) {
+    this.storedData = sd;
+  }
+
+  public function set(int x, SigHashPreimage txPreimage) {
+    this.storedData = x;
+    require(Tx.checkPreimage(txPreimage));
+    bytes outputScript = this.getStateScript();
+    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    require(hash256(output) == SigHash.hashOutputs(txPreimage));
+  }
+
+  function get() : int {
+    return this.storedData;
+  }
+}|]
+
+  itTransContract
+      [r|contract SimpleStorage {
+    uint storedData;
+
+    constructor() {
+    }
+}|]
+      [r|contract SimpleStorage {
+  @state
+  int storedData;
+
+  constructor() {
+  }
+}|]
+
+  itTransContract
+      [r|contract SimpleStorage {
+    uint storedData;
+
+    constructor(uint sd) {
+    }
+}|]
+      [r|contract SimpleStorage {
+  @state
+  int storedData;
+
+  constructor(int sd) {
+  }
+}|]
+
+  itTransContract
+      [r|contract SimpleStorage {
+    uint storedData;
+
+    constructor() {
+        storedData = 0;
+    }
+}|]
+      [r|contract SimpleStorage {
+  @state
+  int storedData;
+
+  constructor() {
+    this.storedData = 0;
+  }
+}|]
+
+  itTransContract
+      [r|contract SimpleStorage {
+    uint storedData;
+
+    constructor(uint sd, int i) {
+        storedData = sd + i;
+    }
+}|]
+      [r|contract SimpleStorage {
+  @state
+  int storedData;
+
+  constructor(int sd, int i) {
+    this.storedData = sd + i;
+  }
+}|]
+
+
+  itTransContract
+      [r|contract SimpleStorage {
+    uint storedData;
+
+    constructor() {}
+}|]
+      [r|contract SimpleStorage {
+  @state
+  int storedData;
+
+  constructor() {
+  }
+}|]
+

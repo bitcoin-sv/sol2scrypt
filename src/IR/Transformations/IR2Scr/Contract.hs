@@ -18,14 +18,27 @@ import Utils
 instance ToScryptTransformable IContract' (Maybe (Scr.Contract Ann)) where
   _toScrypt = (<$>) _toScrypt
 
+
+maybeHead :: [Maybe (Constructor Ann)] -> Maybe (Constructor Ann)
+maybeHead [] = Nothing 
+maybeHead (x:_) = x
+
 instance ToScryptTransformable IR.IContract (Scr.Contract Ann) where
-  _toScrypt (IR.Contract cn bodyElems) = Scr.Contract (_toScrypt cn) [] props [] Nothing {-- constructor --} functions False nil
+  _toScrypt (IR.Contract cn bodyElems) = Scr.Contract (_toScrypt cn) [] props [] ctor functions False nil
     where
       props =
         map _toScrypt $
           filter
             ( \case
                 IR.StateVariableDeclaration _ -> True
+                _ -> False
+            )
+            bodyElems
+      ctor =
+        maybeHead $ map _toScrypt $
+          filter
+            ( \case
+                IR.ConstructorDefinition _ -> True
                 _ -> False
             )
             bodyElems
@@ -46,3 +59,7 @@ instance ToScryptTransformable IR.IContractBodyElement (Scr.Param Ann) where
 
 instance ToScryptTransformable IR.IContractBodyElement (Scr.Function Ann) where
   _toScrypt (IR.FunctionDefinition function) = _toScrypt function
+
+
+instance ToScryptTransformable IR.IContractBodyElement (Maybe (Scr.Constructor Ann)) where
+  _toScrypt (IR.ConstructorDefinition (IR.Constructor (IR.ParamList pl) (IR.Block stmts) )) = Just $ Scr.Constructor (map _toScrypt pl) (Scr.CtorBody (map _toScrypt stmts) nil) nil

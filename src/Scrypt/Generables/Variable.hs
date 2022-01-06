@@ -24,7 +24,8 @@ instance Generable (Scr.Param a) where
     vis' <- genCode vis
     pt' <- genCode pt
     pn' <- genCode pn
-    withIndent $ "@state " ++ (if vis /= Default then vis' ++ " " else "") ++  pt' ++ " " ++ pn' ++ ";"
+    pstr <- withIndent $ (if vis /= Default then vis' ++ " " else "") ++  pt' ++ " " ++ pn' ++ ";"
+    withIndent $ "@state" ++ pstr
   genCode (Param (TypeAnn pt _) pn _ _ _ _ _) = do
     pt' <- genCode pt
     pn' <- genCode pn
