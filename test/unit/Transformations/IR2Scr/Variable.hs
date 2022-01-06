@@ -12,11 +12,11 @@ import Utils
 
 spec :: IO TestTree
 spec = testSpec "Variables" $ do
-  let itParam title e1 e2 = it ("should transfrom IR `" ++ title ++ "` to sCrypt Type correctly") $ do
+  let itParam title e1 e2 = it ("should transfrom IR `" ++ title ++ "` to sCrypt NameAnn correctly") $ do
         r <- transform2Scrypt $ Just $ IR.Param e1 (IR.Identifier "a")
         r `shouldBe` Just e2
 
-  let itStateVariable title e1 e2 = it ("should transfrom IR `" ++ title ++ "` to sCrypt Type correctly") $ do
+  let itStateVariable title e1 e2 = it ("should transfrom IR `" ++ title ++ "` to sCrypt Param correctly") $ do
         r <- transform2Scrypt e1
         r `shouldBe` e2
 

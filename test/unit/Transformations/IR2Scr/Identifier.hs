@@ -11,7 +11,7 @@ import Utils (nil)
 
 spec :: IO TestTree
 spec = testSpec "instance ToScryptTransformable IIdentifier (Maybe NameAnn Ann)" $ do
-  let itIdentifier a b = it ("should transfrom IR `" ++ a ++ "` to sCrypt Type correctly") $ do
+  let itIdentifier a b = it ("should transfrom IR `" ++ a ++ "` to sCrypt NameAnn correctly") $ do
         r <- transform2Scrypt (Just $ IR.Identifier a)
         r `shouldBe` Just (NameAnn b nil)
 

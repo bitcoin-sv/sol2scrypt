@@ -12,7 +12,7 @@ import Utils
 
 spec :: IO TestTree
 spec = testSpec "instance ToScryptTransformable IExpr (Scr.Expr Ann)" $ do
-  let itExpr title e c = it ("should transform IR  `" ++ title ++ "` to sCrypt Type correctly") $ do
+  let itExpr title e c = it ("should transform IR  `" ++ title ++ "` to sCrypt Expression correctly") $ do
         r1 <- transform2Scrypt $ Just e
         r1 `shouldBe` Just c
 
@@ -84,15 +84,15 @@ spec = testSpec "instance ToScryptTransformable IExpr (Scr.Expr Ann)" $ do
       (Scr.UnaryExpr Scr.Not (Scr.Var "a" False nil) nil)
 
   describe "#BinaryExpr" $ do
-    let itBinary op = it ("should transform IR  `" ++ op ++ "` to sCrypt Type correctly") $ do
+    let itBinary op = it ("should transform IR  `" ++ op ++ "` to sCrypt BinaryExpr correctly") $ do
           r1 <- transform2Scrypt $ Just (IR.BinaryExpr (str2BinaryOp op) (LiteralExpr $ IR.IntLiteral True 15) (LiteralExpr $ IR.IntLiteral True 15))
           r1 `shouldBe` Just (Scr.BinaryExpr (toScryptBinaryOp $ str2BinaryOp op) (Scr.IntLiteral True 15 nil) (Scr.IntLiteral True 15 nil) nil)
 
-    let itBinary' op = it ("should transform IR  `" ++ op ++ "` to sCrypt Type correctly") $ do
+    let itBinary' op = it ("should transform IR  `" ++ op ++ "` to sCrypt BinaryExpr correctly") $ do
           r1 <- transform2Scrypt $ Just (IR.BinaryExpr (str2BinaryOp op) (IdentifierExpr $ IR.Identifier "a") (LiteralExpr $ IR.IntLiteral True 15))
           r1 `shouldBe` Just (Scr.BinaryExpr (toScryptBinaryOp $ str2BinaryOp op) (Scr.Var "a" False nil) (Scr.IntLiteral True 15 nil) nil)
 
-    let itBinary'' op = it ("should transform IR  `" ++ op ++ "` to sCrypt Type correctly") $ do
+    let itBinary'' op = it ("should transform IR  `" ++ op ++ "` to sCrypt BinaryExpr correctly") $ do
           r1 <- transform2Scrypt $ Just (IR.BinaryExpr (str2BinaryOp op) (LiteralExpr $ IR.BoolLiteral True) (LiteralExpr $ IR.BoolLiteral False))
           r1 `shouldBe` Just (Scr.BinaryExpr (toScryptBinaryOp $ str2BinaryOp op) (Scr.BoolLiteral True nil) (Scr.BoolLiteral False nil) nil)
 
