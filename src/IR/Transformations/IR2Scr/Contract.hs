@@ -24,7 +24,7 @@ maybeHead [] = Nothing
 maybeHead (x:_) = x
 
 instance ToScryptTransformable IR.IContract (Scr.Contract Ann) where
-  _toScrypt (IR.Contract cn bodyElems) = Scr.Contract (_toScrypt cn) [] props [] ctor {-- constructor --} functions False nil
+  _toScrypt (IR.Contract cn bodyElems) = Scr.Contract (_toScrypt cn) [] props [] ctor functions False nil
     where
       props =
         map _toScrypt $

@@ -28,10 +28,10 @@ spec = testSpec "instance ToIRTransformable Contractpart IContractBodyElement'" 
     itContractPart "uint private a;" $ Just (IR.StateVariableDeclaration (IR.StateVariable (IR.Identifier "a") (ElementaryType Int) Private Nothing))
     itContractPart "uint public a;" $ Just (IR.StateVariableDeclaration (IR.StateVariable (IR.Identifier "a") (ElementaryType Int) Public Nothing))
     itContractPart "int public a;" $ Just (IR.StateVariableDeclaration (IR.StateVariable (IR.Identifier "a") (ElementaryType Int) Public Nothing))
-    itContractPart "int public a = 1;" $ Just (IR.StateVariableDeclaration (IR.StateVariable (IR.Identifier "a") (ElementaryType Int) Public 
+    itContractPart "int public a = 1;" $ Just (IR.StateVariableDeclaration (IR.StateVariable (IR.Identifier "a") (ElementaryType Int) Public
       (Just (LiteralExpr (IntLiteral {isHex = False, intVal = 1})))))
     itContractPart "bool a;" $ Just (IR.StateVariableDeclaration (IR.StateVariable (IR.Identifier "a") (ElementaryType Bool) Default Nothing))
-    itContractPart "bool a = true;" $ Just (IR.StateVariableDeclaration (IR.StateVariable (IR.Identifier "a") (ElementaryType Bool) Default 
+    itContractPart "bool a = true;" $ Just (IR.StateVariableDeclaration (IR.StateVariable (IR.Identifier "a") (ElementaryType Bool) Default
       (Just (LiteralExpr (BoolLiteral True)))))
 
   describe "Event" $ do
@@ -39,4 +39,6 @@ spec = testSpec "instance ToIRTransformable Contractpart IContractBodyElement'" 
     itContractPart "event Log();" Nothing
 
   describe "constructor" $ do
-    itContractPart "constructor(bool initvalue) {  value = initvalue;  }" $ Just (ConstructorDefinition (Constructor {ctorParams = ParamList [Param {paramType = ElementaryType Bool, paramName = (IR.Identifier "initvalue")}], ctorBody = IR.Block [AssignStmt [Just (IR.Identifier "value")] [IdentifierExpr (IR.Identifier "initvalue")]]}))
+    itContractPart "constructor(bool initvalue) {  value = initvalue;  }" $ Just (ConstructorDefinition (Constructor {ctorParams = ParamList [Param {paramType = ElementaryType Bool, paramName = IR.Identifier "initvalue"}], ctorBody = IR.Block [AssignStmt [Just (IR.Identifier "value")] [IdentifierExpr (IR.Identifier "initvalue")]]}))
+    itContractPart "constructor() { }" $ Just (IR.ConstructorDefinition (IR.Constructor {IR.ctorParams = ParamList [], IR.ctorBody = IR.Block []}))
+    itContractPart "constructor(int a, bool b) { c = a++; d=b; }" $ Just (ConstructorDefinition (Constructor {ctorParams = ParamList [Param {paramType = ElementaryType Int, paramName = IR.Identifier "a"},Param {paramType = ElementaryType Bool, paramName = IR.Identifier "b"}], ctorBody = IR.Block [AssignStmt [Just (IR.Identifier "c")] [UnaryExpr {unaryOp = PostIncrement, uExpr = IdentifierExpr (IR.Identifier "a")}],AssignStmt [Just (IR.Identifier "d")] [IdentifierExpr (IR.Identifier "b")]]}))
