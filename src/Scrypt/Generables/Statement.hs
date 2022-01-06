@@ -39,25 +39,20 @@ instance Generable (Scr.Statement a) where
     decIndent
     closeBrace <- withIndent "}"
     return $ openBrace ++ intercalate "" stmts' ++ closeBrace
-
-  genCode (If e ifstmts elsestmt _) = do
+  genCode (If e trueBranch falseBranch _) = do
     e' <- genCode e
+    falseBranch' <- genCode falseBranch
+    trueBranchPart <- case trueBranch of
+      Scr.Block _ _ -> do
+        trueBranch' <- genCode trueBranch
+        return $ " " ++ removeIndent trueBranch'
+      _ -> do
+        incIndent
+        trueBranch' <- genCode trueBranch
+        decIndent
+        return trueBranch'
 
-    elsestmt' <- genCode elsestmt
-    let isBlock = case ifstmts of
-          Scr.Block _ _ -> True
-          _ -> False
-    ifPart <-
-      if isBlock
-        then do
-          ifstmts' <- genCode ifstmts
-          return $ " " ++ removeIndent ifstmts'
-        else do
-          incIndent
-          ifstmts' <- genCode ifstmts
-          decIndent
-          return ifstmts'
-    elsePart <- if elsestmt' == "" then withEmptyIndent else withIndent $ "\nelse " ++ removeIndent elsestmt'
+    falseBranchPart <- if falseBranch' == "" then withEmptyIndent else withIndent $ "\nelse " ++ removeIndent falseBranch'
 
-    withIndent $ "if(" ++ e' ++ ")" ++ ifPart ++ elsePart
+    withIndent $ "if(" ++ e' ++ ")" ++ trueBranchPart ++ falseBranchPart
   genCode _ = error "unimplemented show scrypt expr"
