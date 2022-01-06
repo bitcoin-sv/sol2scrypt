@@ -54,9 +54,9 @@ instance ToIRTransformable Sol.Expression IExpression' where
     e3' <- _toIR e3 
     return $ TernaryExpr  <$> e1' <*> e2' <*> e3'
   _toIR (Sol.MemberAccess (Literal (PrimaryExpressionIdentifier (Sol.Identifier "msg"))) (Sol.Identifier "sender")) = do
-    return $ Just $ IR.IdentifierExpr (IR.Identifier "msgSender")
+    return $ Just $ IR.IdentifierExpr (IR.ReservedId varMsgSender)
   _toIR (Sol.MemberAccess (Literal (PrimaryExpressionIdentifier (Sol.Identifier "msg"))) (Sol.Identifier "value")) = do
-    return $ Just $ IR.IdentifierExpr (IR.Identifier "msgValue")
+    return $ Just $ IR.IdentifierExpr (IR.ReservedId varMsgValue)
   _toIR (Sol.MemberAccess e i) = do
     e' <- _toIR e
     i' <- _toIR i

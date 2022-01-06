@@ -54,5 +54,21 @@ spec = testSpec "Transpile Identifier" $ do
     itIdentifier "exit" "userDefined_exit"
     itIdentifier "contract" "userDefined_contract"
     
+  describe "#reservedNames" $ do
+    itIdentifier "Tx" "userDefined_Tx"
+    itIdentifier "Utils" "userDefined_Utils"
+    itIdentifier "SigHash" "userDefined_SigHash"
+    itIdentifier "hash160" "userDefined_hash160"
+    itIdentifier "hash256" "userDefined_hash256"
+    itIdentifier "checkSig" "userDefined_checkSig"
+    itIdentifier "txPreimage" "userDefined_txPreimage"
+    itIdentifier "output" "userDefined_output"
+    itIdentifier "outputScript" "userDefined_outputScript"
+    itIdentifier "msgSender" "userDefined_msgSender"
+    itIdentifier "msgValue" "userDefined_msgValue"
+    itIdentifier "sig" "userDefined_sig"
+    itIdentifier "pubKey" "userDefined_pubKey"
+
+
     
 

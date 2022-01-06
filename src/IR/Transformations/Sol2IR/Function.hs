@@ -72,17 +72,17 @@ toIRFuncParams (ParameterList pl) tags (FuncRetTransResult rt ort rn) vis funcBl
             Just _ -> declareLocalVarStmt $ IR.Param <$> ort <*> rn
             _ -> []
 
-  -- for function that got `msg.sender`
+  -- for function that uses `msg.sender`
   let (extraParams1, blkT1) =
-        if exprExist msgSenderExpr (Sol.BlockStatement funcBlk)
+        if exprExistsInStmt msgSenderExpr (Sol.BlockStatement funcBlk)
           then
             if vis == Public
               then let (ps, blkT_) = transForFuncWithMsgSender in (map Just ps ++ extraParams0, mergeTransOnBlock blkT0 blkT_)
               else error "using `msg.sender` in non-external function is not supported yet"
           else (extraParams0, blkT0)
 
-  -- for function that got `msg.sender`
-  let msgValueExist = exprExist msgValueExpr (Sol.BlockStatement funcBlk)
+  -- for function that uses `msg.value`
+  let msgValueExist = exprExistsInStmt msgValueExpr (Sol.BlockStatement funcBlk)
   let (extraParams2, blkT2) =
         if msgValueExist
           then
@@ -171,76 +171,74 @@ declareLocalVarStmt (Just (IR.Param t _)) = error $ "unimpmented init statement 
 -- transformations for functions that need access preimage
 transForPreimageFunc :: ([IParam], TransformationOnBlock)
 transForPreimageFunc =
-  ( [IR.Param (BuiltinType "SigHashPreimage") $ IR.Identifier "txPreimage"],
+  ( [IR.Param (BuiltinType "SigHashPreimage") $ IR.ReservedId varTxPreimage],
     TransformationOnBlock
       []
       -- appends statements
       [ -- add `require(Tx.checkPreimage(txPreimage));`
         IR.RequireStmt $
           IR.FunctionCallExpr
-            (IR.MemberAccessExpr (IdentifierExpr (IR.Identifier "Tx")) (IR.Identifier "checkPreimage"))
-            [IdentifierExpr (IR.Identifier "txPreimage")],
+            (IR.MemberAccessExpr (IdentifierExpr (IR.ReservedId libTx)) (IR.Identifier "checkPreimage"))
+            [IdentifierExpr (IR.ReservedId varTxPreimage)],
         -- add `bytes outputScript = this.getStateScript();`
         IR.DeclareStmt
-          [Just $ IR.Param (ElementaryType IR.Bytes) (IR.Identifier "outputScript")]
+          [Just $ IR.Param (ElementaryType IR.Bytes) (IR.ReservedId varOutputScript)]
           [ IR.FunctionCallExpr
               (IR.MemberAccessExpr (IdentifierExpr (IR.Identifier "this")) (IR.Identifier "getStateScript"))
               []
           ],
         -- add `bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));`
         IR.DeclareStmt
-          [Just $ IR.Param (ElementaryType IR.Bytes) (IR.Identifier "output")]
+          [Just $ IR.Param (ElementaryType IR.Bytes) (IR.ReservedId varOutput)]
           [ IR.FunctionCallExpr
-              (IR.MemberAccessExpr (IdentifierExpr (IR.Identifier "Utils")) (IR.Identifier "buildOutput"))
-              [ IdentifierExpr (IR.Identifier "outputScript"),
+              (IR.MemberAccessExpr (IdentifierExpr (IR.ReservedId libUtils)) (IR.Identifier "buildOutput"))
+              [ IdentifierExpr (IR.ReservedId varOutputScript),
                 IR.FunctionCallExpr
-                  (IR.MemberAccessExpr (IdentifierExpr (IR.Identifier "SigHash")) (IR.Identifier "value"))
-                  [IdentifierExpr (IR.Identifier "txPreimage")]
+                  (IR.MemberAccessExpr (IdentifierExpr (IR.ReservedId libSigHash)) (IR.Identifier "value"))
+                  [IdentifierExpr (IR.ReservedId varTxPreimage)]
               ]
           ],
         -- add `require(hash256(output) == SigHash.hashOutputs(txPreimage));`
         IR.RequireStmt $
           IR.BinaryExpr
             IR.Equal
-            (IR.FunctionCallExpr (IdentifierExpr (IR.Identifier "hash256")) [IdentifierExpr (IR.Identifier "output")])
+            (IR.FunctionCallExpr (IdentifierExpr (IR.ReservedId funcHash256)) [IdentifierExpr (IR.ReservedId varOutput)])
             $ IR.FunctionCallExpr
-              (IR.MemberAccessExpr (IdentifierExpr (IR.Identifier "SigHash")) (IR.Identifier "hashOutputs"))
-              [IdentifierExpr (IR.Identifier "txPreimage")]
+              (IR.MemberAccessExpr (IdentifierExpr (IR.ReservedId libSigHash)) (IR.Identifier "hashOutputs"))
+              [IdentifierExpr (IR.ReservedId varTxPreimage)]
       ]
   )
 
--- transformations for functions that got `msg.sender`
+-- transformations for functions that uses `msg.sender`
 transForFuncWithMsgSender :: ([IParam], TransformationOnBlock)
 transForFuncWithMsgSender =
-  ( [ IR.Param (BuiltinType "Sig") $ IR.Identifier sigVarName,
-      IR.Param (BuiltinType "PubKey") $ IR.Identifier pubkeyVarName
+  ( [ IR.Param (BuiltinType "Sig") $ IR.ReservedId varSig,
+      IR.Param (BuiltinType "PubKey") $ IR.ReservedId varPubKey
     ],
     TransformationOnBlock
       [ -- PubKeyHash msgSender = hash160(pubKey);
         IR.DeclareStmt
-          [Just $ IR.Param (ElementaryType IR.Address) (IR.Identifier "msgSender")]
-          [IR.FunctionCallExpr (IdentifierExpr (IR.Identifier "hash160")) [IdentifierExpr (IR.Identifier pubkeyVarName)]],
+          [Just $ IR.Param (ElementaryType IR.Address) (IR.ReservedId varMsgSender)]
+          [IR.FunctionCallExpr (IdentifierExpr (IR.ReservedId funcHash160)) [IdentifierExpr (IR.ReservedId varPubKey)]],
         -- require(checkSig(sig, pubKey));
         IR.RequireStmt $
-          IR.FunctionCallExpr (IdentifierExpr (IR.Identifier "checkSig")) [IdentifierExpr (IR.Identifier sigVarName), IdentifierExpr (IR.Identifier pubkeyVarName)]
+          IR.FunctionCallExpr (IdentifierExpr (IR.ReservedId funcCheckSig)) [IdentifierExpr (IR.ReservedId varSig), IdentifierExpr (IR.ReservedId varPubKey)]
       ] -- end of prepends
       [] -- appends
   )
-  where
-    sigVarName = "sig"
-    pubkeyVarName = "pubKey"
 
--- transformations for functions that got `msg.value`
+-- transformations for functions that uses `msg.value`
 transForFuncWithMsgValue :: ([IParam], TransformationOnBlock)
 transForFuncWithMsgValue =
   ( [],
+    -- int msgValue = SigHash.value(txPreimage);
     TransformationOnBlock
       [
         IR.DeclareStmt
-          [Just $ IR.Param (ElementaryType IR.Int) (IR.Identifier "msgValue")]
+          [Just $ IR.Param (ElementaryType IR.Int) (IR.ReservedId varMsgValue)]
           [IR.FunctionCallExpr
-              (IR.MemberAccessExpr (IdentifierExpr (IR.Identifier "SigHash")) (IR.Identifier "value"))
-              [IdentifierExpr (IR.Identifier "txPreimage")]]
+              (IR.MemberAccessExpr (IdentifierExpr (IR.ReservedId libSigHash)) (IR.Identifier "value"))
+              [IdentifierExpr (IR.ReservedId varTxPreimage)]]
       ]
       []
   )

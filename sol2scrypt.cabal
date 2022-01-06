@@ -148,6 +148,7 @@ test-suite unit
       Transformations.Sol2IR.Contract
       Transformations.Sol2IR.Expression
       Transformations.Sol2IR.Function
+      Transformations.Sol2IR.Helper
       Transformations.Sol2IR.Identifier
       Transformations.Sol2IR.Main
       Transformations.Sol2IR.Statement

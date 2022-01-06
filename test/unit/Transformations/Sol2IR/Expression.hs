@@ -80,5 +80,5 @@ spec = testSpec "instance ToIRTransformable Sol.Expression IExpr'" $ do
   describe "#MemberAccess" $ do
     itExpr' "a.b" (IR.MemberAccessExpr {instanceExpr = IdentifierExpr (IR.Identifier "a"), member = IR.Identifier "b"})
     itExpr' "a.b.c" (IR.MemberAccessExpr {instanceExpr = IR.MemberAccessExpr {instanceExpr = IdentifierExpr (IR.Identifier "a"), member = IR.Identifier "b"}, member = IR.Identifier "c"})
-    itExpr' "msg.sender" (IR.IdentifierExpr (IR.Identifier "msgSender"))
-    itExpr' "msg.value" (IR.IdentifierExpr (IR.Identifier "msgValue"))
+    itExpr' "msg.sender" (IR.IdentifierExpr (IR.ReservedId "msgSender"))
+    itExpr' "msg.value" (IR.IdentifierExpr (IR.ReservedId "msgValue"))

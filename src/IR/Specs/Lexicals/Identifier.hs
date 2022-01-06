@@ -1,9 +1,10 @@
 module IR.Specs.Lexicals.Identifier where
 
-newtype IIdentifier = Identifier {unIdentifier :: String} deriving (Eq, Ord)
+data IIdentifier = Identifier {unIdentifier :: String} | ReservedId {unReservedId :: String} deriving (Eq, Ord)
 
 instance Show IIdentifier where
-  show i = "(Identifier \"" ++ unIdentifier i ++ "\")"
+  show (Identifier i) = "(Identifier \"" ++ i ++ "\")"
+  show (ReservedId i) = "(ReservedId \"" ++ i ++ "\")"
 
 reservedKeywords :: [String]
 reservedKeywords =
@@ -43,3 +44,60 @@ reservedKeywords =
     "SigHashPreimage",
     "asm"
   ]
+    ++ reservedNames
+
+reservedNames :: [String]
+reservedNames =
+  [ libTx,
+    libUtils,
+    libSigHash,
+    funcHash160,
+    funcHash256,
+    funcCheckSig,
+    varTxPreimage,
+    varOutput,
+    varOutputScript,
+    varMsgSender,
+    varMsgValue,
+    varSig,
+    varPubKey
+  ]
+
+libTx :: String
+libTx = "Tx"
+
+libUtils :: String
+libUtils = "Utils"
+
+libSigHash :: String
+libSigHash = "SigHash"
+
+funcHash160 :: String
+funcHash160 = "hash160"
+
+funcHash256 :: String
+funcHash256 = "hash256"
+
+funcCheckSig :: String
+funcCheckSig = "checkSig"
+
+varTxPreimage :: String
+varTxPreimage = "txPreimage"
+
+varOutput :: String
+varOutput = "output"
+
+varOutputScript :: String
+varOutputScript = "outputScript"
+
+varMsgSender :: String
+varMsgSender = "msgSender"
+
+varMsgValue :: String
+varMsgValue = "msgValue"
+
+varSig :: String
+varSig = "sig"
+
+varPubKey :: String
+varPubKey = "pubKey"
