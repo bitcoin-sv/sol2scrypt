@@ -1,14 +1,13 @@
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Scrypt.Generables.Statement where
 
+import Data.List (intercalate)
 import Scrypt.Generables.Base
 import Scrypt.Generables.Expression
 import Scrypt.Generables.Variable
-
 import Scrypt.Spec as Scr
-import Data.List (intercalate)
 
 instance Generable (Maybe (Scr.Statement a)) where
   genCode Nothing = return ""
