@@ -48,6 +48,10 @@ withIndent s = do
   ind <- getIndent
   return $ "\n" ++ ind ++ trim s
 
+withEmptyIndent :: CodeGenerator String
+withEmptyIndent = do
+  return ""
+
 removeIndent :: String -> String
 removeIndent (s:xs) = case s of
                       '\n' -> removeIndent xs

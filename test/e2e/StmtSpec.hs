@@ -144,24 +144,25 @@ spec = testSpec "Transpile Statement" $ do
 }|]
 
   describe "#IfStmt" $ do
-    itstmt "IfStmt without else statement "  "if(true){true;}"  
+    itstmt "If stmt with block stmt in true branch, without else"  "if(true){true;}"  
       [r|
 if(true) {
   true;
 }|]
 
 
-    itstmt "IfStmt without else statement "  "if(true) true;"  "\nif(true) true;"
+    itstmt "If stmt with expression stmt in true branch, without else"  "if(true) true;"  "\nif(true)\n  true;"
 
-    itstmt "IfStmt with else statement "  "if(true){true;}else{false;}"  
+    itstmt "If statement with else"  "if(true){true;}else{false;}"  
       [r|
 if(true) {
   true;
-} else {
+}
+else {
   false;
 }|]
 
-    itstmt "IfStmt with multi else statement "  
+    itstmt "If statement with multi else"  
       [r|if (true) {
     1 + 3;
 } else if (1 == a) {
@@ -174,15 +175,18 @@ if(true) {
       [r|
 if(true) {
   1 + 3;
-} else if(1 == a) {
+}
+else if(1 == a) {
   a++;
-} else if(!c != (c || d)) {
+}
+else if(!c != (c || d)) {
   e = b * 2;
-} else {
+}
+else {
   int x = 3;
 }|]
 
-    itstmt "IfStmt with nested if/else"  
+    itstmt "If statement with nested if/else"  
       [r|if (true) {
   if (true) {
     a++;
@@ -209,21 +213,50 @@ if(true) {
     a++;
     if(c) {
       --a;
-    } else {
+    }
+    else {
       a--;
     }
-  } else {
+  }
+  else {
     a--;
   }
-} else {
+}
+else {
   int x = 3;
   if(false) {
     a++;
-  } else {
+  }
+  else {
     a--;
   }
 }|]
 
+    itstmt "If stmt with assign stmt in true branch, no else"  "if (x > 0) storedData = x +1;"
+       [r|
+if(x > 0)
+  storedData = x + 1;|]
+
+    itstmt "If stmt with assign stmt in true branch, with else"  "if (x > 0) storedData = x +1; else { uint a = 3; }"
+       [r|
+if(x > 0)
+  storedData = x + 1;
+else {
+  int a = 3;
+}|]
+
+    itstmt "If stmt with declare stmt in true branch, no else"  "if (x > 0) int x = x3 +1;"
+       [r|
+if(x > 0)
+  int x = x3 + 1;|]
+
+    itstmt "If stmt with declare stmt in true branch, with else"  "if (x > 0) int x = x3 +1; else { uint a = 3; }"
+       [r|
+if(x > 0)
+  int x = x3 + 1;
+else {
+  int a = 3;
+}|]
 
 
 

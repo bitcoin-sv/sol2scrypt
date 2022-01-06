@@ -1,14 +1,13 @@
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Scrypt.Generables.Statement where
 
+import Data.List (intercalate)
 import Scrypt.Generables.Base
 import Scrypt.Generables.Expression
-import Scrypt.Generables.Variable 
-
+import Scrypt.Generables.Variable
 import Scrypt.Spec as Scr
-import Data.List (intercalate)
 
 instance Generable (Maybe (Scr.Statement a)) where
   genCode Nothing = return ""
@@ -39,10 +38,20 @@ instance Generable (Scr.Statement a) where
     decIndent
     closeBrace <- withIndent "}"
     return $ openBrace ++ intercalate "" stmts' ++ closeBrace
-
-  genCode (If e ifstmts elsestmt _) = do
+  genCode (If e trueBranch falseBranch _) = do
     e' <- genCode e
-    ifstmts' <- genCode ifstmts
-    elsestmt' <- genCode elsestmt
-    withIndent $ "if(" ++ e' ++ ") " ++ removeIndent ifstmts' ++ (if elsestmt' == "" then "" else " else " ++ removeIndent elsestmt')
+    falseBranch' <- genCode falseBranch
+    trueBranchPart <- case trueBranch of
+      Scr.Block _ _ -> do
+        trueBranch' <- genCode trueBranch
+        return $ " " ++ removeIndent trueBranch'
+      _ -> do
+        incIndent
+        trueBranch' <- genCode trueBranch
+        decIndent
+        return trueBranch'
+
+    falseBranchPart <- if falseBranch' == "" then withEmptyIndent else withIndent $ "\nelse " ++ removeIndent falseBranch'
+
+    withIndent $ "if(" ++ e' ++ ")" ++ trueBranchPart ++ falseBranchPart
   genCode _ = error "unimplemented show scrypt expr"
