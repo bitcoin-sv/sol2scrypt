@@ -34,5 +34,5 @@ spec = testSpec "Transpile Variable" $ do
     itParameter "uint a" "int a"
     itParameter "byte a" "bytes a"
     itParameter "bytes a" "bytes a"
-    itParameter "address a" "Ripemd160 a"
+    itParameter "address a" "PubKeyHash a"
     itParameter "bool a" "bool a"

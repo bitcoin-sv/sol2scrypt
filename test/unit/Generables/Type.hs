@@ -23,4 +23,4 @@ spec = testSpec "instance Generable Scr.Type" $ do
 
     itcode "Any" Scr.Any "auto"
 
-    itcode "Address" (Scr.SubBytes Scr.Ripemd160) "Ripemd160"
+    itcode "Address" (Scr.SubBytes Scr.Ripemd160) "PubKeyHash"

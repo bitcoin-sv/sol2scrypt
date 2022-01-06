@@ -15,4 +15,5 @@ instance Generable Scr.Type where
   genCode (Scr.Array t ctc) = do
     t' <- genCode t
     return $ t' ++ "[" ++ show ctc ++ "]"
+  genCode (Scr.SubBytes Scr.Ripemd160) = return "PubKeyHash"
   genCode t = return $ show t
