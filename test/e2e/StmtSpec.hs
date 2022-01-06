@@ -250,13 +250,12 @@ else {
 if(x > 0)
   int x = x3 + 1;|]
 
-    itstmt "If stmt with declare stmt in true branch, with else"  "if (x > 0) int x = x3 +1; else { uint a = 3; }"
+    itstmt "If stmt with declare stmt in true branch, with else"  "if (x > 0) int x = x3 +1; else uint a = 3;"
        [r|
 if(x > 0)
   int x = x3 + 1;
-else {
-  int a = 3;
-}|]
+else
+  int a = 3;|]
 
 
 
