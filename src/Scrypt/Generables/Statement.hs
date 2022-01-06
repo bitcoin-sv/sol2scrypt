@@ -53,7 +53,7 @@ instance Generable (Scr.Statement a) where
             Scr.If {} -> (True, False)
             _ -> (True, True)
 
-    ifLine <- withIndent $ "if(" ++ e' ++ ")"
+    ifLine <- withIndent $ "if (" ++ e' ++ ")"
     trueBranch' <- genBranch tbInd $ Just trueBranch
     elseLine <- if fbExists then withIndent "else" else return ""
     falseBranch' <- genBranch fbInd maybeFalseBranch

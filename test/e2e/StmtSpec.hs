@@ -146,16 +146,16 @@ spec = testSpec "Transpile Statement" $ do
   describe "#IfStmt" $ do
     itstmt "If stmt with block stmt in true branch, without else"  "if(true){true;}"  
       [r|
-if(true) {
+if (true) {
   true;
 }|]
 
 
-    itstmt "If stmt with expression stmt in true branch, without else"  "if(true) true;"  "\nif(true)\n  true;"
+    itstmt "If stmt with expression stmt in true branch, without else"  "if(true) true;"  "\nif (true)\n  true;"
 
     itstmt "If statement with else"  "if(true){true;}else{false;}"  
       [r|
-if(true) {
+if (true) {
   true;
 }
 else {
@@ -173,13 +173,13 @@ else {
     int x  = 3;
 }|]
       [r|
-if(true) {
+if (true) {
   1 + 3;
 }
-else if(1 == a) {
+else if (1 == a) {
   a++;
 }
-else if(!c != (c || d)) {
+else if (!c != (c || d)) {
   e = b * 2;
 }
 else {
@@ -208,10 +208,10 @@ else {
     }
 }|]
       [r|
-if(true) {
-  if(true) {
+if (true) {
+  if (true) {
     a++;
-    if(c) {
+    if (c) {
       --a;
     }
     else {
@@ -224,7 +224,7 @@ if(true) {
 }
 else {
   int x = 3;
-  if(false) {
+  if (false) {
     a++;
   }
   else {
@@ -234,12 +234,12 @@ else {
 
     itstmt "If stmt with assign stmt in true branch, no else"  "if (x > 0) storedData = x +1;"
        [r|
-if(x > 0)
+if (x > 0)
   storedData = x + 1;|]
 
     itstmt "If stmt with assign stmt in true branch, with else"  "if (x > 0) storedData = x +1; else { uint a = 3; }"
        [r|
-if(x > 0)
+if (x > 0)
   storedData = x + 1;
 else {
   int a = 3;
@@ -247,12 +247,12 @@ else {
 
     itstmt "If stmt with declare stmt in true branch, no else"  "if (x > 0) int x = x3 +1;"
        [r|
-if(x > 0)
+if (x > 0)
   int x = x3 + 1;|]
 
     itstmt "If stmt with declare stmt in true branch, with else"  "if (x > 0) int x = x3 +1; else uint a = 3;"
        [r|
-if(x > 0)
+if (x > 0)
   int x = x3 + 1;
 else
   int a = 3;|]
