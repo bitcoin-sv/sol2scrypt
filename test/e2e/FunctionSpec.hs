@@ -376,7 +376,9 @@ public function get(SigHashPreimage txPreimage, int retVal) {
 public function get(PubKeyHash addr, SigHashPreimage txPreimage, Sig sig, PubKey pubKey) {
   PubKeyHash msgSender = hash160(pubKey);
   require(checkSig(sig, pubKey));
-  if(msgSender == addr) addr1 = msgSender; else {
+  if (msgSender == addr)
+    addr1 = msgSender;
+  else {
     PubKeyHash addr1 = msgSender;
   }
   msgSender;
