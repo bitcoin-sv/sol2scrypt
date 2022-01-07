@@ -18,6 +18,8 @@ module IR.Transformer
     module IR.Transformations.IR2Scr.Function,
     module IR.Transformations.Sol2IR.Contract,
     module IR.Transformations.IR2Scr.Contract,
+    module IR.Transformations.Sol2IR.Program,
+    module IR.Transformations.IR2Scr.Program,
   )
 where
 
@@ -36,8 +38,11 @@ import IR.Transformations.Sol2IR.Expression
 import IR.Transformations.Sol2IR.Function
 import IR.Transformations.Sol2IR.Identifier
 import IR.Transformations.Sol2IR.Statement
-import IR.Transformations.Sol2IR.Type ()
+import IR.Transformations.Sol2IR.Type
 import IR.Transformations.Sol2IR.Variable
+import IR.Transformations.Sol2IR.Program
+import IR.Transformations.IR2Scr.Program
+
 
 class Node a where
   nodeType :: Show a => a -> String
