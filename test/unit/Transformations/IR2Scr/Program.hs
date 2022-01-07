@@ -16,5 +16,4 @@ spec = testSpec "instance ToScryptTransformable IProgram Program" $ do
         r `shouldBe` Just e2
 
   describe "#Program" $ do
-    itProgram "Program" (IR.Program [] [] []) (Scr.Program [] [] [] [] nil)
-
+    itProgram "Empty Program" (IR.Program [] [] []) (Scr.Program [] [] [] [] nil)

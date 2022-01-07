@@ -19,3 +19,12 @@ spec = testSpec "instance ToIRTransformable SolidityCode Program'" $ do
 
   describe "#Empty Program" $ do
     itProgram  ""  ( IR.Program [] [] [])
+
+  describe "#Simple Program" $ do
+    itProgram  [r|
+contract SimpleStorage {
+  uint storedData;
+
+  constructor() {}
+}   
+|]  (Program {programImports = [], programContracts = [Contract {contractName = (IR.Identifier "SimpleStorage"), contractBody = [IR.StateVariableDeclaration (StateVariable {stateVarName = (IR.Identifier "storedData"), stateVarType = ElementaryType Int, stateVisibility = Default, stateInitialValue = Nothing}),ConstructorDefinition (Constructor {ctorParams = ParamList [], ctorBody = IR.Block []})]}], programLibraries = []})

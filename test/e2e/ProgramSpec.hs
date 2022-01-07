@@ -20,7 +20,9 @@ spec = testSpec "Transpile Program" $ do
 
 
   itProgram
-      [r|contract SimpleStorage {
+      [r|
+      
+contract SimpleStorage {
     uint storedData;
 
     constructor() {}
