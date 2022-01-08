@@ -12,5 +12,9 @@ spec :: IO TestTree
 spec = testSpec "Program" $ do
   describe "#Program" $ do
     it "instance Generable (Maybe (Scr.Program Ann))" $ do
-      r <- generateScrypt (CodeGenState 0) (Just (Scr.Param (TypeAnn Scr.Bool nil) (NameAnn "p" nil) (Const False) Nothing Default (IsStateProp False) nil))
-      r `shouldBe` "bool p"
+      r <- generateScrypt (CodeGenState 0) (Just (Scr.Program [] [] [] [] nil))
+      r `shouldBe` ""
+
+    it "instance Generable (Maybe (Scr.Program Ann))" $ do
+      r <- generateScrypt (CodeGenState 0) (Just (Scr.Program [ImportPath "./myLovelyLovelyLib.scrypt" (Ann {unAnn = Nothing})] [] [] [] nil))
+      r `shouldBe` "import \"./myLovelyLovelyLib.scrypt\";\n\n"

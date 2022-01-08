@@ -10,16 +10,6 @@ import Scrypt.Generables.Contract ()
 import Utils
 import Data.List (intercalate)
 
-
-instance Generable (Maybe (Scr.ImportPath Ann)) where
-  genCode = maybe (return "") genCode
-
-instance Generable (Scr.ImportPath Ann) where
-  genCode (Scr.ImportPath path _) = do
-    return $ "import \"" ++ path ++ "\";"
-
-
-
 instance Generable (Maybe (Scr.Program Ann)) where
   genCode = maybe (return "") genCode
 
@@ -32,3 +22,11 @@ instance Generable (Scr.Program Ann) where
     let contractsLines = intercalate "\n\n" contracts'
 
     return $ (if importsLines /= "" then importsLines ++ "\n\n" else "") ++ contractsLines
+
+
+instance Generable (Maybe (Scr.ImportPath Ann)) where
+  genCode = maybe (return "") genCode
+
+instance Generable (Scr.ImportPath Ann) where
+  genCode (Scr.ImportPath path _) = do
+    return $ "import \"" ++ path ++ "\";"

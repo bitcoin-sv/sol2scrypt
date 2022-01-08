@@ -43,3 +43,14 @@ contract SimpleStorage {
   constructor() {}
 }   
 |]  (Program {programImports = [IR.ImportDirective "./myLovelyLovelyLib.scrypt"], programContracts = [IR.Contract {contractName = (IR.Identifier "SimpleStorage"), contractBody = [IR.StateVariableDeclaration (IR.StateVariable {stateVarName = (IR.Identifier "storedData"), stateVarType = ElementaryType Int, stateVisibility = Default, stateInitialValue = Nothing}),ConstructorDefinition (Constructor {ctorParams = ParamList [], ctorBody = IR.Block []})]}], programLibraries = []})
+
+
+  describe "#Program with pragma and multi import" $ do
+    itProgram  [r|
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.10;
+
+import "./myLovelyLovelyLib.sol";
+import "./aa.sol";
+
+|]  (Program {programImports = [IR.ImportDirective "./myLovelyLovelyLib.scrypt", IR.ImportDirective "./aa.scrypt"], programContracts = [], programLibraries = []})
