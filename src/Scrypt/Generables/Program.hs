@@ -16,4 +16,4 @@ instance Generable (Maybe (Scr.Program Ann)) where
 instance Generable (Scr.Program Ann) where
   genCode (Scr.Program _ _ _ contracts _) = do
     contracts' <- mapM genCode contracts
-    return $ intercalate "\n" contracts'
+    return $ intercalate "\n\n" contracts'
