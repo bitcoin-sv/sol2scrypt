@@ -23,14 +23,14 @@ instance ToIRTransformable Sol.SourceUnit1 IContract' where
 
 instance ToIRTransformable Sol.SolidityCode IProgram' where
   _toIR (Sol.SolidityCode (SourceUnit [])) = return $ Just $ IR.Program [] [] []
-  _toIR (Sol.SolidityCode (SourceUnit directives)) = do
+  _toIR (Sol.SolidityCode (SourceUnit sourceUnits)) = do
     let contracts =
           filter
             ( \d -> case d of
                 SourceUnit1_ContractDefinition _ -> True
                 _ -> False
             )
-            directives
+            sourceUnits
     contracts' <- mapM _toIR contracts
 
     return $ Just $ IR.Program [] (catMaybes contracts') []
