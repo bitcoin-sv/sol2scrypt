@@ -46,6 +46,7 @@ library
       IR.Transformations.IR2Scr.Expression
       IR.Transformations.IR2Scr.Function
       IR.Transformations.IR2Scr.Identifier
+      IR.Transformations.IR2Scr.Program
       IR.Transformations.IR2Scr.Statement
       IR.Transformations.IR2Scr.Type
       IR.Transformations.IR2Scr.Variable
@@ -54,6 +55,7 @@ library
       IR.Transformations.Sol2IR.Function
       IR.Transformations.Sol2IR.Helper
       IR.Transformations.Sol2IR.Identifier
+      IR.Transformations.Sol2IR.Program
       IR.Transformations.Sol2IR.Statement
       IR.Transformations.Sol2IR.Type
       IR.Transformations.Sol2IR.Variable
@@ -64,6 +66,7 @@ library
       Scrypt.Generables.Empty
       Scrypt.Generables.Expression
       Scrypt.Generables.Function
+      Scrypt.Generables.Program
       Scrypt.Generables.Statement
       Scrypt.Generables.Type
       Scrypt.Generables.Variable
@@ -83,6 +86,7 @@ library
       aeson
     , base
     , containers
+    , filepath
     , mtl
     , parsec
     , protolude
@@ -98,6 +102,7 @@ executable sol2scrypt
   ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N -fno-warn-orphans
   build-depends:
       base >=4.7 && <5
+    , raw-strings-qq
     , sol2scrypt
   default-language: Haskell2010
 
@@ -110,6 +115,7 @@ test-suite e2e
       FunctionSpec
       IdentifierSpec
       PragmaSpec
+      ProgramSpec
       StmtSpec
       TypeSpec
       VariableSpec
@@ -132,6 +138,7 @@ test-suite unit
   other-modules:
       Generables.Expression
       Generables.Function
+      Generables.Program
       Generables.Statement
       Generables.Type
       Generables.Variable
@@ -142,6 +149,7 @@ test-suite unit
       Transformations.IR2Scr.Function
       Transformations.IR2Scr.Identifier
       Transformations.IR2Scr.Main
+      Transformations.IR2Scr.Program
       Transformations.IR2Scr.Statement
       Transformations.IR2Scr.Type
       Transformations.IR2Scr.Variable
@@ -151,6 +159,7 @@ test-suite unit
       Transformations.Sol2IR.Helper
       Transformations.Sol2IR.Identifier
       Transformations.Sol2IR.Main
+      Transformations.Sol2IR.Program
       Transformations.Sol2IR.Statement
       Transformations.Sol2IR.Type
       Transformations.Sol2IR.Variable

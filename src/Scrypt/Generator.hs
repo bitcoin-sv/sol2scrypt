@@ -7,6 +7,7 @@ module Scrypt.Generator
     module Scrypt.Generables.Type,
     module Scrypt.Generables.Variable,
     module Scrypt.Generables.Contract,
+    module Scrypt.Generables.Program,
   )
 where
 
@@ -18,4 +19,5 @@ import Scrypt.Generables.Statement
 import Scrypt.Generables.Type
 import Scrypt.Generables.Variable
 import Scrypt.Generables.Contract
+import Scrypt.Generables.Program
 import qualified Solidity.Spec as Scrypt.Generables

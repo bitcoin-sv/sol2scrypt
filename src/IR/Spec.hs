@@ -10,7 +10,7 @@ module IR.Spec
     module IR.Specs.Program,
     IIdentifier', IType', IExpression', IStatement', IParam', IParamList',
     IVisibility', IBlock', IFunction',
-    IContractBodyElement', IStateVariable', IContract', IConstructor'
+    IContractBodyElement', IStateVariable', IContract', IConstructor', IProgram', IImportDirective'
   )
 where
 
@@ -49,3 +49,7 @@ type IStateVariable' = Maybe IStateVariable
 type IContractBodyElement' = Maybe IContractBodyElement
 
 type IContract' = Maybe IContract
+
+type IProgram' = Maybe  IProgram
+
+type IImportDirective' = Maybe IImportDirective
