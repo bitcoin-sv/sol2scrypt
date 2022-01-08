@@ -86,6 +86,7 @@ library
       aeson
     , base
     , containers
+    , filepath
     , mtl
     , parsec
     , protolude

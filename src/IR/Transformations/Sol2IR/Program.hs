@@ -13,6 +13,8 @@ import IR.Transformations.Sol2IR.Expression ()
 import IR.Transformations.Sol2IR.Contract ()
 import Solidity.Spec as Sol
 import Data.Maybe (catMaybes)
+import System.FilePath (replaceExtensions)
+
 import Utils
 
 -- from SolidityCode to IProgram'
@@ -20,6 +22,12 @@ import Utils
 
 instance ToIRTransformable Sol.SourceUnit1 IContract' where
   _toIR (Sol.SourceUnit1_ContractDefinition contractDef ) = _toIR contractDef
+
+instance ToIRTransformable Sol.ImportDirective IImportDirective' where
+  _toIR (Sol.ImportDirective _ (StringLiteral path)) = return $ Just $ IR.ImportDirective $ replaceExtensions path "scrypt"
+
+instance ToIRTransformable Sol.SourceUnit1 IImportDirective' where
+  _toIR (Sol.SourceUnit1_ImportDirective ip ) = _toIR ip
 
 instance ToIRTransformable Sol.SolidityCode IProgram' where
   _toIR (Sol.SolidityCode (SourceUnit [])) = return $ Just $ IR.Program [] [] []
@@ -33,4 +41,13 @@ instance ToIRTransformable Sol.SolidityCode IProgram' where
             sourceUnits
     contracts' <- mapM _toIR contracts
 
-    return $ Just $ IR.Program [] (catMaybes contracts') []
+    let imports =
+          filter
+            ( \d -> case d of
+                SourceUnit1_ImportDirective _ -> True
+                _ -> False
+            )
+            sourceUnits
+    imports' <- mapM _toIR imports
+
+    return $ Just $ IR.Program (catMaybes imports') (catMaybes contracts') []

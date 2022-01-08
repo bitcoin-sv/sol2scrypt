@@ -34,6 +34,7 @@ library:
   - aeson
   - protolude
   - text
+  - filepath
 
 executables:
   sol2scrypt:
@@ -46,6 +47,7 @@ executables:
     - -fno-warn-orphans
     dependencies:
     - sol2scrypt
+    - raw-strings-qq
 
 tests:
   unit:

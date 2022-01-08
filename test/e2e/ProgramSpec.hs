@@ -223,3 +223,73 @@ contract A {
     require(hash256(output) == SigHash.hashOutputs(txPreimage));
   }
 }|]
+
+
+  describe "#ImportDirective" $ do
+    itProgram "Program with one ImportDirective"
+      [r|
+
+import "./myLovelyLovelyLib.sol";
+
+contract SimpleStorage {
+    uint storedData;
+
+    constructor() {}
+}|]
+      [r|import "./myLovelyLovelyLib.scrypt";
+
+contract SimpleStorage {
+  @state
+  int storedData;
+
+  constructor() {
+  }
+}|]
+
+
+    itProgram "Program with multi ImportDirective"
+      [r|
+
+import "./myLovelyLovelyLib.sol";
+import "ccc.sol";
+
+contract SimpleStorage {
+    uint storedData;
+
+    constructor() {}
+}|]
+      [r|import "./myLovelyLovelyLib.scrypt";
+import "ccc.scrypt";
+
+contract SimpleStorage {
+  @state
+  int storedData;
+
+  constructor() {
+  }
+}|]
+
+    itProgram "Program with multi ImportDirective and pragma"
+      [r|
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.10;
+
+import "./myLovelyLovelyLib.sol";
+import "ccc.sol";
+
+contract SimpleStorage {
+    uint storedData;
+
+    constructor() {}
+}|]
+      [r|import "./myLovelyLovelyLib.scrypt";
+import "ccc.scrypt";
+
+contract SimpleStorage {
+  @state
+  int storedData;
+
+  constructor() {
+  }
+}|]
