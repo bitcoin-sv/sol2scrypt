@@ -11,8 +11,7 @@ import Utils
 import Data.List (intercalate)
 
 instance Generable (Maybe (Scr.Contract Ann)) where
-  genCode Nothing = return ""
-  genCode (Just t) = genCode t
+  genCode = maybe (return "") genCode
 
 instance Generable (Scr.Contract Ann) where
   genCode (Scr.Contract cn _ props _ maybector fs False _) = do

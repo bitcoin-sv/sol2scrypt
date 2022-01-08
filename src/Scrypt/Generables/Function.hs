@@ -13,8 +13,7 @@ import Scrypt.Spec as Scr
 import Utils
 
 instance Generable (Maybe (Scr.Function Ann)) where
-  genCode Nothing = return ""
-  genCode (Just t) = genCode t
+  genCode = maybe (return "") genCode
 
 instance Generable (Scr.Function Ann) where
   genCode (Scr.Function fn ps (TypeAnn rt _) (RegularBody stmts _ _) vis stc _) = do

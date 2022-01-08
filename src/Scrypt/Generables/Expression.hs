@@ -10,8 +10,7 @@ import Scrypt.Spec as Scr
 import Utils (showHexWithPadded)
 
 instance Generable (Maybe (Scr.Expr a)) where
-  genCode Nothing = return ""
-  genCode (Just t) = genCode t
+  genCode = maybe (return "") genCode
 
 instance Generable (Scr.Expr a) where
   genCode (Scr.BoolLiteral b _) = return $ if b then "true" else "false"

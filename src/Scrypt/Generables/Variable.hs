@@ -9,8 +9,7 @@ import Scrypt.Spec as Scr
 import Utils
 
 instance Generable (Maybe (Scr.Param Ann)) where
-  genCode Nothing = return ""
-  genCode (Just t) = genCode t
+  genCode = maybe (return "") genCode
 
 
 instance Generable Scr.Visibility where
