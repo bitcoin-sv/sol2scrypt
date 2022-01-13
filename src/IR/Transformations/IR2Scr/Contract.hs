@@ -20,17 +20,25 @@ instance ToScryptTransformable IContract' (Maybe (Scr.Contract Ann)) where
 
 
 maybeHead :: [Maybe (Constructor Ann)] -> Maybe (Constructor Ann)
-maybeHead [] = Nothing 
+maybeHead [] = Nothing
 maybeHead (x:_) = x
 
 instance ToScryptTransformable IR.IContract (Scr.Contract Ann) where
-  _toScrypt (IR.Contract cn bodyElems) = Scr.Contract (_toScrypt cn) [] props [] ctor functions False nil
+  _toScrypt (IR.Contract cn bodyElems) = Scr.Contract (_toScrypt cn) [] props staticProps ctor functions False nil
     where
       props =
         map _toScrypt $
           filter
             ( \case
-                IR.StateVariableDeclaration _ -> True
+                IR.StateVariableDeclaration (IR.StateVariable _ _ _ _ False) -> True
+                _ -> False
+            )
+            bodyElems
+      staticProps =
+        map _toScrypt $
+          filter
+            ( \case
+                IR.StateVariableDeclaration (IR.StateVariable _ _ _ _ True) -> True
                 _ -> False
             )
             bodyElems
@@ -55,6 +63,12 @@ instance ToScryptTransformable IContractBodyElement' (Maybe (Scr.Param Ann)) whe
   _toScrypt = (<$>) _toScrypt
 
 instance ToScryptTransformable IR.IContractBodyElement (Scr.Param Ann) where
+  _toScrypt (IR.StateVariableDeclaration stateVar) = _toScrypt stateVar
+
+
+instance ToScryptTransformable IContractBodyElement' (Maybe (Scr.Static Ann)) where
+  _toScrypt = (<$>) _toScrypt
+instance ToScryptTransformable IR.IContractBodyElement  (Scr.Static Ann) where
   _toScrypt (IR.StateVariableDeclaration stateVar) = _toScrypt stateVar
 
 instance ToScryptTransformable IR.IContractBodyElement (Scr.Function Ann) where

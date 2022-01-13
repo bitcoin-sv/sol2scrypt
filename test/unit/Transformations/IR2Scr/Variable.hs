@@ -37,11 +37,11 @@ spec = testSpec "Variables" $ do
   describe "instance ToScryptTransformable IStateVariable (Scr.Param Ann)" $ do
     itStateVariable
       "bool a;"
-      (IR.StateVariable (IR.Identifier "a") (ElementaryType IR.Bool) IR.Default Nothing)
+      (IR.StateVariable (IR.Identifier "a") (ElementaryType IR.Bool) IR.Default Nothing False)
       (Scr.Param (TypeAnn Scr.Bool nil) (NameAnn "a" nil) (Const False) Nothing Scr.Default (IsStateProp True) nil)
 
     itStateVariable
       "int a;"
-      (IR.StateVariable (IR.Identifier "a") (ElementaryType IR.Int) IR.Default Nothing)
+      (IR.StateVariable (IR.Identifier "a") (ElementaryType IR.Int) IR.Default Nothing False)
       (Scr.Param (TypeAnn Scr.Int nil) (NameAnn "a" nil) (Const False) Nothing Scr.Default (IsStateProp True) nil)
 
