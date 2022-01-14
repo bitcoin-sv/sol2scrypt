@@ -14,9 +14,8 @@ import IR.Transformations.Sol2IR.Expression ()
 import IR.Transformations.Sol2IR.Variable ()
 import IR.Transformations.Sol2IR.Function ()
 import Solidity.Spec as Sol
-import Data.Maybe (catMaybes, fromJust)
+import Data.Maybe
 import Utils
-
 instance ToIRTransformable ContractDefinition IContract' where
   _toIR (Sol.ContractDefinition "contract" cn [] cps) = do
     cn' <- _toIR cn
@@ -28,12 +27,6 @@ instance ToIRTransformable ContractDefinition IContract' where
   _toIR c = error $ "unsupported contract definition `" ++ headWord (show c) ++ "`"
 
 
-instance ToIRTransformable ContractPart IConstructor' where
-  _toIR (Sol.ContractPartConstructorDefinition (ParameterList pl) _ (Just block)) = do
-    params' <- mapM _toIR pl
-    block' <- _toIR block
-    return $ Just $ IR.Constructor (ParamList (catMaybes params')) (fromJust block')
-  _toIR c = error $ "unsupported constructor definition `" ++ headWord (show c) ++ "`"
 
 instance ToIRTransformable Sol.PragmaDirective IR.IEmpty where
   _toIR _ = return IR.Empty

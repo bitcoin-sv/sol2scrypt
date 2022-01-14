@@ -350,3 +350,56 @@ spec = testSpec "Transpile Contract" $ do
   }
 }|]
 
+
+  itTransContract
+      [r|contract Coin {
+    address public minter;
+    uint public value;
+
+    event Sent(address from, address to, uint amount);
+
+    constructor() {
+        minter = msg.sender;
+        value = msg.value;
+    }
+
+    function mint(address receiver, uint amount) external {
+        if (msg.sender != minter) return;
+    }
+
+    function send(address receiver, uint amount) external {
+
+        emit Sent(msg.sender, receiver, amount);
+    }
+}|]
+      [r|contract Coin {
+  @state
+  public PubKeyHash minter;
+
+  @state
+  public int value;
+
+  constructor(int msgValue, PubKeyHash msgSender) {
+    this.minter = msgSender;
+    this.value = msgValue;
+  }
+
+  public function mint(PubKeyHash receiver, int amount, SigHashPreimage txPreimage, Sig sig, PubKey pubKey) {
+    PubKeyHash msgSender = hash160(pubKey);
+    require(checkSig(sig, pubKey));
+    if (msgSender != this.minter)
+      return true;
+    require(Tx.checkPreimage(txPreimage));
+    bytes outputScript = this.getStateScript();
+    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    require(hash256(output) == SigHash.hashOutputs(txPreimage));
+  }
+
+  public function send(PubKeyHash receiver, int amount, SigHashPreimage txPreimage) {
+    require(Tx.checkPreimage(txPreimage));
+    bytes outputScript = this.getStateScript();
+    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    require(hash256(output) == SigHash.hashOutputs(txPreimage));
+  }
+}|]
+
