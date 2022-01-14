@@ -5,6 +5,7 @@ module Scrypt.Generables.Variable where
 
 import Scrypt.Generables.Base
 import Scrypt.Generables.Type ()
+import Scrypt.Generables.Expression ()
 import Scrypt.Spec as Scr
 import Utils
 
@@ -29,3 +30,12 @@ instance Generable (Scr.Param a) where
     pt' <- genCode pt
     pn' <- genCode pn
     return $ pt' ++ " " ++ pn'
+
+instance Generable (Maybe (Scr.Static Ann)) where
+  genCode = maybe (return "") genCode
+
+instance Generable (Scr.Static a) where
+  genCode (Static param expr _) = do
+    param' <- genCode param
+    expr' <- genCode expr
+    withIndent $ "static const " ++ param' ++ " = " ++ expr' ++ ";"

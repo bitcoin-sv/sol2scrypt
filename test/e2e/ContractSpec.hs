@@ -339,12 +339,39 @@ spec = testSpec "Transpile Contract" $ do
   itTransContract
       [r|contract SimpleStorage {
     uint storedData;
+    uint storedData1;
+    uint constant x = 1;
 
     constructor() {}
 }|]
       [r|contract SimpleStorage {
   @state
   int storedData;
+
+  @state
+  int storedData1;
+
+  static const int x = 1;
+
+  constructor() {
+  }
+}|]
+
+  itTransContract
+      [r|contract SimpleStorage {
+    bool constant a = true;
+    uint storedData;
+    uint constant x = 1;
+
+    constructor() {}
+}|]
+      [r|contract SimpleStorage {
+  @state
+  int storedData;
+
+  static const bool a = true;
+
+  static const int x = 1;
 
   constructor() {
   }

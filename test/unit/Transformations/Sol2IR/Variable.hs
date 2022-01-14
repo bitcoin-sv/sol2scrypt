@@ -16,7 +16,7 @@ spec = testSpec "Variables" $ do
 
   let itStateVariable sol t vis initvalue = it ("should transfrom Solidity `" ++ sol ++ "` to IR Type correctly") $ do
         r1 <- sol2Ir sol2StateVariable sol
-        r1 `shouldBe` Just (IR.StateVariable (IR.Identifier "a") t vis initvalue)
+        r1 `shouldBe` Just (IR.StateVariable (IR.Identifier "a") t vis initvalue False)
   describe "#Parameter" $ do
     itParameter "bool a" (ElementaryType Bool)
     itParameter "int a" (ElementaryType Int)

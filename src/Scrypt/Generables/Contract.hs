@@ -14,16 +14,17 @@ instance Generable (Maybe (Scr.Contract Ann)) where
   genCode = maybe (return "") genCode
 
 instance Generable (Scr.Contract Ann) where
-  genCode (Scr.Contract cn _ props _ maybector fs False _) = do
+  genCode (Scr.Contract cn _ props stateProps maybector fs False _) = do
     cn' <- genCode cn
     let firstLine = "contract " ++ cn' ++ " {"
     incIndent
     ctor' <- genCode maybector
     props' <- mapM genCode props
+    stateProps' <- mapM genCode stateProps
     fs' <- mapM genCode fs
     decIndent
     let lastLine = "\n}"
-    return $ firstLine ++ intercalate "\n" (props' ++ ([ctor' | ctor' /= ""]) ++ fs') ++ lastLine
+    return $ firstLine ++ intercalate "\n" (props' ++ stateProps' ++ ([ctor' | ctor' /= ""]) ++ fs') ++ lastLine
   genCode _ = error "unimplemented `genCode` for contract"
 
 
