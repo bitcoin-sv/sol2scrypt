@@ -33,6 +33,7 @@ instance Generable (Scr.Param a) where
 
 instance Generable (Maybe (Scr.Static Ann)) where
   genCode = maybe (return "") genCode
+
 instance Generable (Scr.Static a) where
   genCode (Static param expr _) = do
     param' <- genCode param
