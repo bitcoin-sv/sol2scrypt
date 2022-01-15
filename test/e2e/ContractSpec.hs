@@ -354,13 +354,11 @@ spec = testSpec "Transpile Contract" $ do
   itTransContract
       [r|contract Coin {
     address public minter;
-    uint public value;
 
     event Sent(address from, address to, uint amount);
 
     constructor() {
         minter = msg.sender;
-        value = msg.value;
     }
 
     function mint(address receiver, uint amount) external {
@@ -376,12 +374,8 @@ spec = testSpec "Transpile Contract" $ do
   @state
   public PubKeyHash minter;
 
-  @state
-  public int value;
-
-  constructor(int msgValue, PubKeyHash msgSender) {
+  constructor(PubKeyHash msgSender) {
     this.minter = msgSender;
-    this.value = msgValue;
   }
 
   public function mint(PubKeyHash receiver, int amount, SigHashPreimage txPreimage, Sig sig, PubKey pubKey) {

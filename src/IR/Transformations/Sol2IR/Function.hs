@@ -274,18 +274,9 @@ toIRConstructorParams (ParameterList pl) _ funcBlk = do
             let (ps, blkT_) = transForConstructorWithMsgSender in (map Just ps ++ extraParams0, mergeTransOnBlock blkT0 blkT_)
           else (extraParams0, blkT0)
 
-  -- for function that uses `msg.value`
-  let msgValueExist = exprExistsInStmt msgValueExpr (Sol.BlockStatement funcBlk)
-  let (extraParams2, blkT2) =
-        if msgValueExist
-          then
-            let (ps, blkT_) = transForConstructorWithMsgValue in (map Just ps ++ extraParams1, mergeTransOnBlock blkT1 blkT_)
-          else (extraParams1, blkT1)
+  let params' = sequence $ params ++ extraParams1
 
-  let params' = sequence $ params ++ extraParams2
-
-  return (IR.ParamList <$> params', blkT2)
-
+  return (IR.ParamList <$> params', blkT1)
 
 
 toIRConstructorBody :: Block  -> TransformationOnBlock -> Transformation IBlock'
