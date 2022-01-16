@@ -14,6 +14,7 @@ import IR.Transformations.Sol2IR.Statement ()
 import IR.Transformations.Sol2IR.Type ()
 import IR.Transformations.Sol2IR.Variable ()
 import Solidity.Spec as Sol
+import Utils
 
 data TransformationOnBlock = TransformationOnBlock
   { prependStmts :: [IR.IStatement],
@@ -36,6 +37,14 @@ instance ToIRTransformable ContractPart IFunction' where
     body <- toIRFuncBody block vis blkTfromParam retTransResult
     return $ Function (IR.Identifier fn) <$> ps <*> body <*> targetType retTransResult <*> Just vis
   _toIR _ = return Nothing
+
+
+instance ToIRTransformable ContractPart IConstructor' where
+  _toIR (Sol.ContractPartConstructorDefinition pl tags (Just block)) = do
+    (ps, blkTfromParam) <- toIRConstructorParams pl tags block
+    body <- toIRConstructorBody block blkTfromParam
+    return $ IR.Constructor <$> ps <*> body
+  _toIR c = error $ "unsupported constructor definition `" ++ headWord (show c) ++ "`"
 
 toIRFuncVis :: [FunctionDefinitionTag] -> Transformation IVisibility
 toIRFuncVis tags
@@ -248,3 +257,53 @@ msgSenderExpr = Sol.MemberAccess (Sol.Literal (PrimaryExpressionIdentifier (Sol.
 
 msgValueExpr :: Sol.Expression
 msgValueExpr = Sol.MemberAccess (Sol.Literal (PrimaryExpressionIdentifier (Sol.Identifier "msg"))) (Sol.Identifier "value")
+
+
+toIRConstructorParams :: ParameterList -> [FunctionDefinitionTag] -> Block -> Transformation (IParamList', TransformationOnBlock)
+toIRConstructorParams (ParameterList pl) _ funcBlk = do
+  params <- mapM _toIR pl
+
+  let extraParams0 = []
+
+  let blkT0 = TransformationOnBlock [] []
+
+  -- for function that uses `msg.sender`
+  let (extraParams1, blkT1) =
+        if exprExistsInStmt msgSenderExpr (Sol.BlockStatement funcBlk)
+          then
+            let (ps, blkT_) = transForConstructorWithMsgSender in (map Just ps ++ extraParams0, mergeTransOnBlock blkT0 blkT_)
+          else (extraParams0, blkT0)
+
+  let params' = sequence $ params ++ extraParams1
+
+  return (IR.ParamList <$> params', blkT1)
+
+
+toIRConstructorBody :: Block  -> TransformationOnBlock -> Transformation IBlock'
+toIRConstructorBody (Sol.Block ss) (TransformationOnBlock prepends appends) = do
+  stmts' <- mapM _toIR ss
+  let stmts'' = map Just prepends ++ stmts' ++ map Just appends
+  return $ Just $ IR.Block $ catMaybes stmts''
+
+
+
+-- transformations for constructor that uses `msg.sender`
+transForConstructorWithMsgSender :: ([IR.IParam], TransformationOnBlock)
+transForConstructorWithMsgSender =
+  ( [ IR.Param (ElementaryType Address) $ IR.ReservedId varMsgSender],
+    TransformationOnBlock
+      [] -- prepends
+      [] -- appends
+  )
+
+-- transformations for constructor that uses `msg.value`
+transForConstructorWithMsgValue :: ([IR.IParam], TransformationOnBlock)
+transForConstructorWithMsgValue =
+  ( [ IR.Param (ElementaryType Int) $ IR.ReservedId varMsgValue],
+    TransformationOnBlock
+      [] -- prepends
+      [] -- appends
+  )
+
+
+

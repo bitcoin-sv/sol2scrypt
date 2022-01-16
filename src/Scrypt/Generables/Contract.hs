@@ -40,4 +40,4 @@ instance Generable (Scr.Constructor Ann) where
     stmts' <- mapM genCode stmts
     decIndent
     lastLine <- withIndent "}"
-    return $ firstLine ++ intercalate "\n" stmts' ++ lastLine
+    return $ firstLine ++ intercalate "" stmts' ++ lastLine
