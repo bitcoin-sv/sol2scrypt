@@ -5,7 +5,7 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-
+-- commit 01d3a3c392d8eaf8c061734cf837792d3714cc5b
 module Scrypt.Spec where
 
 import Data.Aeson hiding (Array, Bool)
@@ -69,7 +69,7 @@ data Type
   | Bytes
   | SubBytes BytesType
   | PrivKey
-  | ContractClass {contractType :: Name, contractGenerics :: [Type]}
+  | ContractClass {contractType :: Name, isLib :: Bool, contractGenerics :: [Type]}
   | Array Type CTC
   | StructType Name
   | [FuncParam] :-> Type -- Function type
@@ -88,12 +88,13 @@ instance Show Type where
   show Bytes = "bytes"
   show PrivKey = "PrivKey"
   show (SubBytes t) = show t
-  show (ContractClass n gts) = n ++ if null gts then "" else "<" ++ intercalate ", " (map show gts) ++ ">"
-  show (Array t ctc) = let tn = show t
-                       in case elemIndex '[' tn of
-                              -- int x[2][3] -> Array (Array int 3) 2 -> int[2][3]
-                              Just i -> take i tn ++ "[" ++ show ctc ++ "]" ++ drop i tn -- add before others
-                              _ -> tn ++ "[" ++ show ctc ++ "]"
+  show (ContractClass n _ gts) = n ++ if null gts then "" else "<" ++ intercalate ", " (map show gts) ++ ">"
+  show (Array t ctc) = showArr t [ctc]
+      where
+        -- int x[2][3] -> Array (Array int 3) 2 -> int[2][3]
+        showArr et als = case et of
+                          Array et' al' -> showArr et' $ als ++ [al']
+                          _ -> show et ++ intercalate "" (map (\l -> "[" ++ show l ++ "]") als)
   show (StructType n) = "struct " ++ n ++ " {}"
   show (as :-> _) = "(" ++ intercalate ", " (map (\(FuncParam _ t _) -> show t) as) ++ ")"
   show (GenericType n) = n
@@ -185,8 +186,9 @@ data Expr a
   | BinaryExpr {binaryOp :: BinaryOp, lExpr :: Expr a, rExpr :: Expr a, annot :: a}
   | TernaryExpr {ternaryCond :: Expr a, ternaryTrueBranch :: Expr a, ternaryFalseBranch :: Expr a, annot :: a}
   | Call {callFunc :: Name, callParams :: [Expr a], annot :: a}
-  | Dispatch {dispatchContract :: NameAnn a {- contract class/object -}, dispatchContractGTs :: [TypeAnn a] {- contract generic types -}, dispatchMethod :: Name, dispatchParams :: [Expr a], annot :: a}
+  | Dispatch {dispatchContract :: Expr a {- contract class/object -}, dispatchContractGTs :: [TypeAnn a] {- contract generic types -}, dispatchMethod :: NameAnn a, dispatchParams :: [Expr a], annot :: a}
   | Parens {enclosedExpr :: Expr a, annot :: a}
+  | NewExpr {newExprContract :: TypeAnnWithGenerics a, newExprParams :: [Expr a], annot :: a}
   deriving (Eq, Show, Functor, Foldable, Traversable)
 
 instance Annotated Expr a where
@@ -260,6 +262,9 @@ data Param a = Param
     annot :: a
   }
   deriving (Eq, Show, Functor, Foldable, Traversable)
+
+instance Annotated Param a where
+  ann = annot
 
 data Static a = Static
   { staticParam :: Param a,

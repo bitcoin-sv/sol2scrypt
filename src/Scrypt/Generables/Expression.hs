@@ -50,8 +50,9 @@ instance Generable (Scr.Expr a) where
     return $  n ++ "(" ++ intercalate ", " ps' ++ ")"
   genCode (Scr.Dispatch fn _ mn ps _) = do
     fn' <- genCode fn
+    mn' <- genCode mn
     ps' <- mapM genCode ps
-    return $ fn' ++ "." ++ mn ++ "(" ++ intercalate ", " ps' ++ ")"
+    return $ fn' ++ "." ++ mn' ++ "(" ++ intercalate ", " ps' ++ ")"
   -- ArrayLiteral
   genCode (Scr.ArrayLiteral array _) = do
     array' <- mapM genCode array
