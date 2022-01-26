@@ -1,0 +1,131 @@
+
+contract Return {
+
+  
+    public function unlock(){
+        
+        require(true);
+    }
+
+    function test_(int amount) : int {
+        int ret = 0;
+        bool alreadyReturn = false;
+        int x = 3;
+        if(x == 0) {
+            if(!alreadyReturn) {
+                ret = 3;
+                alreadyReturn = true;
+            }
+        }
+
+        x = x + amount;
+        if(!alreadyReturn) {
+            ret = x;
+            alreadyReturn = true;
+        }
+        return ret;
+    }
+
+
+    function test( int amount): int {
+        int ret = 0;
+        bool alreadyReturn = false;
+        int x = 3;
+        if(x == 0) {
+            if(!alreadyReturn) {
+                ret = x;
+                alreadyReturn = true;
+            }
+        }
+
+        x = x + amount;
+        if(!alreadyReturn) {
+            ret = x;
+            alreadyReturn = true;
+        }
+        return ret;
+    }
+
+    function test1( int amount) : int {
+        int ret = 0;
+        bool alreadyReturn = false;
+        int x = 3;
+        if(x == 0) {
+            if(!alreadyReturn) {
+                ret = x;
+                alreadyReturn = true;
+            }
+        } else {
+            if(!alreadyReturn) {
+                ret = x++;
+                alreadyReturn = true;
+            }
+        }
+
+        x = x + amount;
+
+        if(!alreadyReturn) {
+            ret = x;
+            alreadyReturn = true;
+        }
+        return ret;
+    }
+
+    function test2(int amount) : int {
+        int ret = 0;
+        bool alreadyReturn = false;
+        int x = 3;
+        if(x > 0) {
+            if(x == 3) {
+                if(!alreadyReturn) {
+                    ret = x;
+                    alreadyReturn = true;
+                }
+            }
+            x++;
+        } else {
+            if(!alreadyReturn) {
+                ret = x;
+                alreadyReturn = true;
+            }
+        }
+
+        x = x + amount;
+        if(!alreadyReturn) {
+            ret = x;
+            alreadyReturn = true;
+        }
+        return ret;
+    }
+
+    function test3(int amount) : int {
+        int ret = 0;
+        bool alreadyReturn = false;
+        int x = 3;
+        if(x > 1) {
+            if(x == 3) {
+                if(!alreadyReturn) {
+                    ret = x;
+                    alreadyReturn = true;
+                }
+            }
+            x++;
+        } else {
+            if(x == 0) {
+                if(!alreadyReturn) {
+                    ret = x;
+                    alreadyReturn = true;
+                }
+            }
+            x++;
+        }
+
+        x = x + amount;
+        if(!alreadyReturn) {
+            ret = x;
+            alreadyReturn = true;
+        }
+        return ret;
+    }
+
+}
