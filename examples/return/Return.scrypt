@@ -1,111 +1,164 @@
 
 contract Return {
 
-  
-    public function unlock(){
-        
+    public function unlock() {
+
         require(true);
     }
 
-    function test_(int amount) : int {
+    // test return in if
+    function test0(int amount) : int {
         int ret = 0;
         bool returned = false;
         int x = 3;
-        if(x == 0) {
-            if(!returned) {
-                ret = 3;
-                returned = true;
-            }
+        if (x == 0) {
+            x++;
+            ret = x;
+            returned = true;
         }
 
-        x = x + amount;
+        if (!returned) {
+            x = x + amount;
+        }
         return !returned ? x : ret;
     }
 
-
-    function test( int amount): int {
+    // test return both in if and else
+    function test1(int amount) : int {
         int ret = 0;
         bool returned = false;
         int x = 3;
-        if(x == 0) {
-            if(!returned) {
-                ret = x;
-                returned = true;
-            }
+        if (x == 13) {
+            ret = x;
+            returned = true;
+        }
+        else {
+            ret = x++;
+            returned = true;
         }
 
-        x = x + amount;
-        return !returned ? x : ret;
+        return returned ? ret : x;
     }
 
-    function test1( int amount) : int {
-        int ret = 0;
-        bool returned = false;
-        int x = 3;
-        if(x == 0) {
-            if(!returned) {
-                ret = x;
-                returned = true;
-            }
-        } else {
-            if(!returned) {
-                ret = x++;
-                returned = true;
-            }
-        }
-
-        x = x + amount;
-
-        return !returned ? x : ret;
-    }
-
+    // test return in nested if
     function test2(int amount) : int {
         int ret = 0;
         bool returned = false;
         int x = 3;
         if(x > 0) {
             if(x == 3) {
-                if(!returned) {
-                    ret = x;
-                    returned = true;
-                }
-            }
-            x++;
-        } else {
-            if(!returned) {
                 ret = x;
                 returned = true;
             }
+            if (!returned) {
+                x++;
+            }
+        } else {
+            ret = x;
+            returned = true;
         }
 
-        x = x + amount;
-        return !returned ? x : ret;
+        if (!returned) {
+            x = x + amount;
+        }
+        
+        return returned ? ret : x;
     }
 
-    function test3(int amount) : int {
+
+
+    function test3(int amount, int y) : int {
         int ret = 0;
         bool returned = false;
         int x = 3;
-        if(x > 1) {
-            if(x == 3) {
-                if(!returned) {
+        if(x > 0) {
+            if (x > 1) {
+                x /= 2;
+                if(x == 2) {
                     ret = x;
                     returned = true;
                 }
+
+                if(!returned) {
+                    x--;
+                    if(x == 3) {
+                        ret = x;
+                        returned = true;
+                    } else {
+                        x += y;
+                    }
+                    if(!returned) {
+                        x += 2 * amount + 1;
+                    }
+                }
             }
-            x++;
+            if(!returned) {
+                x++;
+                x += 11;
+            }
+
         } else {
-            if(x == 0) {
-                if(!returned) {
-                    ret = x;
-                    returned = true;
-                }
-            }
-            x++;
+            
+            --x;
         }
 
-        x = x + amount;
-        return !returned ? x : ret;
+        if(!returned) {
+            x = x + amount;
+            x += 20 / amount - 12;
+        }
+
+        return returned ? ret : x;
+    }
+
+
+    // return only in else
+    function test4(int amount, int y) : int {
+        int ret = 0;
+        bool returned = false;
+        int x = 3;
+        if(x > 0) {
+            x++;
+        } else {
+            --x;
+            ret = x;
+            returned = true;
+        }
+
+        if(!returned) {
+            x = x + amount;
+            x += 20 / amount - 12;
+        }
+
+        return returned ? ret : x;
+    }
+
+    function test5(int amount, int y) : int {
+        int ret = 0;
+        bool returned = false;
+        int x = 3;
+        if(x > 0) {
+            x++;
+            if(x == 3) {
+                ret = x;
+                returned = true;
+            } else if(x == 5) {
+                x++;
+            } else if(x == 2) {
+                x--;
+            }
+            if(!returned) {
+                x += 3;
+            }
+        } else {
+            --x;
+        }
+
+        if(!returned) {
+            x = x + amount;
+            x += 20 / amount - 12;
+        }
+
+        return returned ? ret : x;
     }
 
 }
