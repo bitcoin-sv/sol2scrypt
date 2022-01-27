@@ -9,123 +9,103 @@ contract Return {
 
     function test_(int amount) : int {
         int ret = 0;
-        bool alreadyReturn = false;
+        bool returned = false;
         int x = 3;
         if(x == 0) {
-            if(!alreadyReturn) {
+            if(!returned) {
                 ret = 3;
-                alreadyReturn = true;
+                returned = true;
             }
         }
 
         x = x + amount;
-        if(!alreadyReturn) {
-            ret = x;
-            alreadyReturn = true;
-        }
-        return ret;
+        return !returned ? x : ret;
     }
 
 
     function test( int amount): int {
         int ret = 0;
-        bool alreadyReturn = false;
+        bool returned = false;
         int x = 3;
         if(x == 0) {
-            if(!alreadyReturn) {
+            if(!returned) {
                 ret = x;
-                alreadyReturn = true;
+                returned = true;
             }
         }
 
         x = x + amount;
-        if(!alreadyReturn) {
-            ret = x;
-            alreadyReturn = true;
-        }
-        return ret;
+        return !returned ? x : ret;
     }
 
     function test1( int amount) : int {
         int ret = 0;
-        bool alreadyReturn = false;
+        bool returned = false;
         int x = 3;
         if(x == 0) {
-            if(!alreadyReturn) {
+            if(!returned) {
                 ret = x;
-                alreadyReturn = true;
+                returned = true;
             }
         } else {
-            if(!alreadyReturn) {
+            if(!returned) {
                 ret = x++;
-                alreadyReturn = true;
+                returned = true;
             }
         }
 
         x = x + amount;
 
-        if(!alreadyReturn) {
-            ret = x;
-            alreadyReturn = true;
-        }
-        return ret;
+        return !returned ? x : ret;
     }
 
     function test2(int amount) : int {
         int ret = 0;
-        bool alreadyReturn = false;
+        bool returned = false;
         int x = 3;
         if(x > 0) {
             if(x == 3) {
-                if(!alreadyReturn) {
+                if(!returned) {
                     ret = x;
-                    alreadyReturn = true;
+                    returned = true;
                 }
             }
             x++;
         } else {
-            if(!alreadyReturn) {
+            if(!returned) {
                 ret = x;
-                alreadyReturn = true;
+                returned = true;
             }
         }
 
         x = x + amount;
-        if(!alreadyReturn) {
-            ret = x;
-            alreadyReturn = true;
-        }
-        return ret;
+        return !returned ? x : ret;
     }
 
     function test3(int amount) : int {
         int ret = 0;
-        bool alreadyReturn = false;
+        bool returned = false;
         int x = 3;
         if(x > 1) {
             if(x == 3) {
-                if(!alreadyReturn) {
+                if(!returned) {
                     ret = x;
-                    alreadyReturn = true;
+                    returned = true;
                 }
             }
             x++;
         } else {
             if(x == 0) {
-                if(!alreadyReturn) {
+                if(!returned) {
                     ret = x;
-                    alreadyReturn = true;
+                    returned = true;
                 }
             }
             x++;
         }
 
         x = x + amount;
-        if(!alreadyReturn) {
-            ret = x;
-            alreadyReturn = true;
-        }
-        return ret;
+        return !returned ? x : ret;
     }
 
 }
