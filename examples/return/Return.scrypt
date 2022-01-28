@@ -43,7 +43,7 @@ contract Return {
             }
         }
 
-        return returned ? ret : x;
+        return ret;
     }
 
     // test return in nested if
