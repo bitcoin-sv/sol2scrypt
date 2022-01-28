@@ -41,7 +41,7 @@ contract Return {
         return x;
     }
 
-    // solidity
+
     function test3( uint amount, uint y) public returns (uint) {
         uint x = 3;
         if(x > 0) {
@@ -106,6 +106,48 @@ contract Return {
         x = x + amount;
         x += 20 / amount - 12;
         return x;
+    }
+
+
+    // test return no in a block
+    function test6( uint x) public view returns (bool) {
+        if(x == 0) 
+            return true;
+        
+        return false;
+    }
+
+
+    // test return no in a block
+    function test7( uint x) public view returns (bytes8) {
+        if(x == 0) {
+            if(x > 1){ 
+                if(x > 9) {
+                    return hex"ff00_0000_0000_0001";
+                }
+                return hex"ff00_0000_0000_0002";
+            }
+            return hex"ff00_0000_0000_0003";
+        }
+
+        return hex"ff00_0000_0000_0004";
+    }
+
+    //  no return at the end.
+    function test8(uint x) public view returns (uint) {
+        uint y = 1;
+        if(x == 0) {
+            if(x > 1){ 
+                if(x > 9) {
+                    return ((x * x + y) > x*y) ? x-- : ((y*x) -9) ;
+                } else {
+                    x = x*9- y + (x*y/100);
+                }
+                return (x-- - 200) * y  ;
+            }
+            return x -9;
+        }
+        x++;
     }
 
 }
