@@ -99,6 +99,7 @@ contract Return {
                 x--;
             }
             x += 3;
+            return x;
         } else {
             --x;
         }
@@ -148,6 +149,13 @@ contract Return {
             return x -9;
         }
         x++;
+    }
+
+
+    //  no return at the end.
+    function test9(uint x) public pure returns (uint) {
+        uint y = 1;
+        
     }
 
 }
