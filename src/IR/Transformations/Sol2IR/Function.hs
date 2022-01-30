@@ -5,9 +5,12 @@
 module IR.Transformations.Sol2IR.Function where
 
 import Data.Foldable
+import qualified Data.Map.Lazy as Map
+import Control.Monad.State
 import Data.Maybe
 import IR.Spec as IR
 import IR.Transformations.Base
+import IR.Transformations.Sol2IR.Expression
 import IR.Transformations.Sol2IR.Helper
 import IR.Transformations.Sol2IR.Identifier ()
 import IR.Transformations.Sol2IR.Statement ()
@@ -15,12 +18,6 @@ import IR.Transformations.Sol2IR.Type ()
 import IR.Transformations.Sol2IR.Variable ()
 import Solidity.Spec as Sol
 import Utils
-
-data TransformationOnBlock = TransformationOnBlock
-  { prependStmts :: [IR.IStatement],
-    appendStmts :: [IR.IStatement]
-  }
-  deriving (Show, Eq, Ord)
 
 data FuncRetTransResult = FuncRetTransResult
   { targetType :: IType',
@@ -35,9 +32,15 @@ instance ToIRTransformable ContractPart IFunction' where
     retTransResult <- toIRFuncRet vis maybeRets
     (ps, blkTfromParam) <- toIRFuncParams pl tags retTransResult vis block
     body <- toIRFuncBody block vis blkTfromParam retTransResult
-    return $ Function (IR.Identifier fn) <$> ps <*> body <*> targetType retTransResult <*> Just vis
-  _toIR _ = return Nothing
 
+    mCounter <- gets stateInFuncMappingCounter
+    let paramsForMap = fst $ transForMappingAccess mCounter
+    let ps' = case ps of
+                Just (ParamList pps) -> Just (ParamList $ pps ++ paramsForMap)
+                _ -> Just $ ParamList paramsForMap
+
+    return $ Function (IR.Identifier fn) <$> ps' <*> body <*> targetType retTransResult <*> Just vis
+  _toIR _ = return Nothing
 
 instance ToIRTransformable ContractPart IConstructor' where
   _toIR (Sol.ContractPartConstructorDefinition pl tags (Just block)) = do
@@ -65,7 +68,7 @@ toIRFuncRet vis (Just (ParameterList [x])) = do
   return $ FuncRetTransResult t' t n
 toIRFuncRet _ _ = return $ FuncRetTransResult Nothing Nothing Nothing -- error "mutiple-returns function not implemented"
 
-toIRFuncParams :: ParameterList -> [FunctionDefinitionTag] -> FuncRetTransResult -> IVisibility -> Block -> Transformation (IParamList', TransformationOnBlock)
+toIRFuncParams :: ParameterList -> [FunctionDefinitionTag] -> FuncRetTransResult -> IVisibility -> Block -> Transformation (IParamList', TFStmtWrapper)
 toIRFuncParams (ParameterList pl) tags (FuncRetTransResult rt ort rn) vis funcBlk = do
   params <- mapM _toIR pl
 
@@ -74,7 +77,7 @@ toIRFuncParams (ParameterList pl) tags (FuncRetTransResult rt ort rn) vis funcBl
         where
           rn' = Just $ if isJust rn then mirror rn else IR.Identifier "retVal"
 
-  let blkT0 = TransformationOnBlock prepends []
+  let blkT0 = TFStmtWrapper prepends []
         where
           prepends = case rn of
             -- add initialize statement for named return param
@@ -86,7 +89,7 @@ toIRFuncParams (ParameterList pl) tags (FuncRetTransResult rt ort rn) vis funcBl
         if exprExistsInStmt msgSenderExpr (Sol.BlockStatement funcBlk)
           then
             if vis == Public
-              then let (ps, blkT_) = transForFuncWithMsgSender in (map Just ps ++ extraParams0, mergeTransOnBlock blkT0 blkT_)
+              then let (ps, blkT_) = transForFuncWithMsgSender in (map Just ps ++ extraParams0, mergeTFStmtWrapper blkT0 blkT_)
               else error "using `msg.sender` in non-external function is not supported yet"
           else (extraParams0, blkT0)
 
@@ -96,7 +99,7 @@ toIRFuncParams (ParameterList pl) tags (FuncRetTransResult rt ort rn) vis funcBl
         if msgValueExist
           then
             if vis == Public
-              then let (ps, blkT_) = transForFuncWithMsgValue in (map Just ps ++ extraParams1, mergeTransOnBlock blkT1 blkT_)
+              then let (ps, blkT_) = transForFuncWithMsgValue in (map Just ps ++ extraParams1, mergeTFStmtWrapper blkT1 blkT_)
               else error "using `msg.value` in non-external function is not supported yet"
           else (extraParams1, blkT1)
 
@@ -107,7 +110,7 @@ toIRFuncParams (ParameterList pl) tags (FuncRetTransResult rt ort rn) vis funcBl
         | otherwise = False
   let (extraParams3, blkT3) =
         if needPreimageParam
-          then let (ps, blkT_) = transForPreimageFunc in (map Just ps ++ extraParams2, mergeTransOnBlock blkT2 blkT_)
+          then let (ps, blkT_) = transForPreimageFunc in (map Just ps ++ extraParams2, mergeTFStmtWrapper blkT2 blkT_)
           else (extraParams2, blkT2)
 
   let params' = sequence $ params ++ extraParams3
@@ -116,9 +119,12 @@ toIRFuncParams (ParameterList pl) tags (FuncRetTransResult rt ort rn) vis funcBl
 
   return (IR.ParamList <$> params', blkT3)
 
-toIRFuncBody :: Block -> IVisibility -> TransformationOnBlock -> FuncRetTransResult -> Transformation IBlock'
-toIRFuncBody (Sol.Block ss) vis (TransformationOnBlock prepends appends) (FuncRetTransResult _ ort rn) = do
+toIRFuncBody :: Block -> IVisibility -> TFStmtWrapper -> FuncRetTransResult -> Transformation IBlock'
+toIRFuncBody (Sol.Block ss) vis wrapperFromParam (FuncRetTransResult _ ort rn) = do
   stmts <- mapM _toIR ss
+
+  mCounter <- gets stateInFuncMappingCounter
+  let (TFStmtWrapper prepends appends) = wrapTFStmtWrapper wrapperFromParam $ snd $ transForMappingAccess mCounter
 
   let hasRetStmt =
         not (null stmts)
@@ -166,10 +172,6 @@ requireEqualStmt e i = RequireStmt $ BinaryExpr IR.Equal e $ IdentifierExpr i
 trueExpr :: IExpression
 trueExpr = LiteralExpr $ BoolLiteral True
 
-mergeTransOnBlock :: TransformationOnBlock -> TransformationOnBlock -> TransformationOnBlock
-mergeTransOnBlock (TransformationOnBlock preA appA) (TransformationOnBlock preB appB) =
-  TransformationOnBlock (preA ++ preB) (appA ++ appB)
-
 declareLocalVarStmt :: IParam' -> [IStatement]
 declareLocalVarStmt Nothing = []
 declareLocalVarStmt (Just p@(IR.Param (IR.ElementaryType IR.Bool) _)) = [IR.DeclareStmt [Just p] [LiteralExpr (IR.BoolLiteral False)]]
@@ -178,10 +180,10 @@ declareLocalVarStmt (Just p@(IR.Param (IR.ElementaryType IR.Bytes) _)) = [IR.Dec
 declareLocalVarStmt (Just (IR.Param t _)) = error $ "unimpmented init statement for type `" ++ show t ++ "`"
 
 -- transformations for functions that need access preimage
-transForPreimageFunc :: ([IParam], TransformationOnBlock)
+transForPreimageFunc :: ([IParam], TFStmtWrapper)
 transForPreimageFunc =
   ( [IR.Param (BuiltinType "SigHashPreimage") $ IR.ReservedId varTxPreimage],
-    TransformationOnBlock
+    TFStmtWrapper
       []
       -- appends statements
       [ -- add `require(Tx.checkPreimage(txPreimage));`
@@ -219,12 +221,12 @@ transForPreimageFunc =
   )
 
 -- transformations for functions that uses `msg.sender`
-transForFuncWithMsgSender :: ([IParam], TransformationOnBlock)
+transForFuncWithMsgSender :: ([IParam], TFStmtWrapper)
 transForFuncWithMsgSender =
   ( [ IR.Param (BuiltinType "Sig") $ IR.ReservedId varSig,
       IR.Param (BuiltinType "PubKey") $ IR.ReservedId varPubKey
     ],
-    TransformationOnBlock
+    TFStmtWrapper
       [ -- PubKeyHash msgSender = hash160(pubKey);
         IR.DeclareStmt
           [Just $ IR.Param (ElementaryType IR.Address) (IR.ReservedId varMsgSender)]
@@ -237,17 +239,17 @@ transForFuncWithMsgSender =
   )
 
 -- transformations for functions that uses `msg.value`
-transForFuncWithMsgValue :: ([IParam], TransformationOnBlock)
+transForFuncWithMsgValue :: ([IParam], TFStmtWrapper)
 transForFuncWithMsgValue =
   ( [],
     -- int msgValue = SigHash.value(txPreimage);
-    TransformationOnBlock
-      [
-        IR.DeclareStmt
+    TFStmtWrapper
+      [ IR.DeclareStmt
           [Just $ IR.Param (ElementaryType IR.Int) (IR.ReservedId varMsgValue)]
-          [IR.FunctionCallExpr
+          [ IR.FunctionCallExpr
               (IR.MemberAccessExpr (IdentifierExpr (IR.ReservedId libSigHash)) (IR.Identifier "value"))
-              [IdentifierExpr (IR.ReservedId varTxPreimage)]]
+              [IdentifierExpr (IR.ReservedId varTxPreimage)]
+          ]
       ]
       []
   )
@@ -258,52 +260,149 @@ msgSenderExpr = Sol.MemberAccess (Sol.Literal (PrimaryExpressionIdentifier (Sol.
 msgValueExpr :: Sol.Expression
 msgValueExpr = Sol.MemberAccess (Sol.Literal (PrimaryExpressionIdentifier (Sol.Identifier "msg"))) (Sol.Identifier "value")
 
-
-toIRConstructorParams :: ParameterList -> [FunctionDefinitionTag] -> Block -> Transformation (IParamList', TransformationOnBlock)
+toIRConstructorParams :: ParameterList -> [FunctionDefinitionTag] -> Block -> Transformation (IParamList', TFStmtWrapper)
 toIRConstructorParams (ParameterList pl) _ funcBlk = do
   params <- mapM _toIR pl
 
   let extraParams0 = []
 
-  let blkT0 = TransformationOnBlock [] []
+  let blkT0 = TFStmtWrapper [] []
 
   -- for function that uses `msg.sender`
   let (extraParams1, blkT1) =
         if exprExistsInStmt msgSenderExpr (Sol.BlockStatement funcBlk)
-          then
-            let (ps, blkT_) = transForConstructorWithMsgSender in (map Just ps ++ extraParams0, mergeTransOnBlock blkT0 blkT_)
+          then let (ps, blkT_) = transForConstructorWithMsgSender in (map Just ps ++ extraParams0, mergeTFStmtWrapper blkT0 blkT_)
           else (extraParams0, blkT0)
 
   let params' = sequence $ params ++ extraParams1
 
   return (IR.ParamList <$> params', blkT1)
 
-
-toIRConstructorBody :: Block  -> TransformationOnBlock -> Transformation IBlock'
-toIRConstructorBody (Sol.Block ss) (TransformationOnBlock prepends appends) = do
+toIRConstructorBody :: Block -> TFStmtWrapper -> Transformation IBlock'
+toIRConstructorBody (Sol.Block ss) (TFStmtWrapper prepends appends) = do
   stmts' <- mapM _toIR ss
   let stmts'' = map Just prepends ++ stmts' ++ map Just appends
   return $ Just $ IR.Block $ catMaybes stmts''
 
-
-
 -- transformations for constructor that uses `msg.sender`
-transForConstructorWithMsgSender :: ([IR.IParam], TransformationOnBlock)
+transForConstructorWithMsgSender :: ([IR.IParam], TFStmtWrapper)
 transForConstructorWithMsgSender =
-  ( [ IR.Param (ElementaryType Address) $ IR.ReservedId varMsgSender],
-    TransformationOnBlock
+  ( [IR.Param (ElementaryType Address) $ IR.ReservedId varMsgSender],
+    TFStmtWrapper
       [] -- prepends
       [] -- appends
   )
 
 -- transformations for constructor that uses `msg.value`
-transForConstructorWithMsgValue :: ([IR.IParam], TransformationOnBlock)
+transForConstructorWithMsgValue :: ([IR.IParam], TFStmtWrapper)
 transForConstructorWithMsgValue =
-  ( [ IR.Param (ElementaryType Int) $ IR.ReservedId varMsgValue],
-    TransformationOnBlock
+  ( [IR.Param (ElementaryType Int) $ IR.ReservedId varMsgValue],
+    TFStmtWrapper
       [] -- prepends
       [] -- appends
   )
 
+transForMappingAccess :: MappingExprCounter -> ([IR.IParam], TFStmtWrapper)
+transForMappingAccess mCounter =
+  ( -- injected params
+    concatMap
+      ( \(MECEntry t me ke _) ->
+          let mn = toExprName me
+              kn = toExprName ke
+           in [ IR.Param t $ IR.Identifier $ getValName mn kn initTag, -- init value
+                IR.Param (ElementaryType Int) $ IR.Identifier $ getIdxName mn kn initTag, -- init value index
+                IR.Param t $ IR.Identifier $ getValName mn kn finalTag, -- final value
+                IR.Param (ElementaryType Int) $ IR.Identifier $ getIdxName mn kn finalTag -- final value index
+              ]
+      )
+      $ Map.elems mCounter,
+    -- injected statements
+    Map.foldl'
+      ( \mc (MECEntry _ me ke _) ->
+        let mn = toExprName me
+            kn = toExprName ke
+          in mergeTFStmtWrapper mc
+              $ TFStmtWrapper 
+                  [preCheckStmt mn kn initTag] 
+                  [afterCheckStmt mn kn finalTag $ getValName mn kn initTag]
+      )
+      (TFStmtWrapper [] [])
+      mCounter
+  )
+  where
+    initTag = ""
+    finalTag = "_final"
+    getKeyExpr keyName = if keyName `elem` reservedNames then IR.ReservedId keyName else IR.Identifier keyName
+    getValName = \mapName keyName postfix -> mapName ++ "_" ++ keyName ++ postfix
+    getIdxName = \mapName keyName postfix -> getValName mapName keyName postfix ++ "_index"
 
+    -- <mapName>.canGet(<keyName>, <valName>, <valIdx>)
+    mapCanGetExpr mapName keyName postfix =
+      FunctionCallExpr
+        { funcExpr =
+            MemberAccessExpr
+              { instanceExpr = IdentifierExpr (IR.Identifier mapName),
+                member = IR.Identifier "canGet"
+              },
+          funcParamExprs =
+            [ IdentifierExpr (getKeyExpr keyName),
+              IdentifierExpr (IR.Identifier $ getValName mapName keyName postfix),
+              IdentifierExpr (IR.Identifier $ getIdxName mapName keyName postfix)
+            ]
+        }
 
+    -- <mapName>.set(<keyName>, <valName>, <valIdx>)
+    mapSetExpr mapName keyName postfix =
+      FunctionCallExpr
+        { funcExpr =
+            MemberAccessExpr
+              { instanceExpr = IdentifierExpr (IR.Identifier mapName),
+                member = IR.Identifier "set"
+              },
+          funcParamExprs =
+            [ IdentifierExpr (getKeyExpr keyName),
+              IdentifierExpr (IR.Identifier $ getValName mapName keyName postfix),
+              IdentifierExpr (IR.Identifier $ getIdxName mapName keyName postfix)
+            ]
+        }
+
+    -- require((!<mapName>.has(<keyName>, <valIdx>)) || <mapName>.canGet(<keyName>, <valName>, <valIdx>));
+    preCheckStmt mapName keyName postfix =
+      IR.RequireStmt $
+        BinaryExpr
+          { binaryOp = BoolOr,
+            lExpr =
+              ParensExpr
+                { enclosedExpr =
+                    UnaryExpr
+                      { unaryOp = Not,
+                        uExpr =
+                          FunctionCallExpr
+                            { funcExpr =
+                                MemberAccessExpr
+                                  { instanceExpr = IdentifierExpr (IR.Identifier mapName),
+                                    member = IR.Identifier "has"
+                                  },
+                              funcParamExprs =
+                                [ IdentifierExpr (getKeyExpr keyName),
+                                  IdentifierExpr (IR.Identifier $ getIdxName mapName keyName postfix)
+                                ]
+                            }
+                      }
+                },
+            rExpr = mapCanGetExpr mapName keyName postfix
+          }
+
+    -- require(<targetName> == <valName> && <mapName>.set(keyName, valName, valIdx))
+    afterCheckStmt mapName keyName postfix targetName =
+      IR.RequireStmt $
+        BinaryExpr
+          { binaryOp = BoolAnd,
+            lExpr =
+              BinaryExpr
+                { binaryOp = IR.Equal,
+                  lExpr = IdentifierExpr (IR.Identifier targetName),
+                  rExpr = IdentifierExpr (IR.Identifier $ getValName mapName keyName postfix)
+                },
+            rExpr = mapSetExpr mapName keyName postfix
+          }

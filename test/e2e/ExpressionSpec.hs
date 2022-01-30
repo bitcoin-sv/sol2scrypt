@@ -2,6 +2,7 @@
 
 module ExpressionSpec where
 
+import qualified Data.Map.Lazy as Map
 import IR
 import Scrypt as Scr
 import Solidity as Sol
@@ -86,6 +87,30 @@ spec = testSpec "Transpile Expression" $ do
 
       itBinary ">="
 
+      describe "operator `[]`" $ do
+        let squareBracketExpr = \leftExpr rightExpr -> leftExpr ++ "[" ++ rightExpr ++ "]"
+
+        describe "when the left expr is a mapping-typed var" $ do
+          let itSBExpr leftExpr rightExpr scrypt = 
+                it "should transpile correctly" $ do
+                  let mapSym = Symbol (IR.Identifier leftExpr) (Mapping (ElementaryType Address) (ElementaryType IR.Int)) False
+                      initEnv =  [Map.insert (IR.Identifier leftExpr) mapSym Map.empty]
+                      sol = leftExpr ++ "[" ++ rightExpr ++ "]" 
+                  tr :: TranspileResult Expression IExpression' (Maybe (Expr Ann)) <- 
+                          transpile' (TransformState initEnv Nothing Map.empty) sol
+                  scryptCode tr `shouldBe` scrypt
+
+          itSBExpr "a" "0" "a_0"
+          itSBExpr "a" "true" "a_True"
+          itSBExpr "a" "'ab'" "a_ab"
+          itSBExpr "a" "b" "a_b"
+          itSBExpr "a" "msg.sender" "a_msgSender"
+        
+        describe "when the left expr is not a mapping-typed var" $ do
+          itexpr "[]" (squareBracketExpr "a" "b") "a[b]"
+          itexpr "[]" (squareBracketExpr "a" "b()") "a[b()]"
+          itexpr "[]" (squareBracketExpr "a()" "b") "a()[b]"
+
   describe "#Ternary Expression" $ do
     itexpr "Ternary" "true ? 1 : 2" "true ? 1 : 2"
     itexpr "Ternary" "false ? (1 + a) : a++" "false ? (1 + a) : a++"
@@ -94,6 +119,8 @@ spec = testSpec "Transpile Expression" $ do
   describe "#MemberAccess" $ do
     itexpr "plain MemberAccess" "a.b" "a.b"
     itexpr "embeded MemberAccess" "a.b.c" "a.b.c"
+    itexpr "msg.sender" "msg.sender" "msgSender"
+    itexpr "msg.value" "msg.value" "msgValue"
 
   describe "#FunctionCallExpressionList" $ do
     itexpr "FunctionCallExpressionList with identifer expr as function name" "a(b, c)" "a(b, c)"

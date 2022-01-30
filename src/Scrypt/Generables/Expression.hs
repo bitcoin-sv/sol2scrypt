@@ -36,6 +36,10 @@ instance Generable (Scr.Expr a) where
     e' <- genCode e
     return $ unaryOp2Str op ++ e'
   -- BinaryExpr
+  genCode (Scr.BinaryExpr Index e1 e2 _) = do
+    e1' <- genCode e1
+    e2' <- genCode e2
+    return $ e1' ++ "[" ++ e2' ++ "]"
   genCode (Scr.BinaryExpr op e1 e2 _) = do
     e1' <- genCode e1
     e2' <- genCode e2

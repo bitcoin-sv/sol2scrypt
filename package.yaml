@@ -63,6 +63,7 @@ tests:
     - tasty-hspec
     - hspec
     - raw-strings-qq
+    - containers
   e2e:
     main:                Main.hs
     source-dirs:         test/e2e
@@ -76,3 +77,4 @@ tests:
     - tasty-hspec
     - hspec
     - raw-strings-qq
+    - containers

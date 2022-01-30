@@ -3,13 +3,12 @@
 module IR.Transformations.Base where
 
 import Control.Applicative hiding (Const)
+import Control.Monad.State
 import qualified Data.Map.Lazy as Map
 import Data.Maybe
-import Control.Monad.State
-import Solidity.Parser
 import IR.Spec as IR
+import Solidity.Parser
 import Text.Parsec hiding (try, (<|>))
-
 
 parseIO :: Parseable a => String -> IO a
 parseIO solidityCode = either (fail . (parseError ++) . show) return $ parse parser "" solidityCode
@@ -17,8 +16,14 @@ parseIO solidityCode = either (fail . (parseError ++) . show) return $ parse par
     parseError = "Error during parsing of <" ++ solidityCode ++ ">\n"
 
 -----------------  Solidity to IR -----------------
-
-newtype TransformState = TransformState { stateEnv :: Env } deriving (Show, Eq, Ord)
+data TransformState = TransformState
+  { stateEnv :: Env,
+    -- TFStmtWrapper for current statement
+    stateWrapperForStmt :: Maybe TFStmtWrapper,
+    -- counter for mapping-access exprs in a function, key is the expression name, value is its occurrences count
+    stateInFuncMappingCounter :: MappingExprCounter
+  }
+  deriving (Show, Eq, Ord)
 
 type Transformation a = StateT TransformState IO a
 
@@ -28,15 +33,33 @@ class Parseable sol => ToIRTransformable sol ir where
 transform2IR :: ToIRTransformable sol ir => TransformState -> sol -> IO ir
 transform2IR ts sol = fst <$> runStateT (_toIR sol) ts
 
--- symbols & enviroment
+type ExprName = String
 
+-- counter for mapping-related expression occurrences, `ExprName` as key
+type MappingExprCounter = Map.Map ExprName MECEntry
+
+-- Mapping Expr Counter Entry
+data MECEntry = MECEntry
+  { -- the expression's type
+    exprType :: IType,
+    -- mapping instance expr
+    mExpr :: IExpression,
+    -- key expr
+    kExpr :: IExpression,
+    -- the expression occurrences count
+    exprCnt :: Int
+  }
+  deriving (Show, Eq, Ord)
+
+-- symbols & enviroment
 type SymbolName = IIdentifier
 
-data Symbol = Symbol {
-    symbolName :: SymbolName,
+data Symbol = Symbol
+  { symbolName :: SymbolName,
     symbolType :: IType,
     symbolStateVar :: Bool
-  } deriving (Show, Eq, Ord)
+  }
+  deriving (Show, Eq, Ord)
 
 type SymbolTable = Map.Map SymbolName Symbol
 
@@ -66,7 +89,7 @@ addSymbol :: Symbol -> Env -> Either SymbolTableUpdateError Env
 addSymbol s [] = addSymbol s [Map.empty]
 addSymbol s (scope : scopes)
   | isJust (Map.lookup (symbolName s) scope) = Left $ SymbolTableUpdateError $ "duplicated symbol `" ++ show (symbolName s) ++ "` in current scope"
-  | otherwise =  Right $ Map.insert (symbolName s) s scope : scopes
+  | otherwise = Right $ Map.insert (symbolName s) s scope : scopes
 
 addSym :: Maybe Symbol -> Transformation ()
 addSym Nothing = return ()
@@ -78,7 +101,7 @@ addSym (Just sym) = do
 
 lookupSymbol :: SymbolName -> Env -> Maybe Symbol
 lookupSymbol _ [] = Nothing
-lookupSymbol sn (scope: scopes) = Map.lookup sn scope <|> lookupSymbol sn scopes
+lookupSymbol sn (scope : scopes) = Map.lookup sn scope <|> lookupSymbol sn scopes
 
 lookupSym :: SymbolName -> Transformation (Maybe Symbol)
 lookupSym sn = do
@@ -90,6 +113,21 @@ contractSymType = BuiltinType "contract"
 
 functionSymType :: IType
 functionSymType = BuiltinType "function"
+
+-- Transformation Statement Wrapper is a container of statements injected before & after target.
+data TFStmtWrapper = TFStmtWrapper
+  { prependStmts :: [IR.IStatement],
+    appendStmts :: [IR.IStatement]
+  }
+  deriving (Show, Eq, Ord)
+
+mergeTFStmtWrapper :: TFStmtWrapper -> TFStmtWrapper -> TFStmtWrapper
+mergeTFStmtWrapper (TFStmtWrapper preA appA) (TFStmtWrapper preB appB) =
+  TFStmtWrapper (preA ++ preB) (appA ++ appB)
+
+wrapTFStmtWrapper :: TFStmtWrapper -> TFStmtWrapper -> TFStmtWrapper
+wrapTFStmtWrapper (TFStmtWrapper preOuter appOuter) (TFStmtWrapper preInner appInner) =
+  TFStmtWrapper (preOuter ++ preInner) (appInner ++ appOuter)
 
 -----------------  IR to sCrypt  -----------------
 

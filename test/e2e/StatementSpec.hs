@@ -1,7 +1,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE QuasiQuotes #-}
 
-module StmtSpec where
+module StatementSpec where
 import Transpiler
 import Solidity as Sol
 import IR

@@ -5,6 +5,7 @@
 
 module Transformations.Helper where
 
+import qualified Data.Map.Lazy as Map
 import IR
 import Transpiler 
 import Utils
@@ -59,10 +60,12 @@ sol2Program solidityCode = do
     return e
 
 sol2Ir :: ToIRTransformable sol b => (String -> IO sol) -> String -> IO b
-sol2Ir f solidityCode = do
-    ast <- f solidityCode
-    transform2IR (TransformState []) ast
+sol2Ir = sol2Ir' (TransformState [] Nothing Map.empty)
 
+sol2Ir' :: ToIRTransformable sol b => TransformState -> (String -> IO sol) -> String -> IO b
+sol2Ir' initState f solidityCode = do
+    ast <- f solidityCode
+    transform2IR initState ast
 
 -- sol2scr :: (ToIRTransformable sol ir, ToScryptTransformable ir scr) => (String -> IO sol) -> String -> IO b
 -- sol2scr f solidityCode = do
