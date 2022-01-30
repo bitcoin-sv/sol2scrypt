@@ -21,7 +21,7 @@ instance ToIRTransformable Sol.Statement IStatement' where
     e' <- _toIR e
     i' <- _toIR i
     i'' <- maybeStateVarId i'
-    return $ Just $ AssignStmt [i''] [fromJust e']
+    return $ AssignStmt <$> sequence [IdentifierExpr <$> i''] <*> sequence [e']
   _toIR (SimpleStatementVariableAssignmentList _ _) = error "unsupported SimpleStatementVariableAssignmentList"
   _toIR (SimpleStatementVariableDeclarationList [Just localVar] [e]) = do
     e' <- _toIR e

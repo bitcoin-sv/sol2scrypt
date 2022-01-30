@@ -61,33 +61,33 @@ spec = testSpec "instance ToIRTransformable Sol.Statement IExpr'" $ do
       itstmt
         "IntLiteral"
         "x = 11;"
-        (IR.AssignStmt [Just $ IR.Identifier "x"] [LiteralExpr $ IR.IntLiteral False 11])
+        (IR.AssignStmt [IR.IdentifierExpr $ IR.Identifier "x"] [LiteralExpr $ IR.IntLiteral False 11])
 
       itstmt
         "IntLiteral"
         "x = 0x11;"
-        (IR.AssignStmt [Just $ IR.Identifier "x"] [LiteralExpr $ IR.IntLiteral True 17])
+        (IR.AssignStmt [IR.IdentifierExpr $ IR.Identifier "x"] [LiteralExpr $ IR.IntLiteral True 17])
 
       itstmt
         "BooleanLiteral"
         "x = true;"
-        (IR.AssignStmt [Just $ IR.Identifier "x"] [LiteralExpr $ IR.BoolLiteral True])
+        (IR.AssignStmt [IR.IdentifierExpr $ IR.Identifier "x"] [LiteralExpr $ IR.BoolLiteral True])
 
       itstmt
         "BooleanLiteral"
         "x = false;"
-        (IR.AssignStmt [Just $ IR.Identifier "x"] [LiteralExpr $ IR.BoolLiteral False])
+        (IR.AssignStmt [IR.IdentifierExpr $ IR.Identifier "x"] [LiteralExpr $ IR.BoolLiteral False])
 
 
       itstmt
         "HexLiteral"
         "x = hex\"010113\";"
-        (IR.AssignStmt [Just $ IR.Identifier "x"] [LiteralExpr $ IR.BytesLiteral [1,1,19]])
+        (IR.AssignStmt [IR.IdentifierExpr $ IR.Identifier "x"] [LiteralExpr $ IR.BytesLiteral [1,1,19]])
 
       itstmt
         "HexLiteral"
         "x = hex\"\";"
-        (IR.AssignStmt [Just $ IR.Identifier "x"] [LiteralExpr $ IR.BytesLiteral []])
+        (IR.AssignStmt [IR.IdentifierExpr $ IR.Identifier "x"] [LiteralExpr $ IR.BytesLiteral []])
 
     describe "#DeclareStmt" $ do
 
@@ -132,7 +132,7 @@ spec = testSpec "instance ToIRTransformable Sol.Statement IExpr'" $ do
         itstmt
           "contains DeclareStmt AssignStmt ExprStmt"
           "{ int x = 3; x++; x = 1; }"
-          (IR.BlockStmt (IR.Block [DeclareStmt [Just $ IR.Param (ElementaryType Int) (IR.Identifier "x")] [LiteralExpr (IntLiteral {isHex = False, intVal = 3})], ExprStmt (UnaryExpr IR.PostIncrement (IdentifierExpr (IR.Identifier "x"))), AssignStmt [Just (IR.Identifier "x")] [LiteralExpr (IntLiteral {isHex = False, intVal = 1})]]))
+          (IR.BlockStmt (IR.Block [DeclareStmt [Just $ IR.Param (ElementaryType Int) (IR.Identifier "x")] [LiteralExpr (IntLiteral {isHex = False, intVal = 3})], ExprStmt (UnaryExpr IR.PostIncrement (IdentifierExpr (IR.Identifier "x"))), AssignStmt [IR.IdentifierExpr (IR.Identifier "x")] [LiteralExpr (IntLiteral {isHex = False, intVal = 1})]]))
 
         itstmt
           "empty"
