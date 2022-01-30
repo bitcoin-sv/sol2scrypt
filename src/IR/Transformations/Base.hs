@@ -18,7 +18,7 @@ parseIO solidityCode = either (fail . (parseError ++) . show) return $ parse par
 
 -----------------  Solidity to IR -----------------
 
-newtype TransformState = TransformState { stateEnv :: Env } deriving (Show, Eq, Ord)
+newtype TransformState = TransformState { stateEnv :: Env} deriving (Show, Eq, Ord)
 
 type Transformation a = StateT TransformState IO a
 
@@ -40,19 +40,48 @@ data Symbol = Symbol {
 
 type SymbolTable = Map.Map SymbolName Symbol
 
-type Env = [SymbolTable]
+data GState = GState {
+    symbolTable :: [SymbolTable],
+    returned :: Returned
+  } deriving (Show, Eq, Ord)
+
+type Env = GState
 
 addScope :: Env -> Env
-addScope scopes = Map.empty : scopes
+addScope gstate = GState (Map.empty : symbolTable gstate) (returned gstate)
 
 dropScope :: Env -> Env
-dropScope = tail
+dropScope gstate = GState (tail $ symbolTable gstate) (returned gstate) 
 
 enterScope :: Transformation ()
 enterScope = do
   env <- gets stateEnv
   modify $ \s -> s {stateEnv = addScope env}
   return ()
+
+_setReturned :: Env -> Bool -> Env
+_setReturned gstate r = GState (symbolTable gstate) (Returned r)
+
+setReturned :: Transformation ()
+setReturned = do
+  env <- gets stateEnv
+  modify $ \s -> s {stateEnv = _setReturned env True}
+  return ()
+
+clearReturned :: Transformation ()
+clearReturned = do
+  env <- gets stateEnv
+  modify $ \s -> s {stateEnv = _setReturned env False}
+  return ()
+
+
+isReturned :: Transformation Bool
+isReturned = do
+  env <- gets stateEnv
+  return (returned env == Returned True)
+
+
+
 
 leaveScope :: Transformation ()
 leaveScope = do
@@ -63,10 +92,10 @@ leaveScope = do
 newtype SymbolTableUpdateError = SymbolTableUpdateError String deriving (Show, Eq, Ord)
 
 addSymbol :: Symbol -> Env -> Either SymbolTableUpdateError Env
-addSymbol s [] = addSymbol s [Map.empty]
-addSymbol s (scope : scopes)
+addSymbol s (GState [] r) = addSymbol s $ GState [Map.empty] r
+addSymbol s (GState (scope : scopes) r) 
   | isJust (Map.lookup (symbolName s) scope) = Left $ SymbolTableUpdateError $ "duplicated symbol `" ++ show (symbolName s) ++ "` in current scope"
-  | otherwise =  Right $ Map.insert (symbolName s) s scope : scopes
+  | otherwise =  Right $ GState (Map.insert (symbolName s) s scope : scopes) r
 
 addSym :: Maybe Symbol -> Transformation ()
 addSym Nothing = return ()
@@ -77,8 +106,8 @@ addSym (Just sym) = do
     Right env' -> modify $ \s -> s {stateEnv = env'}
 
 lookupSymbol :: SymbolName -> Env -> Maybe Symbol
-lookupSymbol _ [] = Nothing
-lookupSymbol sn (scope: scopes) = Map.lookup sn scope <|> lookupSymbol sn scopes
+lookupSymbol _ (GState [] _)  = Nothing
+lookupSymbol sn (GState (scope: scopes) r) = Map.lookup sn scope <|> lookupSymbol sn (GState scopes r)
 
 lookupSym :: SymbolName -> Transformation (Maybe Symbol)
 lookupSym sn = do
@@ -90,6 +119,11 @@ contractSymType = BuiltinType "contract"
 
 functionSymType :: IType
 functionSymType = BuiltinType "function"
+
+-- returned
+
+newtype Returned = Returned Bool deriving (Show, Eq, Ord)
+
 
 -----------------  IR to sCrypt  -----------------
 

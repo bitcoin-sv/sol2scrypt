@@ -15,6 +15,7 @@ import IR.Transformations.Sol2IR.Type ()
 import IR.Transformations.Sol2IR.Variable ()
 import Solidity.Spec as Sol
 import Utils
+import Debug.Trace
 
 data TransformationOnBlock = TransformationOnBlock
   { prependStmts :: [IR.IStatement],
@@ -31,6 +32,7 @@ data FuncRetTransResult = FuncRetTransResult
 
 instance ToIRTransformable ContractPart IFunction' where
   _toIR (ContractPartFunctionDefinition (Just (Sol.Identifier fn)) pl tags maybeRets (Just block)) = do
+    clearReturned
     vis <- toIRFuncVis tags
     retTransResult <- toIRFuncRet vis maybeRets
     (ps, blkTfromParam) <- toIRFuncParams pl tags retTransResult vis block
@@ -120,14 +122,18 @@ toIRFuncBody :: Block -> IVisibility -> TransformationOnBlock -> FuncRetTransRes
 toIRFuncBody (Sol.Block ss) vis (TransformationOnBlock prepends appends) (FuncRetTransResult _ ort rn) = do
   stmts <- mapM _toIR ss
 
-  let hasRetStmt =
-        not (null stmts)
-          && case last stmts of
-            Just (ReturnStmt _) -> True
-            _ -> False
+  -- let hasRetStmt =
+  --       not (null stmts)
+  --         && case last stmts of
+  --           Just (ReturnStmt _) -> True
+  --           _ -> False
 
-  let stmts' = case (vis == Public, hasRetStmt) of
-        (True, True) -> case last stmts of
+  let midReturn = hasMiddleReturn ss
+  let lastReturn = hasLastReturn ss
+  traceShowM ("function returnExistsInStmt " ++ show midReturn ++ show lastReturn)
+
+  let stmts' = case (vis == Public, lastReturn, midReturn) of
+        (True, True, False) -> case last stmts of
           Just (ReturnStmt r) -> case ort of
             -- use `require(boolExpr);` to replace `return boolExpr;`
             Just (ElementaryType IR.Bool) -> init stmts ++ [Just $ RequireStmt r]
@@ -136,11 +142,11 @@ toIRFuncBody (Sol.Block ss) vis (TransformationOnBlock prepends appends) (FuncRe
               let e = fromMaybe (IR.Identifier "retVal") rn
                in init stmts ++ [Just $ requireEqualStmt r e]
           _ -> error "last statement is not return statement"
-        (True, False) ->
+        (True, False, False) ->
           stmts ++ case rn of
             Just r -> [Just $ requireEqualStmt (IdentifierExpr r) $ mirror rn]
             _ -> [Just $ RequireStmt trueExpr]
-        (False, False) -> case rn of
+        (False, False, False) -> case rn of
           -- append `return returnName;`
           Just n -> stmts ++ [Just $ ReturnStmt $ IdentifierExpr n]
           -- append `return true;`

@@ -61,7 +61,7 @@ sol2Program solidityCode = do
 sol2Ir :: ToIRTransformable sol b => (String -> IO sol) -> String -> IO b
 sol2Ir f solidityCode = do
     ast <- f solidityCode
-    transform2IR (TransformState []) ast
+    transform2IR (TransformState $ GState [] $ Returned False) ast
 
 
 -- sol2scr :: (ToIRTransformable sol ir, ToScryptTransformable ir scr) => (String -> IO sol) -> String -> IO b

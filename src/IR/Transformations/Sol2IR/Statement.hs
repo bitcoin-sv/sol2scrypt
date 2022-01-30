@@ -2,10 +2,12 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
+{-# OPTIONS_GHC -Wno-overlapping-patterns #-}
+{-# LANGUAGE BlockArguments #-}
 module IR.Transformations.Sol2IR.Statement where
 
 import Data.Maybe
-import IR.Transformations.Base
+import IR.Transformations.Base hiding (returned)
 import IR.Transformations.Sol2IR.Identifier
 import IR.Transformations.Sol2IR.Expression
 import IR.Transformations.Sol2IR.Variable
@@ -16,28 +18,33 @@ import Protolude.Functor
 import Utils
 
 instance ToIRTransformable Sol.Statement IStatement' where
-  _toIR (SimpleStatementExpression e) = ExprStmt <<$>> _toIR e
+  _toIR (SimpleStatementExpression e) = do
+    e' <- _toIR e
+    withIfReturned $ Just $ ExprStmt $ fromJust e'
   _toIR (SimpleStatementVariableAssignmentList [Just i] [e]) = do
     e' <- _toIR e
     i' <- _toIR i
     i'' <- maybeStateVarId i'
-    return $ Just $ AssignStmt [i''] [fromJust e']
+    withIfReturned $ Just $ AssignStmt [i''] [fromJust e']
   _toIR (SimpleStatementVariableAssignmentList _ _) = error "unsupported SimpleStatementVariableAssignmentList"
   _toIR (SimpleStatementVariableDeclarationList [Just localVar] [e]) = do
     e' <- _toIR e
     localVar' <- _toIR localVar
     addSym $ Symbol <$> (paramName <$> localVar') <*> (paramType <$> localVar') <*> Just False
-    return $ Just $ DeclareStmt [localVar'] [fromJust e']
+    withIfReturned $ Just $ DeclareStmt [localVar'] [fromJust e']
   _toIR (SimpleStatementVariableDeclarationList _ _) = error "unsupported SimpleStatementVariableDeclarationList"
   _toIR (Return e) = do
+    setReturned
     e' <- case e of
             Just re -> _toIR re
-            _ -> return $ Just $ LiteralExpr (BoolLiteral True)
-    return $ ReturnStmt <$> e'
+            _ -> return $ Just $ IdentifierExpr (IR.Identifier "ret")
+    let assignRet = IR.AssignStmt [Just $ IR.Identifier "ret"] [fromJust e']
+    let assignReturned = IR.AssignStmt [Just $ IR.Identifier "returned"] [LiteralExpr $ BoolLiteral True]
+    return $ Just $ IR.BlockStmt $ IR.Block [assignRet, assignReturned]
   _toIR (Sol.BlockStatement blk) = do
     blk' <- _toIR blk
-    return $ IR.BlockStmt <$> blk'
-  _toIR Sol.EmitStatement {} = return Nothing 
+    withIfReturned $ IR.BlockStmt <$> blk'
+  _toIR Sol.EmitStatement {} = return Nothing
   _toIR (Sol.IfStatement e ifstmt maybeelsestmt) = do
     e' <- _toIR e
     ifstmt' <- _toIR ifstmt
@@ -54,4 +61,16 @@ instance ToIRTransformable Sol.Block IBlock' where
     enterScope
     stmts' <- mapM _toIR stmts
     leaveScope
-    return $ IR.Block <$> sequence stmts'
+    return $ IR.Block <$> sequence (init stmts')
+
+
+withIfReturned :: IStatement' -> Transformation IStatement'
+withIfReturned stmt = do
+  returned <- isReturned
+  if returned then return $ wrapperStmt stmt else return stmt
+
+
+wrapperStmt :: IStatement' -> IStatement'
+wrapperStmt Nothing  = Nothing 
+wrapperStmt (Just stmt) = Just $ IR.IfStmt (IR.UnaryExpr {unaryOp = Not, uExpr = IR.IdentifierExpr (IR.Identifier "returned")}) stmt Nothing 
+

@@ -37,3 +37,28 @@ exprExistsInExpr e e' = e == e'
 
 exprExistsInExpr' :: Expression -> Expression -> Bool
 exprExistsInExpr' decExpr ancExpr = decExpr == ancExpr || exprExistsInExpr decExpr ancExpr
+
+
+returnExistsInStmt :: Statement -> Bool
+returnExistsInStmt (BlockStatement (Block stmts)) = foldr ((||) . returnExistsInStmt ) False stmts
+returnExistsInStmt (IfStatement _ trueBranch maybeFalseBranch) =
+  returnExistsInStmt trueBranch
+    || maybe False returnExistsInStmt maybeFalseBranch
+returnExistsInStmt (Return _)  = True
+returnExistsInStmt _  = False
+
+
+returnExistsInStmts :: [Statement] -> Bool
+returnExistsInStmts = foldr ((||) . returnExistsInStmt) False
+
+
+hasMiddleReturn :: [Statement] -> Bool
+hasMiddleReturn [] = False 
+hasMiddleReturn [BlockStatement (Block stmts)] = hasMiddleReturn stmts
+hasMiddleReturn [_] = False
+hasMiddleReturn xs = returnExistsInStmts $ init xs
+
+hasLastReturn :: [Statement] -> Bool
+hasLastReturn [] = False  
+hasLastReturn [x] = returnExistsInStmt x 
+hasLastReturn xs = returnExistsInStmt $ last xs
