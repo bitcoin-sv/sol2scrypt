@@ -418,15 +418,15 @@ public function get(SigHashPreimage txPreimage) {
     balances[receiver] += amount;
 }|]
       [r|
-public function send(PubKeyHash receiver, int amount, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, int balances_msgSender, int balances_msgSender_index, int balances_msgSender_final, int balances_msgSender_final_index, int balances_receiver, int balances_receiver_index, int balances_receiver_final, int balances_receiver_final_index) {
+public function send(PubKeyHash receiver, int amount, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, int balances_msgSender, int balances_msgSender_index, int balances_receiver, int balances_receiver_index) {
   PubKeyHash msgSender = hash160(pubKey);
   require(checkSig(sig, pubKey));
   require((!balances.has(msgSender, balances_msgSender_index)) || balances.canGet(msgSender, balances_msgSender, balances_msgSender_index));
   require((!balances.has(receiver, balances_receiver_index)) || balances.canGet(receiver, balances_receiver, balances_receiver_index));
   balances_msgSender -= amount;
   balances_receiver += amount;
-  require(balances_msgSender == balances_msgSender_final && balances.set(msgSender, balances_msgSender_final, balances_msgSender_final_index));
-  require(balances_receiver == balances_receiver_final && balances.set(receiver, balances_receiver_final, balances_receiver_final_index));
+  require(balances.set(msgSender, balances_msgSender, balances_msgSender_index));
+  require(balances.set(receiver, balances_receiver, balances_receiver_index));
   require(Tx.checkPreimage(txPreimage));
   bytes outputScript = this.getStateScript();
   bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));

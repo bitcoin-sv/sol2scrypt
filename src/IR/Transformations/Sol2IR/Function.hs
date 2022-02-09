@@ -310,9 +310,7 @@ transForMappingAccess mCounter =
           let mn = toExprName me
               kn = toExprName ke
            in [ IR.Param t $ IR.Identifier $ getValName mn kn initTag, -- init value
-                IR.Param (ElementaryType Int) $ IR.Identifier $ getIdxName mn kn initTag, -- init value index
-                IR.Param t $ IR.Identifier $ getValName mn kn finalTag, -- final value
-                IR.Param (ElementaryType Int) $ IR.Identifier $ getIdxName mn kn finalTag -- final value index
+                IR.Param (ElementaryType Int) $ IR.Identifier $ getIdxName mn kn initTag -- init value index
               ]
       )
       $ Map.elems mCounter,
@@ -324,14 +322,13 @@ transForMappingAccess mCounter =
           in mergeTFStmtWrapper mc
               $ TFStmtWrapper 
                   [preCheckStmt mn kn initTag] 
-                  [afterCheckStmt mn kn finalTag $ getValName mn kn initTag]
+                  [afterCheckStmt mn kn initTag]
       )
       (TFStmtWrapper [] [])
       mCounter
   )
   where
     initTag = ""
-    finalTag = "_final"
     getKeyExpr keyName = if keyName `elem` reservedNames then IR.ReservedId keyName else IR.Identifier keyName
     getValName = \mapName keyName postfix -> mapName ++ "_" ++ keyName ++ postfix
     getIdxName = \mapName keyName postfix -> getValName mapName keyName postfix ++ "_index"
@@ -393,16 +390,7 @@ transForMappingAccess mCounter =
             rExpr = mapCanGetExpr mapName keyName postfix
           }
 
-    -- require(<targetName> == <valName> && <mapName>.set(keyName, valName, valIdx))
-    afterCheckStmt mapName keyName postfix targetName =
-      IR.RequireStmt $
-        BinaryExpr
-          { binaryOp = BoolAnd,
-            lExpr =
-              BinaryExpr
-                { binaryOp = IR.Equal,
-                  lExpr = IdentifierExpr (IR.Identifier targetName),
-                  rExpr = IdentifierExpr (IR.Identifier $ getValName mapName keyName postfix)
-                },
-            rExpr = mapSetExpr mapName keyName postfix
-          }
+    -- require(<mapName>.set(keyName, valName, valIdx))
+    afterCheckStmt mapName keyName postfix =
+      IR.RequireStmt $ mapSetExpr mapName keyName postfix
+
