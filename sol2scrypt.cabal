@@ -116,7 +116,7 @@ test-suite e2e
       IdentifierSpec
       PragmaSpec
       ProgramSpec
-      StmtSpec
+      StatementSpec
       TypeSpec
       VariableSpec
       Paths_sol2scrypt
@@ -125,6 +125,7 @@ test-suite e2e
   ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , containers
     , hspec
     , raw-strings-qq
     , sol2scrypt
@@ -170,6 +171,7 @@ test-suite unit
   ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , containers
     , hspec
     , raw-strings-qq
     , sol2scrypt

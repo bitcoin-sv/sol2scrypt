@@ -18,7 +18,7 @@ instance ToScryptTransformable IStatement' (Maybe (Scr.Statement Ann)) where
 instance ToScryptTransformable IStatement (Scr.Statement Ann) where
   _toScrypt (IR.ExprStmt e) = Scr.ExprStmt (_toScrypt e) nil
   -- assignment only allows one identifier and expr on the left & right, respectively
-  _toScrypt (IR.AssignStmt [Just idtf] [e]) =
+  _toScrypt (IR.AssignStmt [IR.IdentifierExpr idtf] [e]) =
     let idtf' :: NameAnn Ann = _toScrypt idtf
         lhs = Var (unName idtf') False nil
         e' = _toScrypt e

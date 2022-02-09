@@ -8,7 +8,7 @@ module IR.Spec
     module IR.Specs.Contract,
     module IR.Specs.Empty,
     module IR.Specs.Program,
-    IIdentifier', IType', IExpression', IStatement', IParam', IParamList',
+    IIdentifier', IElementaryTypeName', IType', IExpression', IStatement', IParam', IParamList',
     IVisibility', IBlock', IFunction',
     IContractBodyElement', IStateVariable', IContract', IConstructor', IProgram', IImportDirective'
   )
@@ -25,6 +25,8 @@ import IR.Specs.Empty
 import IR.Specs.Variable
 
 type IIdentifier' = Maybe IIdentifier
+
+type IElementaryTypeName' = Maybe IElementaryTypeName
 
 type IType' = Maybe IType
 

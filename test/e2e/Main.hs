@@ -1,7 +1,7 @@
 import Test.Tasty
 import TypeSpec
 import ExpressionSpec
-import StmtSpec
+import StatementSpec
 import PragmaSpec
 import VariableSpec
 import FunctionSpec
@@ -16,6 +16,6 @@ e2eTests :: IO TestTree
 e2eTests =
   testGroup "e2e tests"
 
-    <$> sequence [TypeSpec.spec, StmtSpec.spec, ExpressionSpec.spec, PragmaSpec.spec, VariableSpec.spec, FunctionSpec.spec,
+    <$> sequence [TypeSpec.spec, StatementSpec.spec, ExpressionSpec.spec, PragmaSpec.spec, VariableSpec.spec, FunctionSpec.spec,
        ContractSpec.spec, IdentifierSpec.spec, ProgramSpec.spec]
 

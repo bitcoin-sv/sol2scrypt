@@ -231,12 +231,15 @@ spec = testSpec "Transpile Type" $ do
 
       itType "var" "auto"
 
-    describe "#Array Type" $ do
+  describe "#TypeNameArrayTypeName" $ do
 
-      itType "int[20]" "int[20]"
-      itType "uint[20]" "int[20]"
-      itType "bool[20]" "bool[20]"
-      itType "bytes[20]" "bytes[20]"
+    itType "int[20]" "int[20]"
+    itType "uint[20]" "int[20]"
+    itType "bool[20]" "bool[20]"
+    itType "bytes[20]" "bytes[20]"
+
+  describe "#TypeNameMapping" $ do
+    itType "mapping (address => uint)" "HashedMap<PubKeyHash, int>"
 
 
 

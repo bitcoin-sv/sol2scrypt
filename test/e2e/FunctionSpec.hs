@@ -3,6 +3,7 @@
 
 module FunctionSpec where
 
+import qualified Data.Map.Lazy as Map
 import IR
 import Scrypt as Scr
 import Solidity as Sol
@@ -361,7 +362,7 @@ public function get(SigHashPreimage txPreimage, int retVal) {
   require(storedData == retVal);
 }|]
 
-  describe "msg" $ do
+  describe "#msg" $ do
     itTranspile
       "msg.sender"
       [r|function get(address addr) external view {
@@ -395,6 +396,37 @@ public function get(PubKeyHash addr, SigHashPreimage txPreimage, Sig sig, PubKey
 public function get(SigHashPreimage txPreimage) {
   int msgValue = SigHash.value(txPreimage);
   int amt = msgValue;
+  require(Tx.checkPreimage(txPreimage));
+  bytes outputScript = this.getStateScript();
+  bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+  require(hash256(output) == SigHash.hashOutputs(txPreimage));
+}|]
+
+  describe "#mapping" $ do
+    let itTranspileWithMapping mapName sol scrypt = 
+          it "should transpile function with mapping-typed var correctly" $ do
+            let mapSym = Symbol (IR.Identifier mapName) (Mapping (ElementaryType Address) (ElementaryType IR.Int)) False
+                initEnv =  [Map.insert (IR.Identifier mapName) mapSym Map.empty]
+            tr :: TranspileResult Sol.ContractPart IFunction' (Maybe (Scr.Function Ann)) <- 
+                          transpile' (TransformState initEnv Nothing Map.empty) sol
+            scryptCode tr `shouldBe` scrypt
+
+    itTranspileWithMapping
+      "balances"
+      [r|function send(address receiver, uint amount) external {
+    balances[msg.sender] -= amount;
+    balances[receiver] += amount;
+}|]
+      [r|
+public function send(PubKeyHash receiver, int amount, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, int balances_msgSender, int balances_msgSender_index, int balances_receiver, int balances_receiver_index) {
+  PubKeyHash msgSender = hash160(pubKey);
+  require(checkSig(sig, pubKey));
+  require((!balances.has(msgSender, balances_msgSender_index)) || balances.canGet(msgSender, balances_msgSender, balances_msgSender_index));
+  require((!balances.has(receiver, balances_receiver_index)) || balances.canGet(receiver, balances_receiver, balances_receiver_index));
+  balances_msgSender -= amount;
+  balances_receiver += amount;
+  require(balances.set(msgSender, balances_msgSender, balances_msgSender_index));
+  require(balances.set(receiver, balances_receiver, balances_receiver_index));
   require(Tx.checkPreimage(txPreimage));
   bytes outputScript = this.getStateScript();
   bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));

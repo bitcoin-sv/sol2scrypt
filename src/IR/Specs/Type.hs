@@ -8,6 +8,7 @@ data IType
   | BuiltinType String
   | UserDefinedType IUserDefinedTypeName
   | Array IType Int
+  | Mapping IType IType
   deriving (Show, Eq, Ord)
 
 data IElementaryTypeName 

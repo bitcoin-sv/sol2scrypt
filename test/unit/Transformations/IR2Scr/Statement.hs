@@ -62,7 +62,7 @@ spec = testSpec "instance ToScryptTransformable IStatment (Scr.Statement IExpr)"
     describe "#AssignStmt" $ do
       let itAssignStmt title e1 e2 = it ("should transfrom IR `" ++ title ++ "` to sCrypt Statement correctly") $ do
             let idtf = Identifier "x"
-            r1 <- transform2Scrypt $ Just $ IR.AssignStmt [Just idtf] [e1]
+            r1 <- transform2Scrypt $ Just $ IR.AssignStmt [IdentifierExpr idtf] [e1]
             r1 `shouldBe` Just (Scr.Assign (Var "x" False nil) e2 nil)
 
       itAssignStmt

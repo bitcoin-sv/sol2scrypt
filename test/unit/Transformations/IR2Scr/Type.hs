@@ -23,4 +23,4 @@ spec = testSpec "instance ToScryptTransformable IType Type" $ do
 
     itType "Bytes" IR.Any Scr.Any
 
-    itType "Bytes" IR.Address (Scr.SubBytes Scr.Ripemd160)
+    itType "Bytes" IR.Address (Scr.CustomType "PubKeyHash")

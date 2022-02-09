@@ -25,4 +25,8 @@ instance ToIRTransformable TypeName IType' where
     sub <- _toIR e
     let arr = flip Array sub
     return $ arr <$> t'
+  _toIR (TypeNameMapping kt vt) = do
+    kt' <- _toIR (TypeNameElementaryTypeName kt)
+    vt' <- _toIR vt
+    return $ Mapping <$> kt' <*> vt'
   _toIR t = error $ "unsupported type `" ++ headWord (show t) ++ "`"
