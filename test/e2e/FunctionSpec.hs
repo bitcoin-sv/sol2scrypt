@@ -148,8 +148,246 @@ function get() : int {
       "function g(uint a) public pure returns (uint ret) { return a + f(); }"
       [r|
 function g(int a) : int {
-  int ret = 0;
+  int userDefined_ret = 0;
   return a + f();
+}|]
+
+    itTranspile
+      "function with return in if branch"
+      [r|function test0( uint amount) public view returns (uint) {
+  uint x = 3;
+  if(x == 0) {
+      x++;
+      return x;
+  }
+  x = x + amount;
+  return x;
+}|]
+      [r|
+function test0(int amount) : int {
+  int ret = 0;
+  bool returned = false;
+  int x = 3;
+  if (x == 0) {
+    x++;
+    {
+      ret = x;
+      returned = true;
+    }
+  }
+  if (!returned) {
+    x = x + amount;
+  }
+  return returned ? ret : x;
+}|]
+
+    itTranspile
+      "function with return in else branch"
+      [r|function test4( uint amount, uint y) public returns (uint) {
+  uint x = 3;
+  if(x > 0) {
+    x++;
+  } else {
+    --x;
+    return x;
+  }
+  x = x + amount;
+  x += 20 / amount - 12;
+  return x;
+}|]
+      [r|
+function test4(int amount, int y) : int {
+  int ret = 0;
+  bool returned = false;
+  int x = 3;
+  if (x > 0) {
+    x++;
+  }
+  else {
+    --x;
+    {
+      ret = x;
+      returned = true;
+    }
+  }
+  if (!returned) {
+    x = x + amount;
+    x += 20 / amount - 12;
+  }
+  return returned ? ret : x;
+}|]
+
+    itTranspile
+      "function with return in both if & else branch"
+      [r|function test1( uint amount) public returns (uint) {
+    uint x = 3;
+    if(x == 3) {
+        return x;
+    } else {
+        return x++;
+    }
+}|]
+      [r|
+function test1(int amount) : int {
+  int ret = 0;
+  bool returned = false;
+  int x = 3;
+  if (x == 3) {
+    {
+      ret = x;
+      returned = true;
+    }
+  }
+  else {
+    {
+      ret = x++;
+      returned = true;
+    }
+  }
+  return ret;
+}|]
+
+    itTranspile
+      "function with return in nested if branch"
+      [r|function test5( uint amount, uint y) public returns (uint) {
+    uint x = 3;
+    if(x > 0) {
+        x++;
+        if(x == 3) {
+            return x;
+        } else if(x == 5) {
+            x++;
+        } else if(x == 2) {
+            x--;
+        }
+        x += 3;
+        return x;
+    } else {
+        --x;
+    }
+
+    x = x + amount;
+    x += 20 / amount - 12;
+    return x;
+}|]
+      [r|
+function test5(int amount, int y) : int {
+  int ret = 0;
+  bool returned = false;
+  int x = 3;
+  if (x > 0) {
+    x++;
+    if (x == 3) {
+      {
+        ret = x;
+        returned = true;
+      }
+    }
+    else if (x == 5) {
+      x++;
+    }
+    else if (x == 2) {
+      x--;
+    }
+    if (!returned) {
+      x += 3;
+      {
+        ret = x;
+        returned = true;
+      }
+    }
+  }
+  else {
+    --x;
+  }
+  if (!returned) {
+    x = x + amount;
+    x += 20 / amount - 12;
+  }
+  return returned ? ret : x;
+}|]
+
+    itTranspile
+      "function with return in non-block if branch"
+      [r|function test6( uint x) public view returns (bool) {
+    if(x == 0) 
+        return true;
+    return false;
+}|]
+      [r|
+function test6(int x) : bool {
+  bool ret = false;
+  bool returned = false;
+  if (x == 0) {
+    {
+      ret = true;
+      returned = true;
+    }
+  }
+  return returned ? ret : false;
+}|]
+
+    itTranspile
+      "function with no return at the end"
+      [r|function test9(uint x) public pure returns (uint) {
+    uint y = 1;
+}|]
+      [r|
+function test9(int x) : int {
+  int y = 1;
+  return 0;
+}|]
+
+    itTranspile
+      "function with named but omitted return at the end"
+      [r|function test10(uint x) public view returns (uint z) {
+    if(x == 0) {
+        if(x > 1){ 
+            if(x > 9) {
+                return ((x * x + y) > x*y) ? x-- : ((y*x) -9) ;
+            } else {
+                z = x*9- y + (x*y/100);
+            }
+            return (x-- - 200) * y  ;
+        }
+        return x -9;
+    }
+    z++;
+}|]
+      [r|
+function test10(int x) : int {
+  int ret = 0;
+  bool returned = false;
+  int z = 0;
+  if (x == 0) {
+    if (x > 1) {
+      if (x > 9) {
+        {
+          ret = ((x * x + y) > x * y) ? x-- : ((y * x) - 9);
+          returned = true;
+        }
+      }
+      else {
+        z = x * 9 - y + (x * y / 100);
+      }
+      if (!returned) {
+        {
+          ret = (x-- - 200) * y;
+          returned = true;
+        }
+      }
+    }
+    if (!returned) {
+      {
+        ret = x - 9;
+        returned = true;
+      }
+    }
+  }
+  if (!returned) {
+    z++;
+  }
+  return returned ? ret : z;
 }|]
 
   describe "#private " $ do
@@ -408,7 +646,7 @@ public function get(SigHashPreimage txPreimage) {
             let mapSym = Symbol (IR.Identifier mapName) (Mapping (ElementaryType Address) (ElementaryType IR.Int)) False
                 initEnv =  [Map.insert (IR.Identifier mapName) mapSym Map.empty]
             tr :: TranspileResult Sol.ContractPart IFunction' (Maybe (Scr.Function Ann)) <- 
-                          transpile' (TransformState initEnv Nothing Map.empty) sol
+                          transpile' (TransformState initEnv Nothing Map.empty []) sol
             scryptCode tr `shouldBe` scrypt
 
     itTranspileWithMapping

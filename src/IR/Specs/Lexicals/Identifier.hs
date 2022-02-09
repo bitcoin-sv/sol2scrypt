@@ -60,7 +60,9 @@ reservedNames =
     varMsgSender,
     varMsgValue,
     varSig,
-    varPubKey
+    varPubKey,
+    varReturned,
+    varRetVal
   ]
 
 libTx :: String
@@ -101,3 +103,9 @@ varSig = "sig"
 
 varPubKey :: String
 varPubKey = "pubKey"
+
+varReturned :: String
+varReturned = "returned"
+
+varRetVal :: String
+varRetVal = "ret"

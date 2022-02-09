@@ -65,12 +65,12 @@ spec = testSpec "Transpile Statement" $ do
     itstmt "bool"  "bool x = true;"  "\nbool x = true;"
     itstmt "bytes"  "bytes x = hex\"010113\";"  "\nbytes x = b'010113';"
 
-    describe "#BlockStatement" $ do
-      itstmt "BlockStatement"  "{bytes x = hex\"010113\";}"  "\n{\n  bytes x = b'010113';\n}"
-      itstmt "BlockStatement"  "{1 + 2;}"  "\n{\n  1 + 2;\n}"
-      itstmt "BlockStatement"  "{1;}"  "\n{\n  1;\n}"
-      itstmt "BlockStatement"  "{}"  "\n{\n}"
-      itstmt "BlockStatement"  [r|{
+  describe "#BlockStatement" $ do
+    itstmt "BlockStatement"  "{bytes x = hex\"010113\";}"  "\n{\n  bytes x = b'010113';\n}"
+    itstmt "BlockStatement"  "{1 + 2;}"  "\n{\n  1 + 2;\n}"
+    itstmt "BlockStatement"  "{1;}"  "\n{\n  1;\n}"
+    itstmt "BlockStatement"  "{}"  "\n{\n}"
+    itstmt "BlockStatement"  [r|{
         1 + 2;
         int x = 3;
         x = x * 4 + 1;
@@ -81,7 +81,7 @@ spec = testSpec "Transpile Statement" $ do
   x = x * 4 + 1;
 }|]
 
-      itstmt "BlockStatement"  [r|{
+    itstmt "BlockStatement"  [r|{
         count += 1;
         bytes x = hex"010113";
         address nameReg = 0xdCad3a6d3569DF655070DEd06cb7A1b2Ccd1D3AF;
@@ -104,7 +104,87 @@ spec = testSpec "Transpile Statement" $ do
   bool b = !a;
 }|]
 
-      
+    itstmt "BlockStatement with return"
+        "{ if(x) {return y;} return z; }"
+        [r|
+{
+  if (x) {
+    {
+      ret = y;
+      returned = true;
+    }
+  }
+  return returned ? ret : z;
+}|]
+
+    itstmt "BlockStatement with embeded if & return"
+      [r|{
+  uint x = 3;
+  if(x > 0) {
+      if (x > 1) {
+          x /= 2;
+          if(x == 2) {
+              return x;
+          }
+          x--;
+          if(x == 3) {
+              return x;
+          } else {
+              x += y;
+          }
+          x += 2 * amount + 1;
+      }
+      x++;
+      x += 11;
+  } else {
+      --x;
+  }
+  x = x + amount;
+  x += 20 / amount - 12;
+  return x;
+}|]
+      [r|
+{
+  int x = 3;
+  if (x > 0) {
+    if (x > 1) {
+      x /= 2;
+      if (x == 2) {
+        {
+          ret = x;
+          returned = true;
+        }
+      }
+      if (!returned) {
+        x--;
+        if (x == 3) {
+          {
+            ret = x;
+            returned = true;
+          }
+        }
+        else {
+          x += y;
+        }
+        if (!returned) {
+          x += 2 * amount + 1;
+        }
+      }
+    }
+    if (!returned) {
+      x++;
+      x += 11;
+    }
+  }
+  else {
+    --x;
+  }
+  if (!returned) {
+    x = x + amount;
+    x += 20 / amount - 12;
+  }
+  return returned ? ret : x;
+}|]
 
     describe "#Fix Sol Parser bug #9" $ do
       itstmt "SimpleStatementExpression"  "true;"  "\ntrue;"

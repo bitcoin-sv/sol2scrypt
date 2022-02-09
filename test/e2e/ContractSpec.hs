@@ -408,8 +408,9 @@ spec = testSpec "Transpile Contract" $ do
   public function mint(PubKeyHash receiver, int amount, SigHashPreimage txPreimage, Sig sig, PubKey pubKey) {
     PubKeyHash msgSender = hash160(pubKey);
     require(checkSig(sig, pubKey));
-    if (msgSender != this.minter)
-      return true;
+    if (msgSender != this.minter) {
+      exit(false);
+    }
     require(Tx.checkPreimage(txPreimage));
     bytes outputScript = this.getStateScript();
     bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));

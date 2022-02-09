@@ -58,6 +58,9 @@ instance Generable (Scr.Statement a) where
     falseBranch' <- genBranch fbInd maybeFalseBranch
 
     return $ ifLine ++ trueBranch' ++ elseLine ++ falseBranch'
+  genCode (Exit e _) = do
+    e' <- genCode e
+    withIndent $ "exit(" ++ e' ++ ");"
   genCode _ = error "unimplemented show scrypt expr"
 
 genBranch :: Bool -> Maybe (Statement a) -> CodeGenerator String
