@@ -390,6 +390,130 @@ function test10(int x) : int {
   return returned ? ret : z;
 }|]
 
+    itTranspile
+      "function with return bytes"
+      [r|function test9(uint x) public pure returns (bytes) {
+    bytes y = hex"00";
+    if(x == 10000) {
+      return y;
+    }
+    if(x >= 0) {
+
+      if(x < -1) {
+        if(x == -2) {
+          y = hex"22";
+          return y;
+        } else {
+          return y;
+        }
+      }
+
+      return y;
+    } else {
+      y = hex"11";
+      if(x < - 1) {
+        if(x == -2) {
+          y = hex"22";
+          return y;
+        } else {
+          return y;
+        }
+      }
+      y = hex"2233";
+      x++;
+    }
+
+    x++;
+    x=10;
+
+    return y;
+}|]
+      [r|
+function test9(int x) : bytes {
+  bytes ret = b'';
+  bool returned = false;
+  bytes y = b'00';
+  if (x == 10000) {
+    {
+      ret = y;
+      returned = true;
+    }
+  }
+  if (!returned) {
+    if (x >= 0) {
+      if (x < -1) {
+        if (x == -2) {
+          y = b'22';
+          {
+            ret = y;
+            returned = true;
+          }
+        }
+        else {
+          {
+            ret = y;
+            returned = true;
+          }
+        }
+      }
+      if (!returned) {
+        {
+          ret = y;
+          returned = true;
+        }
+      }
+    }
+    else {
+      y = b'11';
+      if (x < -1) {
+        if (x == -2) {
+          y = b'22';
+          {
+            ret = y;
+            returned = true;
+          }
+        }
+        else {
+          {
+            ret = y;
+            returned = true;
+          }
+        }
+      }
+      if (!returned) {
+        y = b'2233';
+        x++;
+      }
+    }
+    if (!returned) {
+      x++;
+      x = 10;
+    }
+  }
+  return returned ? ret : y;
+}|]
+
+    itTranspile
+      "function with return bool"
+      [r|function test6( uint x) public view returns (bool) {
+    if(x == 0) 
+        return true;
+    
+    return false;
+}|]
+      [r|
+function test6(int x) : bool {
+  bool ret = false;
+  bool returned = false;
+  if (x == 0) {
+    {
+      ret = true;
+      returned = true;
+    }
+  }
+  return returned ? ret : false;
+}|]
+
   describe "#private " $ do
 
     itTranspile
