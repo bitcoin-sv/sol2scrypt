@@ -97,7 +97,7 @@ spec = testSpec "Transpile Expression" $ do
                       initEnv =  [Map.insert (IR.Identifier leftExpr) mapSym Map.empty]
                       sol = leftExpr ++ "[" ++ rightExpr ++ "]" 
                   tr :: TranspileResult Expression IExpression' (Maybe (Expr Ann)) <- 
-                          transpile' (TransformState initEnv Nothing Map.empty) sol
+                          transpile' (TransformState initEnv Nothing Map.empty []) sol
                   scryptCode tr `shouldBe` scrypt
 
           itSBExpr "a" "0" "a_0"

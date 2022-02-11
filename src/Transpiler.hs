@@ -17,7 +17,7 @@ data TranspilePath sol ir scr = TranspilePath sol ir scr
 data TranspileResult a b c = TranspileResult {scryptCode :: String, tranpilePath :: TranspilePath a b c}
 
 transpile :: (Parseable a, ToIRTransformable a b, ToScryptTransformable b c, Generable c) => String -> IO (TranspileResult a b c)
-transpile = transpile' (TransformState [] Nothing Map.empty)
+transpile = transpile' (TransformState [] Nothing Map.empty [])
 
 transpile' :: (Parseable a, ToIRTransformable a b, ToScryptTransformable b c, Generable c) => TransformState -> String -> IO (TranspileResult a b c)
 transpile' initState solidityCode  = do

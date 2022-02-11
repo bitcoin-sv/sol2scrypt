@@ -5,13 +5,14 @@
 
 module IR.Transformations.Sol2IR.Statement where
 
+import Control.Monad.State
 import Data.Maybe
 import IR.Spec as IR
 import IR.Transformations.Base
-import IR.Transformations.Sol2IR.Expression
+import IR.Transformations.Sol2IR.Expression ()
 import IR.Transformations.Sol2IR.Identifier
 import IR.Transformations.Sol2IR.Type ()
-import IR.Transformations.Sol2IR.Variable
+import IR.Transformations.Sol2IR.Variable ()
 import Protolude.Functor
 import Solidity.Spec as Sol
 import Utils
@@ -35,21 +36,50 @@ instance ToIRTransformable Sol.Statement IStatement' where
     return $ Just $ DeclareStmt [localVar'] [fromJust e']
   _toIR (SimpleStatementVariableDeclarationList _ _) = error "unsupported SimpleStatementVariableDeclarationList"
   _toIR (Return e) = do
-    e' <- case e of
-      Just re -> _toIR re
-      _ -> return $ Just $ LiteralExpr (BoolLiteral True)
-    return $ ReturnStmt <$> e'
+    returned <- gets stateReturnedInBlock
+    case e of
+      Just re -> do
+        e' <- _toIR re
+        case returned of
+          -- for the outermost return, transpile to `return returned ? retVal : e;`
+          [True] -> do
+            return $
+              ReturnStmt
+                <$> ( TernaryExpr
+                        <$> Just (IdentifierExpr (IR.ReservedId varReturned))
+                        <*> Just (IdentifierExpr (IR.ReservedId varRetVal))
+                        <*> e'
+                    )
+          -- for the non-outermost return (at least two flags in `stateReturnedInBlock`), transplie to `{ returned = true; retVal = e; }`
+          _ : _ : _ -> do
+            -- set current block's returned flag
+            modify $ \s -> s {stateReturnedInBlock = True : drop 1 returned}
+            return $
+              BlockStmt
+                <$> ( IR.Block
+                        <$> sequence
+                          [ AssignStmt <$> Just [IdentifierExpr (IR.ReservedId varRetVal)] <*> sequence [e'],
+                            Just $ AssignStmt [IdentifierExpr (IR.ReservedId varReturned)] [LiteralExpr $ BoolLiteral True]
+                          ]
+                    )
+          _ -> return $ ReturnStmt <$> e'
+      -- transpile `return;` to `exit(false);`
+      _ -> return $ ExitStmt <$> Just (LiteralExpr (BoolLiteral False))
   _toIR (Sol.BlockStatement blk) = do
     blk' <- _toIR blk
     return $ IR.BlockStmt <$> blk'
   _toIR Sol.EmitStatement {} = return Nothing
   _toIR (Sol.IfStatement e ifstmt maybeelsestmt) = do
+    -- wrap a single return statement into a block for the convenience of transpile `return`
+    let wrapSingleRet stmt = case stmt of
+          r@(Return _) -> Sol.BlockStatement $ Sol.Block [r]
+          _ -> stmt
     e' <- _toIR e
-    ifstmt' <- _toIR ifstmt
+    ifstmt' <- _toIR $ wrapSingleRet ifstmt
     let ret = IR.IfStmt <$> e' <*> ifstmt'
     case maybeelsestmt of
       Just elsestmt -> do
-        elsestmt' <- _toIR elsestmt
+        elsestmt' <- _toIR $ wrapSingleRet elsestmt
         return $ ret <*> (Just <$> elsestmt')
       Nothing -> return $ ret <*> Just Nothing
   _toIR s = error $ "unsupported statement `" ++ headWord (show s) ++ "`"
@@ -57,6 +87,54 @@ instance ToIRTransformable Sol.Statement IStatement' where
 instance ToIRTransformable Sol.Block IBlock' where
   _toIR (Sol.Block stmts) = do
     enterScope
-    stmts' <- mapM _toIR stmts
+    stmts' <- transBlockStmtsWithReturn stmts []
     leaveScope
     return $ IR.Block <$> sequence stmts'
+
+-- transplie block statments that may have returned in middle
+transBlockStmtsWithReturn :: [Statement] -> [IStatement'] -> Transformation [IStatement']
+transBlockStmtsWithReturn [] results = return results
+transBlockStmtsWithReturn ss@(stmt : rss) results = do
+  returned <- gets stateReturnedInBlock
+  (ss', results') <-
+    case returned of
+      -- when it's the outermost block
+      [True] -> do
+        case last ss of
+          -- end with return stmt
+          r@Return {} -> do
+            -- wrap all stmts except the last return into a if stmt: `if (!returned) {...}`
+            ifstmt <- wrapWithIfReturn $ init ss
+            r' <- _toIR r
+            return ([], results ++ ifstmt ++ [r'])
+          -- end with non return stmt
+          _ -> do
+            -- wrap all stmts after into a if stmt: `if (!returned) {...}`
+            ifstmt <- wrapWithIfReturn ss
+            return ([], results ++ ifstmt)
+      -- when it's not the outermost block
+      True : _ -> do
+        -- wrap all stmts after into a if stmt: `if (!returned) {...}`
+        ifstmt <- wrapWithIfReturn ss
+        return ([], results ++ ifstmt)
+      _ -> do
+        stmt' <- _toIR stmt
+        return (rss, results ++ [stmt'])
+  transBlockStmtsWithReturn ss' results'
+  where
+    -- wrap `stmts` to `if (!returned) { <stmts> }`
+    wrapWithIfReturn stmts = do
+      if null stmts
+        then return []
+        else do
+          blk <- _toIR $ Sol.BlockStatement $ Sol.Block stmts
+          case blk of
+            Just blk' ->
+              return
+                [ Just $
+                    IR.IfStmt
+                      (UnaryExpr Not $ IdentifierExpr $ IR.ReservedId varReturned)
+                      blk'
+                      Nothing
+                ]
+            _ -> return []

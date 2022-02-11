@@ -4,9 +4,8 @@
 
 module IR.Transformations.Sol2IR.Function where
 
-import Data.Foldable
-import qualified Data.Map.Lazy as Map
 import Control.Monad.State
+import qualified Data.Map.Lazy as Map
 import Data.Maybe
 import IR.Spec as IR
 import IR.Transformations.Base
@@ -36,8 +35,8 @@ instance ToIRTransformable ContractPart IFunction' where
     mCounter <- gets stateInFuncMappingCounter
     let paramsForMap = fst $ transForMappingAccess mCounter
     let ps' = case ps of
-                Just (ParamList pps) -> Just (ParamList $ pps ++ paramsForMap)
-                _ -> Just $ ParamList paramsForMap
+          Just (ParamList pps) -> Just (ParamList $ pps ++ paramsForMap)
+          _ -> Just $ ParamList paramsForMap
 
     return $ Function (IR.Identifier fn) <$> ps' <*> body <*> targetType retTransResult <*> Just vis
   _toIR _ = return Nothing
@@ -120,8 +119,16 @@ toIRFuncParams (ParameterList pl) tags (FuncRetTransResult rt ort rn) vis funcBl
   return (IR.ParamList <$> params', blkT3)
 
 toIRFuncBody :: Block -> IVisibility -> TFStmtWrapper -> FuncRetTransResult -> Transformation IBlock'
-toIRFuncBody (Sol.Block ss) vis wrapperFromParam (FuncRetTransResult _ ort rn) = do
-  stmts <- mapM _toIR ss
+toIRFuncBody blk@(Sol.Block _) vis wrapperFromParam (FuncRetTransResult _ ort rn) = do
+  modify $ \s -> s {stateReturnedInBlock = []}
+  blk' <- _toIR blk
+  let stmts = case blk' of
+        Just (IR.Block ss) -> map Just ss
+        Nothing -> []
+  returned <- gets stateReturnedInBlock
+  let returnedInMiddle = case returned of
+        True : _ -> True
+        _ -> False
 
   mCounter <- gets stateInFuncMappingCounter
   let (TFStmtWrapper prepends appends) = wrapTFStmtWrapper wrapperFromParam $ snd $ transForMappingAccess mCounter
@@ -147,10 +154,27 @@ toIRFuncBody (Sol.Block ss) vis wrapperFromParam (FuncRetTransResult _ ort rn) =
             Just r -> [Just $ requireEqualStmt (IdentifierExpr r) $ mirror rn]
             _ -> [Just $ RequireStmt trueExpr]
         (False, False) -> case rn of
-          -- append `return returnName;`
-          Just n -> stmts ++ [Just $ ReturnStmt $ IdentifierExpr n]
-          -- append `return true;`
-          _ -> stmts ++ [Just $ ReturnStmt trueExpr]
+          Just n ->
+            stmts
+              ++ [ Just $
+                     ReturnStmt $
+                       if returnedInMiddle
+                         then -- append `return returned ? ret : returnName;`
+
+                           TernaryExpr
+                             (IdentifierExpr (IR.ReservedId varReturned))
+                             (IdentifierExpr (IR.ReservedId varRetVal))
+                             (IdentifierExpr n)
+                         else -- append `return returnName;`
+                           IdentifierExpr n
+                 ]
+          _ ->
+            stmts
+              ++ if returnedInMiddle
+                then -- append `return ret;`
+                  [Just $ ReturnStmt $ IdentifierExpr $ IR.ReservedId varRetVal]
+                else -- append `return <defaultValue>;` / `return true;`
+                  [Just $ ReturnStmt $ maybe (LiteralExpr $ BoolLiteral True) defaultValueExpr ort]
         _ -> stmts
 
   let stmts'' = map Just prepends ++ init stmts' ++ map Just appends ++ [last stmts']
@@ -160,7 +184,12 @@ toIRFuncBody (Sol.Block ss) vis wrapperFromParam (FuncRetTransResult _ ort rn) =
         (Just (RequireStmt (LiteralExpr (BoolLiteral True)))) : (Just (RequireStmt _)) : _ -> init stmts''
         _ -> stmts''
 
-  return $ Just $ IR.Block $ catMaybes stmts'''
+  let stmts4 =
+        if returnedInMiddle
+          then map Just (prependsForReturnedInit ort) ++ stmts'''
+          else stmts'''
+
+  return $ Just $ IR.Block $ catMaybes stmts4
 
 mirror :: IIdentifier' -> IIdentifier
 mirror (Just (IR.Identifier i)) = IR.Identifier ("_" ++ i)
@@ -394,3 +423,23 @@ transForMappingAccess mCounter =
     afterCheckStmt mapName keyName postfix =
       IR.RequireStmt $ mapSetExpr mapName keyName postfix
 
+-- prepends some init statements for functions that have returned in middle.
+prependsForReturnedInit :: IType' -> [IStatement]
+prependsForReturnedInit Nothing = []
+prependsForReturnedInit (Just t) =
+  [ -- `<T> ret = <defaultValueExprueofT>;`
+    IR.DeclareStmt
+      [Just $ IR.Param t (IR.ReservedId varRetVal)]
+      [defaultValueExpr t],
+    -- `bool returned = false;`
+    IR.DeclareStmt
+      [Just $ IR.Param (ElementaryType IR.Bool) (IR.ReservedId varReturned)]
+      [LiteralExpr $ BoolLiteral False]
+  ]
+
+-- get default value expression for type `tp`
+defaultValueExpr :: IType -> IExpression
+defaultValueExpr (ElementaryType IR.Int) = LiteralExpr $ IntLiteral False 0
+defaultValueExpr (ElementaryType IR.Bool) = LiteralExpr $ BoolLiteral False
+defaultValueExpr (ElementaryType IR.Bytes) = LiteralExpr $ BytesLiteral []
+defaultValueExpr tp = error $ "unsupported default value for type `" ++ show tp ++ "`"

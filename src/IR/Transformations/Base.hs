@@ -21,7 +21,9 @@ data TransformState = TransformState
     -- TFStmtWrapper for current statement
     stateWrapperForStmt :: Maybe TFStmtWrapper,
     -- counter for mapping-access exprs in a function, key is the expression name, value is its occurrences count
-    stateInFuncMappingCounter :: MappingExprCounter
+    stateInFuncMappingCounter :: MappingExprCounter,
+    -- have returned previously in current block
+    stateReturnedInBlock :: [Bool]
   }
   deriving (Show, Eq, Ord)
 
@@ -74,14 +76,28 @@ dropScope = tail
 enterScope :: Transformation ()
 enterScope = do
   env <- gets stateEnv
-  modify $ \s -> s {stateEnv = addScope env}
-  return ()
+  returned <- gets stateReturnedInBlock
+  modify $ \s ->
+    s
+      { stateEnv = addScope env,
+        -- add default value of current block's returned flag
+        stateReturnedInBlock = False : returned
+      }
 
 leaveScope :: Transformation ()
 leaveScope = do
   env <- gets stateEnv
-  modify $ \s -> s {stateEnv = dropScope env}
-  return ()
+  returned <- gets stateReturnedInBlock
+  modify $ \s ->
+    s
+      { stateEnv = dropScope env,
+        stateReturnedInBlock = case returned of
+          -- merge current block's returned flag to its outer block's
+          cr : outerR : rs -> (cr || outerR) : rs
+          -- keep the outermost returned flag
+          [cr] -> [cr]
+          _ -> []
+      }
 
 newtype SymbolTableUpdateError = SymbolTableUpdateError String deriving (Show, Eq, Ord)
 
