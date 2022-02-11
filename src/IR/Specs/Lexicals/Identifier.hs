@@ -6,6 +6,10 @@ instance Show IIdentifier where
   show (Identifier i) = "(Identifier \"" ++ i ++ "\")"
   show (ReservedId i) = "(ReservedId \"" ++ i ++ "\")"
 
+getId :: IIdentifier -> String
+getId (Identifier i) = i
+getId (ReservedId i) = i
+
 reservedKeywords :: [String]
 reservedKeywords =
   [ "contract",
