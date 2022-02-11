@@ -293,3 +293,81 @@ contract SimpleStorage {
   constructor() {
   }
 }|]
+
+
+  itProgram "Coin"
+      [r|
+pragma solidity ^0.8.10;
+
+contract Coin {
+    // The keyword "public" makes those variables
+    // readable from outside.
+    address public minter;
+    mapping (address => uint) public balances;
+
+    // Events allow light clients to react on
+    // changes efficiently.
+    event Sent(address from, address to, uint amount);
+
+    // This is the constructor whose code is
+    // run only when the contract is created.
+    constructor() {
+        minter = msg.sender;
+    }
+
+    function mint(address receiver, uint amount) external {
+        if (msg.sender != minter) return;
+        balances[receiver] += amount;
+    }
+
+    function send(address receiver, uint amount) external {
+        if (balances[msg.sender] < amount) return;
+        balances[msg.sender] -= amount;
+        balances[receiver] += amount;
+        emit Sent(msg.sender, receiver, amount);
+    }
+}|]
+      [r|contract Coin {
+  @state
+  public PubKeyHash minter;
+
+  @state
+  public HashedMap<PubKeyHash, int> balances;
+
+  constructor(PubKeyHash msgSender) {
+    this.minter = msgSender;
+  }
+
+  public function mint(PubKeyHash receiver, int amount, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, int this_balances_receiver, int this_balances_receiver_index) {
+    PubKeyHash msgSender = hash160(pubKey);
+    require(checkSig(sig, pubKey));
+    require((!this.balances.has(receiver, this_balances_receiver_index)) || this.balances.canGet(receiver, this_balances_receiver, this_balances_receiver_index));
+    if (msgSender != this.minter) {
+      exit(false);
+    }
+    this_balances_receiver += amount;
+    require(this.balances.set(receiver, this_balances_receiver, this_balances_receiver_index));
+    require(Tx.checkPreimage(txPreimage));
+    bytes outputScript = this.getStateScript();
+    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    require(hash256(output) == SigHash.hashOutputs(txPreimage));
+  }
+
+  public function send(PubKeyHash receiver, int amount, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, int this_balances_msgSender, int this_balances_msgSender_index, int this_balances_receiver, int this_balances_receiver_index) {
+    PubKeyHash msgSender = hash160(pubKey);
+    require(checkSig(sig, pubKey));
+    require((!this.balances.has(msgSender, this_balances_msgSender_index)) || this.balances.canGet(msgSender, this_balances_msgSender, this_balances_msgSender_index));
+    require((!this.balances.has(receiver, this_balances_receiver_index)) || this.balances.canGet(receiver, this_balances_receiver, this_balances_receiver_index));
+    if (this_balances_msgSender < amount) {
+      exit(false);
+    }
+    this_balances_msgSender -= amount;
+    this_balances_receiver += amount;
+    require(this.balances.set(msgSender, this_balances_msgSender, this_balances_msgSender_index));
+    require(this.balances.set(receiver, this_balances_receiver, this_balances_receiver_index));
+    require(Tx.checkPreimage(txPreimage));
+    bytes outputScript = this.getStateScript();
+    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    require(hash256(output) == SigHash.hashOutputs(txPreimage));
+  }
+}|]

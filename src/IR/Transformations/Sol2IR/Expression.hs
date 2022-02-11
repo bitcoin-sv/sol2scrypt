@@ -52,14 +52,16 @@ instance ToIRTransformable Sol.Expression IExpression' where
     case e1' of
       -- due to the lack of semantics, only `IdentifierExpr` can get resolved type here.
       Just (IdentifierExpr i) -> do
-        i' <- lookupSym i
+        i' <- lookupSym $ case i of
+          IR.Identifier n -> IR.Identifier $ stripThis n
+          ReservedId n -> ReservedId $ stripThis n
         case i' of
           -- mapping-typed var access
           Just (Symbol _ (Mapping _ vt) _) -> do
             mc <- gets stateInFuncMappingCounter
             modify $ \s -> s {stateInFuncMappingCounter = incExprCounter mc e1' e2' vt}
             -- transpile to a plain var
-            return $ IdentifierExpr . IR.Identifier . toExprName <$> r
+            return $ IdentifierExpr . IR.Identifier . replaceDotWithUnderscore . toExprName <$> r
           _ -> return r
       -- other exprs whose type is `Mapping` will not be correctly transpiled below due to the same above.
       _ -> return r

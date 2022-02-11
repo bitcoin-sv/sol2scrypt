@@ -16,12 +16,12 @@ contract Coin {
         minter = msg.sender;
     }
 
-    function mint(address receiver, uint amount) public {
+    function mint(address receiver, uint amount) external {
         if (msg.sender != minter) return;
         balances[receiver] += amount;
     }
 
-    function send(address receiver, uint amount) public {
+    function send(address receiver, uint amount) external {
         if (balances[msg.sender] < amount) return;
         balances[msg.sender] -= amount;
         balances[receiver] += amount;

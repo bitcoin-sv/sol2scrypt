@@ -89,7 +89,7 @@ instance ToIRTransformable Sol.Block IBlock' where
     enterScope
     stmts' <- transBlockStmtsWithReturn stmts []
     leaveScope
-    return $ IR.Block <$> sequence stmts'
+    return $ Just $ IR.Block $ catMaybes stmts'
 
 -- transplie block statments that may have returned in middle
 transBlockStmtsWithReturn :: [Statement] -> [IStatement'] -> Transformation [IStatement']

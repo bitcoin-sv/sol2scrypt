@@ -359,7 +359,7 @@ transForMappingAccess mCounter =
   where
     initTag = ""
     getKeyExpr keyName = if keyName `elem` reservedNames then IR.ReservedId keyName else IR.Identifier keyName
-    getValName = \mapName keyName postfix -> mapName ++ "_" ++ keyName ++ postfix
+    getValName = \mapName keyName postfix -> replaceDotWithUnderscore mapName ++ "_" ++ keyName ++ postfix
     getIdxName = \mapName keyName postfix -> getValName mapName keyName postfix ++ "_index"
 
     -- <mapName>.canGet(<keyName>, <valName>, <valIdx>)
