@@ -49,7 +49,7 @@ instance ToIRTransformable Sol.SourceUnit1 IImportDirective' where
   _toIR (Sol.SourceUnit1_ImportDirective ip ) = _toIR ip
 
 instance ToIRTransformable Sol.ImportDirective IImportDirective' where
-  _toIR (Sol.ImportDirective _ (StringLiteral path)) = return $ Just $ IR.ImportDirective $ replaceExtensions path "scrypt"
+  _toIR (Sol.ImportDirective _ (Sol.StringLiteral path)) = return $ Just $ IR.ImportDirective $ replaceExtensions path "scrypt"
 
 
 

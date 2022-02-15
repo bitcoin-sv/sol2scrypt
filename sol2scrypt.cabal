@@ -85,12 +85,14 @@ library
   build-depends:
       aeson
     , base
+    , bytestring
     , containers
     , filepath
     , mtl
     , parsec
     , protolude
     , text
+    , utf8-string
   default-language: Haskell2010
 
 executable sol2scrypt

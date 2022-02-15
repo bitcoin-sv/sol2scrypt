@@ -3,6 +3,8 @@
 
 module Scrypt.Generables.Expression where
 
+import Data.ByteString (pack)
+import Data.ByteString.UTF8 as UTF8
 import Data.List
 import Numeric
 import Scrypt.Generables.Base
@@ -18,7 +20,10 @@ instance Generable (Scr.Expr a) where
       where
         showHex_ = "0x" ++ showHex i ""
         showInt_ = showInt i ""
-  genCode (Scr.BytesLiteral b _) = return $ "b'" ++ concatMap showHexWithPadded b ++ "'"
+  genCode (Scr.BytesLiteral utf8 b _) =
+    if utf8
+      then return $ "\"" ++ UTF8.toString (pack b) ++ "\""
+      else return $ "b'" ++ concatMap showHexWithPadded b ++ "'"
   -- Var
   genCode (Scr.Var v _ _) = return v
   -- Parens

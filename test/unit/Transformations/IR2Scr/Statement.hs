@@ -47,7 +47,7 @@ spec = testSpec "instance ToScryptTransformable IStatment (Scr.Statement IExpr)"
     itExprStmt
       "HexLiteral"
       (LiteralExpr $ IR.BytesLiteral [1, 1, 19])
-      (Scr.BytesLiteral [1, 1, 19] nil)
+      (Scr.BytesLiteral False [1, 1, 19] nil)
 
     itExprStmt
       "UnaryExpr"
@@ -83,7 +83,7 @@ spec = testSpec "instance ToScryptTransformable IStatment (Scr.Statement IExpr)"
       itAssignStmt
         "HexLiteral"
         (LiteralExpr $ IR.BytesLiteral [1, 1, 19])
-        (Scr.BytesLiteral [1, 1, 19] nil)
+        (Scr.BytesLiteral False [1, 1, 19] nil)
 
     describe "#DeclareStmt" $ do
       it "should transform IR `bool x = true;` to sCrypt Statment correctly" $ do

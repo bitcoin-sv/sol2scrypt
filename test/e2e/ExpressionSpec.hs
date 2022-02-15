@@ -37,6 +37,12 @@ spec = testSpec "Transpile Expression" $ do
       itexpr "HexLiteral" "hex\"0aAD\"" "b'0aad'"
       itexpr "empty HexLiteral" "hex\"\"" "b''"
 
+    describe "#StringLiteral" $ do
+      itexpr "ascii" "\"abcde12\"" "\"abcde12\""
+      itexpr "unicode" "\"你好\"" "\"你好\""
+      itexpr "emoji" "\"😊\"" "\"😊\""
+      itexpr "empty" "\"\"" "\"\""
+
   describe "#Unary Expression" $ do
     describe "#Unary" $ do
       itexpr "-" "-(0xf)" "-(0xf)"

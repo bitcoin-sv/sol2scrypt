@@ -5,6 +5,8 @@
 
 module IR.Transformations.IR2Scr.Expression where
 
+import Data.ByteString (unpack)
+import Data.ByteString.UTF8 as UTF8
 import IR.Spec as IR
 import IR.Transformations.Base
 import IR.Transformations.IR2Scr.Identifier ()
@@ -17,7 +19,8 @@ instance ToScryptTransformable IExpression' (Maybe (Scr.Expr Ann)) where
 instance ToScryptTransformable IExpression (Scr.Expr Ann) where
   _toScrypt (LiteralExpr (IR.BoolLiteral b)) = Scr.BoolLiteral b nil
   _toScrypt (LiteralExpr (IR.IntLiteral _isHex i)) = Scr.IntLiteral _isHex i nil
-  _toScrypt (LiteralExpr (IR.BytesLiteral b)) = Scr.BytesLiteral b nil
+  _toScrypt (LiteralExpr (IR.BytesLiteral b)) = Scr.BytesLiteral False b nil
+  _toScrypt (LiteralExpr (IR.StringLiteral s)) = Scr.BytesLiteral True (unpack $ UTF8.fromString s) nil
   _toScrypt (IdentifierExpr i) = let (NameAnn n a) :: NameAnn Ann = _toScrypt i in Scr.Var n False a
   _toScrypt (IR.ParensExpr ie) = Scr.Parens (_toScrypt ie) nil
   _toScrypt (IR.UnaryExpr op ie) = Scr.UnaryExpr (toScryptUnaryOp op) (_toScrypt ie) nil

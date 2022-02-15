@@ -23,8 +23,8 @@ spec = testSpec "instance Generable (Stmt a)" $ do
     itcode "IntLiteral" (Scr.ExprStmt (Scr.IntLiteral True 15 nil) nil) "\n0xf;"
     itcode "IntLiteral" (Scr.ExprStmt (Scr.IntLiteral False 15 nil) nil) "\n15;"
 
-    itcode "HexLiteral" (Scr.ExprStmt (Scr.BytesLiteral [1, 1, 19] nil) nil) "\nb'010113';"
-    itcode "HexLiteral" (Scr.ExprStmt (Scr.BytesLiteral [] nil) nil) "\nb'';"
+    itcode "HexLiteral" (Scr.ExprStmt (Scr.BytesLiteral False [1, 1, 19] nil) nil) "\nb'010113';"
+    itcode "HexLiteral" (Scr.ExprStmt (Scr.BytesLiteral False [] nil) nil) "\nb'';"
 
     itcode
       "UnaryExpr"
@@ -47,7 +47,7 @@ spec = testSpec "instance Generable (Stmt a)" $ do
 
       itAssignStmt "IntLiteral" (Scr.IntLiteral True 15 nil) "\nx = 0xf;"
 
-      itAssignStmt "BytesLiteral" (Scr.BytesLiteral [1, 1, 19] nil) "\nx = b'010113';"
+      itAssignStmt "BytesLiteral" (Scr.BytesLiteral False [1, 1, 19] nil) "\nx = b'010113';"
 
   describe "#DeclareStmt" $ do
     let param typ = Scr.Param (TypeAnn typ nil) (NameAnn "x" nil) (Const False) Nothing Public (IsStateProp False) nil
@@ -56,7 +56,7 @@ spec = testSpec "instance Generable (Stmt a)" $ do
 
     itcode "IntLiteral" (Scr.Declare (param Scr.Int) (Scr.IntLiteral False 15 nil) nil) "\nint x = 15;"
 
-    itcode "BytesLiteral" (Scr.Declare (param Scr.Bytes) (Scr.BytesLiteral [1, 1, 19] nil) nil) "\nbytes x = b'010113';"
+    itcode "BytesLiteral" (Scr.Declare (param Scr.Bytes) (Scr.BytesLiteral False [1, 1, 19] nil) nil) "\nbytes x = b'010113';"
 
     itcode "UnaryExpr" (Scr.Declare (param Scr.Int) (Scr.UnaryExpr Scr.PreDecrement (Scr.Var "a" False nil) nil) nil) "\nint x = --a;"
 

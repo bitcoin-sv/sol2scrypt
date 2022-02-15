@@ -24,8 +24,10 @@ spec = testSpec "instance Generable (Expr a)" $ do
       itcode "IntLiteral" (Scr.IntLiteral False 15 nil) "15"
       itcode "IntLiteral" (Scr.IntLiteral True 32 nil) "0x20"
 
-      itcode "BytesLiteral" (Scr.BytesLiteral [1, 1, 19] nil) "b'010113'"
-      itcode "BytesLiteral" (Scr.BytesLiteral [] nil) "b''"
+      itcode "BytesLiteral" (Scr.BytesLiteral False [1, 1, 19] nil) "b'010113'"
+      itcode "BytesLiteral" (Scr.BytesLiteral False [] nil) "b''"
+      itcode "BytesLiteral" (Scr.BytesLiteral True [240, 159, 152, 138] nil) "\"😊\""
+      itcode "BytesLiteral" (Scr.BytesLiteral True [228, 189, 160, 229, 165, 189] nil) "\"你好\""
 
     describe "#Parens" $ do
       itcode "Parens" (Scr.Parens (Scr.IntLiteral False 0 nil) nil) "(0)"

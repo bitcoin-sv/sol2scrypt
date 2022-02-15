@@ -64,6 +64,7 @@ spec = testSpec "Transpile Statement" $ do
     itstmt "uint"  "uint s = sum(_arr);"  "\nint s = sum(_arr);"
     itstmt "bool"  "bool x = true;"  "\nbool x = true;"
     itstmt "bytes"  "bytes x = hex\"010113\";"  "\nbytes x = b'010113';"
+    itstmt "string"  "string x = \"abc0123\";"  "\nbytes x = \"abc0123\";"
 
   describe "#BlockStatement" $ do
     itstmt "BlockStatement"  "{bytes x = hex\"010113\";}"  "\n{\n  bytes x = b'010113';\n}"
