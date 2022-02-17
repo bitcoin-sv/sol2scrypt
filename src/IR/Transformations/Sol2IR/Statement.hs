@@ -69,6 +69,9 @@ instance ToIRTransformable Sol.Statement IStatement' where
     blk' <- _toIR blk
     return $ IR.BlockStmt <$> blk'
   _toIR Sol.EmitStatement {} = return Nothing
+  _toIR (Sol.RequireStatement e _) = do
+    e' <- _toIR e
+    return $ Just $ IR.RequireStmt $ fromJust e'
   _toIR (Sol.IfStatement e ifstmt maybeelsestmt) = do
     -- wrap a single return statement into a block for the convenience of transpile `return`
     let wrapSingleRet stmt = case stmt of
