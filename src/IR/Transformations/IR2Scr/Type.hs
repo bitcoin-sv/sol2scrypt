@@ -16,6 +16,7 @@ instance ToScryptTransformable IType Type where
   _toScrypt (ElementaryType IR.Bool) = Scr.Bool
   _toScrypt (ElementaryType IR.Int) = Scr.Int
   _toScrypt (ElementaryType IR.Bytes) = Scr.Bytes
+  _toScrypt (ElementaryType IR.String) = Scr.Bytes
   _toScrypt (ElementaryType IR.Any) = Scr.Any
   _toScrypt (ElementaryType IR.Address) = Scr.CustomType "PubKeyHash"
   _toScrypt (BuiltinType "SigHashPreimage") = Scr.SubBytes Scr.SigHashPreimage

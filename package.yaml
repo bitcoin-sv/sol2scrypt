@@ -35,6 +35,8 @@ library:
   - protolude
   - text
   - filepath
+  - bytestring
+  - utf8-string
 
 executables:
   sol2scrypt:

@@ -38,6 +38,8 @@ instance ToIRTransformable Sol.Expression IExpression' where
     return $ Just $ LiteralExpr $ IR.IntLiteral False (fst $ head $ readDec n)
   _toIR (Literal (PrimaryExpressionHexLiteral (HexLiteral h))) =
     return $ Just $ LiteralExpr $ IR.BytesLiteral $ parseHex h
+  _toIR (Literal (PrimaryExpressionStringLiteral (Sol.StringLiteral s))) =
+    return $ Just $ LiteralExpr $ IR.StringLiteral s
   _toIR (Literal (PrimaryExpressionIdentifier i)) = do
     i' <- _toIR i
     i'' <- maybeStateVarId i'

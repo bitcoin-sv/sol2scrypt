@@ -177,7 +177,7 @@ class Annotated a b where
 data Expr a
   = BoolLiteral {boolVal :: Bool, annot :: a}
   | IntLiteral {isHex :: Bool, intVal :: Integer, annot :: a}
-  | BytesLiteral {bytesVal :: [Word8], annot :: a}
+  | BytesLiteral {isUTF8 :: Bool, bytesVal :: [Word8], annot :: a}
   | Var {variableName :: Name, isCTC :: Bool, annot :: a}
   | ArrayLiteral {arrayVal :: [Expr a], annot :: a}
   | StructLiteral {structVal :: [Expr a], annot :: a}

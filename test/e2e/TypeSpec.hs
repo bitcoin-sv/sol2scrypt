@@ -231,6 +231,9 @@ spec = testSpec "Transpile Type" $ do
 
       itType "var" "auto"
 
+    describe "#StringType" $ do
+      itType "string" "bytes"
+
   describe "#TypeNameArrayTypeName" $ do
 
     itType "int[20]" "int[20]"

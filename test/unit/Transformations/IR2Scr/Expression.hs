@@ -40,11 +40,11 @@ spec = testSpec "instance ToScryptTransformable IExpr (Scr.Expr Ann)" $ do
     itExpr
       "BytesLiteral"
       (LiteralExpr $ IR.BytesLiteral [1, 1, 19])
-      (Scr.BytesLiteral [1, 1, 19] nil)
+      (Scr.BytesLiteral False [1, 1, 19] nil)
     itExpr
       "BytesLiteral"
       (LiteralExpr $ IR.BytesLiteral [])
-      (Scr.BytesLiteral [] nil)
+      (Scr.BytesLiteral False [] nil)
 
   describe "#Parens" $ do
     itExpr
