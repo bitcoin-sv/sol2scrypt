@@ -66,6 +66,13 @@ spec = testSpec "Transpile Statement" $ do
     itstmt "bytes"  "bytes x = hex\"010113\";"  "\nbytes x = b'010113';"
     itstmt "string"  "string x = \"abc0123\";"  "\nbytes x = \"abc0123\";"
 
+  describe "#require" $ do
+    itstmt "require"  "require(true);"  "\nrequire(true);"
+    itstmt "require"  "require(true, \"\");"  "\nrequire(true);"
+    itstmt "require"  "require(owner != sender, \"ERC20: approve from the zero address\");"  "\nrequire(owner != sender);"
+    itstmt "require"  "require((Age > 10) && (Age < 20) || (Age > 40) && (Age < 50), \"ERC20: approve from the zero address\");"  "\nrequire((Age > 10) && (Age < 20) || (Age > 40) && (Age < 50));"
+         
+
   describe "#BlockStatement" $ do
     itstmt "BlockStatement"  "{bytes x = hex\"010113\";}"  "\n{\n  bytes x = b'010113';\n}"
     itstmt "BlockStatement"  "{1 + 2;}"  "\n{\n  1 + 2;\n}"
