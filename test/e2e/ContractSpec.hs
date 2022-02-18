@@ -23,7 +23,7 @@ spec = testSpec "Transpile Contract" $ do
     uint a;
 
     function set(uint x) external {
-        require(x > 3, "a error message");
+        require(x > 3, "an error message");
         a = x;
     }
 }|]
