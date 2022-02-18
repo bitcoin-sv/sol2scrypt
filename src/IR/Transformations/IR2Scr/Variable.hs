@@ -26,11 +26,11 @@ instance ToScryptTransformable IVisibility Scr.Visibility where
 
 
 instance ToScryptTransformable IStateVariable (Scr.Param Ann) where
-  _toScrypt (IR.StateVariable name varType vis Nothing False) = Scr.Param (TypeAnn (_toScrypt varType) nil) (_toScrypt name) (Const False) Nothing (_toScrypt vis) (IsStateProp True) nil
+  _toScrypt (IR.StateVariable name varType vis Nothing False isImmutable) = Scr.Param (TypeAnn (_toScrypt varType) nil) (_toScrypt name) (Const isImmutable) Nothing (_toScrypt vis) (IsStateProp True) nil
   _toScrypt t = error $ "IStateVariable to (Scr.Param Ann) `" ++ show t ++ "` not implemented in scrypt"
 
 
 instance ToScryptTransformable IStateVariable  (Scr.Static Ann) where
-  _toScrypt (IR.StateVariable name varType vis (Just expr) True) = let param = Scr.Param (TypeAnn (_toScrypt varType) nil) (_toScrypt name) (Const True) Nothing (_toScrypt vis) (IsStateProp False) nil
+  _toScrypt (IR.StateVariable name varType vis (Just expr) True False) = let param = Scr.Param (TypeAnn (_toScrypt varType) nil) (_toScrypt name) (Const True) Nothing (_toScrypt vis) (IsStateProp False) nil
       in Scr.Static param (_toScrypt expr) nil
   _toScrypt t = error $ "IStateVariable to Maybe (Scr.Static Ann) `" ++ show t ++ "` not implemented in scrypt"

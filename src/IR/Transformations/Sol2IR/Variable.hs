@@ -32,7 +32,8 @@ instance ToIRTransformable Sol.StateVariableDeclaration IStateVariable' where
     i' <- _toIR i
     expr' <- _toIR expr
     isConstant' <- isConstant vis
-    return $ IR.StateVariable <$> i' <*> t' <*> Just vis' <*> Just expr' <*> Just isConstant' 
+    isImmutable' <- isImmutable vis
+    return $ IR.StateVariable <$> i' <*> t' <*> Just vis' <*> Just expr' <*> Just isConstant' <*> Just isImmutable' 
 
 toIRVisibility :: [String] -> Transformation IVisibility
 toIRVisibility tags
@@ -41,6 +42,7 @@ toIRVisibility tags
   | otherwise = return Default
 
 isConstant :: [String] -> Transformation Bool 
-isConstant tags
-  | "constant" `elem` tags = return True 
-  | otherwise = return False
+isConstant tags = return $ "constant" `elem` tags
+
+isImmutable :: [String] -> Transformation Bool 
+isImmutable tags = return $ "immutable" `elem` tags

@@ -20,12 +20,17 @@ instance Generable Scr.Visibility where
 
 
 instance Generable (Scr.Param a) where
-  genCode (Param (TypeAnn pt _) pn _ _ vis (IsStateProp True) _) = do
+  genCode (Param (TypeAnn pt _) pn (Const False) _ vis (IsStateProp True) _) = do
     vis' <- genCode vis
     pt' <- genCode pt
     pn' <- genCode pn
     pstr <- withIndent $ (if vis /= Default then vis' ++ " " else "") ++  pt' ++ " " ++ pn' ++ ";"
     withIndent $ "@state" ++ pstr
+  genCode (Param (TypeAnn pt _) pn (Const True) _ vis (IsStateProp True) _) = do
+    vis' <- genCode vis
+    pt' <- genCode pt
+    pn' <- genCode pn
+    withIndent $ (if vis /= Default then vis' ++ " " else "") ++ "const " ++  pt' ++ " " ++ pn' ++ ";"
   genCode (Param (TypeAnn pt _) pn _ _ _ _ _) = do
     pt' <- genCode pt
     pn' <- genCode pn
