@@ -6,6 +6,7 @@ module IR.Transformations.IR2Scr.Program where
 
 import IR.Spec as IR
 import IR.Transformations.Base
+import IR.Transformations.IR2Scr.Struct ()
 import IR.Transformations.IR2Scr.Contract ()
 import Scrypt.Spec as Scr
 import Utils
@@ -15,7 +16,7 @@ instance ToScryptTransformable IProgram' (Maybe (Scr.Program Ann)) where
   _toScrypt = (<$>) _toScrypt
 
 instance ToScryptTransformable IProgram (Scr.Program Ann) where
-  _toScrypt (IR.Program imports contracts _) = Scr.Program (map _toScrypt imports) [] [] (map _toScrypt contracts) nil
+  _toScrypt (IR.Program imports contracts _ structs) = Scr.Program (map _toScrypt imports) [] (map _toScrypt structs) (map _toScrypt contracts) nil
 
 instance ToScryptTransformable IImportDirective' (Maybe (Scr.ImportPath Ann)) where
   _toScrypt = (<$>) _toScrypt

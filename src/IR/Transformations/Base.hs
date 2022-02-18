@@ -23,7 +23,9 @@ data TransformState = TransformState
     -- counter for mapping-access exprs in a function, key is the expression name, value is its occurrences count
     stateInFuncMappingCounter :: MappingExprCounter,
     -- have returned previously in current block
-    stateReturnedInBlock :: [Bool]
+    stateReturnedInBlock :: [Bool],
+    -- structs used as key type for nested maps
+    stateMapKeyStructs :: Map.Map [IType] IStruct
   }
   deriving (Show, Eq, Ord)
 

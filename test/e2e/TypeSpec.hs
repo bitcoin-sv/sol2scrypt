@@ -243,6 +243,7 @@ spec = testSpec "Transpile Type" $ do
 
   describe "#TypeNameMapping" $ do
     itType "mapping (address => uint)" "HashedMap<PubKeyHash, int>"
+    itType "mapping (address => mapping (address => uint))" "HashedMap<MapKeyST0, int>"
 
 
 

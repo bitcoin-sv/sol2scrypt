@@ -371,3 +371,45 @@ contract Coin {
     require(hash256(output) == SigHash.hashOutputs(txPreimage));
   }
 }|]
+
+  itProgram "contract with nestedMapping"
+    [r|contract EIP20 {
+  mapping (address => mapping (address => uint256)) public allowed;
+
+  function allowance(address _owner, address _spender) public view returns (uint256) {
+    return allowed[_owner][_spender];
+  }
+
+  function approve(address _spender, uint256 _value) external returns (bool) {
+    allowed[msg.sender][_spender] = _value;
+    emit Approval(msg.sender, _spender, _value); //solhint-disable-line indent, no-unused-vars
+    return true;
+  }
+}|]
+    [r|struct MapKeyST0 {
+  PubKeyHash key0;
+  PubKeyHash key1;
+}
+
+contract EIP20 {
+  @state
+  public HashedMap<MapKeyST0, int> allowed;
+
+  function allowance(PubKeyHash _owner, PubKeyHash _spender, int this_allowed__owner__spender, int this_allowed__owner__spender_index) : int {
+    require((!this.allowed.has({_owner, _spender}, this_allowed__owner__spender_index)) || this.allowed.canGet({_owner, _spender}, this_allowed__owner__spender, this_allowed__owner__spender_index));
+    require(this.allowed.set({_owner, _spender}, this_allowed__owner__spender, this_allowed__owner__spender_index));
+    return this_allowed__owner__spender;
+  }
+
+  public function approve(PubKeyHash _spender, int _value, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, int this_allowed_msgSender__spender, int this_allowed_msgSender__spender_index) {
+    PubKeyHash msgSender = hash160(pubKey);
+    require(checkSig(sig, pubKey));
+    require((!this.allowed.has({msgSender, _spender}, this_allowed_msgSender__spender_index)) || this.allowed.canGet({msgSender, _spender}, this_allowed_msgSender__spender, this_allowed_msgSender__spender_index));
+    this_allowed_msgSender__spender = _value;
+    require(this.allowed.set({msgSender, _spender}, this_allowed_msgSender__spender, this_allowed_msgSender__spender_index));
+    require(Tx.checkPreimage(txPreimage));
+    bytes outputScript = this.getStateScript();
+    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    require(hash256(output) == SigHash.hashOutputs(txPreimage));
+  }
+}|]
