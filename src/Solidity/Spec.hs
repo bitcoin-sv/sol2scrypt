@@ -296,7 +296,6 @@ data Statement
   | Return (Maybe Expression)
   | Throw
   | EmitStatement Expression
-  | RequireStatement Expression (Maybe StringLiteral)
   | SimpleStatementExpression Expression
   | SimpleStatementVariableList IdentifierList (Maybe Expression)
  -- | SimpleStatementVariableDeclaration VariableDeclaration (Maybe Expression)
