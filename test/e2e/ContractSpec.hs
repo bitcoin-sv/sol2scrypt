@@ -362,12 +362,21 @@ spec = testSpec "Transpile Contract" $ do
     bool constant a = true;
     uint storedData;
     uint constant x = 1;
+    uint immutable decimals;
+    uint immutable maxBalance;
+    address immutable owner;
 
     constructor() {}
 }|]
       [r|contract SimpleStorage {
   @state
   int storedData;
+
+  const int decimals;
+
+  const int maxBalance;
+
+  const PubKeyHash owner;
 
   static const bool a = true;
 
