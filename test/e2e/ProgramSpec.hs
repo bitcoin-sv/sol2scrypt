@@ -53,6 +53,7 @@ contract flipper {
     /// This one flips the value of the stored `bool` from `true`
     /// to `false` and vice versa.
     function flip() public {
+        require(value, "a error message");
         value = !value;
     }
 
