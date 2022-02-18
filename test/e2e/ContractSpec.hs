@@ -32,6 +32,7 @@ spec = testSpec "Transpile Contract" $ do
   int a;
 
   public function set(int x, SigHashPreimage txPreimage) {
+    require(x > 3);
     this.a = x;
     require(Tx.checkPreimage(txPreimage));
     bytes outputScript = this.getStateScript();

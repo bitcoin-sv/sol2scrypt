@@ -72,6 +72,7 @@ contract flipper {
   }
 
   function flip() : bool {
+    require(this.value);
     this.value = !this.value;
     return true;
   }
