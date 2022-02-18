@@ -30,7 +30,7 @@ instance ToScryptTransformable IR.IContract (Scr.Contract Ann) where
         map _toScrypt $
           filter
             ( \case
-                IR.StateVariableDeclaration (IR.StateVariable _ _ _ _ False) -> True
+                IR.StateVariableDeclaration (IR.StateVariable _ _ _ _ False _) -> True
                 _ -> False
             )
             bodyElems
@@ -38,7 +38,7 @@ instance ToScryptTransformable IR.IContract (Scr.Contract Ann) where
         map _toScrypt $
           filter
             ( \case
-                IR.StateVariableDeclaration (IR.StateVariable _ _ _ _ True) -> True
+                IR.StateVariableDeclaration (IR.StateVariable _ _ _ _ True _) -> True
                 _ -> False
             )
             bodyElems

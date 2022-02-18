@@ -338,7 +338,7 @@ instance Parseable ContractPart where
 
 
 -------------------------------------------------------------------------------
--- StateVariableDeclaration = TypeName ( 'public' | 'internal' | 'private' | 'constant' )? Identifier ('=' Expression)? ';'
+-- StateVariableDeclaration = TypeName ( 'public' | 'internal' | 'private' | 'constant' | 'immutable' )? Identifier ('=' Expression)? ';'
 
 instance Parseable StateVariableDeclaration where
   parser =
@@ -349,6 +349,7 @@ instance Parseable StateVariableDeclaration where
           , try $ keyword "private"
           , try $ keyword "internal"
           , try $ keyword "constant"
+          , try $ keyword "immutable"
           ] <* whitespace
         )
       _variableName <- parser <* whitespace
