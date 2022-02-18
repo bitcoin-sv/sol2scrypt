@@ -42,7 +42,7 @@ toIRVisibility tags
   | otherwise = return Default
 
 isConstant :: [String] -> Transformation Bool 
-isConstant tags = return $ "constant" `elem` tags
+isConstant = return . elem "constant"
 
 isImmutable :: [String] -> Transformation Bool 
-isImmutable tags = return $ "immutable" `elem` tags
+isImmutable = return . elem "immutable"
