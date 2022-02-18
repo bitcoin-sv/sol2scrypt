@@ -23,6 +23,7 @@ spec = testSpec "Transpile Contract" $ do
     uint a;
 
     function set(uint x) external {
+        require(x > 3, "an error message");
         a = x;
     }
 }|]
@@ -31,6 +32,7 @@ spec = testSpec "Transpile Contract" $ do
   int a;
 
   public function set(int x, SigHashPreimage txPreimage) {
+    require(x > 3);
     this.a = x;
     require(Tx.checkPreimage(txPreimage));
     bytes outputScript = this.getStateScript();

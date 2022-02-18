@@ -165,3 +165,22 @@ spec = testSpec "instance ToIRTransformable Sol.Statement IExpr'" $ do
           "IfStatement"
           "if(true) {true;} else { false;}"
           (IfStmt {cond = LiteralExpr (BoolLiteral True), trueBranch = BlockStmt (IR.Block [ExprStmt (LiteralExpr (BoolLiteral True))]), falseBranch = Just (BlockStmt (IR.Block [ExprStmt (LiteralExpr (BoolLiteral False))]))})
+
+
+      describe "#RequireStatement" $ do
+        itstmt
+          "RequireStatement"
+          "require(true);"
+          (RequireStmt {verifyExpr = LiteralExpr (BoolLiteral True)})
+
+        itstmt
+          "RequireStatement with message"
+          "require(true, \"a message\");"
+          (RequireStmt {verifyExpr = LiteralExpr (BoolLiteral True)})
+
+        itstmt
+          "RequireStatement with message"
+          "require(a == b, \"a message\");"
+          (RequireStmt {verifyExpr = BinaryExpr {binaryOp = IR.Equal, lExpr = IdentifierExpr (IR.Identifier "a"), rExpr = IdentifierExpr (IR.Identifier "b")}})
+
+

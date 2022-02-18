@@ -22,6 +22,9 @@ instance ToIRTransformable Sol.Statement IStatement' where
     le' <- _toIR le
     re' <- _toIR re
     return $ AssignStmt <$> sequence [le'] <*> sequence [re']
+  _toIR (SimpleStatementExpression (FunctionCallExpressionList (Literal (PrimaryExpressionIdentifier (Sol.Identifier "require"))) (Just (ExpressionList (e:_))))) = do
+    e' <- _toIR e
+    return $ Just $ IR.RequireStmt $ fromJust e'
   _toIR (SimpleStatementExpression e) = ExprStmt <<$>> _toIR e
   _toIR (SimpleStatementVariableAssignmentList [Just i] [e]) = do
     e' <- _toIR e
