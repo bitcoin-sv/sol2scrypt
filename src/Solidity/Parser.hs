@@ -671,7 +671,7 @@ instance Parseable Statement where
       , const Throw <$> (keyword "throw" <* whitespace <* char ';')
       , EmitStatement <$> (keyword "emit" *> whitespace *> parser <* whitespace <* char ';')
       , do
-          c <- keyword "require" *> whitespace *> char '(' *> whitespace *> parser <* whitespace
+          c <- try (keyword "require" *> whitespace *> char '(' *> whitespace *> parser <* whitespace)
           m <- try (Just <$> char ',' *> whitespace *> parser) <|> (char ')' <* whitespace <* char ';' *> return Nothing)
           return (RequireStatement c m)
       , Return <$> (keyword "return" *> whitespace *> ((Just <$> parser) <|> return Nothing) <* whitespace <* char ';')
