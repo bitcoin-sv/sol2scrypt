@@ -14,11 +14,11 @@ import Utils
 
 spec :: IO TestTree
 spec = testSpec "Transpile Contract" $ do
-  let itTransContract sol scrypt = it "should transpile Solidity contract correctly" $ do
+  let itTransContract title sol scrypt = it ("should transpile Solidity " ++ title ++ " correctly") $ do
         tr :: TranspileResult ContractDefinition IContract' (Maybe (Scr.Contract Ann)) <- transpile sol
         scryptCode tr `shouldBe` scrypt
 
-  itTransContract
+  itTransContract "contract A with state `a` and no constructor"
     [r|contract A {
     uint a;
 
@@ -41,7 +41,7 @@ spec = testSpec "Transpile Contract" $ do
   }
 }|]
 
-  itTransContract
+  itTransContract "contract SimpleStorage with state `storedData` and no constructor"
     [r|contract SimpleStorage {
     uint storedData;
 
@@ -70,7 +70,7 @@ spec = testSpec "Transpile Contract" $ do
   }
 }|]
 
-  itTransContract
+  itTransContract "contract A with only public function"
     [r|contract A {
     uint a;
 
@@ -113,7 +113,7 @@ spec = testSpec "Transpile Contract" $ do
   }
 }|]
 
-  itTransContract
+  itTransContract "contract flipper with private state and no external function"
     [r|contract flipper {
     bool private value;
 
@@ -139,7 +139,7 @@ spec = testSpec "Transpile Contract" $ do
   }
 }|]
 
-  itTransContract
+  itTransContract "contract flipper with external function"
     [r|contract flipper {
     bool private value;
 
@@ -168,7 +168,7 @@ spec = testSpec "Transpile Contract" $ do
   }
 }|]
 
-  itTransContract
+  itTransContract "contract Counter without constructor"
     [r|contract Counter {
     uint public count;
 
@@ -217,7 +217,7 @@ spec = testSpec "Transpile Contract" $ do
     itEvent "event AnotherLog();"
 
 
-    itTransContract
+    itTransContract "contract Event with event"
       [r|contract Event {
     event Log(address indexed sender, string message);
     event AnotherLog();
@@ -236,7 +236,7 @@ spec = testSpec "Transpile Contract" $ do
 
   describe "#test contract constructor" $ do
 
-    itTransContract
+    itTransContract "contract SimpleStorage with constructor"
       [r|contract SimpleStorage {
     uint storedData;
 
@@ -273,7 +273,7 @@ spec = testSpec "Transpile Contract" $ do
   }
 }|]
 
-  itTransContract
+  itTransContract "contract SimpleStorage with a constructor without parameter"
       [r|contract SimpleStorage {
     uint storedData;
 
@@ -288,7 +288,7 @@ spec = testSpec "Transpile Contract" $ do
   }
 }|]
 
-  itTransContract
+  itTransContract "contract SimpleStorage with a constructor with a parameter"
       [r|contract SimpleStorage {
     uint storedData;
 
@@ -303,7 +303,7 @@ spec = testSpec "Transpile Contract" $ do
   }
 }|]
 
-  itTransContract
+  itTransContract  "contract SimpleStorage with a constructor with a statement"
       [r|contract SimpleStorage {
     uint storedData;
 
@@ -320,7 +320,7 @@ spec = testSpec "Transpile Contract" $ do
   }
 }|]
 
-  itTransContract
+  itTransContract "contract SimpleStorage with a constructor with multi parameter"
       [r|contract SimpleStorage {
     uint storedData;
 
@@ -338,7 +338,7 @@ spec = testSpec "Transpile Contract" $ do
 }|]
 
 
-  itTransContract
+  itTransContract "contract SimpleStorage without public function"
       [r|contract SimpleStorage {
     uint storedData;
     uint storedData1;
@@ -359,7 +359,7 @@ spec = testSpec "Transpile Contract" $ do
   }
 }|]
 
-  itTransContract
+  itTransContract "contract SimpleStorage with immutable and constant property"
       [r|contract SimpleStorage {
     bool constant a = true;
     uint storedData;
@@ -389,7 +389,7 @@ spec = testSpec "Transpile Contract" $ do
 }|]
 
 
-  itTransContract
+  itTransContract "contract Coin with accessing msg.sender in constructor"
       [r|contract Coin {
     address public minter;
 
