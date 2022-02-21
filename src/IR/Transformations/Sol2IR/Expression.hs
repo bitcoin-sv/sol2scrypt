@@ -47,6 +47,8 @@ instance ToIRTransformable Sol.Expression IExpression' where
     return $ IdentifierExpr <$> i''
   _toIR (Unary opStr e) = do
     e' <- _toIR e
+    when (opStr `elem` ["++", "--", "()++", "()--"]) $
+      checkLHSmapExpr e'
     return $ transformUnaryExpr opStr e'
   _toIR e@(Binary "[]" e1 e2) = do
     let arrayIndexAccess = \arr idx -> do
@@ -76,6 +78,8 @@ instance ToIRTransformable Sol.Expression IExpression' where
   _toIR (Binary opStr e1 e2) = do
     e1' <- _toIR e1
     e2' <- _toIR e2
+    when (opStr `elem` ["+=", "-=", "*=", "/="]) $
+      checkLHSmapExpr e1'
     return $ BinaryExpr (str2BinaryOp opStr) <$> e1' <*> e2'
   _toIR (Ternary _ e1 e2 e3) = do
     e1' <- _toIR e1
@@ -140,17 +144,19 @@ toExprName :: IExpression -> ExprName
 toExprName (LiteralExpr (BoolLiteral b)) = show b
 toExprName (LiteralExpr (IntLiteral _ i)) = show i
 toExprName (LiteralExpr (BytesLiteral bytes)) = concatMap showHexWithPadded bytes
-toExprName (IdentifierExpr (IR.Identifier n)) = n
-toExprName (IdentifierExpr (IR.ReservedId n)) = n
+toExprName (IdentifierExpr (IR.Identifier n)) = replaceDotWithUnderscore n
+toExprName (IdentifierExpr (IR.ReservedId n)) = replaceDotWithUnderscore n
 toExprName (BinaryExpr _ le re) = toExprName le ++ "_" ++ toExprName re
 toExprName (StructLiteralExpr es) = intercalate "_" $ map toExprName es
 toExprName e = error $ "the expr is not supported in #toExprName: " ++ show e
 
 incExprCounter :: MappingExprCounter -> IExpression' -> IExpression' -> IType -> MappingExprCounter
-incExprCounter ec (Just mapping) (Just key) et = Map.insert en (MECEntry et mapping key cnt) ec
+incExprCounter ec (Just mapping) (Just key) et = Map.insert en (MECEntry et mapping key cnt updated) ec
   where
     en = toExprName $ BinaryExpr Index mapping key
-    cnt = maybe 0 exprCnt $ Map.lookup en ec
+    entry = Map.lookup en ec
+    cnt = maybe 0 exprCnt entry
+    updated = maybe False entryUpdated entry
 incExprCounter ec _ _ _ = ec
 
 -- get base identifier for binary index expression: `a[x][y]` -> `a`
@@ -201,3 +207,15 @@ indexNameOfMapping e postfix = (++) <$> valName <*> Just "_index"
 indexExprOfMapping :: IExpression' -> String -> IExpression'
 indexExprOfMapping e@(Just (BinaryExpr Index _ _)) postfix = IdentifierExpr <$> (IR.Identifier <$> indexNameOfMapping e postfix)
 indexExprOfMapping _ _ = Nothing
+
+-- check left-hand-side map expression
+checkLHSmapExpr :: IExpression' -> Transformation ()
+checkLHSmapExpr e = do
+  -- set updated flag for mapping type LHS
+  mapCounter <- gets stateInFuncMappingCounter
+  let mapName = toExprName <$> e
+  case join $ Map.lookup <$> mapName <*> Just mapCounter of
+    Just entry -> do
+      let mapCounter' = Map.insert (fromJust mapName) (entry {entryUpdated = True}) mapCounter
+      modify $ \s -> s {stateInFuncMappingCounter = mapCounter'}
+    _ -> return ()

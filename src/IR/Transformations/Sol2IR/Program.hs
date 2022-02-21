@@ -42,7 +42,7 @@ instance ToIRTransformable Sol.SolidityCode IProgram' where
 
     structs <- gets stateMapKeyStructs
 
-    return $ Just $ IR.Program (catMaybes imports') (catMaybes contracts') [] $ Map.elems structs
+    return $ Just $ IR.Program (catMaybes imports') (catMaybes contracts') [] $ reverse $ Map.elems structs
 
 instance ToIRTransformable Sol.SourceUnit1 IContract' where
   _toIR (Sol.SourceUnit1_ContractDefinition contractDef) = _toIR contractDef

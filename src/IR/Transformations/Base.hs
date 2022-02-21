@@ -51,7 +51,9 @@ data MECEntry = MECEntry
     -- key expr
     kExpr :: IExpression,
     -- the expression occurrences count
-    exprCnt :: Int
+    exprCnt :: Int,
+    -- whether the entry been updated, i.e. used as LHS expr.
+    entryUpdated :: Bool
   }
   deriving (Show, Eq, Ord)
 

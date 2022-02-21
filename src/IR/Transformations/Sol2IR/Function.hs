@@ -336,7 +336,7 @@ transForMappingAccess :: MappingExprCounter -> ([IR.IParam], TFStmtWrapper)
 transForMappingAccess mCounter =
   ( -- injected params
     concatMap
-      ( \(MECEntry t me ke _) ->
+      ( \(MECEntry t me ke _ _) ->
           let e = Just $ BinaryExpr Index me ke
            in [ IR.Param t $ IR.Identifier $ fromJust $ valueNameOfMapping e initTag, -- init value
                 IR.Param (ElementaryType Int) $ IR.Identifier $ fromJust $ indexNameOfMapping e initTag -- init value index
@@ -345,14 +345,14 @@ transForMappingAccess mCounter =
       $ Map.elems mCounter,
     -- injected statements
     Map.foldl'
-      ( \mc (MECEntry _ me ke _) ->
+      ( \mc (MECEntry _ me ke _ updated) ->
           mergeTFStmtWrapper mc $
             TFStmtWrapper
               [preCheckStmt me ke initTag]
-              [afterCheckStmt me ke initTag]
+              [afterCheckStmt me ke initTag | updated]
       )
       (TFStmtWrapper [] [])
-      mCounter
+      $ mCounter
   )
   where
     initTag = ""

@@ -19,7 +19,7 @@ instance Generable (Scr.Program Ann) where
     structs' <- mapM genCode structs
     _imports' <- mapM genCode _imports
     contracts' <- mapM genCode contracts
-    let structsLines = intercalate "\n" structs'
+    let structsLines = intercalate "\n\n" structs'
     let importsLines = intercalate "\n" _imports'
     let contractsLines = intercalate "\n\n" contracts'
     return $ section importsLines ++ section structsLines ++ contractsLines
