@@ -47,7 +47,8 @@ instance ToIRTransformable Sol.Expression IExpression' where
     return $ IdentifierExpr <$> i''
   _toIR (Unary opStr e) = do
     e' <- _toIR e
-    when (opStr `elem` ["++", "--", "()++", "()--"]) $
+    let allIncDecOps = ["++", "--", "()++", "()--"]
+    when (opStr `elem` allIncDecOps) $
       checkLHSmapExpr e'
     return $ transformUnaryExpr opStr e'
   _toIR e@(Binary "[]" e1 e2) = do
@@ -78,7 +79,10 @@ instance ToIRTransformable Sol.Expression IExpression' where
   _toIR (Binary opStr e1 e2) = do
     e1' <- _toIR e1
     e2' <- _toIR e2
-    when (opStr `elem` ["+=", "-=", "*=", "/="]) $
+    -- TODO: check e1's type, it should be `bytes` for bytesOnlyAssignOps
+    let bytesOnlyAssignOps = ["%=", "&=", "|=", "^=", "<<=", ">>="]
+        assignOps = ["+=", "-=", "*=", "/="] ++ bytesOnlyAssignOps
+    when (opStr `elem` assignOps) $
       checkLHSmapExpr e1'
     return $ BinaryExpr (str2BinaryOp opStr) <$> e1' <*> e2'
   _toIR (Ternary _ e1 e2 e3) = do
@@ -128,6 +132,11 @@ str2BinaryOp "-=" = SubAssign
 str2BinaryOp "*=" = MulAssign
 str2BinaryOp "/=" = DivAssign
 str2BinaryOp "%=" = ModAssign
+str2BinaryOp "&=" = AndAssign -- only works on bytes in scrypt
+str2BinaryOp "|=" = OrAssign -- only works on bytes in scrypt
+str2BinaryOp "^=" = XorAssign -- only works on bytes in scrypt
+str2BinaryOp "<<=" = LShiftAssign -- only works on bytes in scrypt
+str2BinaryOp ">>=" = RShiftAssign -- only works on bytes in scrypt
 str2BinaryOp "==" = IR.Equal
 str2BinaryOp "!=" = Neq
 str2BinaryOp "<" = LessThan

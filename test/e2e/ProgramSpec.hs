@@ -413,7 +413,7 @@ contract EIP20 {
   }
 }|]
 
-  itProgram "contract with multiple mapping"
+  itProgram "contract with multiple mappings"
     [r|contract MM{
   mapping (address => mapping (address => uint256)) public m1;
   mapping (address => mapping (address => uint256)) public m2;
