@@ -60,7 +60,7 @@ sol2Program solidityCode = do
     return e
 
 sol2Ir :: ToIRTransformable sol b => (String -> IO sol) -> String -> IO b
-sol2Ir = sol2Ir' (TransformState [] Nothing Map.empty [])
+sol2Ir = sol2Ir' (TransformState [] Nothing Map.empty [] Map.empty)
 
 sol2Ir' :: ToIRTransformable sol b => TransformState -> (String -> IO sol) -> String -> IO b
 sol2Ir' initState f solidityCode = do

@@ -27,6 +27,7 @@ import IR.Spec
 import IR.Transformations.Base
 import IR.Transformations.IR2Scr.Empty
 import IR.Transformations.IR2Scr.Expression
+import IR.Transformations.IR2Scr.Struct
 import IR.Transformations.IR2Scr.Function
 import IR.Transformations.IR2Scr.Identifier
 import IR.Transformations.IR2Scr.Statement

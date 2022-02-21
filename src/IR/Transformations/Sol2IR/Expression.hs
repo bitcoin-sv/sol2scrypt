@@ -6,6 +6,7 @@
 module IR.Transformations.Sol2IR.Expression where
 
 import Control.Monad.State
+import Data.List
 import qualified Data.Map.Lazy as Map
 import Data.Maybe
 import IR.Spec as IR
@@ -46,14 +47,19 @@ instance ToIRTransformable Sol.Expression IExpression' where
     return $ IdentifierExpr <$> i''
   _toIR (Unary opStr e) = do
     e' <- _toIR e
+    let allIncDecOps = ["++", "--", "()++", "()--"]
+    when (opStr `elem` allIncDecOps) $
+      checkLHSmapExpr e'
     return $ transformUnaryExpr opStr e'
-  _toIR (Binary "[]" e1 e2) = do
-    e1' <- _toIR e1
-    e2' <- _toIR e2
-    let r = BinaryExpr Index <$> e1' <*> e2'
-    case e1' of
+  _toIR e@(Binary "[]" e1 e2) = do
+    let arrayIndexAccess = \arr idx -> do
+          arr' <- _toIR arr
+          idx' <- _toIR idx
+          return $ BinaryExpr Index <$> arr' <*> idx'
+    baseId <- baseIdOfBinaryIndexExpr e
+    case baseId of
       -- due to the lack of semantics, only `IdentifierExpr` can get resolved type here.
-      Just (IdentifierExpr i) -> do
+      Just i -> do
         i' <- lookupSym $ case i of
           IR.Identifier n -> IR.Identifier $ stripThis n
           ReservedId n -> ReservedId $ stripThis n
@@ -61,15 +67,23 @@ instance ToIRTransformable Sol.Expression IExpression' where
           -- mapping-typed var access
           Just (Symbol _ (Mapping _ vt) _) -> do
             mc <- gets stateInFuncMappingCounter
-            modify $ \s -> s {stateInFuncMappingCounter = incExprCounter mc e1' e2' vt}
-            -- transpile to a plain var
-            return $ IdentifierExpr . IR.Identifier . replaceDotWithUnderscore . toExprName <$> r
-          _ -> return r
+            let mapExpr = Just $ IdentifierExpr i
+            keyExpr <- keyExprOfMapping e []
+            modify $ \s -> s {stateInFuncMappingCounter = incExprCounter mc mapExpr keyExpr vt}
+            -- transpile to a value expression
+            let e' = BinaryExpr Index <$> mapExpr <*> keyExpr
+            return $ valueExprOfMapping e' "" -- with empty postfix
+          _ -> arrayIndexAccess e1 e2
       -- other exprs whose type is `Mapping` will not be correctly transpiled below due to the same above.
-      _ -> return r
+      _ -> arrayIndexAccess e1 e2
   _toIR (Binary opStr e1 e2) = do
     e1' <- _toIR e1
     e2' <- _toIR e2
+    -- TODO: check e1's type, it should be `bytes` for bytesOnlyAssignOps
+    let bytesOnlyAssignOps = ["%=", "&=", "|=", "^=", "<<=", ">>="]
+        assignOps = ["+=", "-=", "*=", "/="] ++ bytesOnlyAssignOps
+    when (opStr `elem` assignOps) $
+      checkLHSmapExpr e1'
     return $ BinaryExpr (str2BinaryOp opStr) <$> e1' <*> e2'
   _toIR (Ternary _ e1 e2 e3) = do
     e1' <- _toIR e1
@@ -118,6 +132,11 @@ str2BinaryOp "-=" = SubAssign
 str2BinaryOp "*=" = MulAssign
 str2BinaryOp "/=" = DivAssign
 str2BinaryOp "%=" = ModAssign
+str2BinaryOp "&=" = AndAssign -- only works on bytes in scrypt
+str2BinaryOp "|=" = OrAssign -- only works on bytes in scrypt
+str2BinaryOp "^=" = XorAssign -- only works on bytes in scrypt
+str2BinaryOp "<<=" = LShiftAssign -- only works on bytes in scrypt
+str2BinaryOp ">>=" = RShiftAssign -- only works on bytes in scrypt
 str2BinaryOp "==" = IR.Equal
 str2BinaryOp "!=" = Neq
 str2BinaryOp "<" = LessThan
@@ -134,14 +153,78 @@ toExprName :: IExpression -> ExprName
 toExprName (LiteralExpr (BoolLiteral b)) = show b
 toExprName (LiteralExpr (IntLiteral _ i)) = show i
 toExprName (LiteralExpr (BytesLiteral bytes)) = concatMap showHexWithPadded bytes
-toExprName (IdentifierExpr (IR.Identifier n)) = n
-toExprName (IdentifierExpr (IR.ReservedId n)) = n
+toExprName (IdentifierExpr (IR.Identifier n)) = replaceDotWithUnderscore n
+toExprName (IdentifierExpr (IR.ReservedId n)) = replaceDotWithUnderscore n
 toExprName (BinaryExpr _ le re) = toExprName le ++ "_" ++ toExprName re
+toExprName (StructLiteralExpr es) = intercalate "_" $ map toExprName es
 toExprName e = error $ "the expr is not supported in #toExprName: " ++ show e
 
 incExprCounter :: MappingExprCounter -> IExpression' -> IExpression' -> IType -> MappingExprCounter
-incExprCounter ec (Just mapping) (Just key) et = Map.insert en (MECEntry et mapping key cnt) ec
+incExprCounter ec (Just mapping) (Just key) et = Map.insert en (MECEntry et mapping key cnt updated) ec
   where
     en = toExprName $ BinaryExpr Index mapping key
-    cnt = maybe 0 exprCnt $ Map.lookup en ec
+    entry = Map.lookup en ec
+    cnt = maybe 0 exprCnt entry
+    updated = maybe False entryUpdated entry
 incExprCounter ec _ _ _ = ec
+
+-- get base identifier for binary index expression: `a[x][y]` -> `a`
+baseIdOfBinaryIndexExpr :: Expression -> Transformation IIdentifier'
+baseIdOfBinaryIndexExpr (Binary "[]" e@(Binary "[]" _ _) _) = baseIdOfBinaryIndexExpr e
+baseIdOfBinaryIndexExpr (Binary "[]" (Literal (PrimaryExpressionIdentifier i)) _) = do
+  i' <- _toIR i
+  maybeStateVarId i'
+baseIdOfBinaryIndexExpr _ = return Nothing
+
+-- get expression for the key of mapping
+keyExprOfMapping :: Expression -> [Expression] -> Transformation IExpression'
+keyExprOfMapping (Binary "[]" e@(Binary "[]" _ _) ke) keys = keyExprOfMapping e $ ke : keys
+keyExprOfMapping (Binary "[]" _ ke) keys =
+  if null keys
+    then do
+      e <- _toIR ke
+      let ke' = case toExprName <$> e of
+            Just kn -> if kn `elem` reservedNames then Just (IR.ReservedId kn) else Just (IR.Identifier kn)
+            _ -> Nothing
+      -- use IdentifierExpr for non-nested-mapping key
+      return $ IdentifierExpr <$> ke'
+    else do
+      keys' <- mapM _toIR $ ke : keys
+      -- use StructLiteralExpr for nested-mapping keys
+      return $ StructLiteralExpr <$> sequence keys'
+keyExprOfMapping _ _ = return Nothing
+
+-- name for mapping expression, e.x. use `mapping_key` as name of expr `mapping[key]`
+valueNameOfMapping :: IExpression' -> String -> Maybe String
+valueNameOfMapping e postfix = n'
+  where
+    n = replaceDotWithUnderscore . toExprName <$> e
+    n' = (++) <$> n <*> Just postfix
+
+-- use identifier expression to replace mapping expression
+valueExprOfMapping :: IExpression' -> String -> IExpression'
+valueExprOfMapping e@(Just (BinaryExpr Index _ _)) postfix = IdentifierExpr <$> (IR.Identifier <$> valueNameOfMapping e postfix)
+valueExprOfMapping _ _ = Nothing
+
+-- index name for mapping expression, e.x. use `mapping_key_index` as index name for expr `mapping[key]` 
+indexNameOfMapping :: IExpression' -> String -> Maybe String
+indexNameOfMapping e postfix = (++) <$> valName <*> Just "_index"
+  where
+    valName = valueNameOfMapping e postfix
+
+-- corresponding index expression for mapping expression
+indexExprOfMapping :: IExpression' -> String -> IExpression'
+indexExprOfMapping e@(Just (BinaryExpr Index _ _)) postfix = IdentifierExpr <$> (IR.Identifier <$> indexNameOfMapping e postfix)
+indexExprOfMapping _ _ = Nothing
+
+-- check left-hand-side map expression
+checkLHSmapExpr :: IExpression' -> Transformation ()
+checkLHSmapExpr e = do
+  -- set updated flag for mapping type LHS
+  mapCounter <- gets stateInFuncMappingCounter
+  let mapName = toExprName <$> e
+  case join $ Map.lookup <$> mapName <*> Just mapCounter of
+    Just entry -> do
+      let mapCounter' = Map.insert (fromJust mapName) (entry {entryUpdated = True}) mapCounter
+      modify $ \s -> s {stateInFuncMappingCounter = mapCounter'}
+    _ -> return ()

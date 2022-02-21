@@ -12,6 +12,7 @@ data IExpression
   | MemberAccessExpr {instanceExpr :: IExpression, member :: IIdentifier}
   | FunctionCallExpr {funcExpr :: IExpression, funcParamExprs :: [IExpression]}
   | ArrayLiteralExpr {arrayVal :: [IExpression]}
+  | StructLiteralExpr [IExpression]
   deriving (Eq, Show, Ord)
 
 

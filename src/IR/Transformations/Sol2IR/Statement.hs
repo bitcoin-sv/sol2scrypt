@@ -6,10 +6,11 @@
 module IR.Transformations.Sol2IR.Statement where
 
 import Control.Monad.State
+import qualified Data.Map.Lazy as Map
 import Data.Maybe
 import IR.Spec as IR
 import IR.Transformations.Base
-import IR.Transformations.Sol2IR.Expression ()
+import IR.Transformations.Sol2IR.Expression
 import IR.Transformations.Sol2IR.Identifier
 import IR.Transformations.Sol2IR.Type ()
 import IR.Transformations.Sol2IR.Variable ()
@@ -20,6 +21,7 @@ import Utils
 instance ToIRTransformable Sol.Statement IStatement' where
   _toIR (SimpleStatementExpression (Binary "=" le re)) = do
     le' <- _toIR le
+    checkLHSmapExpr le'
     re' <- _toIR re
     return $ AssignStmt <$> sequence [le'] <*> sequence [re']
   _toIR (SimpleStatementExpression (FunctionCallExpressionList (Literal (PrimaryExpressionIdentifier (Sol.Identifier "require"))) (Just (ExpressionList (e:_))))) = do
@@ -30,6 +32,7 @@ instance ToIRTransformable Sol.Statement IStatement' where
     e' <- _toIR e
     i' <- _toIR i
     i'' <- maybeStateVarId i'
+    checkLHSmapExpr $ IdentifierExpr <$> i''
     return $ AssignStmt <$> sequence [IdentifierExpr <$> i''] <*> sequence [e']
   _toIR (SimpleStatementVariableAssignmentList _ _) = error "unsupported SimpleStatementVariableAssignmentList"
   _toIR (SimpleStatementVariableDeclarationList [Just localVar] [e]) = do

@@ -1,14 +1,17 @@
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
+
 module IR.Transformations.Sol2IR.Type where
 
-import IR.Transformations.Base
-import Solidity.Spec as Sol
+import Control.Monad.State
+import qualified Data.Map.Lazy as Map
 import IR.Spec as IR
-import Utils
+import IR.Transformations.Base
 import IR.Transformations.Sol2IR.Expression ()
+import Solidity.Spec as Sol
+import Utils
 
 -- from TypeName to IType'
 instance ToIRTransformable TypeName IType' where
@@ -25,8 +28,41 @@ instance ToIRTransformable TypeName IType' where
     sub <- _toIR e
     let arr = flip Array sub
     return $ arr <$> t'
-  _toIR (TypeNameMapping kt vt) = do
-    kt' <- _toIR (TypeNameElementaryTypeName kt)
-    vt' <- _toIR vt
-    return $ Mapping <$> kt' <*> vt'
+  _toIR (TypeNameMapping kt vt) = toIRMappingType (TypeNameElementaryTypeName kt) vt []
   _toIR t = error $ "unsupported type `" ++ headWord (show t) ++ "`"
+
+-- transpile Sol mapping type to a flattened IR mapping type
+toIRMappingType :: TypeName -> TypeName -> [IType'] -> Transformation IType'
+toIRMappingType kt (TypeNameMapping vkt vvt) flattendKeyTypes = do
+  kt' <- _toIR kt
+  toIRMappingType (TypeNameElementaryTypeName vkt) vvt $ flattendKeyTypes ++ [kt']
+toIRMappingType kt vt flattendKeyTypes = do
+  kt' <- _toIR kt
+  vt' <- _toIR vt
+  kt'' <-
+    if null flattendKeyTypes
+      then return kt' -- for non nested mapping type, e.x. `a[b]`
+      else do
+        -- for nested mapping type, e.x. `a[b][c]`
+        mapKeySTs <- gets stateMapKeyStructs
+        case sequence $ flattendKeyTypes ++ [kt'] of
+          Just kts -> do
+            case Map.lookup kts mapKeySTs of
+              Just (IR.Struct sn _) ->
+                return $ Just $ UserDefinedType sn
+              _ -> do
+                let sn = "MapKeyST" ++ show (length mapKeySTs)
+                -- use a new struct for flattened map key types
+                modify $ \s ->
+                  s
+                    { stateMapKeyStructs =
+                        Map.insert
+                          kts
+                          ( IR.Struct sn $
+                              zipWith (\ft i -> Param ft $ IR.Identifier $ "key" ++ show i) kts [0 ..]
+                          )
+                          mapKeySTs
+                    }
+                return $ Just $ UserDefinedType sn
+          _ -> return Nothing
+  return $ Mapping <$> kt'' <*> vt'

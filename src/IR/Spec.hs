@@ -1,6 +1,7 @@
 module IR.Spec
   ( module IR.Specs.Lexical,
     module IR.Specs.Type,
+    module IR.Specs.Struct,
     module IR.Specs.Expression,
     module IR.Specs.Variable,
     module IR.Specs.Statement,
@@ -8,20 +9,35 @@ module IR.Spec
     module IR.Specs.Contract,
     module IR.Specs.Empty,
     module IR.Specs.Program,
-    IIdentifier', IElementaryTypeName', IType', IExpression', IStatement', IParam', IParamList',
-    IVisibility', IBlock', IFunction',
-    IContractBodyElement', IStateVariable', IContract', IConstructor', IProgram', IImportDirective'
+    IIdentifier',
+    IElementaryTypeName',
+    IType',
+    IStruct',
+    IExpression',
+    IStatement',
+    IParam',
+    IParamList',
+    IVisibility',
+    IBlock',
+    IFunction',
+    IContractBodyElement',
+    IStateVariable',
+    IContract',
+    IConstructor',
+    IProgram',
+    IImportDirective',
   )
 where
 
-import IR.Specs.Lexical
-import IR.Specs.Expression
-import IR.Specs.Type
-import IR.Specs.Statement
-import IR.Specs.Function
 import IR.Specs.Contract
-import IR.Specs.Program
 import IR.Specs.Empty
+import IR.Specs.Expression
+import IR.Specs.Function
+import IR.Specs.Lexical
+import IR.Specs.Program
+import IR.Specs.Statement
+import IR.Specs.Struct
+import IR.Specs.Type
 import IR.Specs.Variable
 
 type IIdentifier' = Maybe IIdentifier
@@ -52,6 +68,8 @@ type IContractBodyElement' = Maybe IContractBodyElement
 
 type IContract' = Maybe IContract
 
-type IProgram' = Maybe  IProgram
+type IProgram' = Maybe IProgram
 
 type IImportDirective' = Maybe IImportDirective
+
+type IStruct' = Maybe IStruct

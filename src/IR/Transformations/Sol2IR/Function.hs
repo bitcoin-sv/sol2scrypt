@@ -27,6 +27,7 @@ data FuncRetTransResult = FuncRetTransResult
 
 instance ToIRTransformable ContractPart IFunction' where
   _toIR (ContractPartFunctionDefinition (Just (Sol.Identifier fn)) pl tags maybeRets (Just block)) = do
+    modify $ \s -> s {stateInFuncMappingCounter = Map.empty}
     vis <- toIRFuncVis tags
     retTransResult <- toIRFuncRet vis maybeRets
     (ps, blkTfromParam) <- toIRFuncParams pl tags retTransResult vis block
@@ -335,93 +336,90 @@ transForMappingAccess :: MappingExprCounter -> ([IR.IParam], TFStmtWrapper)
 transForMappingAccess mCounter =
   ( -- injected params
     concatMap
-      ( \(MECEntry t me ke _) ->
-          let mn = toExprName me
-              kn = toExprName ke
-           in [ IR.Param t $ IR.Identifier $ getValName mn kn initTag, -- init value
-                IR.Param (ElementaryType Int) $ IR.Identifier $ getIdxName mn kn initTag -- init value index
+      ( \(MECEntry t me ke _ _) ->
+          let e = Just $ BinaryExpr Index me ke
+           in [ IR.Param t $ IR.Identifier $ fromJust $ valueNameOfMapping e initTag, -- init value
+                IR.Param (ElementaryType Int) $ IR.Identifier $ fromJust $ indexNameOfMapping e initTag -- init value index
               ]
       )
       $ Map.elems mCounter,
     -- injected statements
     Map.foldl'
-      ( \mc (MECEntry _ me ke _) ->
-        let mn = toExprName me
-            kn = toExprName ke
-          in mergeTFStmtWrapper mc
-              $ TFStmtWrapper 
-                  [preCheckStmt mn kn initTag] 
-                  [afterCheckStmt mn kn initTag]
+      ( \mc (MECEntry _ me ke _ updated) ->
+          mergeTFStmtWrapper mc $
+            TFStmtWrapper
+              [preCheckStmt me ke initTag]
+              [afterCheckStmt me ke initTag | updated]
       )
       (TFStmtWrapper [] [])
-      mCounter
+      $ mCounter
   )
   where
     initTag = ""
-    getKeyExpr keyName = if keyName `elem` reservedNames then IR.ReservedId keyName else IR.Identifier keyName
-    getValName = \mapName keyName postfix -> replaceDotWithUnderscore mapName ++ "_" ++ keyName ++ postfix
-    getIdxName = \mapName keyName postfix -> getValName mapName keyName postfix ++ "_index"
 
-    -- <mapName>.canGet(<keyName>, <valName>, <valIdx>)
-    mapCanGetExpr mapName keyName postfix =
-      FunctionCallExpr
-        { funcExpr =
-            MemberAccessExpr
-              { instanceExpr = IdentifierExpr (IR.Identifier mapName),
-                member = IR.Identifier "canGet"
-              },
-          funcParamExprs =
-            [ IdentifierExpr (getKeyExpr keyName),
-              IdentifierExpr (IR.Identifier $ getValName mapName keyName postfix),
-              IdentifierExpr (IR.Identifier $ getIdxName mapName keyName postfix)
-            ]
-        }
+    -- <mapExpr>.canGet(<keyExpr>, <valExpr>, <idxExpr>)
+    mapCanGetExpr mapExpr keyExpr postfix =
+      let e = Just $ BinaryExpr Index mapExpr keyExpr
+       in FunctionCallExpr
+            { funcExpr =
+                MemberAccessExpr
+                  { instanceExpr = mapExpr,
+                    member = IR.Identifier "canGet"
+                  },
+              funcParamExprs =
+                [ keyExpr,
+                  fromJust $ valueExprOfMapping e postfix,
+                  fromJust $ indexExprOfMapping e postfix
+                ]
+            }
 
-    -- <mapName>.set(<keyName>, <valName>, <valIdx>)
-    mapSetExpr mapName keyName postfix =
-      FunctionCallExpr
-        { funcExpr =
-            MemberAccessExpr
-              { instanceExpr = IdentifierExpr (IR.Identifier mapName),
-                member = IR.Identifier "set"
-              },
-          funcParamExprs =
-            [ IdentifierExpr (getKeyExpr keyName),
-              IdentifierExpr (IR.Identifier $ getValName mapName keyName postfix),
-              IdentifierExpr (IR.Identifier $ getIdxName mapName keyName postfix)
-            ]
-        }
+    -- <mapExpr>.set(<keyExpr>, <valExpr>, <idxExpr>)
+    mapSetExpr mapExpr keyExpr postfix =
+      let e = Just $ BinaryExpr Index mapExpr keyExpr
+       in FunctionCallExpr
+            { funcExpr =
+                MemberAccessExpr
+                  { instanceExpr = mapExpr,
+                    member = IR.Identifier "set"
+                  },
+              funcParamExprs =
+                [ keyExpr,
+                  fromJust $ valueExprOfMapping e postfix,
+                  fromJust $ indexExprOfMapping e postfix
+                ]
+            }
 
-    -- require((!<mapName>.has(<keyName>, <valIdx>)) || <mapName>.canGet(<keyName>, <valName>, <valIdx>));
-    preCheckStmt mapName keyName postfix =
-      IR.RequireStmt $
-        BinaryExpr
-          { binaryOp = BoolOr,
-            lExpr =
-              ParensExpr
-                { enclosedExpr =
-                    UnaryExpr
-                      { unaryOp = Not,
-                        uExpr =
-                          FunctionCallExpr
-                            { funcExpr =
-                                MemberAccessExpr
-                                  { instanceExpr = IdentifierExpr (IR.Identifier mapName),
-                                    member = IR.Identifier "has"
-                                  },
-                              funcParamExprs =
-                                [ IdentifierExpr (getKeyExpr keyName),
-                                  IdentifierExpr (IR.Identifier $ getIdxName mapName keyName postfix)
-                                ]
-                            }
-                      }
-                },
-            rExpr = mapCanGetExpr mapName keyName postfix
-          }
+    -- require((!<mapExpr>.has(<keyExpr>, <idxExpr>)) || <mapExpr>.canGet(<keyExpr>, <valExpr>, <idxExpr>));
+    preCheckStmt mapExpr keyExpr postfix =
+      let e = Just $ BinaryExpr Index mapExpr keyExpr
+       in IR.RequireStmt $
+            BinaryExpr
+              { binaryOp = BoolOr,
+                lExpr =
+                  ParensExpr
+                    { enclosedExpr =
+                        UnaryExpr
+                          { unaryOp = Not,
+                            uExpr =
+                              FunctionCallExpr
+                                { funcExpr =
+                                    MemberAccessExpr
+                                      { instanceExpr = mapExpr,
+                                        member = IR.Identifier "has"
+                                      },
+                                  funcParamExprs =
+                                    [ keyExpr,
+                                      fromJust $ indexExprOfMapping e postfix
+                                    ]
+                                }
+                          }
+                    },
+                rExpr = mapCanGetExpr mapExpr keyExpr postfix
+              }
 
-    -- require(<mapName>.set(keyName, valName, valIdx))
-    afterCheckStmt mapName keyName postfix =
-      IR.RequireStmt $ mapSetExpr mapName keyName postfix
+    -- require(<mapExpr>.set(keyExpr, valExpr, idxExpr))
+    afterCheckStmt mapExpr keyExpr postfix =
+      IR.RequireStmt $ mapSetExpr mapExpr keyExpr postfix
 
 -- prepends some init statements for functions that have returned in middle.
 prependsForReturnedInit :: IType' -> [IStatement]

@@ -30,6 +30,7 @@ instance ToScryptTransformable IExpression (Scr.Expr Ann) where
   _toScrypt (IR.FunctionCallExpr (IdentifierExpr fn) ps) = let (NameAnn n _) :: NameAnn Ann = _toScrypt fn in Scr.Call n (map _toScrypt ps) nil
   _toScrypt (IR.FunctionCallExpr (MemberAccessExpr ins m) ps) = Scr.Dispatch (_toScrypt ins) [] (_toScrypt m) (map _toScrypt ps) nil
   _toScrypt (IR.ArrayLiteralExpr array) = Scr.ArrayLiteral (map _toScrypt array) nil
+  _toScrypt (IR.StructLiteralExpr es) = Scr.StructLiteral (map _toScrypt es) nil
   _toScrypt e = error $ "IExpr `" ++ show e ++ "` not implemented in scrypt"
 
 toScryptUnaryOp :: IR.IUnaryOp -> Scr.UnaryOp

@@ -38,6 +38,7 @@ library
       IR.Specs.Lexicals.Operator
       IR.Specs.Program
       IR.Specs.Statement
+      IR.Specs.Struct
       IR.Specs.Type
       IR.Specs.Variable
       IR.Transformations.Base
@@ -48,6 +49,7 @@ library
       IR.Transformations.IR2Scr.Identifier
       IR.Transformations.IR2Scr.Program
       IR.Transformations.IR2Scr.Statement
+      IR.Transformations.IR2Scr.Struct
       IR.Transformations.IR2Scr.Type
       IR.Transformations.IR2Scr.Variable
       IR.Transformations.Sol2IR.Contract
@@ -68,6 +70,7 @@ library
       Scrypt.Generables.Function
       Scrypt.Generables.Program
       Scrypt.Generables.Statement
+      Scrypt.Generables.Struct
       Scrypt.Generables.Type
       Scrypt.Generables.Variable
       Scrypt.Generator

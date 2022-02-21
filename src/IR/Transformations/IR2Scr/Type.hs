@@ -24,4 +24,5 @@ instance ToScryptTransformable IType Type where
   _toScrypt (BuiltinType "PubKey") = Scr.SubBytes Scr.PubKey
   _toScrypt (IR.Array t e) = Scr.Array (_toScrypt t) (Scr.CTCConst $ toInteger e)
   _toScrypt (Mapping kt vt) = Scr.ContractClass "HashedMap" True [_toScrypt kt, _toScrypt vt]
+  _toScrypt (UserDefinedType ut) = CustomType ut
   _toScrypt t = error $ "IType `" ++ show t ++ "` not implemented in scrypt"

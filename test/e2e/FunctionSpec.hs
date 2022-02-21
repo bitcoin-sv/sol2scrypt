@@ -770,7 +770,7 @@ public function get(SigHashPreimage txPreimage) {
             let mapSym = Symbol (IR.Identifier mapName) (Mapping (ElementaryType Address) (ElementaryType IR.Int)) False
                 initEnv =  [Map.insert (IR.Identifier mapName) mapSym Map.empty]
             tr :: TranspileResult Sol.ContractPart IFunction' (Maybe (Scr.Function Ann)) <- 
-                          transpile' (TransformState initEnv Nothing Map.empty []) sol
+                          transpile' (TransformState initEnv Nothing Map.empty [] Map.empty) sol
             scryptCode tr `shouldBe` scrypt
 
     itTranspileWithMapping

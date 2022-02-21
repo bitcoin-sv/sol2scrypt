@@ -66,6 +66,9 @@ instance Generable (Scr.Expr a) where
   genCode (Scr.ArrayLiteral array _) = do
     array' <- mapM genCode array
     return $ "[" ++ intercalate ", " array' ++ "]"
+  genCode (Scr.StructLiteral es _) = do
+    es' <- mapM genCode es
+    return $ "{" ++ intercalate ", " es' ++ "}"
   genCode _ = error "unimplemented show scrypt expr"
 
 unaryOp2Str :: Scr.UnaryOp -> String
