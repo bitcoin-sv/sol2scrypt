@@ -34,10 +34,14 @@ spec = testSpec "Transpile Contract" $ do
   public function set(int x, SigHashPreimage txPreimage) {
     require(x > 3);
     this.a = x;
+    require(this.propagateState(txPreimage));
+  }
+
+  function propagateState(SigHashPreimage txPreimage) : bool {
     require(Tx.checkPreimage(txPreimage));
     bytes outputScript = this.getStateScript();
     bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
-    require(hash256(output) == SigHash.hashOutputs(txPreimage));
+    return hash256(output) == SigHash.hashOutputs(txPreimage);
   }
 }|]
 
@@ -59,14 +63,18 @@ spec = testSpec "Transpile Contract" $ do
 
   public function set(int x, SigHashPreimage txPreimage) {
     this.storedData = x;
-    require(Tx.checkPreimage(txPreimage));
-    bytes outputScript = this.getStateScript();
-    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
-    require(hash256(output) == SigHash.hashOutputs(txPreimage));
+    require(this.propagateState(txPreimage));
   }
 
   function get() : int {
     return this.storedData;
+  }
+
+  function propagateState(SigHashPreimage txPreimage) : bool {
+    require(Tx.checkPreimage(txPreimage));
+    bytes outputScript = this.getStateScript();
+    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    return hash256(output) == SigHash.hashOutputs(txPreimage);
   }
 }|]
 
@@ -157,14 +165,18 @@ spec = testSpec "Transpile Contract" $ do
 
   public function flip(SigHashPreimage txPreimage) {
     this.value = !this.value;
-    require(Tx.checkPreimage(txPreimage));
-    bytes outputScript = this.getStateScript();
-    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
-    require(hash256(output) == SigHash.hashOutputs(txPreimage));
+    require(this.propagateState(txPreimage));
   }
 
   function get() : bool {
     return this.value;
+  }
+
+  function propagateState(SigHashPreimage txPreimage) : bool {
+    require(Tx.checkPreimage(txPreimage));
+    bytes outputScript = this.getStateScript();
+    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    return hash256(output) == SigHash.hashOutputs(txPreimage);
   }
 }|]
 
@@ -262,14 +274,18 @@ spec = testSpec "Transpile Contract" $ do
 
   public function set(int x, SigHashPreimage txPreimage) {
     this.storedData = x;
-    require(Tx.checkPreimage(txPreimage));
-    bytes outputScript = this.getStateScript();
-    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
-    require(hash256(output) == SigHash.hashOutputs(txPreimage));
+    require(this.propagateState(txPreimage));
   }
 
   function get() : int {
     return this.storedData;
+  }
+
+  function propagateState(SigHashPreimage txPreimage) : bool {
+    require(Tx.checkPreimage(txPreimage));
+    bytes outputScript = this.getStateScript();
+    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    return hash256(output) == SigHash.hashOutputs(txPreimage);
   }
 }|]
 
@@ -389,7 +405,7 @@ spec = testSpec "Transpile Contract" $ do
 }|]
 
 
-  itTransContract "contract Coin with accessing msg.sender in constructor"
+  itTransContract "contract Coin with accessing Coin.msg.sender in constructor"
       [r|contract Coin {
     address public minter;
 
@@ -422,17 +438,18 @@ spec = testSpec "Transpile Contract" $ do
     if (msgSender != this.minter) {
       exit(false);
     }
-    require(Tx.checkPreimage(txPreimage));
-    bytes outputScript = this.getStateScript();
-    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
-    require(hash256(output) == SigHash.hashOutputs(txPreimage));
+    require(this.propagateState(txPreimage));
   }
 
   public function send(PubKeyHash receiver, int amount, SigHashPreimage txPreimage) {
+    require(this.propagateState(txPreimage));
+  }
+
+  function propagateState(SigHashPreimage txPreimage) : bool {
     require(Tx.checkPreimage(txPreimage));
     bytes outputScript = this.getStateScript();
     bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
-    require(hash256(output) == SigHash.hashOutputs(txPreimage));
+    return hash256(output) == SigHash.hashOutputs(txPreimage);
   }
 }|]
 

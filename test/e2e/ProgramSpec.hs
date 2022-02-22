@@ -146,10 +146,14 @@ contract A {
 
   public function set(int x, SigHashPreimage txPreimage) {
     this.a = x;
+    require(this.propagateState(txPreimage));
+  }
+
+  function propagateState(SigHashPreimage txPreimage) : bool {
     require(Tx.checkPreimage(txPreimage));
     bytes outputScript = this.getStateScript();
     bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
-    require(hash256(output) == SigHash.hashOutputs(txPreimage));
+    return hash256(output) == SigHash.hashOutputs(txPreimage);
   }
 }|]
 
@@ -219,10 +223,14 @@ contract A {
 
   public function set(int x, SigHashPreimage txPreimage) {
     this.a = x;
+    require(this.propagateState(txPreimage));
+  }
+
+  function propagateState(SigHashPreimage txPreimage) : bool {
     require(Tx.checkPreimage(txPreimage));
     bytes outputScript = this.getStateScript();
     bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
-    require(hash256(output) == SigHash.hashOutputs(txPreimage));
+    return hash256(output) == SigHash.hashOutputs(txPreimage);
   }
 }|]
 
@@ -349,10 +357,7 @@ contract Coin {
     }
     this_balances_receiver += amount;
     require(this.balances.set(receiver, this_balances_receiver, this_balances_receiver_index));
-    require(Tx.checkPreimage(txPreimage));
-    bytes outputScript = this.getStateScript();
-    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
-    require(hash256(output) == SigHash.hashOutputs(txPreimage));
+    require(this.propagateState(txPreimage));
   }
 
   public function send(PubKeyHash receiver, int amount, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, int this_balances_msgSender, int this_balances_msgSender_index, int this_balances_receiver, int this_balances_receiver_index) {
@@ -367,10 +372,14 @@ contract Coin {
     this_balances_receiver += amount;
     require(this.balances.set(msgSender, this_balances_msgSender, this_balances_msgSender_index));
     require(this.balances.set(receiver, this_balances_receiver, this_balances_receiver_index));
+    require(this.propagateState(txPreimage));
+  }
+
+  function propagateState(SigHashPreimage txPreimage) : bool {
     require(Tx.checkPreimage(txPreimage));
     bytes outputScript = this.getStateScript();
     bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
-    require(hash256(output) == SigHash.hashOutputs(txPreimage));
+    return hash256(output) == SigHash.hashOutputs(txPreimage);
   }
 }|]
 
@@ -408,10 +417,14 @@ contract EIP20 {
     require((!this.allowed.has({msgSender, _spender}, this_allowed_msgSender__spender_index)) || this.allowed.canGet({msgSender, _spender}, this_allowed_msgSender__spender, this_allowed_msgSender__spender_index));
     this_allowed_msgSender__spender = _value;
     require(this.allowed.set({msgSender, _spender}, this_allowed_msgSender__spender, this_allowed_msgSender__spender_index));
+    require(this.propagateState(txPreimage));
+  }
+
+  function propagateState(SigHashPreimage txPreimage) : bool {
     require(Tx.checkPreimage(txPreimage));
     bytes outputScript = this.getStateScript();
     bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
-    require(hash256(output) == SigHash.hashOutputs(txPreimage));
+    return hash256(output) == SigHash.hashOutputs(txPreimage);
   }
 }|]
 
@@ -457,15 +470,19 @@ contract MM {
     this_m3_1_a;
     require(this.m1.set({a, a}, this_m1_a_a, this_m1_a_a_index));
     require(this.m2.set({a, a}, this_m2_a_a, this_m2_a_a_index));
+    require(this.propagateState(txPreimage));
+  }
+
+  function propagateState(SigHashPreimage txPreimage) : bool {
     require(Tx.checkPreimage(txPreimage));
     bytes outputScript = this.getStateScript();
     bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
-    require(hash256(output) == SigHash.hashOutputs(txPreimage));
+    return hash256(output) == SigHash.hashOutputs(txPreimage);
   }
 }|]
 
 
-  itProgram "contract with multiple mappings"
+  itProgram "a simple ERC20 contract "
     [r|
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
@@ -548,10 +565,7 @@ contract ERC20 {
     this_balanceOf_recipient += amount;
     require(this.balanceOf.set(msgSender, this_balanceOf_msgSender, this_balanceOf_msgSender_index));
     require(this.balanceOf.set(recipient, this_balanceOf_recipient, this_balanceOf_recipient_index));
-    require(Tx.checkPreimage(txPreimage));
-    bytes outputScript = this.getStateScript();
-    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
-    require(hash256(output) == SigHash.hashOutputs(txPreimage));
+    require(this.propagateState(txPreimage));
   }
 
   public function approve(PubKeyHash spender, int amount, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, int this_allowance_msgSender_spender, int this_allowance_msgSender_spender_index) {
@@ -560,10 +574,7 @@ contract ERC20 {
     require((!this.allowance.has({msgSender, spender}, this_allowance_msgSender_spender_index)) || this.allowance.canGet({msgSender, spender}, this_allowance_msgSender_spender, this_allowance_msgSender_spender_index));
     this_allowance_msgSender_spender = amount;
     require(this.allowance.set({msgSender, spender}, this_allowance_msgSender_spender, this_allowance_msgSender_spender_index));
-    require(Tx.checkPreimage(txPreimage));
-    bytes outputScript = this.getStateScript();
-    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
-    require(hash256(output) == SigHash.hashOutputs(txPreimage));
+    require(this.propagateState(txPreimage));
   }
 
   public function transferFrom(PubKeyHash sender, PubKeyHash recipient, int amount, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, int this_allowance_sender_msgSender, int this_allowance_sender_msgSender_index, int this_balanceOf_recipient, int this_balanceOf_recipient_index, int this_balanceOf_sender, int this_balanceOf_sender_index) {
@@ -578,10 +589,7 @@ contract ERC20 {
     require(this.allowance.set({sender, msgSender}, this_allowance_sender_msgSender, this_allowance_sender_msgSender_index));
     require(this.balanceOf.set(recipient, this_balanceOf_recipient, this_balanceOf_recipient_index));
     require(this.balanceOf.set(sender, this_balanceOf_sender, this_balanceOf_sender_index));
-    require(Tx.checkPreimage(txPreimage));
-    bytes outputScript = this.getStateScript();
-    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
-    require(hash256(output) == SigHash.hashOutputs(txPreimage));
+    require(this.propagateState(txPreimage));
   }
 
   public function mint(int amount, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, int this_balanceOf_msgSender, int this_balanceOf_msgSender_index) {
@@ -591,10 +599,7 @@ contract ERC20 {
     this_balanceOf_msgSender += amount;
     this.totalSupply += amount;
     require(this.balanceOf.set(msgSender, this_balanceOf_msgSender, this_balanceOf_msgSender_index));
-    require(Tx.checkPreimage(txPreimage));
-    bytes outputScript = this.getStateScript();
-    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
-    require(hash256(output) == SigHash.hashOutputs(txPreimage));
+    require(this.propagateState(txPreimage));
   }
 
   public function burn(int amount, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, int this_balanceOf_msgSender, int this_balanceOf_msgSender_index) {
@@ -604,10 +609,14 @@ contract ERC20 {
     this_balanceOf_msgSender -= amount;
     this.totalSupply -= amount;
     require(this.balanceOf.set(msgSender, this_balanceOf_msgSender, this_balanceOf_msgSender_index));
+    require(this.propagateState(txPreimage));
+  }
+
+  function propagateState(SigHashPreimage txPreimage) : bool {
     require(Tx.checkPreimage(txPreimage));
     bytes outputScript = this.getStateScript();
     bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
-    require(hash256(output) == SigHash.hashOutputs(txPreimage));
+    return hash256(output) == SigHash.hashOutputs(txPreimage);
   }
 }|]
 
