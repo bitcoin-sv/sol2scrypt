@@ -37,4 +37,4 @@ instance ToScryptTransformable IStatement (Scr.Statement Ann) where
         elsestmt' = _toScrypt elsestmt
     in Scr.If e' ifstmt' elsestmt' nil
   _toScrypt (IR.ExitStmt e) = Scr.Exit (_toScrypt e) nil
-  _toScrypt e = error $ "_toScrypt for `" ++ show e ++ "` not implemented in scrypt"
+  _toScrypt e = error $ "_toScrypt for `" ++ headWord (show e) ++ "` not implemented in scrypt"

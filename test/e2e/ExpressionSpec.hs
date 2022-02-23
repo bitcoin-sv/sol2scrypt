@@ -11,11 +11,20 @@ import Test.Tasty.Hspec
 import Transpiler
 import Utils
 
+transpileSol :: String -> IO String
+transpileSol sol = do
+  tr :: TranspileResult Expression IExpression' (Maybe (Expr Ann)) <- transpile sol
+  return $ scryptCode tr
+
+
 spec :: IO TestTree
 spec = testSpec "Transpile Expression" $ do
   let itexpr title sol scrypt = it ("should transpile Solidity `" ++ title ++ "` correctly") $ do
         tr :: TranspileResult Expression IExpression' (Maybe (Expr Ann)) <- transpile sol
         scryptCode tr `shouldBe` scrypt
+  
+  let itThrow sol err = it ("should throw when transpile Solidity Expression `" ++ sol ++ "`") $ do
+        transpileSol sol `shouldThrow` err  
   describe "#PrimaryExpression" $ do
     describe "Identifier" $ do
       itexpr "Identifier" "aZ_$0" "aZ__0"
@@ -139,14 +148,15 @@ spec = testSpec "Transpile Expression" $ do
     itComplex "((Age > 10) && (Age < 20)) || ((Age > 40) && (Age < 50) )" "((Age > 10) && (Age < 20)) || ((Age > 40) && (Age < 50))"
     itComplex "(48 + _i % 10) * 1" "(48 + _i % 10) * 1"
     itComplex "a % 4 == 0" "a % 4 == 0"
-    itComplex "now >= start + daysAfter * 1 days" "now >= start + daysAfter * 1"
-    itComplex "now >= start + daysAfter * 1 days" "now >= start + daysAfter * 1"
+    itComplex "now >= start + daysAfter * 1" "now >= start + daysAfter * 1"
+    itComplex "now >= start + daysAfter * 1" "now >= start + daysAfter * 1"
     itComplex "a + b * c" "a + b * c"
     itComplex "a + (b * c)" "a + (b * c)"
     itComplex "(a + b) * c" "(a + b) * c"
     itComplex "a * c + b * c" "a * c + b * c"
     itComplex "amount <= msg.value / 2" "amount <= msgValue / 2"
-    itComplex "uint(1)" "uint(1)"
+    itComplex "uint(1)" "1"
+    itComplex "bytes1(hex\"00\")" "b'00'"
 
   describe "#PrimaryExpressionTupleExpression" $ do
     itexpr "number array" "[1,3,1,3]" "[1, 3, 1, 3]"
@@ -156,6 +166,45 @@ spec = testSpec "Transpile Expression" $ do
     itexpr "bool array" "[true, true, false]" "[true, true, false]"
     itexpr "bytes array" "[hex\"010113\", hex\"\"]" "[b'010113', b'']"
 
+  describe "#New Expression" $ do
+    itexpr "new bytes" "new bytes(7)" "num2bin(0, 7)"
+  describe "#Throw" $ do
+    -- operator
+    itThrow "1 & 1" (errorCall "unsupported binary operator `&`")
+    itThrow "1 | 1" (errorCall "unsupported binary operator `|`")
+    itThrow "1 ^ 1" (errorCall "unsupported binary operator `^`")
+    itThrow "~a" anyErrorCall
+    itThrow "A << 1" (errorCall "unsupported binary operator `<<`")
+    itThrow "A >> 1" (errorCall "unsupported binary operator `>>`")
+    -- build int function
+    itThrow "new uint[](3)" (errorCall "unsupported expression : `New`")
+    itThrow "assert(true)" (errorCall "unsupported function call : `assert`")
+    itThrow "keccak256(a)" (errorCall "unsupported function call : `keccak256`")
+    itThrow "ecrecover(hash, v, r, s)" (errorCall "unsupported function call : `ecrecover`")
+    itThrow "addmod(4, 5, 3)" (errorCall "unsupported function call : `addmod`")
+    itThrow "mulmod(4, 5, 3)" (errorCall "unsupported function call : `mulmod`")
+    itThrow "revert(4, 5, 3)" (errorCall "unsupported function call : `revert`")
+    itThrow "selfdestruct(a)" (errorCall "unsupported function call : `selfdestruct`")
+    itThrow "type(int).min" (errorCall "unsupported function call : `type`")
+    
+    -- Time Units
+    itThrow "1 seconds" (errorCall "unsupported expression : `Literal`")
+    itThrow "1 days" (errorCall "unsupported expression : `Literal`")
+    itThrow "1 wei" (errorCall "unsupported expression : `Literal`")
+    -- block
+    itThrow "block.number" (errorCall "unsupported expression: `block.number`")
+    itThrow "block.timestamp" (errorCall "unsupported expression: `block.timestamp`")
+    itThrow "block.basefee" (errorCall "unsupported expression: `block.basefee`")
+    itThrow "block.chainid" (errorCall "unsupported expression: `block.chainid`")
+    itThrow "block.coinbase" (errorCall "unsupported expression: `block.coinbase`")
+    itThrow "msg.sig" (errorCall "unsupported expression: `msg.sig`")
+    itThrow "msg.data" (errorCall "unsupported expression: `msg.data`")
+    itThrow "tx.origin" (errorCall "unsupported expression: `tx.origin`")
+    itThrow "abi.encodePacked(arr, \"AAAA\", \"BBBB\")" (errorCall "unsupported expression: `abi.encodePacked`")
+    -- tupple
+    itThrow "(1, 2, 3, 4, 5)" (errorCall "unsupported expression : `Literal`")
+
+    
       
 
       

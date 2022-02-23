@@ -27,6 +27,9 @@ instance ToIRTransformable Sol.Statement IStatement' where
   _toIR (SimpleStatementExpression (FunctionCallExpressionList (Literal (PrimaryExpressionIdentifier (Sol.Identifier "require"))) (Just (ExpressionList (e:_))))) = do
     e' <- _toIR e
     return $ Just $ IR.RequireStmt $ fromJust e'
+  _toIR (SimpleStatementExpression (FunctionCallExpressionList (Literal (PrimaryExpressionIdentifier (Sol.Identifier "assert"))) (Just (ExpressionList (e:_))))) = do
+    e' <- _toIR e
+    return $ Just $ IR.RequireStmt $ fromJust e'
   _toIR (SimpleStatementExpression e) = ExprStmt <<$>> _toIR e
   _toIR (SimpleStatementVariableAssignmentList [Just i] [e]) = do
     e' <- _toIR e
@@ -75,6 +78,7 @@ instance ToIRTransformable Sol.Statement IStatement' where
     blk' <- _toIR blk
     return $ IR.BlockStmt <$> blk'
   _toIR Sol.EmitStatement {} = return Nothing
+  _toIR Sol.PlaceholderStatement = return Nothing
   _toIR (Sol.IfStatement e ifstmt maybeelsestmt) = do
     -- wrap a single return statement into a block for the convenience of transpile `return`
     let wrapSingleRet stmt = case stmt of

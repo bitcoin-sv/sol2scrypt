@@ -11,12 +11,21 @@ import Test.Tasty.Hspec
 import Text.RawString.QQ
 import Utils
 
+
+transpileSol :: String -> IO String
+transpileSol sol = do
+  tr :: TranspileResult Sol.Statement IStatement' (Maybe (Scr.Statement Ann)) <- transpile sol
+  return $ scryptCode tr
+
 spec :: IO TestTree
 spec = testSpec "Transpile Statement" $ do
 
   let itstmt title sol scrypt = it ("should transpile Solidity `" ++ title ++ "` correctly") $ do
-        tr :: TranspileResult Sol.Statement IStatement' (Maybe (Scr.Statement Ann)) <- transpile sol
-        scryptCode tr `shouldBe` scrypt
+        tr  <- transpileSol sol
+        tr `shouldBe` scrypt
+
+  let itThrow sol err = it ("should throw when transpile Solidity Statement `" ++ sol ++ "`") $ do
+        transpileSol sol `shouldThrow` err  
 
   describe "#SimpleStatementExpression" $ do
     describe "#NumberLiteral" $ do
@@ -43,7 +52,7 @@ spec = testSpec "Transpile Statement" $ do
 
   describe "#SimpleStatementVariableAssignmentList" $ do
     itstmt "assignment"  "x = 11;"  "\nx = 11;"
-    itstmt "assignment"  "x = uint(11);"  "\nx = uint(11);"
+    itstmt "assignment"  "x = uint(11);"  "\nx = 11;"
     itstmt "assignment"  "x = a;"  "\nx = a;"
     itstmt "assignment"  "x = a + 1;"  "\nx = a + 1;"
     itstmt "assignment"  "x = true;"  "\nx = true;"
@@ -65,13 +74,16 @@ spec = testSpec "Transpile Statement" $ do
     itstmt "bool"  "bool x = true;"  "\nbool x = true;"
     itstmt "bytes"  "bytes x = hex\"010113\";"  "\nbytes x = b'010113';"
     itstmt "string"  "string x = \"abc0123\";"  "\nbytes x = \"abc0123\";"
+    itstmt "string"  "string memory message = string(\"aa\");"  "\nbytes message = \"aa\";"
+    itstmt "new bytes"  "bytes memory bstr = new bytes(10);"  "\nbytes bstr = num2bin(0, 10);"
 
   describe "#require" $ do
     itstmt "require"  "require(true);"  "\nrequire(true);"
     itstmt "require"  "require(true, \"\");"  "\nrequire(true);"
     itstmt "require"  "require(owner != sender, \"ERC20: approve from the zero address\");"  "\nrequire(owner != sender);"
     itstmt "require"  "require((Age > 10) && (Age < 20) || (Age > 40) && (Age < 50), \"ERC20: approve from the zero address\");"  "\nrequire((Age > 10) && (Age < 20) || (Age > 40) && (Age < 50));"
-         
+    itstmt "assert"  "assert(true);"  "\nrequire(true);"     
+    itstmt "assert"  "assert(a == 3);"  "\nrequire(a == 3);"   
 
   describe "#BlockStatement" $ do
     itstmt "BlockStatement"  "{bytes x = hex\"010113\";}"  "\n{\n  bytes x = b'010113';\n}"
@@ -345,6 +357,16 @@ if (x > 0)
 else
   int a = 3;|]
 
+  describe "#PlaceholderStatement" $ do
+      itstmt "PlaceholderStatement" "_;" ""
+
+  describe "#Throw" $ do
+    itThrow "while (j != 0) {  len++;  j /= 10; }" (errorCall  "unsupported statement `WhileStatement`")
+    itThrow "D newD = new D(1);" (errorCall  "unsupported expression : `New`")
+    itThrow "for (uint p = 0; p < proposals.length; p++) { p++; }" (errorCall  "unsupported statement `ForStatement`")
+    itThrow "a[i] = 3;" anyErrorCall
+    itThrow "assembly { let size := extcodesize(_addr) }" (errorCall  "unsupported statement `InlineAssemblyStatement`")
+    itThrow "assembly { let size := extcodesize(_addr) }" (errorCall  "unsupported statement `InlineAssemblyStatement`")
 
 
 

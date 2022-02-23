@@ -12,11 +12,30 @@ import Text.RawString.QQ
 import Transpiler
 import Utils
 
+
+transpileSol :: String -> IO String
+transpileSol sol = do
+  tr :: TranspileResult Sol.ContractDefinition IContract' (Maybe (Scr.Contract Ann)) <- transpile sol
+  return $ scryptCode tr
+
+
+transpileSolContractPart :: String -> IO String
+transpileSolContractPart sol = do
+  tr :: TranspileResult Sol.ContractPart IContractBodyElement' (Maybe (Scr.Param Ann)) <- transpile sol
+  return $ scryptCode tr
+
+
 spec :: IO TestTree
 spec = testSpec "Transpile Contract" $ do
   let itTransContract title sol scrypt = it ("should transpile Solidity " ++ title ++ " correctly") $ do
-        tr :: TranspileResult ContractDefinition IContract' (Maybe (Scr.Contract Ann)) <- transpile sol
-        scryptCode tr `shouldBe` scrypt
+        tr  <- transpileSol sol
+        tr `shouldBe` scrypt
+
+  let itThrow sol err = it ("should throw when transpile Solidity Contract `" ++ sol ++ "`") $ do
+        transpileSol sol `shouldThrow` err  
+
+  let itThrowContractPart sol err = it ("should throw when transpile Solidity ContractPart `" ++ sol ++ "`") $ do
+        transpileSolContractPart sol `shouldThrow` err  
 
   itTransContract "contract A with state `a` and no constructor"
     [r|contract A {
@@ -452,4 +471,16 @@ spec = testSpec "Transpile Contract" $ do
     return hash256(output) == SigHash.hashOutputs(txPreimage);
   }
 }|]
+
+  describe "#Throw" $ do
+    itThrowContractPart "modifier onlyAfter(uint _time) { require(_time > 0); _; }" (errorCall  "unsupported contract part `ContractPartModifierDefinition`")
+    itThrowContractPart "enum State { Created, Locked, Inactive }" (errorCall  "unsupported contract part `ContractPartEnumDefinition`")
+    itThrowContractPart "struct Bid {bytes32 blindedBid; uint deposit;}" (errorCall  "unsupported contract part `ContractPartStructDefinition`")
+    itThrow "library D {}" (errorCall  "unsupported contract definition `ContractDefinition`")
+    itThrow "interface D {}" (errorCall  "unsupported contract definition `ContractDefinition`")
+
+
+
+
+
 
