@@ -417,7 +417,7 @@ defaultValueExpr (ElementaryType IR.Bytes) = LiteralExpr $ BytesLiteral []
 defaultValueExpr tp = error $ "unsupported default value for type `" ++ show tp ++ "`"
 
 
-
+-- build `propagateState` function, in this way we can call `require(this.propagateState(txPreimage));` in other public functions
 buildPropagateState :: IR.IContractBodyElement
 buildPropagateState = IR.FunctionDefinition $ IR.Function (IR.Identifier "propagateState") 
   (IR.ParamList [IR.Param (BuiltinType "SigHashPreimage") $ IR.ReservedId varTxPreimage]) (IR.Block body) (ElementaryType Bool) Default
