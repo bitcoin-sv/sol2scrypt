@@ -53,10 +53,7 @@ public function set(int x, int retVal) {
     [r|
 public function set(int x, SigHashPreimage txPreimage) {
   storedData = x;
-  require(Tx.checkPreimage(txPreimage));
-  bytes outputScript = this.getStateScript();
-  bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
-  require(hash256(output) == SigHash.hashOutputs(txPreimage));
+  require(this.propagateState(txPreimage));
 }|]
 
   itTranspile
@@ -66,10 +63,7 @@ public function set(int x, SigHashPreimage txPreimage) {
 public function set(int x, SigHashPreimage txPreimage, int _y) {
   int y = 0;
   y = x;
-  require(Tx.checkPreimage(txPreimage));
-  bytes outputScript = this.getStateScript();
-  bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
-  require(hash256(output) == SigHash.hashOutputs(txPreimage));
+  require(this.propagateState(txPreimage));
   require(y == _y);
 }|]
 
@@ -585,10 +579,7 @@ function test6(int x) : bool {
       "function get() external payable { return x; }"
       [r|
 public function get(SigHashPreimage txPreimage) {
-  require(Tx.checkPreimage(txPreimage));
-  bytes outputScript = this.getStateScript();
-  bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
-  require(hash256(output) == SigHash.hashOutputs(txPreimage));
+  require(this.propagateState(txPreimage));
   require(x == retVal);
 }|]
 
@@ -602,10 +593,7 @@ public function get(SigHashPreimage txPreimage) {
       "function get() external constant { return x; }"
       [r|
 public function get(SigHashPreimage txPreimage) {
-  require(Tx.checkPreimage(txPreimage));
-  bytes outputScript = this.getStateScript();
-  bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
-  require(hash256(output) == SigHash.hashOutputs(txPreimage));
+  require(this.propagateState(txPreimage));
   require(x == retVal);
 }|]
 
@@ -614,10 +602,7 @@ public function get(SigHashPreimage txPreimage) {
       "function get() external view { return x; }"
       [r|
 public function get(SigHashPreimage txPreimage) {
-  require(Tx.checkPreimage(txPreimage));
-  bytes outputScript = this.getStateScript();
-  bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
-  require(hash256(output) == SigHash.hashOutputs(txPreimage));
+  require(this.propagateState(txPreimage));
   require(x == retVal);
 }|]
 
@@ -627,10 +612,7 @@ public function get(SigHashPreimage txPreimage) {
       -- "public function get(SigHashPreimage txPreimage) { require(Tx.checkPreimage(txPreimage)); bytes outputScript = this.getStateScript(); bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage)); require(hash256(output) == SigHash.hashOutputs(txPreimage)); require(x == retVal); }"
       [r|
 public function get(SigHashPreimage txPreimage) {
-  require(Tx.checkPreimage(txPreimage));
-  bytes outputScript = this.getStateScript();
-  bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
-  require(hash256(output) == SigHash.hashOutputs(txPreimage));
+  require(this.propagateState(txPreimage));
   require(x == retVal);
 }|]
 
@@ -640,10 +622,7 @@ public function get(SigHashPreimage txPreimage) {
       [r|
 public function set(int x, SigHashPreimage txPreimage) {
   storedData = x;
-  require(Tx.checkPreimage(txPreimage));
-  bytes outputScript = this.getStateScript();
-  bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
-  require(hash256(output) == SigHash.hashOutputs(txPreimage));
+  require(this.propagateState(txPreimage));
 }|]
 
     itTranspile
@@ -652,10 +631,7 @@ public function set(int x, SigHashPreimage txPreimage) {
       [r|
 public function set(int x, SigHashPreimage txPreimage) {
   storedData = x;
-  require(Tx.checkPreimage(txPreimage));
-  bytes outputScript = this.getStateScript();
-  bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
-  require(hash256(output) == SigHash.hashOutputs(txPreimage));
+  require(this.propagateState(txPreimage));
 }|]
 
     itTranspile
@@ -673,10 +649,7 @@ public function set(int x) {
       [r|
 public function set(int x, SigHashPreimage txPreimage) {
   storedData = x;
-  require(Tx.checkPreimage(txPreimage));
-  bytes outputScript = this.getStateScript();
-  bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
-  require(hash256(output) == SigHash.hashOutputs(txPreimage));
+  require(this.propagateState(txPreimage));
 }|]
 
     itTranspile
@@ -685,10 +658,7 @@ public function set(int x, SigHashPreimage txPreimage) {
       [r|
 public function set(int x, SigHashPreimage txPreimage) {
   storedData = x;
-  require(Tx.checkPreimage(txPreimage));
-  bytes outputScript = this.getStateScript();
-  bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
-  require(hash256(output) == SigHash.hashOutputs(txPreimage));
+  require(this.propagateState(txPreimage));
 }|]
 
     itTranspile
@@ -696,10 +666,7 @@ public function set(int x, SigHashPreimage txPreimage) {
       "function get() external view returns (uint) { return storedData; }"
       [r|
 public function get(SigHashPreimage txPreimage, int retVal) {
-  require(Tx.checkPreimage(txPreimage));
-  bytes outputScript = this.getStateScript();
-  bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
-  require(hash256(output) == SigHash.hashOutputs(txPreimage));
+  require(this.propagateState(txPreimage));
   require(storedData == retVal);
 }|]
 
@@ -717,10 +684,7 @@ public function get(SigHashPreimage txPreimage, int retVal) {
       true;
     }
   }
-  require(Tx.checkPreimage(txPreimage));
-  bytes outputScript = this.getStateScript();
-  bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
-  require(hash256(output) == SigHash.hashOutputs(txPreimage));
+  require(this.propagateState(txPreimage));
   require(storedData == retVal);
 }|]
 
@@ -745,10 +709,7 @@ public function get(PubKeyHash addr, SigHashPreimage txPreimage, Sig sig, PubKey
     PubKeyHash addr1 = msgSender;
   }
   msgSender;
-  require(Tx.checkPreimage(txPreimage));
-  bytes outputScript = this.getStateScript();
-  bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
-  require(hash256(output) == SigHash.hashOutputs(txPreimage));
+  require(this.propagateState(txPreimage));
 }|]
 
     itTranspile
@@ -758,10 +719,7 @@ public function get(PubKeyHash addr, SigHashPreimage txPreimage, Sig sig, PubKey
 public function get(SigHashPreimage txPreimage) {
   int msgValue = SigHash.value(txPreimage);
   int amt = msgValue;
-  require(Tx.checkPreimage(txPreimage));
-  bytes outputScript = this.getStateScript();
-  bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
-  require(hash256(output) == SigHash.hashOutputs(txPreimage));
+  require(this.propagateState(txPreimage));
 }|]
 
   describe "#mapping" $ do
@@ -789,10 +747,7 @@ public function send(PubKeyHash receiver, int amount, SigHashPreimage txPreimage
   balances_receiver += amount;
   require(balances.set(msgSender, balances_msgSender, balances_msgSender_index));
   require(balances.set(receiver, balances_receiver, balances_receiver_index));
-  require(Tx.checkPreimage(txPreimage));
-  bytes outputScript = this.getStateScript();
-  bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
-  require(hash256(output) == SigHash.hashOutputs(txPreimage));
+  require(this.propagateState(txPreimage));
 }|]
 
 

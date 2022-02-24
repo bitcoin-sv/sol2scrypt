@@ -216,36 +216,10 @@ transForPreimageFunc =
     TFStmtWrapper
       []
       -- appends statements
-      [ -- add `require(Tx.checkPreimage(txPreimage));`
-        IR.RequireStmt $
-          IR.FunctionCallExpr
-            (IR.MemberAccessExpr (IdentifierExpr (IR.ReservedId libTx)) (IR.Identifier "checkPreimage"))
-            [IdentifierExpr (IR.ReservedId varTxPreimage)],
-        -- add `bytes outputScript = this.getStateScript();`
-        IR.DeclareStmt
-          [Just $ IR.Param (ElementaryType IR.Bytes) (IR.ReservedId varOutputScript)]
-          [ IR.FunctionCallExpr
-              (IR.MemberAccessExpr (IdentifierExpr (IR.Identifier "this")) (IR.Identifier "getStateScript"))
-              []
-          ],
-        -- add `bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));`
-        IR.DeclareStmt
-          [Just $ IR.Param (ElementaryType IR.Bytes) (IR.ReservedId varOutput)]
-          [ IR.FunctionCallExpr
-              (IR.MemberAccessExpr (IdentifierExpr (IR.ReservedId libUtils)) (IR.Identifier "buildOutput"))
-              [ IdentifierExpr (IR.ReservedId varOutputScript),
-                IR.FunctionCallExpr
-                  (IR.MemberAccessExpr (IdentifierExpr (IR.ReservedId libSigHash)) (IR.Identifier "value"))
-                  [IdentifierExpr (IR.ReservedId varTxPreimage)]
-              ]
-          ],
-        -- add `require(hash256(output) == SigHash.hashOutputs(txPreimage));`
-        IR.RequireStmt $
-          IR.BinaryExpr
-            IR.Equal
-            (IR.FunctionCallExpr (IdentifierExpr (IR.ReservedId funcHash256)) [IdentifierExpr (IR.ReservedId varOutput)])
-            $ IR.FunctionCallExpr
-              (IR.MemberAccessExpr (IdentifierExpr (IR.ReservedId libSigHash)) (IR.Identifier "hashOutputs"))
+      [ -- require(this.propagateState(preimage));
+          IR.RequireStmt $
+            IR.FunctionCallExpr
+              (IR.MemberAccessExpr (IdentifierExpr (IR.Identifier "this")) (IR.Identifier "propagateState"))
               [IdentifierExpr (IR.ReservedId varTxPreimage)]
       ]
   )
@@ -441,3 +415,43 @@ defaultValueExpr (ElementaryType IR.Int) = LiteralExpr $ IntLiteral False 0
 defaultValueExpr (ElementaryType IR.Bool) = LiteralExpr $ BoolLiteral False
 defaultValueExpr (ElementaryType IR.Bytes) = LiteralExpr $ BytesLiteral []
 defaultValueExpr tp = error $ "unsupported default value for type `" ++ show tp ++ "`"
+
+
+-- build `propagateState` function, in this way we can call `require(this.propagateState(txPreimage));` in other public functions
+buildPropagateState :: IR.IContractBodyElement
+buildPropagateState = IR.FunctionDefinition $ IR.Function (IR.Identifier "propagateState") 
+  (IR.ParamList [IR.Param (BuiltinType "SigHashPreimage") $ IR.ReservedId varTxPreimage]) (IR.Block body) (ElementaryType Bool) Default
+  where 
+    body = [ 
+        -- add `require(Tx.checkPreimage(txPreimage));`
+        IR.RequireStmt $
+          IR.FunctionCallExpr
+            (IR.MemberAccessExpr (IdentifierExpr (IR.ReservedId libTx)) (IR.Identifier "checkPreimage"))
+            [IdentifierExpr (IR.ReservedId varTxPreimage)],
+        -- add `bytes outputScript = this.getStateScript();`
+        IR.DeclareStmt
+          [Just $ IR.Param (ElementaryType IR.Bytes) (IR.ReservedId varOutputScript)]
+          [ IR.FunctionCallExpr
+              (IR.MemberAccessExpr (IdentifierExpr (IR.Identifier "this")) (IR.Identifier "getStateScript"))
+              []
+          ],
+        -- add `bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));`
+        IR.DeclareStmt
+          [Just $ IR.Param (ElementaryType IR.Bytes) (IR.ReservedId varOutput)]
+          [ IR.FunctionCallExpr
+              (IR.MemberAccessExpr (IdentifierExpr (IR.ReservedId libUtils)) (IR.Identifier "buildOutput"))
+              [ IdentifierExpr (IR.ReservedId varOutputScript),
+                IR.FunctionCallExpr
+                  (IR.MemberAccessExpr (IdentifierExpr (IR.ReservedId libSigHash)) (IR.Identifier "value"))
+                  [IdentifierExpr (IR.ReservedId varTxPreimage)]
+              ]
+          ],
+        -- add `retrun hash256(output) == SigHash.hashOutputs(txPreimage);`
+        IR.ReturnStmt $
+          IR.BinaryExpr
+            IR.Equal
+            (IR.FunctionCallExpr (IdentifierExpr (IR.ReservedId funcHash256)) [IdentifierExpr (IR.ReservedId varOutput)])
+            $ IR.FunctionCallExpr
+              (IR.MemberAccessExpr (IdentifierExpr (IR.ReservedId libSigHash)) (IR.Identifier "hashOutputs"))
+              [IdentifierExpr (IR.ReservedId varTxPreimage)]
+      ]

@@ -12,13 +12,32 @@ import Text.RawString.QQ
 import Transpiler
 import Utils
 
+-- transpile full solidity contract
+transpileSol :: String -> IO String
+transpileSol sol = do
+  tr :: TranspileResult Sol.ContractDefinition IContract' (Maybe (Scr.Contract Ann)) <- transpile sol
+  return $ scryptCode tr
+
+-- transpile part of solidity contract to Scr.Param 
+transpileSolContractPart2Param :: String -> IO String
+transpileSolContractPart2Param sol = do
+  tr :: TranspileResult Sol.ContractPart IContractBodyElement' (Maybe (Scr.Param Ann)) <- transpile sol
+  return $ scryptCode tr
+
+
 spec :: IO TestTree
 spec = testSpec "Transpile Contract" $ do
-  let itTransContract sol scrypt = it "should transpile Solidity contract correctly" $ do
-        tr :: TranspileResult ContractDefinition IContract' (Maybe (Scr.Contract Ann)) <- transpile sol
-        scryptCode tr `shouldBe` scrypt
+  let itTransContract title sol scrypt = it ("should transpile Solidity " ++ title ++ " correctly") $ do
+        tr  <- transpileSol sol
+        tr `shouldBe` scrypt
 
-  itTransContract
+  let itThrow sol err = it ("should throw when transpiling Solidity Contract `" ++ sol ++ "`") $ do
+        transpileSol sol `shouldThrow` err  
+
+  let itThrowContractPart sol err = it ("should throw when transpiling Solidity ContractPart `" ++ sol ++ "`") $ do
+        transpileSolContractPart2Param sol `shouldThrow` err  
+
+  itTransContract "contract A with state `a` and no constructor"
     [r|contract A {
     uint a;
 
@@ -34,14 +53,18 @@ spec = testSpec "Transpile Contract" $ do
   public function set(int x, SigHashPreimage txPreimage) {
     require(x > 3);
     this.a = x;
+    require(this.propagateState(txPreimage));
+  }
+
+  function propagateState(SigHashPreimage txPreimage) : bool {
     require(Tx.checkPreimage(txPreimage));
     bytes outputScript = this.getStateScript();
     bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
-    require(hash256(output) == SigHash.hashOutputs(txPreimage));
+    return hash256(output) == SigHash.hashOutputs(txPreimage);
   }
 }|]
 
-  itTransContract
+  itTransContract "contract SimpleStorage with state `storedData` and no constructor"
     [r|contract SimpleStorage {
     uint storedData;
 
@@ -59,18 +82,22 @@ spec = testSpec "Transpile Contract" $ do
 
   public function set(int x, SigHashPreimage txPreimage) {
     this.storedData = x;
-    require(Tx.checkPreimage(txPreimage));
-    bytes outputScript = this.getStateScript();
-    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
-    require(hash256(output) == SigHash.hashOutputs(txPreimage));
+    require(this.propagateState(txPreimage));
   }
 
   function get() : int {
     return this.storedData;
   }
+
+  function propagateState(SigHashPreimage txPreimage) : bool {
+    require(Tx.checkPreimage(txPreimage));
+    bytes outputScript = this.getStateScript();
+    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    return hash256(output) == SigHash.hashOutputs(txPreimage);
+  }
 }|]
 
-  itTransContract
+  itTransContract "contract A with only public function"
     [r|contract A {
     uint a;
 
@@ -113,7 +140,7 @@ spec = testSpec "Transpile Contract" $ do
   }
 }|]
 
-  itTransContract
+  itTransContract "contract flipper with private state and no external function"
     [r|contract flipper {
     bool private value;
 
@@ -139,7 +166,7 @@ spec = testSpec "Transpile Contract" $ do
   }
 }|]
 
-  itTransContract
+  itTransContract "contract flipper with external function"
     [r|contract flipper {
     bool private value;
 
@@ -157,18 +184,22 @@ spec = testSpec "Transpile Contract" $ do
 
   public function flip(SigHashPreimage txPreimage) {
     this.value = !this.value;
-    require(Tx.checkPreimage(txPreimage));
-    bytes outputScript = this.getStateScript();
-    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
-    require(hash256(output) == SigHash.hashOutputs(txPreimage));
+    require(this.propagateState(txPreimage));
   }
 
   function get() : bool {
     return this.value;
   }
+
+  function propagateState(SigHashPreimage txPreimage) : bool {
+    require(Tx.checkPreimage(txPreimage));
+    bytes outputScript = this.getStateScript();
+    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    return hash256(output) == SigHash.hashOutputs(txPreimage);
+  }
 }|]
 
-  itTransContract
+  itTransContract "contract Counter without constructor"
     [r|contract Counter {
     uint public count;
 
@@ -217,7 +248,7 @@ spec = testSpec "Transpile Contract" $ do
     itEvent "event AnotherLog();"
 
 
-    itTransContract
+    itTransContract "contract Event with event"
       [r|contract Event {
     event Log(address indexed sender, string message);
     event AnotherLog();
@@ -236,7 +267,7 @@ spec = testSpec "Transpile Contract" $ do
 
   describe "#test contract constructor" $ do
 
-    itTransContract
+    itTransContract "contract SimpleStorage with constructor"
       [r|contract SimpleStorage {
     uint storedData;
 
@@ -262,18 +293,22 @@ spec = testSpec "Transpile Contract" $ do
 
   public function set(int x, SigHashPreimage txPreimage) {
     this.storedData = x;
-    require(Tx.checkPreimage(txPreimage));
-    bytes outputScript = this.getStateScript();
-    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
-    require(hash256(output) == SigHash.hashOutputs(txPreimage));
+    require(this.propagateState(txPreimage));
   }
 
   function get() : int {
     return this.storedData;
   }
+
+  function propagateState(SigHashPreimage txPreimage) : bool {
+    require(Tx.checkPreimage(txPreimage));
+    bytes outputScript = this.getStateScript();
+    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    return hash256(output) == SigHash.hashOutputs(txPreimage);
+  }
 }|]
 
-  itTransContract
+  itTransContract "contract SimpleStorage with a constructor without parameter"
       [r|contract SimpleStorage {
     uint storedData;
 
@@ -288,7 +323,7 @@ spec = testSpec "Transpile Contract" $ do
   }
 }|]
 
-  itTransContract
+  itTransContract "contract SimpleStorage with a constructor with a parameter"
       [r|contract SimpleStorage {
     uint storedData;
 
@@ -303,7 +338,7 @@ spec = testSpec "Transpile Contract" $ do
   }
 }|]
 
-  itTransContract
+  itTransContract  "contract SimpleStorage with a constructor with a statement"
       [r|contract SimpleStorage {
     uint storedData;
 
@@ -320,7 +355,7 @@ spec = testSpec "Transpile Contract" $ do
   }
 }|]
 
-  itTransContract
+  itTransContract "contract SimpleStorage with a constructor with multi parameter"
       [r|contract SimpleStorage {
     uint storedData;
 
@@ -338,7 +373,7 @@ spec = testSpec "Transpile Contract" $ do
 }|]
 
 
-  itTransContract
+  itTransContract "contract SimpleStorage without public function"
       [r|contract SimpleStorage {
     uint storedData;
     uint storedData1;
@@ -359,7 +394,7 @@ spec = testSpec "Transpile Contract" $ do
   }
 }|]
 
-  itTransContract
+  itTransContract "contract SimpleStorage with immutable and constant property"
       [r|contract SimpleStorage {
     bool constant a = true;
     uint storedData;
@@ -389,7 +424,7 @@ spec = testSpec "Transpile Contract" $ do
 }|]
 
 
-  itTransContract
+  itTransContract "contract Coin with accessing Coin.msg.sender in constructor"
       [r|contract Coin {
     address public minter;
 
@@ -422,17 +457,24 @@ spec = testSpec "Transpile Contract" $ do
     if (msgSender != this.minter) {
       exit(false);
     }
-    require(Tx.checkPreimage(txPreimage));
-    bytes outputScript = this.getStateScript();
-    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
-    require(hash256(output) == SigHash.hashOutputs(txPreimage));
+    require(this.propagateState(txPreimage));
   }
 
   public function send(PubKeyHash receiver, int amount, SigHashPreimage txPreimage) {
+    require(this.propagateState(txPreimage));
+  }
+
+  function propagateState(SigHashPreimage txPreimage) : bool {
     require(Tx.checkPreimage(txPreimage));
     bytes outputScript = this.getStateScript();
     bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
-    require(hash256(output) == SigHash.hashOutputs(txPreimage));
+    return hash256(output) == SigHash.hashOutputs(txPreimage);
   }
 }|]
 
+  describe "#Throw" $ do
+    itThrowContractPart "modifier onlyAfter(uint _time) { require(_time > 0); _; }" (errorCall  "unsupported contract part `ContractPartModifierDefinition`")
+    itThrowContractPart "enum State { Created, Locked, Inactive }" (errorCall  "unsupported contract part `ContractPartEnumDefinition`")
+    itThrowContractPart "struct Bid {bytes32 blindedBid; uint deposit;}" (errorCall  "unsupported contract part `ContractPartStructDefinition`")
+    itThrow "library D {}" (errorCall  "unsupported contract definition `ContractDefinition`")
+    itThrow "interface D {}" (errorCall  "unsupported contract definition `ContractDefinition`")

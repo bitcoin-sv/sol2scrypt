@@ -12,7 +12,7 @@ import IR.Transformations.Base
 import IR.Transformations.Sol2IR.Identifier ()
 import IR.Transformations.Sol2IR.Expression ()
 import IR.Transformations.Sol2IR.Variable ()
-import IR.Transformations.Sol2IR.Function ()
+import IR.Transformations.Sol2IR.Function (buildPropagateState)
 import Solidity.Spec as Sol
 import Data.Maybe
 import Utils
@@ -23,7 +23,10 @@ instance ToIRTransformable ContractDefinition IContract' where
     enterScope
     cps' <- mapM _toIR cps
     leaveScope
-    return $ Just $ IR.Contract (fromJust cn') (catMaybes  cps')
+    let appendPropagateState = findPreimageFunction cps'
+    let propagateState = [buildPropagateState | appendPropagateState]
+    let cps'' = catMaybes  cps' ++ propagateState
+    return $ Just $ IR.Contract (fromJust cn') cps''
   _toIR c = error $ "unsupported contract definition `" ++ headWord (show c) ++ "`"
 
 
@@ -49,3 +52,21 @@ instance ToIRTransformable Sol.ContractPart IContractBodyElement' where
       return $ IR.ConstructorDefinition <$> ctor'
 
   _toIR c = error $ "unsupported contract part `" ++ headWord (show c) ++ "`"
+
+
+
+findPreimageParam :: IParamList  -> Bool
+findPreimageParam (ParamList []) = False
+findPreimageParam  (ParamList (x:xs))
+  | x == IR.Param (BuiltinType "SigHashPreimage") (IR.ReservedId varTxPreimage) = True
+  | otherwise = findPreimageParam $ ParamList xs
+
+
+findPreimageFunction :: [IContractBodyElement'] -> Bool
+findPreimageFunction [] = False
+findPreimageFunction (x:xs) = case x of
+  Nothing -> findPreimageFunction xs
+  Just icbe -> let finded = case icbe of
+                          IR.FunctionDefinition (IR.Function _ pl _ _ _) -> findPreimageParam pl
+                          _ -> False
+                    in  if finded then finded else  findPreimageFunction xs

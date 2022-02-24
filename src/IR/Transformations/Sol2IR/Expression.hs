@@ -35,7 +35,7 @@ instance ToIRTransformable Sol.Expression IExpression' where
     return $ Just $ LiteralExpr $ IR.BoolLiteral ("true" == toLower b)
   _toIR (Literal (PrimaryExpressionNumberLiteral (NumberLiteralHex n Nothing))) =
     return $ Just $ LiteralExpr $ IR.IntLiteral True (fst $ head $ readHex n)
-  _toIR (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec n _))) =
+  _toIR (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec n Nothing))) =
     return $ Just $ LiteralExpr $ IR.IntLiteral False (fst $ head $ readDec n)
   _toIR (Literal (PrimaryExpressionHexLiteral (HexLiteral h))) =
     return $ Just $ LiteralExpr $ IR.BytesLiteral $ parseHex h
@@ -90,20 +90,53 @@ instance ToIRTransformable Sol.Expression IExpression' where
     e2' <- _toIR e2
     e3' <- _toIR e3
     return $ TernaryExpr <$> e1' <*> e2' <*> e3'
-  _toIR (Sol.MemberAccess (Literal (PrimaryExpressionIdentifier (Sol.Identifier "msg"))) (Sol.Identifier "sender")) = do
-    return $ Just $ IR.IdentifierExpr (IR.ReservedId varMsgSender)
-  _toIR (Sol.MemberAccess (Literal (PrimaryExpressionIdentifier (Sol.Identifier "msg"))) (Sol.Identifier "value")) = do
-    return $ Just $ IR.IdentifierExpr (IR.ReservedId varMsgValue)
   _toIR (Sol.MemberAccess e i) = do
-    e' <- _toIR e
-    i' <- _toIR i
-    return $ IR.MemberAccessExpr <$> e' <*> i'
+      case (e, i) of
+        (Literal (PrimaryExpressionIdentifier (Sol.Identifier ne)), Sol.Identifier ni) -> do
+          case (ne, ni) of
+            ("msg", "sender") ->
+              return $ Just $ IR.IdentifierExpr (IR.ReservedId varMsgSender)
+            ("msg", "value") ->
+              return $ Just $ IR.IdentifierExpr (IR.ReservedId varMsgValue)
+            _ -> do
+              if isMemberAccessSupported (ne, ni)
+                then do
+                  e' <- _toIR e
+                  i' <- _toIR i
+                  return $ IR.MemberAccessExpr <$> e' <*> i'
+                else error $ "unsupported expression: `" ++ ne ++ "." ++ ni ++ "`"
+                  
+        _ -> do
+              e' <- _toIR e
+              i' <- _toIR i
+              return $ IR.MemberAccessExpr <$> e' <*> i'
   _toIR (FunctionCallExpressionList fe pl) = do
-    fe' <- _toIR fe
-    ps' <- case pl of
-      Nothing -> return []
-      Just (ExpressionList ps) -> mapM _toIR ps
-    return $ FunctionCallExpr <$> fe' <*> sequence ps'
+    case fe of
+      (Literal (PrimaryExpressionIdentifier (Sol.Identifier fn))) -> do
+              if isBuiltInFnSupported fn
+                then do
+                  if shouldIgnoreBuiltInTypes fn
+                  then case pl of
+                      Just (ExpressionList [p]) -> _toIR p
+                      _ -> error $ "unsupported function call : `" ++ fn ++ "`"
+                  else do
+                    fe' <- _toIR fe
+                    ps' <- case pl of
+                      Nothing -> return []
+                      Just (ExpressionList ps) -> mapM _toIR ps
+                    return $ FunctionCallExpr <$> fe' <*> sequence ps'
+                else error $ "unsupported function call : `" ++ fn ++ "`"
+      (New (TypeNameElementaryTypeName (BytesType Nothing))) -> do -- eg. transpile Solidity `new bytes(3)` to `num2bin(0, 3)`
+            ps' <- case pl of
+              Nothing -> return []
+              Just (ExpressionList ps) -> mapM _toIR (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "0" Nothing)) : ps)
+            return $ FunctionCallExpr (IR.IdentifierExpr (IR.Identifier "num2bin")) <$> sequence ps'
+      _ -> do
+        fe' <- _toIR fe
+        ps' <- case pl of
+          Nothing -> return []
+          Just (ExpressionList ps) -> mapM _toIR ps
+        return $ FunctionCallExpr <$> fe' <*> sequence ps'
   _toIR (Literal (PrimaryExpressionTupleExpression (SquareBrackets array))) = do
     array' <- mapM _toIR array
     return $ Just $ ArrayLiteralExpr $ catMaybes array'
@@ -228,3 +261,30 @@ checkLHSmapExpr e = do
       let mapCounter' = Map.insert (fromJust mapName) (entry {entryUpdated = True}) mapCounter
       modify $ \s -> s {stateInFuncMappingCounter = mapCounter'}
     _ -> return ()
+
+-- some solidity buildin functions are not supported
+isBuiltInFnSupported :: String -> Bool
+isBuiltInFnSupported fn = fn `notElem` ["assert", "keccak256", "ecrecover", "addmod", "mulmod", "revert", "selfdestruct", "type"]
+
+-- some solidity buildin member access are not supported
+isMemberAccessSupported :: (String, String) -> Bool
+isMemberAccessSupported (e, i) = case (e, i) of
+  ("msg", "sig") -> False 
+  ("msg", "data") -> False
+  ("block", _) -> False
+  ("tx", _) -> False
+  ("abi", _) -> False
+  _ -> True
+
+-- cast functions in solidity need to be ignored
+shouldIgnoreBuiltInTypes :: String -> Bool
+shouldIgnoreBuiltInTypes fn = fn `elem` ["string", "uint", "uint8", "uint16", "uint24", "uint32", "uint40", "uint48", "uint56", "uint64",
+  "uint72", "uint88", "uint96", "uint104", "uint112", "uint120", "uint128", "uint136", "uint144", "uint152", "uint160", "uint168", "uint176",
+  "uint184", "uint192", "uint200", "uint208", "uint216", "uint224", "uint232", "uint240", "uint248", "uint256",
+  "int", "int8", "int16", "int24", "int32", "int40", "int48", "int56", "int64",
+  "int72", "int88", "int96", "int104", "int112", "int120", "int128", "int136", "int144", "int152", "int160", "int168", "int176",
+  "int184", "int192", "int200", "int208", "int216", "int224", "int232", "int240", "int248", "int256", "bool",
+  "bytes", "bytes1", "bytes2", "bytes3", "bytes4", "bytes5", "bytes6", "bytes7", "bytes8", "bytes9", "bytes10", "bytes11", "bytes12",
+  "bytes13", "bytes14", "bytes15", "bytes16", "bytes17", "bytes18", "bytes19", "bytes20", "bytes21", "bytes22", "bytes23", "bytes24",
+  "bytes25", "bytes26", "bytes27", "bytes28", "bytes29", "bytes30", "bytes31", "bytes32"]
+

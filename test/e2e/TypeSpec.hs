@@ -9,11 +9,22 @@ import Test.Tasty
 import Test.Tasty.Hspec
 import Transpiler
 
+
+transpileSol :: String -> IO String
+transpileSol sol = do
+  tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile sol
+  return $ scryptCode tr
+
 spec :: IO TestTree
 spec = testSpec "Transpile Type" $ do
   let itType sol scrypt = it ("should transpile Solidity `" ++ sol ++ "` correctly") $ do
         tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile sol
         scryptCode tr `shouldBe` scrypt
+
+  
+  let itThrow sol err = it ("should throw when transpiling Solidity `" ++ sol ++ "`") $ do
+        transpileSol sol `shouldThrow` err  
+
   describe "#ElementaryTypeName" $ do
     describe "#BoolType" $ do
       itType "bool" "bool"
@@ -245,5 +256,8 @@ spec = testSpec "Transpile Type" $ do
     itType "mapping (address => uint)" "HashedMap<PubKeyHash, int>"
     itType "mapping (address => mapping (address => uint))" "HashedMap<MapKeyST0, int>"
 
-
-
+  describe "#unsupported type should throw" $ do
+    itThrow "aaaE" (errorCall "unsupported type `TypeNameUserDefinedTypeName`")
+    itThrow "uint[]" (errorCall "unsupported expression to Integer : `Nothing`")
+    itThrow "bool[2][]" (errorCall "unsupported expression to Integer : `Nothing`")
+     
