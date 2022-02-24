@@ -22,7 +22,7 @@ spec = testSpec "Transpile Type" $ do
         scryptCode tr `shouldBe` scrypt
 
   
-  let itThrow sol err = it ("should throw when transpile Solidity `" ++ sol ++ "`") $ do
+  let itThrow sol err = it ("should throw when transpiling Solidity `" ++ sol ++ "`") $ do
         transpileSol sol `shouldThrow` err  
 
   describe "#ElementaryTypeName" $ do

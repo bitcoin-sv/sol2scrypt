@@ -2,7 +2,6 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
-{-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 
 module IR.Transformations.Sol2IR.Expression where
 
@@ -95,37 +94,39 @@ instance ToIRTransformable Sol.Expression IExpression' where
       case (e, i) of
         (Literal (PrimaryExpressionIdentifier (Sol.Identifier ne)), Sol.Identifier ni) -> do
           case (ne, ni) of
-            ("msg", "sender") -> 
+            ("msg", "sender") ->
               return $ Just $ IR.IdentifierExpr (IR.ReservedId varMsgSender)
-            ("msg", "value") -> 
+            ("msg", "value") ->
               return $ Just $ IR.IdentifierExpr (IR.ReservedId varMsgValue)
-            (_, _) -> do
-              if isUnsupportedMemberAccess (ne, ni)
-                then error ("unsupported expression: `" ++ ne ++ "." ++ ni ++ "`")
-                else do
+            _ -> do
+              if isMemberAccessSupported (ne, ni)
+                then do
                   e' <- _toIR e
                   i' <- _toIR i
                   return $ IR.MemberAccessExpr <$> e' <*> i'
-        (_,_) -> do
+                else error $ "unsupported expression: `" ++ ne ++ "." ++ ni ++ "`"
+                  
+        _ -> do
               e' <- _toIR e
               i' <- _toIR i
               return $ IR.MemberAccessExpr <$> e' <*> i'
   _toIR (FunctionCallExpressionList fe pl) = do
     case fe of
       (Literal (PrimaryExpressionIdentifier (Sol.Identifier fn))) -> do
-              if isUnsupportedBuildIn fn
-                then error $ "unsupported function call : `" ++ fn ++ "`"
-                else if shouldIgnoreBuildIn fn
+              if isBuiltInFnSupported fn
+                then do
+                  if shouldIgnoreBuiltInTypes fn
                   then case pl of
                       Just (ExpressionList [p]) -> _toIR p
                       _ -> error $ "unsupported function call : `" ++ fn ++ "`"
-                else do
-                  fe' <- _toIR fe
-                  ps' <- case pl of
-                    Nothing -> return []
-                    Just (ExpressionList ps) -> mapM _toIR ps
-                  return $ FunctionCallExpr <$> fe' <*> sequence ps'
-      (New (TypeNameElementaryTypeName (BytesType Nothing))) -> do
+                  else do
+                    fe' <- _toIR fe
+                    ps' <- case pl of
+                      Nothing -> return []
+                      Just (ExpressionList ps) -> mapM _toIR ps
+                    return $ FunctionCallExpr <$> fe' <*> sequence ps'
+                else error $ "unsupported function call : `" ++ fn ++ "`"
+      (New (TypeNameElementaryTypeName (BytesType Nothing))) -> do -- eg. transpile Solidity `new bytes(3)` to `num2bin(0, 3)`
             ps' <- case pl of
               Nothing -> return []
               Just (ExpressionList ps) -> mapM _toIR (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "0" Nothing)) : ps)
@@ -261,21 +262,23 @@ checkLHSmapExpr e = do
       modify $ \s -> s {stateInFuncMappingCounter = mapCounter'}
     _ -> return ()
 
+-- some solidity buildin functions are not supported
+isBuiltInFnSupported :: String -> Bool
+isBuiltInFnSupported fn = fn `notElem` ["assert", "keccak256", "ecrecover", "addmod", "mulmod", "revert", "selfdestruct", "type"]
 
-isUnsupportedBuildIn :: String -> Bool
-isUnsupportedBuildIn fn = fn `elem` ["assert", "keccak256", "ecrecover", "addmod", "mulmod", "revert", "selfdestruct", "type"]
+-- some solidity buildin member access are not supported
+isMemberAccessSupported :: (String, String) -> Bool
+isMemberAccessSupported (e, i) = case (e, i) of
+  ("msg", "sig") -> False 
+  ("msg", "data") -> False
+  ("block", _) -> False
+  ("tx", _) -> False
+  ("abi", _) -> False
+  _ -> True
 
-isUnsupportedMemberAccess :: (String, String) -> Bool
-isUnsupportedMemberAccess (e, i) = case (e, i) of
-  ("msg", "sig") -> True 
-  ("msg", "data") -> True 
-  ("block", _) -> True 
-  ("tx", _) -> True 
-  ("abi", _) -> True 
-  (_, _) -> False 
-
-shouldIgnoreBuildIn :: String -> Bool
-shouldIgnoreBuildIn fn = fn `elem` ["string", "uint", "uint8", "uint16", "uint24", "uint32", "uint40", "uint48", "uint56", "uint64",
+-- cast functions in solidity need to be ignored
+shouldIgnoreBuiltInTypes :: String -> Bool
+shouldIgnoreBuiltInTypes fn = fn `elem` ["string", "uint", "uint8", "uint16", "uint24", "uint32", "uint40", "uint48", "uint56", "uint64",
   "uint72", "uint88", "uint96", "uint104", "uint112", "uint120", "uint128", "uint136", "uint144", "uint152", "uint160", "uint168", "uint176",
   "uint184", "uint192", "uint200", "uint208", "uint216", "uint224", "uint232", "uint240", "uint248", "uint256",
   "int", "int8", "int16", "int24", "int32", "int40", "int48", "int56", "int64",

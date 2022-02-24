@@ -41,13 +41,13 @@ spec = testSpec "Transpile Variable" $ do
             tr :: TranspileResult ContractPart IContractBodyElement' (Maybe (Scr.Static Ann)) <- transpile sol
             scryptCode tr `shouldBe` scrypt
 
-  let itPropertyThrow sol err = it ("should throw when transpile Solidity `" ++ sol ++ "`") $ do
+  let itPropertyThrow sol err = it ("should throw when transpiling Solidity `" ++ sol ++ "`") $ do
         transpileProperty sol `shouldThrow` err  
 
-  let itParameterThrow sol err = it ("should throw when transpile Solidity `" ++ sol ++ "`") $ do
+  let itParameterThrow sol err = it ("should throw when transpiling Solidity `" ++ sol ++ "`") $ do
         transpileProperty sol `shouldThrow` err  
 
-  let itStaticThrow sol err = it ("should throw when transpile Solidity `" ++ sol ++ "`") $ do
+  let itStaticThrow sol err = it ("should throw when transpiling Solidity `" ++ sol ++ "`") $ do
         transpileStatic sol `shouldThrow` err  
 
   describe "#Property" $ do

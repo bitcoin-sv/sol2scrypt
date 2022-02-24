@@ -12,15 +12,15 @@ import Text.RawString.QQ
 import Transpiler
 import Utils
 
-
+-- transpile full solidity contract
 transpileSol :: String -> IO String
 transpileSol sol = do
   tr :: TranspileResult Sol.ContractDefinition IContract' (Maybe (Scr.Contract Ann)) <- transpile sol
   return $ scryptCode tr
 
-
-transpileSolContractPart :: String -> IO String
-transpileSolContractPart sol = do
+-- transpile part of solidity contract to Scr.Param 
+transpileSolContractPart2Param :: String -> IO String
+transpileSolContractPart2Param sol = do
   tr :: TranspileResult Sol.ContractPart IContractBodyElement' (Maybe (Scr.Param Ann)) <- transpile sol
   return $ scryptCode tr
 
@@ -31,11 +31,11 @@ spec = testSpec "Transpile Contract" $ do
         tr  <- transpileSol sol
         tr `shouldBe` scrypt
 
-  let itThrow sol err = it ("should throw when transpile Solidity Contract `" ++ sol ++ "`") $ do
+  let itThrow sol err = it ("should throw when transpiling Solidity Contract `" ++ sol ++ "`") $ do
         transpileSol sol `shouldThrow` err  
 
-  let itThrowContractPart sol err = it ("should throw when transpile Solidity ContractPart `" ++ sol ++ "`") $ do
-        transpileSolContractPart sol `shouldThrow` err  
+  let itThrowContractPart sol err = it ("should throw when transpiling Solidity ContractPart `" ++ sol ++ "`") $ do
+        transpileSolContractPart2Param sol `shouldThrow` err  
 
   itTransContract "contract A with state `a` and no constructor"
     [r|contract A {
@@ -478,9 +478,3 @@ spec = testSpec "Transpile Contract" $ do
     itThrowContractPart "struct Bid {bytes32 blindedBid; uint deposit;}" (errorCall  "unsupported contract part `ContractPartStructDefinition`")
     itThrow "library D {}" (errorCall  "unsupported contract definition `ContractDefinition`")
     itThrow "interface D {}" (errorCall  "unsupported contract definition `ContractDefinition`")
-
-
-
-
-
-

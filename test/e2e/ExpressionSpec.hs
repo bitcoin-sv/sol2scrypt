@@ -23,7 +23,7 @@ spec = testSpec "Transpile Expression" $ do
         tr :: TranspileResult Expression IExpression' (Maybe (Expr Ann)) <- transpile sol
         scryptCode tr `shouldBe` scrypt
   
-  let itThrow sol err = it ("should throw when transpile Solidity Expression `" ++ sol ++ "`") $ do
+  let itThrow sol err = it ("should throw when transpiling Solidity Expression `" ++ sol ++ "`") $ do
         transpileSol sol `shouldThrow` err  
   describe "#PrimaryExpression" $ do
     describe "Identifier" $ do
@@ -176,7 +176,7 @@ spec = testSpec "Transpile Expression" $ do
     itThrow "~a" anyErrorCall
     itThrow "A << 1" (errorCall "unsupported binary operator `<<`")
     itThrow "A >> 1" (errorCall "unsupported binary operator `>>`")
-    -- build int function
+    -- buildin function
     itThrow "new uint[](3)" (errorCall "unsupported expression : `New`")
     itThrow "assert(true)" (errorCall "unsupported function call : `assert`")
     itThrow "keccak256(a)" (errorCall "unsupported function call : `keccak256`")
@@ -201,7 +201,7 @@ spec = testSpec "Transpile Expression" $ do
     itThrow "msg.data" (errorCall "unsupported expression: `msg.data`")
     itThrow "tx.origin" (errorCall "unsupported expression: `tx.origin`")
     itThrow "abi.encodePacked(arr, \"AAAA\", \"BBBB\")" (errorCall "unsupported expression: `abi.encodePacked`")
-    -- tupple
+    -- tuple
     itThrow "(1, 2, 3, 4, 5)" (errorCall "unsupported expression : `Literal`")
 
     

@@ -24,7 +24,7 @@ spec = testSpec "Transpile Statement" $ do
         tr  <- transpileSol sol
         tr `shouldBe` scrypt
 
-  let itThrow sol err = it ("should throw when transpile Solidity Statement `" ++ sol ++ "`") $ do
+  let itThrow sol err = it ("should throw when transpiling Solidity Statement `" ++ sol ++ "`") $ do
         transpileSol sol `shouldThrow` err  
 
   describe "#SimpleStatementExpression" $ do
