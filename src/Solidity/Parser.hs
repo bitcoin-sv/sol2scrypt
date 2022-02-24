@@ -279,11 +279,12 @@ instance Parseable ErrorDefinition where
 instance Parseable (ContractDefinition SourceRange) where
   parser = do
     start <- getPosition
+    _abstract <- (try (keyword "abstract" *> return True) <|> return False) <* whitespace
     _definitionType' <- (keyword "contract" <|> keyword "library" <|> keyword "interface") <* whitespace
     _definitionName' <- parser <* whitespace
     _isClause' <- (try (keyword "is" *> whitespace *> commaSep1 parser) <|> return []) <* whitespace
     _contractParts' <- char '{' *> whitespace *> many (parser <* whitespace) <* char '}'
-    ContractDefinition _definitionType' _definitionName' _isClause' _contractParts' . SourceRange start <$> getPosition
+    ContractDefinition _abstract _definitionType' _definitionName' _isClause' _contractParts' . SourceRange start <$> getPosition
 
   display contractDefinition =
     definitionType contractDefinition ++ _display (definitionName contractDefinition)

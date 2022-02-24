@@ -12,12 +12,21 @@ import Text.RawString.QQ
 import Transpiler
 import Utils
 
+
+-- transpile full solidity Program
+transpileSol :: String -> IO String
+transpileSol sol = do
+  tr :: TranspileResult (Sol.SolidityCode SourceRange) IProgram' (Maybe (Scr.Program Ann)) <- transpile sol
+  return $ scryptCode tr
+
 spec :: IO TestTree
 spec = testSpec "Transpile Program" $ do
   let itProgram title sol scrypt = it ("should transpile Solidity `" ++ title ++ "` correctly") $ do
-        tr :: TranspileResult (Sol.SolidityCode SourceRange) IProgram' (Maybe (Scr.Program Ann)) <- transpile sol
-        scryptCode tr `shouldBe` scrypt
+        tr  <- transpileSol sol
+        tr `shouldBe` scrypt
 
+  let itThrow sol err = it "should throw when transpiling Solidity Program " $ do
+        transpileSol sol `shouldThrow` err  
 
   itProgram "Program only with a contract "
       [r|

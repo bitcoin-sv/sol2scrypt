@@ -482,6 +482,3 @@ spec = testSpec "Transpile Contract" $ do
     itThrow "abstract contract Feline { }" (errorCall  "unsupported abstract contract definition")
     itThrow "contract Cat is Feline { }" (errorCall  "unsupported contract definition `ContractDefinition`")
 
-
-    
-

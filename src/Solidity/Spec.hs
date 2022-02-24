@@ -164,7 +164,9 @@ data ErrorDefinition a =
 --                      '{' ContractPart* '}'
 
 data ContractDefinition a = ContractDefinition
-  { definitionType :: String,
+  {
+    abstract :: Bool,
+    definitionType :: String,
     definitionName :: Identifier a,
     isClause :: [InheritanceSpecifier a],
     contractParts :: [ContractPart a],
@@ -173,7 +175,8 @@ data ContractDefinition a = ContractDefinition
   deriving (Show, Eq, Ord)
 
 instance Annotated ContractDefinition a where
-  ann (ContractDefinition _ _ _ _ a) = a
+  ann (ContractDefinition _ _ _ _ _ a) = a
+
 
 -------------------------------------------------------------------------------
 -- ContractPart
