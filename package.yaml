@@ -37,6 +37,7 @@ library:
   - filepath
   - bytestring
   - utf8-string
+  - directory
 
 executables:
   sol2scrypt:
@@ -50,6 +51,10 @@ executables:
     dependencies:
     - sol2scrypt
     - raw-strings-qq
+    - optparse-applicative
+    - utf8-string
+    - gitrev
+    - filepath
 
 tests:
   unit:
