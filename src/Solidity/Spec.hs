@@ -52,6 +52,13 @@ module Solidity.Spec (
   SourceRange (..), Identifier' (..), TypeName' (..), ElementaryTypeName' (..), TypeNameList' (..), StateMutability' (..), UserDefinedTypeName' (..),
   Expression' (..), TupleExpression' (..), ExpressionList' (..),  PrimaryExpression' (..), NameValueList' (..),
   NumberLiteral' (..), HexLiteral' (..), StringLiteral' (..), BooleanLiteral' (..),
+  SolidityCode' (..), SourceUnit' (..), ImportDirective' (..), ImportDirective1' (..),
+  ContractDefinition' (..), ContractPart' (..), StateVariableDeclaration' (..), InheritanceSpecifier' (..),
+  ModifierInvocation' (..), FunctionDefinitionTag' (..), EnumValue' (..), IndexedParameterList' (..), IndexedParameter' (..),
+  UntypedParameterList' (..), ParameterList' (..), Parameter' (..), VariableDeclaration' (..),
+  StorageLocation' (..), IdentifierList' (..), Block' (..),
+  Statement' (..),
+
 
   Annotated (..),
   untypeParameterList, typeParameterList, addMemoryLocationToParametersList, mergeRange
@@ -82,16 +89,24 @@ type ModifierName = Identifier
 
 -------------------------------------------------------------------------------
 newtype SolidityCode = SolidityCode SourceUnit deriving (Eq, Ord, Show)
+newtype SolidityCode' a = SolidityCode' (SourceUnit' a) deriving (Eq, Ord, Show)
 
 -------------------------------------------------------------------------------
 -- SourceUnit = (PragmaDirective | ImportDirective | ContractDefinition)*
 
 newtype SourceUnit = SourceUnit [SourceUnit1] deriving (Show, Eq, Ord)
+newtype SourceUnit' a = SourceUnit' [SourceUnit1' a] deriving (Show, Eq, Ord)
 
 data SourceUnit1
   = SourceUnit1_PragmaDirective PragmaDirective 
   | SourceUnit1_ImportDirective ImportDirective
   | SourceUnit1_ContractDefinition ContractDefinition
+  deriving (Show, Eq, Ord)
+
+data SourceUnit1' a
+  = SourceUnit1_PragmaDirective' PragmaDirective 
+  | SourceUnit1_ImportDirective' (ImportDirective' a)
+  | SourceUnit1_ContractDefinition' (ContractDefinition' a)
   deriving (Show, Eq, Ord)
 
 -------------------------------------------------------------------------------
@@ -122,6 +137,13 @@ data ImportDirective =
     from :: StringLiteral
   } deriving (Show, Eq, Ord)
 
+data ImportDirective' a =
+  ImportDirective' {
+    imports' :: [ImportDirective1' a],
+    from' :: StringLiteral' a,
+    annot :: a
+  } deriving (Show, Eq, Ord)
+
 data ImportDirective1 =
   ImportDirective1 {
     name :: Import,
@@ -129,6 +151,15 @@ data ImportDirective1 =
   } deriving (Show, Eq, Ord)
 data Import = ImportAll | ImportId Identifier deriving (Show, Eq, Ord)
 
+
+data ImportDirective1' a =
+  ImportDirective1' {
+    name' :: Import' a,
+    as'   :: Maybe (Identifier' a),
+    annot :: a
+  } deriving (Show, Eq, Ord)
+
+data Import' a = ImportAll' | ImportId' (Identifier' a) deriving (Show, Eq, Ord)
 -------------------------------------------------------------------------------
 -- ContractDefinition = ( 'contract' | 'library' | 'interface' ) Identifier
 --                      ( 'is' InheritanceSpecifier (',' InheritanceSpecifier )* )?
@@ -140,6 +171,15 @@ data ContractDefinition =
     definitionName :: Identifier,
     isClause :: [InheritanceSpecifier],
     contractParts :: [ContractPart]
+  } deriving (Show, Eq, Ord)
+
+data ContractDefinition' a =
+  ContractDefinition' {
+    definitionType' :: String,
+    definitionName' :: Identifier' a,
+    isClause' :: [InheritanceSpecifier' a],
+    contractParts' :: [ContractPart' a],
+    annot :: a
   } deriving (Show, Eq, Ord)
 
 -------------------------------------------------------------------------------
@@ -164,6 +204,17 @@ data ContractPart
   | ContractPartStateVariableDeclaration StateVariableDeclaration
   deriving (Show, Eq, Ord)
 
+data ContractPart' a
+  = ContractPartUsingForDeclaration' (Identifier' a) (Maybe (TypeName' a)) a
+  | ContractPartStructDefinition' (Identifier' a) [VariableDeclaration' a] a
+  | ContractPartModifierDefinition' (Identifier' a) (Maybe (ParameterList' a)) (Block' a) a
+  | ContractPartConstructorDefinition' (ParameterList' a) [FunctionDefinitionTag' a] (Maybe (Block' a)) a
+  | ContractPartFunctionDefinition' (Maybe (Identifier' a)) (ParameterList' a) [FunctionDefinitionTag' a] (Maybe (ParameterList' a)) (Maybe (Block' a)) a
+  | ContractPartEnumDefinition' (Identifier' a) [EnumValue' a]
+  | ContractPartEventDefinition' (Identifier' a) (IndexedParameterList' a) Bool a
+  | ContractPartStateVariableDeclaration' (StateVariableDeclaration' a) a
+  deriving (Show, Eq, Ord)
+
 -------------------------------------------------------------------------------
 -- StateVariableDeclaration = TypeName ( 'public' | 'internal' | 'private' | 'constant' )? Identifier ('=' Expression)? ';'
 
@@ -174,11 +225,21 @@ data StateVariableDeclaration = StateVariableDeclaration {
     initialValue :: Maybe Expression
   } deriving (Show, Eq, Ord)
 
+data StateVariableDeclaration' a = StateVariableDeclaration' {
+    typename' :: TypeName' a,
+    visibility' :: [String],
+    variableName' :: Identifier' a,
+    initialValue' :: Maybe (Expression' a),
+    annot :: a
+  } deriving (Show, Eq, Ord)
+
 -------------------------------------------------------------------------------
 -- InheritanceSpecifier = UserDefinedTypeName ( '(' Expression ( ',' Expression )* ')' )?
 
 data InheritanceSpecifier =
   InheritanceSpecifier { userDefinedTypeName :: UserDefinedTypeName, inheritanceParameters :: [Expression] } deriving (Eq, Ord, Show)
+data InheritanceSpecifier' a =
+  InheritanceSpecifier' { userDefinedTypeName' :: UserDefinedTypeName' a, inheritanceParameters' :: [Expression' a], annot :: a} deriving (Eq, Ord, Show)
 
 -------------------------------------------------------------------------------
 -- ModifierInvocation = Identifier ( '(' ExpressionList? ')' )?
@@ -187,6 +248,13 @@ data ModifierInvocation =
   ModifierInvocation {
     modifierInvocationIdentifier :: Identifier,
     modifierInvocationParameters :: Maybe ExpressionList
+  } deriving (Show, Eq, Ord)
+
+data ModifierInvocation' a =
+  ModifierInvocation' {
+    modifierInvocationIdentifier' :: Identifier' a,
+    modifierInvocationParameters' :: Maybe (ExpressionList' a),
+    annot :: a
   } deriving (Show, Eq, Ord)
 
 -------------------------------------------------------------------------------
@@ -199,16 +267,24 @@ data FunctionDefinitionTag
   | FunctionDefinitionTagPrivate
   deriving (Show, Eq, Ord)
 
+data FunctionDefinitionTag' a
+  = FunctionDefinitionTagModifierInvocation' (ModifierInvocation' a)
+  | FunctionDefinitionTagStateMutability' (StateMutability' a)
+  | FunctionDefinitionTagPublic' a
+  | FunctionDefinitionTagPrivate' a
+  deriving (Show, Eq, Ord)
+
 -------------------------------------------------------------------------------
 -- EnumValue = Identifier
 
 type EnumValue = Identifier
-
+type EnumValue' a = (Identifier' a)
 -------------------------------------------------------------------------------
 -- IndexedParameterList =
 --  '(' ( TypeName 'indexed'? Identifier? (',' TypeName 'indexed'? Identifier?)* )? ')'
 
 newtype IndexedParameterList = IndexedParameterList [IndexedParameter] deriving (Eq, Ord, Show)
+newtype IndexedParameterList' a = IndexedParameterList' [IndexedParameter' a] deriving (Eq, Ord, Show)
 
 data IndexedParameter = IndexedParameter {
     indexedParameterType :: TypeName,
@@ -216,21 +292,36 @@ data IndexedParameter = IndexedParameter {
     indexedParameterIdentifier :: Maybe Identifier
   } deriving (Eq, Ord, Show)
 
+data IndexedParameter' a = IndexedParameter' {
+    indexedParameterType' :: TypeName' a,
+    indexedParameterIndexed' :: Bool,
+    indexedParameterIdentifier' :: Maybe (Identifier' a),
+    annot :: a
+  } deriving (Eq, Ord, Show)
+
 -------------------------------------------------------------------------------
 -- UntypedParameterList = '(' ( Identifier (',' Identifier)* )? ')'
 -- Added for DEAs
 
 newtype UntypedParameterList = UntypedParameterList { fromUntypedParameterList :: [Identifier] } deriving (Eq, Ord, Show)
-
+newtype UntypedParameterList' a = UntypedParameterList' { fromUntypedParameterList :: [Identifier' a]} deriving (Eq, Ord, Show)
 -------------------------------------------------------------------------------
 -- ParameterList = '(' ( TypeName StorageLocation? Identifier? (',' TypeName StorageLocation? Identifier?)* )? ')'
 
 newtype ParameterList = ParameterList [Parameter] deriving (Eq, Ord, Show)
+newtype ParameterList' a = ParameterList' [Parameter' a] deriving (Eq, Ord, Show)
 
 data Parameter = Parameter {
     parameterType :: TypeName,
     parameterStorageLocation :: Maybe StorageLocation,
     parameterIdentifier :: Maybe Identifier
+  } deriving (Show, Eq, Ord)
+
+data Parameter' a = Parameter' {
+    parameterType' :: TypeName' a,
+    parameterStorageLocation' :: Maybe (StorageLocation' a),
+    parameterIdentifier' :: Maybe (Identifier' a),
+    annot :: a
   } deriving (Show, Eq, Ord)
 
 -------------------------------------------------------------------------------
@@ -247,6 +338,13 @@ data VariableDeclaration = VariableDeclaration {
     variableDeclarationStorageLocation :: Maybe StorageLocation,
     variableDeclarationName :: Identifier
   } deriving (Eq, Ord, Show)
+
+data VariableDeclaration' a = VariableDeclaration' {
+    variableDeclarationType' :: TypeName' a,
+    variableDeclarationStorageLocation' :: Maybe (StorageLocation' a),
+    variableDeclarationName' :: Identifier' a,
+    annot :: a
+  } deriving (Eq, Ord, Show)  
 
 -------------------------------------------------------------------------------
 -- TypeName
@@ -284,6 +382,7 @@ newtype UserDefinedTypeName' a = UserDefinedTypeName' [Identifier' a] deriving (
 -- StorageLocation = 'memory' | 'storage' | 'calldata'
 
 data StorageLocation = Memory | Storage | CallData deriving (Show, Eq, Ord)
+data StorageLocation' a = StorageLocation' StorageLocation a deriving (Show, Eq, Ord)
 
 -------------------------------------------------------------------------------
 -- StateMutability = 'internal' | 'external' | 'pure' | 'constant' | 'view' | 'payable'
@@ -296,12 +395,13 @@ data StateMutability' a = StateMutability' StateMutability a deriving (Eq, Ord, 
 -- IdentifierList = '(' ( Identifier? ',' )* Identifier? ')'
 
 newtype IdentifierList = IdentifierList [Identifier] deriving (Eq, Ord, Show)
+newtype IdentifierList' a = IdentifierList' [Identifier' a] deriving (Eq, Ord, Show)
 
 -------------------------------------------------------------------------------
 -- Block = '{' Statement* '}'
 
 newtype Block = Block [Statement] deriving (Eq, Ord, Show)
-
+newtype Block' a = Block' [Statement' a] deriving (Eq, Ord, Show)
 -------------------------------------------------------------------------------
 -- Statement = IfStatement | WhileStatement | ForStatement | Block | InlineAssemblyStatement |
 --             ( DoWhileStatement | PlaceholderStatement | Continue | Break | Return |
@@ -340,6 +440,27 @@ data Statement
  -- | SimpleStatementVariableDeclaration VariableDeclaration (Maybe Expression)
   | SimpleStatementVariableDeclarationList [Maybe VariableDeclaration] [Expression]
   | SimpleStatementVariableAssignmentList [Maybe Identifier] [Expression]
+  deriving (Eq, Ord, Show)
+
+data Statement' a
+  = IfStatement' (Expression' a) (Statement' a) (Maybe (Statement' a)) a
+  | WhileStatement' (Expression' a) (Statement' a)
+  | InlineAssemblyStatement' (Maybe (StringLiteral' a)) InlineAssemblyBlock a
+  | ForStatement' (Maybe (Statement' a), Maybe (Expression' a), Maybe (Expression' a)) (Statement' a)
+  | BlockStatement' (Block' a) a
+
+  | DoWhileStatement' (Statement' a) (Expression' a)
+  | PlaceholderStatement' a
+  | Continue' a
+  | Break' a
+  | Return' (Maybe (Expression' a)) a
+  | Throw' a
+  | EmitStatement' (Expression' a) a
+  | SimpleStatementExpression' (Expression' a) a
+  | SimpleStatementVariableList' (IdentifierList' (Maybe (Expression' a))) a
+ -- | SimpleStatementVariableDeclaration VariableDeclaration (Maybe Expression)
+  | SimpleStatementVariableDeclarationList' [Maybe (VariableDeclaration' a)] [Expression' a] a
+  | SimpleStatementVariableAssignmentList' [Maybe (Identifier' a)] [Expression' a] a
   deriving (Eq, Ord, Show)
 
 -------------------------------------------------------------------------------
