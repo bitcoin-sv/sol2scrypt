@@ -4,7 +4,7 @@ import Options.Applicative
 
 data Options
   = Transpile {cDest :: FilePath, cSource :: Maybe FilePath}
-  | TranspileVersion
+  | Version
   deriving (Show)
 
 sourceParser :: Parser (Maybe FilePath)
@@ -20,12 +20,12 @@ commandsParser =
         "transpile"
         ( info
             (Transpile <$> destParser <*> sourceParser)
-            (progDesc "Transpile FILE to sCrypt")
+            (progDesc "Transpile Solidity FILE to sCrypt")
         )
         <> command
           "version"
           ( info
-              (pure TranspileVersion)
+              (pure Version)
               (progDesc "Show version")
           )
     )
