@@ -276,7 +276,7 @@ data TypeName' a
 -------------------------------------------------------------------------------
 -- UserDefinedTypeName = Identifier ( '.' Identifier )*
 
-data UserDefinedTypeName = UserDefinedTypeName [Identifier] deriving (Eq, Ord, Show)
+newtype UserDefinedTypeName = UserDefinedTypeName [Identifier] deriving (Eq, Ord, Show)
 
 newtype UserDefinedTypeName' a = UserDefinedTypeName' [Identifier' a] deriving (Eq, Ord, Show)
 
@@ -429,15 +429,20 @@ data PrimaryExpression' a
   deriving (Eq, Ord, Show)
 
 instance Annotated PrimaryExpression' a where
-  ann (PrimaryExpressionBooleanLiteral' l) = ann l
-
+  ann (PrimaryExpressionBooleanLiteral' e) = ann e
+  ann (PrimaryExpressionNumberLiteral' e) = ann e
+  ann (PrimaryExpressionHexLiteral' e) = ann e
+  ann (PrimaryExpressionStringLiteral' e) = ann e
+  ann (PrimaryExpressionTupleExpression' e) = ann e
+  ann (PrimaryExpressionIdentifier' e) = ann e
+  ann (PrimaryExpressionElementaryTypeNameExpression' e) = ann e
 
 -------------------------------------------------------------------------------
 -- ExpressionList = Expression ( ',' Expression )*
 
 newtype ExpressionList = ExpressionList { unExpressionList :: [Expression] } deriving (Eq, Ord, Show)
 
-data ExpressionList' a = ExpressionList' { unExpressionList' :: [Expression' a], annot :: a } deriving (Eq, Ord, Show)
+newtype ExpressionList' a = ExpressionList' { unExpressionList' :: [Expression' a]} deriving (Eq, Ord, Show)
 
 -------------------------------------------------------------------------------
 -- NameValueList = Identifier ':' Expression ( ',' Identifier ':' Expression )*
@@ -469,6 +474,9 @@ data NumberLiteral
 
 data NumberLiteral' a = NumberLiteral' NumberLiteral a deriving (Eq, Ord, Show)
 
+instance Annotated NumberLiteral' a where
+  ann (NumberLiteral' _ a) = a
+
 -------------------------------------------------------------------------------
 -- NumberUnit = 'wei' | 'szabo' | 'finney' | 'ether'
 --           | 'seconds' | 'minutes' | 'hours' | 'days' | 'weeks' | 'years'
@@ -484,12 +492,18 @@ data NumberUnit
 newtype HexLiteral = HexLiteral String deriving (Show, Eq, Ord)
 
 data HexLiteral' a = HexLiteral' String a deriving (Show, Eq, Ord)
+
+instance Annotated HexLiteral' a where
+  ann (HexLiteral' _ a) = a
 -------------------------------------------------------------------------------
 -- StringLiteral = '"' ([^"\r\n\\] | '\\' .)* '"'
 
 newtype StringLiteral = StringLiteral String deriving (Show, Eq, Ord)
 
 data StringLiteral' a = StringLiteral' String a deriving (Show, Eq, Ord)
+
+instance Annotated StringLiteral' a where
+  ann (StringLiteral' _ a) = a
 
 -------------------------------------------------------------------------------
 -- Identifier = [a-zA-Z_$] [a-zA-Z_$0-9]*
@@ -501,6 +515,8 @@ instance Show Identifier where
 
 data Identifier' a = Identifier' { unIdentifier' :: String, annot :: a} deriving (Show, Eq, Ord)
 
+instance Annotated Identifier' a where
+  ann = annot
 -- -------------------------------------------------------------------------------
 -- TupleExpression = '(' ( Expression ( ',' Expression )*  )? ')'
 --                 | '[' ( Expression ( ',' Expression )*  )? ']'
@@ -515,6 +531,9 @@ data TupleExpression' a
   | SquareBrackets' [Expression' a] a
   deriving (Show, Eq, Ord)
 
+instance Annotated TupleExpression' a where
+  ann (RoundBrackets' _ a) = a
+  ann (SquareBrackets' _ a) = a
 -- -------------------------------------------------------------------------------
 -- ElementaryTypeNameExpression = ElementaryTypeName
 
@@ -540,6 +559,8 @@ data ElementaryTypeName
 
 data ElementaryTypeName' a = ElementaryTypeName' ElementaryTypeName a deriving (Eq, Ord, Show)
 
+instance Annotated ElementaryTypeName' a where
+  ann (ElementaryTypeName' _ a) = a
 -- -------------------------------------------------------------------------------
 -- InlineAssemblyBlock = '{' AssemblyItem* '}'
 
