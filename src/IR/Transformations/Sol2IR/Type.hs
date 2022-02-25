@@ -31,6 +31,23 @@ instance ToIRTransformable TypeName IType' where
   _toIR (TypeNameMapping kt vt) = toIRMappingType (TypeNameElementaryTypeName kt) vt []
   _toIR t = error $ "unsupported type `" ++ headWord (show t) ++ "`"
 
+instance ToIRTransformable (TypeName' SourceRange) IType' where
+  _toIR (TypeNameElementaryTypeName' (ElementaryTypeName' Sol.BoolType _) _) = return $ Just $ ElementaryType Bool
+  _toIR (TypeNameElementaryTypeName' (ElementaryTypeName' (Sol.IntType _) _) _) = return $ Just $ ElementaryType Int
+  _toIR (TypeNameElementaryTypeName' (ElementaryTypeName' (Sol.UintType _) _) _) = return $ Just $ ElementaryType Int
+  _toIR (TypeNameElementaryTypeName' (ElementaryTypeName' (Sol.BytesType _) _) _) = return $ Just $ ElementaryType Bytes
+  _toIR (TypeNameElementaryTypeName' (ElementaryTypeName' Sol.ByteType _) _) = return $ Just $ ElementaryType Bytes
+  _toIR (TypeNameElementaryTypeName' (ElementaryTypeName' Sol.StringType _) _) = return $ Just $ ElementaryType String
+  _toIR (TypeNameElementaryTypeName' (ElementaryTypeName' Sol.AddressType _) _) = return $ Just $ ElementaryType Address
+  _toIR (TypeNameElementaryTypeName' (ElementaryTypeName' Sol.VarType _) _) = return $ Just $ ElementaryType Any
+  -- _toIR (TypeNameArrayTypeName' t e) = do
+  --   t' <- _toIR t
+  --   sub <- _toIR e
+  --   let arr = flip Array sub
+  --   return $ arr <$> t'
+  -- _toIR (TypeNameMapping' kt vt _) = toIRMappingType (TypeNameElementaryTypeName kt) vt []
+  _toIR t = error $ "unsupported type `" ++ headWord (show t) ++ "`"
+
 -- transpile Sol mapping type to a flattened IR mapping type
 toIRMappingType :: TypeName -> TypeName -> [IType'] -> Transformation IType'
 toIRMappingType kt (TypeNameMapping vkt vvt) flattendKeyTypes = do

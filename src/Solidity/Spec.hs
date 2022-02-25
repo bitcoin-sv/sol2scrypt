@@ -13,6 +13,8 @@
 -- limitations under the License.
 
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE DuplicateRecordFields #-}
 
 -- Bug in Sublime Text syntax highlighting for Haskel ("()"...
 
@@ -45,15 +47,29 @@ module Solidity.Spec (
 
   FunctionName, VariableName, ContractName, ModifierName,
 
+  -- new versions
+  SourceRange (..), Identifier' (..), TypeName' (..), ElementaryTypeName' (..), TypeNameList' (..), StateMutability' (..), UserDefinedTypeName' (..),
+  Expression' (..), TupleExpression' (..), ExpressionList' (..),  PrimaryExpression' (..), NameValueList' (..),
+  NumberLiteral' (..), HexLiteral' (..), StringLiteral' (..), BooleanLiteral' (..),
+
   untypeParameterList, typeParameterList, addMemoryLocationToParametersList
 ) where
 
 import Data.Maybe
+import Text.Parsec.Pos
+
+data SourceRange = SourceRange
+  { srcStart :: SourcePos,
+    srcEnd :: SourcePos
+  }
+  deriving (Show, Eq, Ord)
 
 type FunctionName = Identifier
 type VariableName = Identifier
 type ContractName = Identifier
 type ModifierName = Identifier
+
+-- data String' a = String' String a deriving (Eq, Ord, Show)
 
 -------------------------------------------------------------------------------
 newtype SolidityCode = SolidityCode SourceUnit deriving (Eq, Ord, Show)
@@ -64,7 +80,7 @@ newtype SolidityCode = SolidityCode SourceUnit deriving (Eq, Ord, Show)
 newtype SourceUnit = SourceUnit [SourceUnit1] deriving (Show, Eq, Ord)
 
 data SourceUnit1
-  = SourceUnit1_PragmaDirective PragmaDirective
+  = SourceUnit1_PragmaDirective PragmaDirective 
   | SourceUnit1_ImportDirective ImportDirective
   | SourceUnit1_ContractDefinition ContractDefinition
   deriving (Show, Eq, Ord)
@@ -213,6 +229,8 @@ data Parameter = Parameter {
 
 newtype TypeNameList = TypeNameList [TypeName] deriving (Eq, Ord, Show)
 
+newtype TypeNameList' a = TypeNameList' [TypeName' a] deriving (Eq, Ord, Show)
+
 -------------------------------------------------------------------------------
 -- VariableDeclaration = TypeName StorageLocation? Identifier
 data VariableDeclaration = VariableDeclaration {
@@ -238,10 +256,20 @@ data TypeName
   | TypeNameArrayTypeName TypeName (Maybe Expression)
   deriving (Eq, Ord, Show)
 
+data TypeName' a
+  = TypeNameMapping' (ElementaryTypeName' a) (TypeName' a) a
+  | TypeNameFunctionTypeName' (TypeNameList' a) [StateMutability' a] (Maybe (TypeNameList' a)) a
+  | TypeNameElementaryTypeName' (ElementaryTypeName' a) a
+  | TypeNameUserDefinedTypeName' (UserDefinedTypeName' a) a
+  | TypeNameArrayTypeName' (TypeName' a) (Maybe Expression) -- a
+  deriving (Eq, Ord, Show)
+
 -------------------------------------------------------------------------------
 -- UserDefinedTypeName = Identifier ( '.' Identifier )*
 
 data UserDefinedTypeName = UserDefinedTypeName [Identifier] deriving (Eq, Ord, Show)
+
+newtype UserDefinedTypeName' a = UserDefinedTypeName' [Identifier' a] deriving (Eq, Ord, Show)
 
 -------------------------------------------------------------------------------
 -- StorageLocation = 'memory' | 'storage' | 'calldata'
@@ -252,6 +280,8 @@ data StorageLocation = Memory | Storage | CallData deriving (Show, Eq, Ord)
 -- StateMutability = 'internal' | 'external' | 'pure' | 'constant' | 'view' | 'payable'
 
 data StateMutability = Pure | Constant | View | Payable | Internal | External deriving (Eq, Ord, Show)
+
+data StateMutability' a = StateMutability' StateMutability a deriving (Eq, Ord, Show)
 
 -------------------------------------------------------------------------------
 -- IdentifierList = '(' ( Identifier? ',' )* Identifier? ')'
@@ -340,6 +370,17 @@ data Expression
   | New TypeName
   deriving (Eq, Ord, Show)
 
+data Expression' a
+  = Unary' String (Expression' a) a
+  | Binary' String (Expression' a) (Expression' a) a
+  | Ternary' String (Expression' a) (Expression' a) (Expression' a) a
+  | FunctionCallNameValueList' (Expression' a) (Maybe (NameValueList' a)) a
+  | FunctionCallExpressionList' (Expression' a) (Maybe (ExpressionList' a)) a
+  | MemberAccess' (Expression' a) (Identifier' a) a
+  | Literal' (PrimaryExpression' a)
+  | New' (TypeName' a) a
+  deriving (Eq, Ord, Show)
+
 -------------------------------------------------------------------------------
 -- PrimaryExpression = BooleanLiteral
 --                   | NumberLiteral
@@ -358,20 +399,36 @@ data PrimaryExpression
   | PrimaryExpressionElementaryTypeNameExpression ElementaryTypeNameExpression
   deriving (Eq, Ord, Show)
 
+data PrimaryExpression' a
+  = PrimaryExpressionBooleanLiteral' (BooleanLiteral' a)
+  | PrimaryExpressionNumberLiteral' (NumberLiteral' a)
+  | PrimaryExpressionHexLiteral' (HexLiteral' a)
+  | PrimaryExpressionStringLiteral' (StringLiteral' a)
+  | PrimaryExpressionTupleExpression' (TupleExpression' a)
+  | PrimaryExpressionIdentifier' (Identifier' a)
+  | PrimaryExpressionElementaryTypeNameExpression' (ElementaryTypeNameExpression' a)
+  deriving (Eq, Ord, Show)
+
 -------------------------------------------------------------------------------
 -- ExpressionList = Expression ( ',' Expression )*
 
 newtype ExpressionList = ExpressionList { unExpressionList :: [Expression] } deriving (Eq, Ord, Show)
+
+data ExpressionList' a = ExpressionList' { unExpressionList' :: [Expression' a], annot :: a } deriving (Eq, Ord, Show)
 
 -------------------------------------------------------------------------------
 -- NameValueList = Identifier ':' Expression ( ',' Identifier ':' Expression )*
 
 newtype NameValueList = NameValueList [(Identifier, Expression)] deriving (Show, Eq, Ord)
 
+newtype NameValueList' a = NameValueList' [(Identifier' a, Expression' a)] deriving (Show, Eq, Ord)
+
 -------------------------------------------------------------------------------
 -- BooleanLiteral = 'true' | 'false'
 
 newtype BooleanLiteral = BooleanLiteral String deriving (Eq, Ord, Show)
+
+data BooleanLiteral' a = BooleanLiteral' String a deriving (Eq, Ord, Show)
 
 -------------------------------------------------------------------------------
 -- NumberLiteral = ( HexNumber | DecimalNumber ) (' ' NumberUnit)?
@@ -384,6 +441,8 @@ data NumberLiteral
   | NumberLiteralDec String (Maybe NumberUnit)
  deriving (Eq, Ord, Show)
 
+data NumberLiteral' a = NumberLiteral' NumberLiteral a deriving (Eq, Ord, Show)
+
 -------------------------------------------------------------------------------
 -- NumberUnit = 'wei' | 'szabo' | 'finney' | 'ether'
 --           | 'seconds' | 'minutes' | 'hours' | 'days' | 'weeks' | 'years'
@@ -392,15 +451,19 @@ data NumberUnit
   = Wei | Szabo | Finney | Ether | Seconds | Minutes | Hours | Days | Weeks | Years
   deriving (Show, Eq, Ord)
 
+-- data NumberUnit' a = NumberUnit' NumberUnit a deriving (Show, Eq, Ord)
 -------------------------------------------------------------------------------
 -- HexLiteral = 'hex' ('"' ([0-9a-fA-F]{2})* '"' | '\'' ([0-9a-fA-F]{2})* '\'')
 
 newtype HexLiteral = HexLiteral String deriving (Show, Eq, Ord)
 
+data HexLiteral' a = HexLiteral' String a deriving (Show, Eq, Ord)
 -------------------------------------------------------------------------------
 -- StringLiteral = '"' ([^"\r\n\\] | '\\' .)* '"'
 
 newtype StringLiteral = StringLiteral String deriving (Show, Eq, Ord)
+
+data StringLiteral' a = StringLiteral' String a deriving (Show, Eq, Ord)
 
 -------------------------------------------------------------------------------
 -- Identifier = [a-zA-Z_$] [a-zA-Z_$0-9]*
@@ -409,6 +472,8 @@ newtype Identifier = Identifier { unIdentifier :: String } deriving (Eq, Ord)
 
 instance Show Identifier where
   show i = "(Identifier \"" ++ unIdentifier i ++ "\")"
+
+data Identifier' a = Identifier' { unIdentifier' :: String, annot :: a} deriving (Show, Eq, Ord)
 
 -- -------------------------------------------------------------------------------
 -- TupleExpression = '(' ( Expression ( ',' Expression )*  )? ')'
@@ -419,10 +484,17 @@ data TupleExpression
   | SquareBrackets [Expression]
   deriving (Show, Eq, Ord)
 
+data TupleExpression' a
+  = RoundBrackets' [Expression' a] a
+  | SquareBrackets' [Expression' a] a
+  deriving (Show, Eq, Ord)
+
 -- -------------------------------------------------------------------------------
 -- ElementaryTypeNameExpression = ElementaryTypeName
 
 type ElementaryTypeNameExpression = ElementaryTypeName
+
+type ElementaryTypeNameExpression' a = ElementaryTypeName' a
 
 -- -------------------------------------------------------------------------------
 -- ElementaryTypeName = 'address' | 'bool' | 'string' | 'var'
@@ -439,6 +511,8 @@ data ElementaryTypeName
   | IntType (Maybe Integer) | UintType (Maybe Integer) | BytesType (Maybe Integer)
   | ByteType | FixedType (Maybe (Integer, Integer)) | UfixedType (Maybe (Integer, Integer))
   deriving (Eq, Ord, Show)
+
+data ElementaryTypeName' a = ElementaryTypeName' ElementaryTypeName a deriving (Eq, Ord, Show)
 
 -- -------------------------------------------------------------------------------
 -- InlineAssemblyBlock = '{' AssemblyItem* '}'

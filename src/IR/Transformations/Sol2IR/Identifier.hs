@@ -12,6 +12,9 @@ import Solidity.Spec as Sol
 instance ToIRTransformable Sol.Identifier IIdentifier' where
   _toIR (Sol.Identifier i) = return $ Just $ IR.Identifier i
 
+instance ToIRTransformable (Identifier' SourceRange) IIdentifier' where
+  _toIR (Sol.Identifier' i _) = return $ Just $ IR.Identifier i
+
 maybeStateVarId :: IR.IIdentifier' -> Transformation IR.IIdentifier'
 maybeStateVarId Nothing = return Nothing
 maybeStateVarId (Just i) = do
