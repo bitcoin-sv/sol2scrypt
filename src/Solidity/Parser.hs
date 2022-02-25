@@ -13,7 +13,7 @@
 -- limitations under the License.
 
 {-# LANGUAGE FlexibleContexts #-}
-
+{-# LANGUAGE FlexibleInstances #-}
 -- Bug in Sublime Text syntax highlighting for Haskel ("()"...
 
 module Solidity.Parser where
@@ -43,6 +43,7 @@ lineDisplay :: Parseable a => a -> String
 lineDisplay = filter (not . isSpace) . display
 
 -- Some helper parsing functions
+indent :: String -> String
 indent = unlines . map ("  "++) . lines
 
 sep1, sep :: Char -> Parser a -> Parser [a]
@@ -76,6 +77,13 @@ list (p:ps) = do { vp <- p; vps <- list ps; return (vp:vps) }
 
 keyword :: String -> Parser String
 keyword word = string word <* endOfWord
+
+addSource :: Parser (SourceRange -> a) -> Parser a
+addSource p = do
+  start <- getPosition
+  x <- p
+  end <- getPosition
+  return $ x $ SourceRange start end
 
 -- end of helper functions
 
@@ -484,6 +492,9 @@ instance Parseable TypeNameList where
   display (TypeNameList ts) = "(" ++ intercalate ", " (map display ts) ++")"
   parser = TypeNameList <$> (char '(' *> whitespace *> commaSep parser <* whitespace <* char ')')
 
+instance Parseable (TypeNameList' SourceRange) where
+  display (TypeNameList' ts) = "(" ++ intercalate ", " (map display ts) ++")"
+  parser = TypeNameList' <$> (char '(' *> whitespace *> commaSep parser <* whitespace <* char ')')
 
 -------------------------------------------------------------------------------
 -- VariableDeclaration = TypeName StorageLocation? Identifier
@@ -552,12 +563,54 @@ instance Parseable TypeName where
       construct t [] = t
       construct t (me:mes) = construct (TypeNameArrayTypeName t me) mes
 
+instance Parseable (TypeName' SourceRange) where
+  display (TypeNameMapping' t1 t2 _) = "mapping ("++display t1++" => "++display t2++")"
+  display (TypeNameElementaryTypeName' t _) = display t
+  display (TypeNameUserDefinedTypeName' t _) = display t
+  display (TypeNameArrayTypeName' t me ) = display t ++"["++maybe "" display me++"]"
+  display (TypeNameFunctionTypeName' tl ms mtl' _) =
+    "function " ++ display tl ++ (if null ms then "" else " " ++ unwords (map display ms)) ++
+    maybe "" (\r -> " returns "++display r) mtl'
+
+  parser =
+    do
+      t <- addSource parserBasic <* whitespace
+      mes <- many (parseArrayBrackets <* whitespace)
+      return $ construct t mes
+    where
+      parserBasic = choice
+        [ do
+            t1 <- keyword "mapping" *> whitespace *> char '(' *> parser <* whitespace <* string "=>" <* whitespace
+            t2 <- parser <* whitespace <* char ')'
+            return (TypeNameMapping' t1 t2)
+        , try $ TypeNameElementaryTypeName' <$> parser
+        , try $ do
+            tl <- keyword "function" *> whitespace *> parser <* whitespace
+            ms <- many (parser <* whitespace)
+            mtl' <- try (Just <$> keyword "returns" *> whitespace *> parser) <|> return Nothing
+            return (TypeNameFunctionTypeName' tl ms mtl')
+        , TypeNameUserDefinedTypeName' <$> parser
+        ]
+
+      parseArrayBrackets =
+        char '[' *> whitespace *>
+        do
+          me <- (char ']' *> return Nothing) <|> (Just <$> parser <* whitespace <* char ']')
+          return me
+
+      construct t [] = t
+      construct t (me:mes) = construct (TypeNameArrayTypeName' t me ) mes
+
 -------------------------------------------------------------------------------
 -- UserDefinedTypeName = Identifier ( '.' Identifier )*
 
 instance Parseable UserDefinedTypeName where
   display (UserDefinedTypeName is) = intercalate "." (map display is)
   parser = UserDefinedTypeName <$> sep1 '.' parser
+
+instance Parseable (UserDefinedTypeName' SourceRange) where
+  display (UserDefinedTypeName' is) = intercalate "." (map display is)
+  parser = UserDefinedTypeName' <$> sep1 '.' parser
 
 -------------------------------------------------------------------------------
 -- StorageLocation = 'memory' | 'storage'
@@ -589,6 +642,25 @@ instance Parseable StateMutability where
     , char 'p' *>
         ((const Pure <$> keyword "ure") <|> (const Payable <$> keyword "ayable"))
     ]
+
+instance Parseable (StateMutability' SourceRange) where
+  display (StateMutability' Pure _) = "pure"
+  -- display Internal = "internal"
+  -- display External = "external"
+  -- display Constant = "constant"
+  -- display View = "view"
+  -- display Payable = "payable"
+
+  parser = addSource $ StateMutability' <$> p
+    where
+    p = choice
+      [ const Internal <$> keyword "internal"
+      , const External <$> keyword "external"
+      , const Constant <$> keyword "constant"
+      , const View <$> keyword "view"
+      , char 'p' *>
+          ((const Pure <$> keyword "ure") <|> (const Payable <$> keyword "ayable"))
+      ]
 
 -------------------------------------------------------------------------------
 -- IdentifierList = '(' ( Identifier? ',' )* Identifier? ')'
@@ -930,6 +1002,24 @@ instance Parseable PrimaryExpression where
   display (PrimaryExpressionIdentifier l) = display l
   display (PrimaryExpressionElementaryTypeNameExpression l) = display l
 
+instance Parseable (PrimaryExpression' SourceRange) where
+  parser = choice
+    [ try $ PrimaryExpressionBooleanLiteral' <$> parser
+    , try $ PrimaryExpressionNumberLiteral' <$> parser
+    -- , try $ PrimaryExpressionHexLiteral' <$> parser
+    -- , try $ PrimaryExpressionStringLiteral' <$> parser
+    -- , try $ PrimaryExpressionTupleExpression' <$> parser
+    , try $ PrimaryExpressionIdentifier' <$> parser
+    , PrimaryExpressionElementaryTypeNameExpression' <$> parser
+    ]
+  display (PrimaryExpressionBooleanLiteral' l) = display l
+  display (PrimaryExpressionNumberLiteral' l) = display l
+  -- display (PrimaryExpressionHexLiteral' l) = display l
+  -- display (PrimaryExpressionStringLiteral' l) = display l
+  -- display (PrimaryExpressionTupleExpression' l) = display l
+  display (PrimaryExpressionIdentifier' l) = display l
+  display (PrimaryExpressionElementaryTypeNameExpression' l) = display l
+
 -------------------------------------------------------------------------------
 -- ExpressionList = Expression ( ',' Expression )*
 
@@ -952,6 +1042,10 @@ instance Parseable NameValueList where
 instance Parseable BooleanLiteral where
   parser = BooleanLiteral <$> (string "true" <|> string "false")
   display (BooleanLiteral lit) = lit
+
+instance Parseable (BooleanLiteral' SourceRange) where
+  parser = addSource $ BooleanLiteral' <$> (string "true" <|> string "false")
+  display (BooleanLiteral' lit _) = lit
 
 -------------------------------------------------------------------------------
 -- NumberLiteral = ( HexNumber | DecimalNumber ) (' ' NumberUnit)?
@@ -976,6 +1070,23 @@ instance Parseable NumberLiteral where
 
   display (NumberLiteralHex n units) = "0x"++ n ++ maybe "" _display units
   display (NumberLiteralDec n units) = n ++ maybe "" _display units
+
+instance Parseable (NumberLiteral' SourceRange) where
+  parser = addSource $ NumberLiteral' <$> (try (do
+          n <- string "0x" *> many1 (digit <|> oneOf "ABCDEFabcdef")
+          u <- parseMaybeUnits
+          return (NumberLiteralHex n u)
+            )
+          <|>
+          do
+            n <- many1 digit
+            u <- parseMaybeUnits
+            return (NumberLiteralDec n u))
+    where
+      parseMaybeUnits = try (Just <$> char ' ' *> whitespace *> parser) <|> return Nothing
+
+  display (NumberLiteral' (NumberLiteralHex n units) _) = "0x"++ n ++ maybe "" _display units
+  display (NumberLiteral' (NumberLiteralDec n units) _) = n ++ maybe "" _display units
 
 -------------------------------------------------------------------------------
 -- NumberUnit = 'wei' | 'szabo' | 'finney' | 'ether'
@@ -1046,6 +1157,15 @@ instance Parseable Identifier where
         endOfWord
     )
   display (Identifier ident) = ident
+
+instance Parseable (Identifier' SourceRange) where
+  parser = addSource $ Identifier' <$> (
+                          (:) <$>
+                            (letter <|> oneOf "_$") <*>
+                            many (alphaNum <|> oneOf "_$") <*
+                            endOfWord
+                        )
+  display (Identifier' ident _) = ident
 
 -- -------------------------------------------------------------------------------
 -- TupleExpression = '(' ( Expression ( ',' Expression )*  )? ')'
@@ -1131,6 +1251,65 @@ instance Parseable ElementaryTypeName where
             if (null d1 || null d2) then mzero else return (Just (read d1, read d2))
         ) <|> return Nothing
 
+instance Parseable (ElementaryTypeName' SourceRange) where
+  display (ElementaryTypeName' AddressPayableType _) = "address payable"
+  -- display AddressType = "address"
+  -- display BoolType = "bool"
+  -- display StringType = "string"
+  -- display VarType = "var"
+  -- display ByteType = "byte"
+  -- display (IntType Nothing) = "int"
+  -- display (IntType (Just n)) = "int"++show n
+  -- display (UintType Nothing) = "uint"
+  -- display (UintType (Just n)) = "uint"++show n
+  -- display (BytesType Nothing) = "bytes"
+  -- display (BytesType (Just n)) = "bytes"++show n
+  -- display (FixedType Nothing) = "fixed"
+  -- display (FixedType (Just (d1,d2))) = "fixed"++show d1++"x"++show d2
+  -- display (UfixedType Nothing) = "ufixed"
+  -- display (UfixedType (Just (d1,d2))) = "ufixed"++show d1++"x"++show d2
+
+  parser = addSource $ ElementaryTypeName' <$> p 
+    where
+      p = choice
+        [ try (const AddressPayableType <$> keyword "address" <* whitespace <* keyword "payable") <|> const AddressType <$> keyword "address"
+        , const StringType <$> keyword "string"
+        , const VarType <$> keyword "var"
+        , IntType <$> (string "int" *> parseIntSize)
+        , FixedType <$> (string "fixed" *> parseFixedPair)
+        , char 'u' *> (
+            (UfixedType <$> (string "fixed" *> parseFixedPair)) <|>
+            (UintType <$> (string "int" *> parseIntSize))
+          )
+        , char 'b' *> (
+            (const BoolType <$> keyword "ool") <|>
+            (string "yte" *> (
+              (BytesType <$> (char 's' *> parseBytesSize)) <|>
+              (return ByteType)
+            ))
+          )
+        ]
+      
+      parseIntSize :: Parser (Maybe Integer)
+      parseIntSize =
+        do
+          ns <- many digit
+          let n = read ns :: Integer
+          if not (null ns) && n `mod` 8 == 0 && n >= 8 && n <= 256 then return (Just n) else mzero
+        <|> return Nothing
+      parseBytesSize =
+        do
+          ns <- many digit
+          let n = read ns :: Integer
+          if not (null ns) && n > 0 && n >= 1 && n <= 32 then return (Just n) else mzero
+        <|> return Nothing
+      parseFixedPair =
+        try (
+          do
+            d1 <- many digit <* char 'x'
+            d2 <- many digit
+            if (null d1 || null d2) then mzero else return (Just (read d1, read d2))
+        ) <|> return Nothing
 
 -- -------------------------------------------------------------------------------
 -- InlineAssemblyBlock = '{' AssemblyItem* '}'
