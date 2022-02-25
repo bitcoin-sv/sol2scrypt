@@ -104,10 +104,15 @@ data SourceUnit1
   deriving (Show, Eq, Ord)
 
 data SourceUnit1' a
-  = SourceUnit1_PragmaDirective' PragmaDirective 
+  = SourceUnit1_PragmaDirective' (PragmaDirective' a)
   | SourceUnit1_ImportDirective' (ImportDirective' a)
   | SourceUnit1_ContractDefinition' (ContractDefinition' a)
   deriving (Show, Eq, Ord)
+
+instance Annotated SourceUnit1' a where
+  ann (SourceUnit1_PragmaDirective' p) = ann p
+  ann (SourceUnit1_ImportDirective' i) = ann i
+  ann (SourceUnit1_ContractDefinition' c) = ann c
 
 -------------------------------------------------------------------------------
 -- VersionComparator = '^' | '>' | '<' | '<=' | '>='
@@ -126,6 +131,14 @@ data PragmaDirective = SolidityPragmaConjunction [Version]
                      | SolidityPragmaDisjunction [Version] 
                      | ExperimentalPragma String deriving (Show, Eq, Ord)
 
+data PragmaDirective' a = SolidityPragmaConjunction' [Version] a
+                     | SolidityPragmaDisjunction' [Version] a
+                     | ExperimentalPragma' String a deriving (Show, Eq, Ord)
+
+instance Annotated PragmaDirective' a where
+  ann (SolidityPragmaConjunction' _ a) = a
+  ann (SolidityPragmaDisjunction' _ a) = a
+  ann (ExperimentalPragma' _ a) = a
 -------------------------------------------------------------------------------
 -- ImportDirective = 'import' StringLiteral ('as' Identifier)? ';'
 --         | 'import' ('*' | Identifier) ('as' Identifier)? 'from' StringLiteral ';'
@@ -144,6 +157,9 @@ data ImportDirective' a =
     annot :: a
   } deriving (Show, Eq, Ord)
 
+instance Annotated ImportDirective' a where
+  ann (ImportDirective' _ _ a) = a
+
 data ImportDirective1 =
   ImportDirective1 {
     name :: Import,
@@ -159,7 +175,13 @@ data ImportDirective1' a =
     annot :: a
   } deriving (Show, Eq, Ord)
 
-data Import' a = ImportAll' | ImportId' (Identifier' a) deriving (Show, Eq, Ord)
+data Import' a = ImportAll' a | ImportId' (Identifier' a) a deriving (Show, Eq, Ord)
+instance Annotated Import' a where
+  ann (ImportAll' a) = a
+  ann (ImportId' _ a) = a
+
+instance Annotated ImportDirective1' a where
+  ann (ImportDirective1' _ _ a) = a
 -------------------------------------------------------------------------------
 -- ContractDefinition = ( 'contract' | 'library' | 'interface' ) Identifier
 --                      ( 'is' InheritanceSpecifier (',' InheritanceSpecifier )* )?
@@ -181,6 +203,9 @@ data ContractDefinition' a =
     contractParts' :: [ContractPart' a],
     annot :: a
   } deriving (Show, Eq, Ord)
+
+instance Annotated ContractDefinition' a where
+  ann (ContractDefinition' _ _ _ _ a) = a
 
 -------------------------------------------------------------------------------
 -- ContractPart
@@ -210,10 +235,20 @@ data ContractPart' a
   | ContractPartModifierDefinition' (Identifier' a) (Maybe (ParameterList' a)) (Block' a) a
   | ContractPartConstructorDefinition' (ParameterList' a) [FunctionDefinitionTag' a] (Maybe (Block' a)) a
   | ContractPartFunctionDefinition' (Maybe (Identifier' a)) (ParameterList' a) [FunctionDefinitionTag' a] (Maybe (ParameterList' a)) (Maybe (Block' a)) a
-  | ContractPartEnumDefinition' (Identifier' a) [EnumValue' a]
+  | ContractPartEnumDefinition' (Identifier' a) [EnumValue' a] a
   | ContractPartEventDefinition' (Identifier' a) (IndexedParameterList' a) Bool a
   | ContractPartStateVariableDeclaration' (StateVariableDeclaration' a) a
   deriving (Show, Eq, Ord)
+
+instance Annotated ContractPart' a where
+  ann (ContractPartUsingForDeclaration' _ _ a) = a
+  ann (ContractPartStructDefinition' _ _ a) = a
+  ann (ContractPartModifierDefinition' _ _ _ a) = a
+  ann (ContractPartConstructorDefinition' _ _ _ a) = a
+  ann (ContractPartFunctionDefinition' _ _ _ _ _ a) = a
+  ann (ContractPartEnumDefinition' _ _ a) = a
+  ann (ContractPartEventDefinition' _ _ _ a) = a
+  ann (ContractPartStateVariableDeclaration' _ a) = a
 
 -------------------------------------------------------------------------------
 -- StateVariableDeclaration = TypeName ( 'public' | 'internal' | 'private' | 'constant' )? Identifier ('=' Expression)? ';'
@@ -233,6 +268,9 @@ data StateVariableDeclaration' a = StateVariableDeclaration' {
     annot :: a
   } deriving (Show, Eq, Ord)
 
+instance Annotated StateVariableDeclaration' a where
+  ann (StateVariableDeclaration' _ _ _ _ a) = a
+  
 -------------------------------------------------------------------------------
 -- InheritanceSpecifier = UserDefinedTypeName ( '(' Expression ( ',' Expression )* ')' )?
 
@@ -241,6 +279,8 @@ data InheritanceSpecifier =
 data InheritanceSpecifier' a =
   InheritanceSpecifier' { userDefinedTypeName' :: UserDefinedTypeName' a, inheritanceParameters' :: [Expression' a], annot :: a} deriving (Eq, Ord, Show)
 
+instance Annotated InheritanceSpecifier' a where
+  ann (InheritanceSpecifier' _ _ a) = a
 -------------------------------------------------------------------------------
 -- ModifierInvocation = Identifier ( '(' ExpressionList? ')' )?
 
@@ -256,6 +296,9 @@ data ModifierInvocation' a =
     modifierInvocationParameters' :: Maybe (ExpressionList' a),
     annot :: a
   } deriving (Show, Eq, Ord)
+
+instance Annotated ModifierInvocation' a where
+  ann (ModifierInvocation' _ _ a) = a
 
 -------------------------------------------------------------------------------
 -- FunctionDefinitionTag = ModifierInvocation | StateMutability | 'public' | 'internal' | 'private'
@@ -274,11 +317,21 @@ data FunctionDefinitionTag' a
   | FunctionDefinitionTagPrivate' a
   deriving (Show, Eq, Ord)
 
+instance Annotated FunctionDefinitionTag' a where
+  ann (FunctionDefinitionTagModifierInvocation' l) = ann l
+  ann (FunctionDefinitionTagStateMutability' l) = ann l
+  ann (FunctionDefinitionTagPublic' a) = a
+  ann (FunctionDefinitionTagPrivate' a) = a
+
 -------------------------------------------------------------------------------
 -- EnumValue = Identifier
 
 type EnumValue = Identifier
-type EnumValue' a = (Identifier' a)
+data EnumValue' a = EnumValue' (Identifier' a) a deriving (Show, Eq, Ord)
+
+instance Annotated EnumValue' a where
+  ann (EnumValue' _ a) = a
+
 -------------------------------------------------------------------------------
 -- IndexedParameterList =
 --  '(' ( TypeName 'indexed'? Identifier? (',' TypeName 'indexed'? Identifier?)* )? ')'
@@ -298,6 +351,9 @@ data IndexedParameter' a = IndexedParameter' {
     indexedParameterIdentifier' :: Maybe (Identifier' a),
     annot :: a
   } deriving (Eq, Ord, Show)
+
+instance Annotated IndexedParameter' a where
+  ann (IndexedParameter' _ _ _ a) = a
 
 -------------------------------------------------------------------------------
 -- UntypedParameterList = '(' ( Identifier (',' Identifier)* )? ')'
@@ -324,6 +380,9 @@ data Parameter' a = Parameter' {
     annot :: a
   } deriving (Show, Eq, Ord)
 
+instance Annotated Parameter' a where
+  ann (Parameter' _ _ _ a) = a
+
 -------------------------------------------------------------------------------
 -- TypeNameList = '(' ( TypeName (',' TypeName )* )? ')'
 
@@ -345,6 +404,10 @@ data VariableDeclaration' a = VariableDeclaration' {
     variableDeclarationName' :: Identifier' a,
     annot :: a
   } deriving (Eq, Ord, Show)  
+
+
+instance Annotated VariableDeclaration' a where
+  ann (VariableDeclaration' _ _ _ a) = a
 
 -------------------------------------------------------------------------------
 -- TypeName
@@ -371,6 +434,12 @@ data TypeName' a
   | TypeNameArrayTypeName' (TypeName' a) (Maybe Expression) -- a
   deriving (Eq, Ord, Show)
 
+instance Annotated TypeName' a where
+  ann (TypeNameMapping' _ _ a) = a
+  ann (TypeNameFunctionTypeName' _ _ _ a) = a
+  ann (TypeNameElementaryTypeName' _ a) = a
+  ann (TypeNameUserDefinedTypeName' _ a) = a
+  ann (TypeNameArrayTypeName' t _) = ann t
 -------------------------------------------------------------------------------
 -- UserDefinedTypeName = Identifier ( '.' Identifier )*
 
@@ -384,12 +453,18 @@ newtype UserDefinedTypeName' a = UserDefinedTypeName' [Identifier' a] deriving (
 data StorageLocation = Memory | Storage | CallData deriving (Show, Eq, Ord)
 data StorageLocation' a = StorageLocation' StorageLocation a deriving (Show, Eq, Ord)
 
+instance Annotated StorageLocation' a where
+  ann (StorageLocation' _ a) = a
+
 -------------------------------------------------------------------------------
 -- StateMutability = 'internal' | 'external' | 'pure' | 'constant' | 'view' | 'payable'
 
 data StateMutability = Pure | Constant | View | Payable | Internal | External deriving (Eq, Ord, Show)
 
 data StateMutability' a = StateMutability' StateMutability a deriving (Eq, Ord, Show)
+
+instance Annotated StateMutability' a where
+  ann (StateMutability' _ a) = a
 
 -------------------------------------------------------------------------------
 -- IdentifierList = '(' ( Identifier? ',' )* Identifier? ')'
@@ -401,7 +476,9 @@ newtype IdentifierList' a = IdentifierList' [Identifier' a] deriving (Eq, Ord, S
 -- Block = '{' Statement* '}'
 
 newtype Block = Block [Statement] deriving (Eq, Ord, Show)
-newtype Block' a = Block' [Statement' a] deriving (Eq, Ord, Show)
+data Block' a = Block' [Statement' a] a deriving (Eq, Ord, Show)
+instance Annotated Block' a where
+  ann (Block' _ a) = a
 -------------------------------------------------------------------------------
 -- Statement = IfStatement | WhileStatement | ForStatement | Block | InlineAssemblyStatement |
 --             ( DoWhileStatement | PlaceholderStatement | Continue | Break | Return |
@@ -444,12 +521,12 @@ data Statement
 
 data Statement' a
   = IfStatement' (Expression' a) (Statement' a) (Maybe (Statement' a)) a
-  | WhileStatement' (Expression' a) (Statement' a)
+  | WhileStatement' (Expression' a) (Statement' a) a
   | InlineAssemblyStatement' (Maybe (StringLiteral' a)) InlineAssemblyBlock a
-  | ForStatement' (Maybe (Statement' a), Maybe (Expression' a), Maybe (Expression' a)) (Statement' a)
-  | BlockStatement' (Block' a) a
+  | ForStatement' (Maybe (Statement' a), Maybe (Expression' a), Maybe (Expression' a)) (Statement' a) a
+  | BlockStatement' (Block' a)
 
-  | DoWhileStatement' (Statement' a) (Expression' a)
+  | DoWhileStatement' (Statement' a) (Expression' a) a
   | PlaceholderStatement' a
   | Continue' a
   | Break' a
@@ -462,6 +539,25 @@ data Statement' a
   | SimpleStatementVariableDeclarationList' [Maybe (VariableDeclaration' a)] [Expression' a] a
   | SimpleStatementVariableAssignmentList' [Maybe (Identifier' a)] [Expression' a] a
   deriving (Eq, Ord, Show)
+
+
+instance Annotated Statement' a where
+  ann (IfStatement' _ _ _ a) = a
+  ann (WhileStatement' _ _ a) = a
+  ann (InlineAssemblyStatement' _ _ a) = a
+  ann (ForStatement' _ _ a) = a
+  ann (BlockStatement' block) = ann block
+  ann (DoWhileStatement' _ _ a) = a
+  ann (PlaceholderStatement' a) = a
+  ann (Continue' a) = a
+  ann (Break' a) = a
+  ann (Return' _ a) = a
+  ann (Throw' a) = a
+  ann (EmitStatement' _ a) = a
+  ann (SimpleStatementExpression' _ a) = a
+  ann (SimpleStatementVariableList' _ a) = a
+  ann (SimpleStatementVariableDeclarationList' _ _ a) = a
+  ann (SimpleStatementVariableAssignmentList' _ _ a) = a
 
 -------------------------------------------------------------------------------
 --  Precedence by order (see github.com/ethereum/solidity/pull/732)
@@ -564,6 +660,7 @@ instance Annotated PrimaryExpression' a where
 newtype ExpressionList = ExpressionList { unExpressionList :: [Expression] } deriving (Eq, Ord, Show)
 
 newtype ExpressionList' a = ExpressionList' { unExpressionList' :: [Expression' a]} deriving (Eq, Ord, Show)
+
 
 -------------------------------------------------------------------------------
 -- NameValueList = Identifier ':' Expression ( ',' Identifier ':' Expression )*
