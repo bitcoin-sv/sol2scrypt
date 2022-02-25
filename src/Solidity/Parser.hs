@@ -115,7 +115,7 @@ instance Parseable SourceUnit1 where
 
 instance Parseable VersionComparator where
   parser = try $ choice[
-                do 
+                do
                   string ">"
                   t <-  try(
                           do string "="
@@ -139,25 +139,25 @@ instance Parseable VersionComparator where
   display MoreOrEqual = ">="
   display LessOrEqual = "<="
   display Equal = "^"
-  
+
 --  data Version = Version VersionComparator [Int] deriving (Show, Eq, Ord)
 
 instance Parseable Version where
-  parser = do 
+  parser = do
               c <- parser
               version <- (many digit) `sepBy` (char '.')
               return $ Version c (map (read :: [Char] -> Int) version)
 
-  display (Version c version) = (display c) ++ (intercalate "." [show n | n <- version]) 
+  display (Version c version) = (display c) ++ (intercalate "." [show n | n <- version])
 
 -- data PragmaDirective = SolidityPragmaConjunction [Version] 
 --                      | SolidityPragmaDisjunction [Version] 
 --                      | ExperimentalPragma String deriving (Show, Eq, Ord)
 
 instance Parseable PragmaDirective where
-  parser = (string "pragma" *> whitespace1) *> 
-            (choice 
-            [   do 
+  parser = (string "pragma" *> whitespace1) *>
+            (choice
+            [   do
                   string "experimental"
                   whitespace1
                   t <-  manyTill anyChar (char ';')
@@ -166,20 +166,20 @@ instance Parseable PragmaDirective where
                   string "solidity"
                   whitespace1
                   r <- try(
-                              do 
+                              do
                                 vs <- (whitespace1 *> parser <* whitespace1) `sepBy` (string "||")
                                 whitespace1 <* char ';'
                                 return $ SolidityPragmaDisjunction (vs)
                           ) <|>
-                            ( do 
+                            ( do
                                 vs <- (parser) `sepBy` (char ' ' *> whitespace)
                                 whitespace1 *> char ';'
                                 return $ SolidityPragmaConjunction vs
-                            
+
                       )
                   return r
             ])
-    
+
   display (SolidityPragmaConjunction versions) = "pragma solidity "++(intercalate " " (map display versions))++";"
   display (SolidityPragmaDisjunction versions) = "pragma solidity "++(intercalate "||" (map display versions))++";"
   display (ExperimentalPragma label) = "pragma experimental "++ (label)++";"
@@ -619,8 +619,8 @@ instance Parseable StorageLocation where
   display Memory = "memory"
   display Storage = "storage"
   display CallData = "calldata"
-  parser = (const Memory <$> keyword "memory") 
-       <|> (const Storage <$> keyword "storage") 
+  parser = (const Memory <$> keyword "memory")
+       <|> (const Storage <$> keyword "storage")
        <|> (const Storage <$> keyword "calldata")
 
 -------------------------------------------------------------------------------
@@ -645,11 +645,11 @@ instance Parseable StateMutability where
 
 instance Parseable (StateMutability' SourceRange) where
   display (StateMutability' Pure _) = "pure"
-  -- display Internal = "internal"
-  -- display External = "external"
-  -- display Constant = "constant"
-  -- display View = "view"
-  -- display Payable = "payable"
+  display (StateMutability' Internal _) = "internal"
+  display (StateMutability' External _) = "external"
+  display (StateMutability' Constant _) = "constant"
+  display (StateMutability' View _) = "view"
+  display (StateMutability' Payable _) = "payable"
 
   parser = addSource $ StateMutability' <$> p
     where
@@ -726,7 +726,7 @@ instance Parseable Statement where
   display (SimpleStatementVariableDeclarationList [v] [d]) = display v ++ " = " ++ display d ++";"
   display (SimpleStatementVariableDeclarationList vs []) = "(" ++ intercalate ", " (map display vs) ++ ")" ++";"
   display (SimpleStatementVariableDeclarationList vs me) = "(" ++ intercalate ", " (map display vs) ++ ")" ++ " = " ++ "(" ++ intercalate ", " (map display me) ++ ")" ++";"
-  
+
   display (SimpleStatementVariableAssignmentList [v] []) = display v ++";"
   display (SimpleStatementVariableAssignmentList [v] [d]) = display v ++ " = " ++ display d ++";"
   display (SimpleStatementVariableAssignmentList vs []) = "(" ++ intercalate ", " (map display vs) ++ ")" ++";"
@@ -807,8 +807,8 @@ instance Parseable Statement where
                          return [me])
                   <|>
                   try( do char '=' <* whitespace
-                          optional (char '(') 
-                          mes <- try (commaSep1 (whitespace *> parser <* whitespace)) <|> return [] 
+                          optional (char '(')
+                          mes <- try (commaSep1 (whitespace *> parser <* whitespace)) <|> return []
                           optional (char ')')
                           whitespace <* char ';'
                           return mes)
@@ -827,8 +827,8 @@ instance Parseable Statement where
                          return [me])
                   <|>
                   try( do char '=' <* whitespace
-                          optional (char '(') 
-                          mes <- try (commaSep1 (whitespace *> parser <* whitespace)) <|> return [] 
+                          optional (char '(')
+                          mes <- try (commaSep1 (whitespace *> parser <* whitespace)) <|> return []
                           optional (char ')')
                           whitespace <* char ';'
                           return mes)
@@ -975,6 +975,116 @@ instance Parseable Expression where
               ]
 
 
+instance Parseable (Expression' SourceRange) where
+  display (New' t _) = "new "++display t
+  display (MemberAccess' e i _) = display e++"."++display i
+  display (Literal' e) = display e
+  display (FunctionCallNameValueList' e mvs _) = display e ++ "({"++maybe "" display mvs++"})"
+  display (FunctionCallExpressionList' e mvs _) = display e ++ "("++maybe "" display mvs++")"
+
+  display (Unary' "delete" e _) = "delete "++display e
+  display (Unary' "()++" e _) = display e++"++"
+  display (Unary' "()--" e _) = "("++display e++")--"
+  display (Unary' "()" e _) = "("++display e++")"
+  display (Unary' "[]" e _) = display e++"[]"
+  -- Remaining: ! ~ + - ++ --
+  display (Unary' op e _) = op++display e
+
+  display (Binary' "[]" e1 e2 _) = display e1 ++ "[" ++ display e2++"]"
+  -- Remaining = |= ^= &= <<= >>= += -= *= /= %= || && == != <= >= < > + - * ** / % ^ | & >> <<
+  display (Binary' op e1 e2 _) = display e1 ++ " " ++ op ++ " " ++ display e2
+
+  display (Ternary' op e1 e2 e3 _) = display e1 ++op++display e2++":"++display e3
+
+  parser = parserPrec (15 :: Integer)
+    where
+      anyString ss = choice (map (try . string) (init ss) ++ [string $ last ss])
+      binaryOperators n ops =
+          do
+            p1 <- parserPrec (n-1) <* whitespace
+            try (
+              do
+                op <- anyString ops <* whitespace
+                p2 <- parserPrec n
+                return (Binary' op p1 p2 $ mergeRange (ann p1) (ann p2))
+              ) <|> return p1
+
+
+      parserPrec 15 = binaryOperators 15 ["=", "|=", "^=", "&=", "<<=", ">>=", "+=", "-=", "*=", "/=", "%="]
+      parserPrec 14 =
+        try (
+          do
+            p1 <- parserPrec 13 <* whitespace
+            p2 <- char '?' *> whitespace *> parserPrec 13 <* whitespace
+            p3 <- char ':' *> whitespace *> parserPrec 13
+            return (Ternary' "?" p1 p2 p3 $ mergeRange (ann p1) (ann p3))
+          ) <|> parserPrec 13
+      parserPrec 13 = binaryOperators 13 ["||"]
+      parserPrec 12 = binaryOperators 12 ["&&"]
+      parserPrec 11 = binaryOperators 11 ["==","!="]
+      parserPrec 10 = binaryOperators 10 ["<=", ">=", "<", ">"]
+      parserPrec 9 = binaryOperators 9 ["|"]
+      parserPrec 8 = binaryOperators 8 ["^"]
+      parserPrec 7 = binaryOperators 7 ["&"]
+      parserPrec 6 = binaryOperators 6 ["<<", ">>"]
+      parserPrec 5 = binaryOperators 5 ["+", "-"]
+      parserPrec 4 = binaryOperators 4 ["*", "/", "%"]
+      parserPrec 3 = binaryOperators 3 ["**"]
+      parserPrec 2 =
+        try (
+          do
+            start <- getPosition
+            op <- (anyString ["++", "--", "+", "-", "!", "~"] <|> keyword "delete") <* whitespace
+            p <- parserPrec 15
+            return (Unary' op p $ (ann p) { srcStart = start })
+          ) <|> parserPrec 1
+
+      -- -- parserPrec 1 split into two to avoid infinite loops
+      parserPrec 1 = choice
+          [ try $ do
+              start <- getPosition
+              p <- parserPrec 0 <* whitespace
+              op <- anyString ["++","--"]
+              return (Unary' ('(':')':op) p $ (ann p) { srcStart = start })
+          ] <|> parserPrec 0
+
+      parserPrec 0 =
+        do
+          p1 <- parserPrecBasic <* whitespace
+          addBottomLevelOperators p1
+        where
+          addBottomLevelOperators :: Expression' SourceRange -> Parser (Expression' SourceRange)
+          addBottomLevelOperators p1 =
+            choice
+              [ try $ do
+                  p2 <- char '[' *> whitespace *> parserPrec 15 <* whitespace <* char ']'
+                  addBottomLevelOperators (Binary' "[]" p1 p2 $ mergeRange (ann p1) (ann p2))
+              , try (
+                  do
+                    i <- char '.' *> whitespace *> parser
+                    addBottomLevelOperators (MemberAccess' p1 i $ mergeRange (ann p1) (ann i))
+                  )
+              , try (
+                  do
+                    start <- getPosition
+                    _ <- char '(' <* whitespace
+                    result <-
+                        (char '{' *> whitespace *> (FunctionCallNameValueList' p1 <$> (parser <* whitespace <* char '}' <* whitespace <* char ')'))) <|>
+                        (FunctionCallExpressionList' p1 <$> (parser <* whitespace <* char ')'))
+                    end <- getPosition
+                    addBottomLevelOperators (result $ SourceRange start end)
+                  )
+              , return p1
+              ]
+          parserPrecBasic :: Parser (Expression' SourceRange)
+          parserPrecBasic =
+            choice
+              [ try $ addSource $ New' <$> (keyword "new" *> whitespace *> parser)
+              , try $ addSource $ Unary' "()" <$> (char '(' *> whitespace *> parserPrec 15 <* whitespace <* char ')')
+              , Literal' <$> parser
+              ]
+
+      parserPrec x = error $ "Invalid param value `" ++ show x ++ "` for function `parserPrec`"
 -------------------------------------------------------------------------------
 -- PrimaryExpression = BooleanLiteral
 --                   | NumberLiteral
@@ -1006,17 +1116,17 @@ instance Parseable (PrimaryExpression' SourceRange) where
   parser = choice
     [ try $ PrimaryExpressionBooleanLiteral' <$> parser
     , try $ PrimaryExpressionNumberLiteral' <$> parser
-    -- , try $ PrimaryExpressionHexLiteral' <$> parser
-    -- , try $ PrimaryExpressionStringLiteral' <$> parser
-    -- , try $ PrimaryExpressionTupleExpression' <$> parser
+    , try $ PrimaryExpressionHexLiteral' <$> parser
+    , try $ PrimaryExpressionStringLiteral' <$> parser
+    , try $ PrimaryExpressionTupleExpression' <$> parser
     , try $ PrimaryExpressionIdentifier' <$> parser
     , PrimaryExpressionElementaryTypeNameExpression' <$> parser
     ]
   display (PrimaryExpressionBooleanLiteral' l) = display l
   display (PrimaryExpressionNumberLiteral' l) = display l
-  -- display (PrimaryExpressionHexLiteral' l) = display l
-  -- display (PrimaryExpressionStringLiteral' l) = display l
-  -- display (PrimaryExpressionTupleExpression' l) = display l
+  display (PrimaryExpressionHexLiteral' l) = display l
+  display (PrimaryExpressionStringLiteral' l) = display l
+  display (PrimaryExpressionTupleExpression' l) = display l
   display (PrimaryExpressionIdentifier' l) = display l
   display (PrimaryExpressionElementaryTypeNameExpression' l) = display l
 
@@ -1027,6 +1137,10 @@ instance Parseable ExpressionList where
   parser = ExpressionList <$> commaSep1 parser
   display (ExpressionList es) = intercalate ", " (map display es)
 
+instance Parseable (ExpressionList' SourceRange) where
+  parser = ExpressionList' <$> commaSep1 parser
+  display (ExpressionList' es) = intercalate ", " (map display es)
+
 -------------------------------------------------------------------------------
 -- NameValueList = Identifier ':' Expression ( ',' Identifier ':' Expression )*
 
@@ -1036,6 +1150,14 @@ instance Parseable NameValueList where
       do {i <- parser <* whitespace <* char ':' <* whitespace; e <- parser; return (i,e) }
     )
   display (NameValueList ies) = intercalate ", " $ map (\(i,e) -> display i ++":"++display e) ies
+
+instance Parseable (NameValueList' SourceRange) where
+  parser =
+    NameValueList' <$> commaSep1 (
+      do {i <- parser <* whitespace <* char ':' <* whitespace; e <- parser; return (i,e) }
+    )
+  display (NameValueList' ies) = intercalate ", " $ map (\(i,e) -> display i ++":"++display e) ies
+
 -------------------------------------------------------------------------------
 -- BooleanLiteral = 'true' | 'false'
 
@@ -1074,14 +1196,12 @@ instance Parseable NumberLiteral where
 instance Parseable (NumberLiteral' SourceRange) where
   parser = addSource $ NumberLiteral' <$> (try (do
           n <- string "0x" *> many1 (digit <|> oneOf "ABCDEFabcdef")
-          u <- parseMaybeUnits
-          return (NumberLiteralHex n u)
+          NumberLiteralHex n <$> parseMaybeUnits
             )
           <|>
           do
             n <- many1 digit
-            u <- parseMaybeUnits
-            return (NumberLiteralDec n u))
+            NumberLiteralDec n <$> parseMaybeUnits)
     where
       parseMaybeUnits = try (Just <$> char ' ' *> whitespace *> parser) <|> return Nothing
 
@@ -1105,6 +1225,17 @@ instance Parseable NumberUnit where
 
 -------------------------------------------------------------------------------
 -- HexLiteral = 'hex' ('"' ([0-9a-fA-F]{2})* '"' | '\'' ([0-9a-fA-F]{2})* '\'')
+
+instance Parseable (HexLiteral' SourceRange) where
+  parser = addSource $ HexLiteral' . concat <$> (string "hex" *>
+      try (char '"' *> manyTill parseHexByte (char '"')) <|>
+      (char '\'' *> manyTill parseHexByte (char '\''))
+    )
+    where
+      parseHexChar = digit <|> oneOf "ABCDEFabcdef"
+      parseHexByte = list [parseHexChar, parseHexChar]
+
+  display (HexLiteral' hl _) = "hex'"++hl++"'"
 
 instance Parseable HexLiteral where
   parser = HexLiteral . concat <$> (string "hex" *>
@@ -1146,6 +1277,31 @@ instance Parseable StringLiteral where
       addEscape '\f' = "\\f"
       addEscape c = [c]
 
+instance Parseable (StringLiteral' SourceRange) where
+  parser = addSource $ StringLiteral' . concat <$> (try (char '"' *> manyTill character (char '"'))
+                                       <|> (char '\'' *> manyTill character (char '\'')))
+    where
+      escape :: Parser String
+      escape = list [char '\\', oneOf ['\\','\"','0','n','r','v','t','b','f','x','u']] -- all the characters which can be escaped
+
+      nonEscape :: Parser Char
+      nonEscape = noneOf ['\\','\"','\0','\n','\r','\v','\t','\b','\f']
+
+      character :: Parser String
+      character = try (return <$> nonEscape) <|> escape
+  display (StringLiteral' s _) = '"':addEscapes s++"\""
+    where
+      addEscapes = concatMap addEscape
+      addEscape '\n' = "\\n"
+      addEscape '\0' = "\\0"
+    --  addEscape '\\' = "\\\\"
+      addEscape '"' = "\""
+      addEscape '\r' = "\\r"
+      addEscape '\v' = "\\v"
+      addEscape '\t' = "\\t"
+      addEscape '\b' = "\\b"
+      addEscape '\f' = "\\f"
+      addEscape c = [c]
 -------------------------------------------------------------------------------
 -- Identifier = [a-zA-Z_$] [a-zA-Z_$0-9]*
 
@@ -1177,6 +1333,13 @@ instance Parseable TupleExpression where
     (SquareBrackets <$> (char '[' *> whitespace *> commaSep1 (parser <* whitespace) <* char ']'))
   display (RoundBrackets es) = "(" ++ intercalate ", " (map display es) ++ ")"
   display (SquareBrackets es) = "[" ++ intercalate ", " (map display es) ++ "]"
+
+instance Parseable (TupleExpression' SourceRange) where
+  parser = addSource
+    ((RoundBrackets' <$> (char '(' *> whitespace *> commaSep (parser <* whitespace) <* char ')')) <|>
+    (SquareBrackets' <$> (char '[' *> whitespace *> commaSep1 (parser <* whitespace) <* char ']')))
+  display (RoundBrackets' es _) = "(" ++ intercalate ", " (map display es) ++ ")"
+  display (SquareBrackets' es _) = "[" ++ intercalate ", " (map display es) ++ "]"
 
 -- -------------------------------------------------------------------------------
 -- ElementaryTypeNameExpression = ElementaryTypeName
@@ -1253,28 +1416,28 @@ instance Parseable ElementaryTypeName where
 
 instance Parseable (ElementaryTypeName' SourceRange) where
   display (ElementaryTypeName' AddressPayableType _) = "address payable"
-  -- display AddressType = "address"
-  -- display BoolType = "bool"
-  -- display StringType = "string"
-  -- display VarType = "var"
-  -- display ByteType = "byte"
-  -- display (IntType Nothing) = "int"
-  -- display (IntType (Just n)) = "int"++show n
-  -- display (UintType Nothing) = "uint"
-  -- display (UintType (Just n)) = "uint"++show n
-  -- display (BytesType Nothing) = "bytes"
-  -- display (BytesType (Just n)) = "bytes"++show n
-  -- display (FixedType Nothing) = "fixed"
-  -- display (FixedType (Just (d1,d2))) = "fixed"++show d1++"x"++show d2
-  -- display (UfixedType Nothing) = "ufixed"
-  -- display (UfixedType (Just (d1,d2))) = "ufixed"++show d1++"x"++show d2
+  display (ElementaryTypeName' AddressType _) = "address"
+  display (ElementaryTypeName' BoolType _) = "bool"
+  display (ElementaryTypeName' StringType _) = "string"
+  display (ElementaryTypeName' VarType _) = "var"
+  display (ElementaryTypeName' ByteType _) = "byte"
+  display (ElementaryTypeName' (IntType Nothing) _) = "int"
+  display (ElementaryTypeName' (IntType (Just n)) _) = "int"++show n
+  display (ElementaryTypeName' (UintType Nothing) _) = "uint"
+  display (ElementaryTypeName' (UintType (Just n)) _) = "uint"++show n
+  display (ElementaryTypeName' (BytesType Nothing) _) = "bytes"
+  display (ElementaryTypeName' (BytesType (Just n)) _) = "bytes"++show n
+  display (ElementaryTypeName' (FixedType Nothing) _) = "fixed"
+  display (ElementaryTypeName' (FixedType (Just (d1,d2))) _) = "fixed"++show d1++"x"++show d2
+  display (ElementaryTypeName' (UfixedType Nothing) _) = "ufixed"
+  display (ElementaryTypeName' (UfixedType (Just (d1,d2))) _) = "ufixed"++show d1++"x"++show d2
 
-  parser = addSource $ ElementaryTypeName' <$> p 
+  parser = addSource $ ElementaryTypeName' <$> p
     where
       p = choice
-        [ try (const AddressPayableType <$> keyword "address" <* whitespace <* keyword "payable") <|> const AddressType <$> keyword "address"
-        , const StringType <$> keyword "string"
-        , const VarType <$> keyword "var"
+        [ try (AddressPayableType <$ keyword "address" <* whitespace <* keyword "payable") <|> AddressType <$ keyword "address"
+        , StringType <$ keyword "string"
+        , VarType <$ keyword "var"
         , IntType <$> (string "int" *> parseIntSize)
         , FixedType <$> (string "fixed" *> parseFixedPair)
         , char 'u' *> (
@@ -1282,14 +1445,14 @@ instance Parseable (ElementaryTypeName' SourceRange) where
             (UintType <$> (string "int" *> parseIntSize))
           )
         , char 'b' *> (
-            (const BoolType <$> keyword "ool") <|>
+            (BoolType <$ keyword "ool") <|>
             (string "yte" *> (
               (BytesType <$> (char 's' *> parseBytesSize)) <|>
-              (return ByteType)
+              return ByteType
             ))
           )
         ]
-      
+
       parseIntSize :: Parser (Maybe Integer)
       parseIntSize =
         do
@@ -1308,7 +1471,7 @@ instance Parseable (ElementaryTypeName' SourceRange) where
           do
             d1 <- many digit <* char 'x'
             d2 <- many digit
-            if (null d1 || null d2) then mzero else return (Just (read d1, read d2))
+            if null d1 || null d2 then mzero else return (Just (read d1, read d2))
         ) <|> return Nothing
 
 -- -------------------------------------------------------------------------------
@@ -1347,7 +1510,6 @@ instance Parseable AssemblyItem where
   display (AssemblyItemAssemblyAssignment i e) = display i++" := "++display e
   display (AssemblyItemInlineAssemblyBlock b) = display b
   display (AssemblyItemFunctionalAssemblyExpression e) = display e
-
 
 -- -------------------------------------------------------------------------------
 -- FunctionalAssemblyExpression = Identifier '(' AssemblyItem? ( ',' AssemblyItem )* ')'
