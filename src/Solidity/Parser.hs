@@ -95,7 +95,7 @@ instance Parseable (SolidityCode SourceRange) where
   parser = whitespace *> (SolidityCode <$> parser) <* whitespace <* eof
 
 -------------------------------------------------------------------------------
--- SourceUnit = (PragmaDirective | ImportDirective | ContractDefinition)*
+-- SourceUnit = (PragmaDirective | ImportDirective | ContractDefinition | ErrorDefinition)*
 
 instance Parseable (SourceUnit SourceRange) where
   parser =
@@ -105,10 +105,12 @@ instance Parseable (SourceUnit SourceRange) where
 
 instance Parseable (SourceUnit1 SourceRange) where
   parser =
-    try (SourceUnit1_PragmaDirective <$> parser)
-      <|> try (SourceUnit1_ImportDirective <$> parser)
-      <|> SourceUnit1_ContractDefinition <$> parser
+    try (SourceUnit1_PragmaDirective <$> parser) <|>
+    try (SourceUnit1_ImportDirective <$> parser) <|>
+    try (SourceUnit1_ErrorDefinition <$> parser) <|>
+    (SourceUnit1_ContractDefinition <$> parser)
   display (SourceUnit1_ContractDefinition contract_definition) = display contract_definition
+  display (SourceUnit1_ErrorDefinition error_definition) = display error_definition
   display (SourceUnit1_ImportDirective import_directive) = display import_directive
   display (SourceUnit1_PragmaDirective pragma_directive) = display pragma_directive
 
@@ -253,6 +255,21 @@ instance Parseable (ImportDirective SourceRange) where
             case as i of
               Nothing -> ""
               Just identifier' -> " as " ++ display identifier'
+
+
+-------------------------------------------------------------------------------
+-- ErrorDefinition = 'error' Identifier ParameterList ';'
+
+instance Parseable ErrorDefinition where
+  parser =
+    do
+      i <- keyword "error" *> whitespace *> parser <* whitespace
+      pl <- parser <* whitespace <* char ';'
+      return ErrorDefinition {
+        errorName = i,
+        parameters = pl
+      }
+  display err = "error " ++ _display (errorName err) ++ _display (parameters err) ++ ";"
 
 -------------------------------------------------------------------------------
 -- ContractDefinition = ( 'contract' | 'library' | 'interface' ) Identifier
@@ -648,6 +665,7 @@ instance Parseable (Block SourceRange) where
 -- SimpleStatement =
 --    Expression | ('var' IdentifierList ( '=' Expression ) | VariableDeclaration ( '=' Expression )?
 
+
 instance Parseable (Statement SourceRange) where
   display (IfStatement e t me _) =
     "if (" ++ display e ++ ") " ++ display t
@@ -672,6 +690,7 @@ instance Parseable (Statement SourceRange) where
   display (BlockStatement b) = display b
   display (DoWhileStatement s e _) = "do " ++ display s ++ " while (" ++ display e ++ ");"
   display (PlaceholderStatement _) = "_;"
+  display (RevertStatement exp _) = "revert "++(display exp)++";"
   display (Continue _) = "continue;"
   display (Break _) = "break;"
   display (Return me _) = "return" ++ maybe "" (\e -> " " ++ display e) me ++ ";"
@@ -717,6 +736,10 @@ instance Parseable (Statement SourceRange) where
               start <- getPosition
               e <- keyword "emit" *> whitespace *> parser <* whitespace <* char ';'
               EmitStatement e . SourceRange start <$> getPosition,
+            do
+              start <- getPosition
+              e <- keyword "revert" *> whitespace *> parser <* whitespace <* char ';'
+              RevertStatement e . SourceRange start <$> getPosition,
             do
               start <- getPosition
               e <- keyword "return" *> whitespace *> (Just <$> parser <|> return Nothing) <* whitespace <* char ';'

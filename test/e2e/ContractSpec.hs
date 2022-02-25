@@ -476,5 +476,12 @@ spec = testSpec "Transpile Contract" $ do
     itThrowContractPart "modifier onlyAfter(uint _time) { require(_time > 0); _; }" (errorCall  "unsupported contract part `ContractPartModifierDefinition`")
     itThrowContractPart "enum State { Created, Locked, Inactive }" (errorCall  "unsupported contract part `ContractPartEnumDefinition`")
     itThrowContractPart "struct Bid {bytes32 blindedBid; uint deposit;}" (errorCall  "unsupported contract part `ContractPartStructDefinition`")
+    itThrowContractPart "using Set for Data;" (errorCall  "unsupported contract part `ContractPartUsingForDeclaration`")
     itThrow "library D {}" (errorCall  "unsupported contract definition `ContractDefinition`")
     itThrow "interface D {}" (errorCall  "unsupported contract definition `ContractDefinition`")
+    itThrow "abstract contract Feline { }" (errorCall  "unsupported abstract contract definition")
+    itThrow "contract Cat is Feline { }" (errorCall  "unsupported contract definition `ContractDefinition`")
+
+
+    
+

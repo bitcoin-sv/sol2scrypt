@@ -620,3 +620,51 @@ contract ERC20 {
   }
 }|]
 
+
+  itProgram "a contract with revert and error defined " 
+   [r|
+// SPDX-License-Identifier: GPL-3.0
+pragma solidity ^0.8.10;
+
+error Unauthorized();
+
+contract VendingMachine {
+    address owner;
+
+    function withdraw() external {
+        if (msg.sender != owner)
+            revert Unauthorized();
+    }
+}
+|] [r|contract VendingMachine {
+  @state
+  PubKeyHash owner;
+
+  public function withdraw(SigHashPreimage txPreimage, Sig sig, PubKey pubKey) {
+    PubKeyHash msgSender = hash160(pubKey);
+    require(checkSig(sig, pubKey));
+    if (msgSender != this.owner)
+      require(false);
+    require(this.propagateState(txPreimage));
+  }
+
+  function propagateState(SigHashPreimage txPreimage) : bool {
+    require(Tx.checkPreimage(txPreimage));
+    bytes outputScript = this.getStateScript();
+    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    return hash256(output) == SigHash.hashOutputs(txPreimage);
+  }
+}|]
+
+
+
+  describe "#Throw" $ do
+    itThrow [r|
+  pragma solidity ^0.8.10;
+  abstract contract Feline {
+  }
+
+  contract Cat is Feline {
+      
+  }
+|] (errorCall  "unsupported abstract contract definition") 

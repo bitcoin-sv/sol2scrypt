@@ -38,7 +38,7 @@ module Solidity.Spec (
         NumberLiteral_ (..), NumberLiteral (..), NumberUnit (..), HexLiteral (..), StringLiteral (..), BooleanLiteral (..),
         InlineAssemblyBlock (..), AssemblyItem (..), FunctionalAssemblyExpression (..),
         Block (..),
-
+    ErrorDefinition (..),
   IdentifierList (..), Identifier (..),
   IndexedParameterList (..), IndexedParameter (..),
   UntypedParameterList (..), ParameterList (..), Parameter (..),
@@ -78,7 +78,7 @@ type ModifierName = Identifier
 newtype SolidityCode a = SolidityCode (SourceUnit a) deriving (Eq, Ord, Show)
 
 -------------------------------------------------------------------------------
--- SourceUnit = (PragmaDirective | ImportDirective | ContractDefinition)*
+-- SourceUnit = (PragmaDirective | ImportDirective | ContractDefinition | ErrorDefinition)*
 
 newtype SourceUnit a = SourceUnit [SourceUnit1 a] deriving (Show, Eq, Ord)
 
@@ -86,6 +86,7 @@ data SourceUnit1 a
   = SourceUnit1_PragmaDirective (PragmaDirective a)
   | SourceUnit1_ImportDirective (ImportDirective a)
   | SourceUnit1_ContractDefinition (ContractDefinition a)
+  | SourceUnit1_ErrorDefinition (ErrorDefinition a)
   deriving (Show, Eq, Ord)
 
 instance Annotated SourceUnit1 a where
@@ -147,6 +148,15 @@ data Import a = ImportAll a | ImportId (Identifier a) deriving (Show, Eq, Ord)
 instance Annotated Import a where
   ann (ImportAll a) = a
   ann (ImportId i) = ann i
+
+-------------------------------------------------------------------------------
+-- ErrorDefinition = ( 'error' ) Identifier ParameterList
+        
+data ErrorDefinition a =
+  ErrorDefinition {
+    errorName :: Identifier a,
+    parameters :: ParameterList a
+  } deriving (Show, Eq, Ord)
 
 -------------------------------------------------------------------------------
 -- ContractDefinition = ( 'contract' | 'library' | 'interface' ) Identifier
@@ -408,6 +418,7 @@ data Statement a
   | Return (Maybe (Expression a)) a
   | Throw a
   | EmitStatement (Expression a) a
+  | RevertStatement (Expression a) a
   | SimpleStatementExpression (Expression a) a
   | SimpleStatementVariableList (IdentifierList a) (Maybe (Expression a)) a
   | -- | SimpleStatementVariableDeclaration VariableDeclaration (Maybe Expression)

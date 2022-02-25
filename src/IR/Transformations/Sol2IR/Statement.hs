@@ -80,6 +80,7 @@ instance ToIRTransformable (Sol.Statement SourceRange) IStatement' where
     return $ IR.BlockStmt <$> blk'
   _toIR Sol.EmitStatement {} = return Nothing
   _toIR Sol.PlaceholderStatement {} = return Nothing
+  _toIR Sol.RevertStatement {} = return $ Just $ IR.RequireStmt $ LiteralExpr $ BoolLiteral False
   _toIR (Sol.IfStatement e ifstmt maybeelsestmt _) = do
     -- wrap a single return statement into a block for the convenience of transpile `return`
     let wrapSingleRet stmt = case stmt of
