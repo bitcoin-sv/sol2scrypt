@@ -15,6 +15,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 -- Bug in Sublime Text syntax highlighting for Haskel ("()"...
 
@@ -52,7 +53,8 @@ module Solidity.Spec (
   Expression' (..), TupleExpression' (..), ExpressionList' (..),  PrimaryExpression' (..), NameValueList' (..),
   NumberLiteral' (..), HexLiteral' (..), StringLiteral' (..), BooleanLiteral' (..),
 
-  untypeParameterList, typeParameterList, addMemoryLocationToParametersList
+  Annotated (..),
+  untypeParameterList, typeParameterList, addMemoryLocationToParametersList, mergeRange
 ) where
 
 import Data.Maybe
@@ -63,6 +65,13 @@ data SourceRange = SourceRange
     srcEnd :: SourcePos
   }
   deriving (Show, Eq, Ord)
+
+mergeRange :: SourceRange -> SourceRange -> SourceRange
+mergeRange start end = start {srcEnd = srcEnd end}
+
+class Annotated a b where
+  -- extract annotation
+  ann :: a b -> b
 
 type FunctionName = Identifier
 type VariableName = Identifier
@@ -381,6 +390,16 @@ data Expression' a
   | New' (TypeName' a) a
   deriving (Eq, Ord, Show)
 
+instance Annotated Expression' a where
+  ann (Unary' _ _ a) = a
+  ann (Binary' _ _ _ a) = a
+  ann (Ternary' _ _ _ _ a) = a
+  ann (FunctionCallNameValueList' _ _ a) = a
+  ann (FunctionCallExpressionList' _ _ a) = a
+  ann (MemberAccess' _ _ a) = a
+  ann (Literal' pe) = ann pe
+  ann (New' _ a) = a
+
 -------------------------------------------------------------------------------
 -- PrimaryExpression = BooleanLiteral
 --                   | NumberLiteral
@@ -409,6 +428,10 @@ data PrimaryExpression' a
   | PrimaryExpressionElementaryTypeNameExpression' (ElementaryTypeNameExpression' a)
   deriving (Eq, Ord, Show)
 
+instance Annotated PrimaryExpression' a where
+  ann (PrimaryExpressionBooleanLiteral' l) = ann l
+
+
 -------------------------------------------------------------------------------
 -- ExpressionList = Expression ( ',' Expression )*
 
@@ -430,6 +453,9 @@ newtype BooleanLiteral = BooleanLiteral String deriving (Eq, Ord, Show)
 
 data BooleanLiteral' a = BooleanLiteral' String a deriving (Eq, Ord, Show)
 
+instance Annotated BooleanLiteral' a where
+  ann (BooleanLiteral' _ a) = a
+
 -------------------------------------------------------------------------------
 -- NumberLiteral = ( HexNumber | DecimalNumber ) (' ' NumberUnit)?
 
@@ -449,7 +475,7 @@ data NumberLiteral' a = NumberLiteral' NumberLiteral a deriving (Eq, Ord, Show)
 
 data NumberUnit
   = Wei | Szabo | Finney | Ether | Seconds | Minutes | Hours | Days | Weeks | Years
-  deriving (Show, Eq, Ord)
+  deriving (Show, Eq, Ord) 
 
 -- data NumberUnit' a = NumberUnit' NumberUnit a deriving (Show, Eq, Ord)
 -------------------------------------------------------------------------------
