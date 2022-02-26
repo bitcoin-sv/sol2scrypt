@@ -849,12 +849,10 @@ instance Parseable (VariableDeclaration' SourceRange) where
     _display (variableDeclarationName' v )
   parser =
     do
-      start <- getPosition
       t <- parser <* whitespace
       sl <- parser <* whitespace
       i <- parser
-      end <- getPosition
-      return $ VariableDeclaration' t sl i $ SourceRange start end
+      return $ VariableDeclaration' t sl i $ mergeRange (ann t) (ann i)
 -------------------------------------------------------------------------------
 -- TypeName
 --          = 'mapping' '(' ElementaryTypeName '=>' TypeName ')'
