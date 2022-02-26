@@ -534,7 +534,7 @@ data Statement' a
   | Throw' a
   | EmitStatement' (Expression' a) a
   | SimpleStatementExpression' (Expression' a) a
-  | SimpleStatementVariableList' (IdentifierList' (Maybe (Expression' a))) a
+  | SimpleStatementVariableList' (IdentifierList' a) (Maybe (Expression' a)) a
  -- | SimpleStatementVariableDeclaration VariableDeclaration (Maybe Expression)
   | SimpleStatementVariableDeclarationList' [Maybe (VariableDeclaration' a)] [Expression' a] a
   | SimpleStatementVariableAssignmentList' [Maybe (Identifier' a)] [Expression' a] a
@@ -555,7 +555,7 @@ instance Annotated Statement' a where
   ann (Throw' a) = a
   ann (EmitStatement' _ a) = a
   ann (SimpleStatementExpression' _ a) = a
-  ann (SimpleStatementVariableList' _ a) = a
+  ann (SimpleStatementVariableList' _ _ a) = a
   ann (SimpleStatementVariableDeclarationList' _ _ a) = a
   ann (SimpleStatementVariableAssignmentList' _ _ a) = a
 
