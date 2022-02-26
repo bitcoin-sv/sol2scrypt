@@ -94,6 +94,10 @@ instance Parseable SolidityCode where
   display (SolidityCode c) = display c
   parser = whitespace *> (SolidityCode <$> parser) <* whitespace <* eof
 
+instance Parseable (SolidityCode' SourceRange) where
+  display (SolidityCode' c) = display c
+  parser = whitespace *> (SolidityCode' <$> parser) <* whitespace <* eof
+
 -------------------------------------------------------------------------------
 -- SourceUnit = (PragmaDirective | ImportDirective | ContractDefinition)*
 
@@ -103,6 +107,12 @@ instance Parseable SourceUnit where
     )
   display (SourceUnit us) = unlines $ map display us
 
+instance Parseable (SourceUnit' SourceRange) where
+  parser = SourceUnit' <$> (
+      many (parser <* whitespace)
+    )
+  display (SourceUnit' us) = unlines $ map display us
+
 instance Parseable SourceUnit1 where
   parser =
     try (SourceUnit1_PragmaDirective <$> parser) <|>
@@ -111,6 +121,15 @@ instance Parseable SourceUnit1 where
   display (SourceUnit1_ContractDefinition contract_definition) = display contract_definition
   display (SourceUnit1_ImportDirective import_directive) = display import_directive
   display (SourceUnit1_PragmaDirective pragma_directive) = display pragma_directive
+
+instance Parseable (SourceUnit1' SourceRange) where
+  parser =
+    try (SourceUnit1_PragmaDirective' <$> parser) <|>
+    try (SourceUnit1_ImportDirective' <$> parser) <|>
+    (SourceUnit1_ContractDefinition' <$> parser)
+  display (SourceUnit1_ContractDefinition' contract_definition) = display contract_definition
+  display (SourceUnit1_ImportDirective' import_directive) = display import_directive
+  display (SourceUnit1_PragmaDirective' pragma_directive) = display pragma_directive
 
 -------------------------------------------------------------------------------
 -- data VersionComparator = Less | More | Equal | LessOrEqual | MoreOrEqual deriving (Show, Eq, Ord)
@@ -187,6 +206,43 @@ instance Parseable PragmaDirective where
   display (ExperimentalPragma label) = "pragma experimental "++ (label)++";"
 
 
+instance Parseable (PragmaDirective' SourceRange) where
+  parser = (string "pragma" *> whitespace1) *>
+            (choice
+            [   do
+                  start <- getPosition 
+                  string "experimental"
+                  whitespace1
+                  t <-  manyTill anyChar (char ';')
+                  end <- getPosition 
+                  return $ ExperimentalPragma' t $ SourceRange start end
+              , do
+                  start <- getPosition 
+                  string "solidity"
+                  whitespace1
+                  r <- try(
+                              do
+                                vs <- (whitespace1 *> parser <* whitespace1) `sepBy` (string "||")
+                                whitespace1 <* char ';'
+                                end <- getPosition 
+                                return $ SolidityPragmaDisjunction' (vs) $ SourceRange start end
+                          ) <|>
+                            ( do
+                                vs <- (parser) `sepBy` (char ' ' *> whitespace)
+                                whitespace1 *> char ';'
+                                end <- getPosition 
+                                return $ SolidityPragmaConjunction' vs $ SourceRange start end
+
+                      )
+                  
+                  return r
+            ])
+
+  display (SolidityPragmaConjunction' versions _) = "pragma solidity "++(intercalate " " (map display versions))++";"
+  display (SolidityPragmaDisjunction' versions _) = "pragma solidity "++(intercalate "||" (map display versions))++";"
+  display (ExperimentalPragma' label _) = "pragma experimental "++ (label)++";"
+
+
 -------------------------------------------------------------------------------
 -- ImportDirective = 'import' StringLiteral ('as' Identifier)? ';'
 --         | 'import' ('*' | Identifier) ('as' Identifier)? 'from' StringLiteral ';'
@@ -196,7 +252,7 @@ instance Parseable ImportDirective where
   parser = keyword "import" *> whitespace1 *> choice [directive1, directive2, directive3] <* whitespace <* char ';'
     where
       parseIdentifierOrStar :: Parser Import
-      parseIdentifierOrStar = (const ImportAll <$> char '*') <|> (ImportId <$> parser)
+      parseIdentifierOrStar =  (ImportId <$> parser)
 
       parseMaybeAsIdentifier :: Parser (Maybe Identifier)
       parseMaybeAsIdentifier =
@@ -251,6 +307,68 @@ instance Parseable ImportDirective where
                 Just identifier -> " as "++display identifier
 
 
+instance Parseable (ImportDirective' SourceRange) where
+  parser = keyword "import" *> whitespace1 *> choice [directive1, directive2, directive3] <* whitespace <* char ';'
+    where
+      parseIdentifierOrStar :: Parser (Import' SourceRange)
+      parseIdentifierOrStar =  ImportId' <$> parser
+
+      parseMaybeAsIdentifier :: Parser (Maybe (Identifier' SourceRange))
+      parseMaybeAsIdentifier =
+        (Just <$> (keyword "as" *> whitespace1 *> parser)) <|> return Nothing
+
+      directive1 =
+        do
+          start <- getPosition
+          _from <- parser <* whitespace
+          _as   <- parseMaybeAsIdentifier
+          end <- getPosition
+          return $ ImportDirective' [ ImportDirective1' (ImportAll' $ SourceRange start end) _as] _from $ SourceRange start end
+
+      directive2 =
+        do
+          start <- getPosition
+          _name <- parseIdentifierOrStar <* whitespace1
+          _as   <- parseMaybeAsIdentifier <* whitespace
+          _from <- keyword "from" *> whitespace1 *> parser
+          end <- getPosition
+          return $ ImportDirective' [ ImportDirective1' _name _as ] _from $ SourceRange start end
+
+      directive3 =
+        do
+          start <- getPosition
+          char '{' *> whitespace
+          _directives <- commaSep1 (
+              do
+                start <- getPosition
+                _name <- parser <* whitespace1
+                _as <- parseMaybeAsIdentifier <* whitespace
+                end <- getPosition
+                return $ ImportDirective1' (ImportId' _name) _as
+            )
+          char '}' *> whitespace
+          _from <- keyword "from" *> whitespace1 *> parser
+          end <- getPosition
+          return $ ImportDirective' _directives _from $ SourceRange start end
+
+  display directive =
+    (case map displayImport (imports' directive) of
+      [i] -> i
+      is  -> "{ "++intercalate ", " is++" }"
+    ) ++ " from "++display (from' directive)
+    where
+      displayImport i =
+        case name' i of
+          ImportAll' _  -> "*"++textAs
+          ImportId' identifier -> display identifier++textAs
+          where
+            textAs =
+              case as' i of
+                Nothing         -> ""
+                Just identifier' -> " as "++display identifier'
+
+
+
 -------------------------------------------------------------------------------
 -- ContractDefinition = ( 'contract' | 'library' | 'interface' ) Identifier
 --                      ( 'is' InheritanceSpecifier (',' InheritanceSpecifier )* )?
@@ -276,6 +394,21 @@ instance Parseable ContractDefinition where
     where
       isClauses = map display $ isClause contractDefinition
 
+instance Parseable (ContractDefinition' SourceRange) where
+  parser = do
+      start <- getPosition
+      _definitionType' <- (keyword "contract" <|> keyword "library" <|> keyword "interface") <* whitespace
+      _definitionName' <- parser <* whitespace
+      _isClause' <- (try (keyword "is" *> whitespace *> commaSep1 parser) <|> return []) <* whitespace
+      _contractParts' <- char '{' *> whitespace *> many (parser <* whitespace) <* char '}'
+      ContractDefinition'  _definitionType' _definitionName' _isClause' _contractParts' . SourceRange start <$> getPosition
+
+  display contractDefinition =
+    definitionType' contractDefinition ++ _display (definitionName' contractDefinition) ++
+    (if null isClauses then "" else " is " ++ intercalate ", " isClauses) ++
+    " {\n"++indent (concatMap (\p -> display p++"\n") (contractParts' contractDefinition))++"\n}"
+    where
+      isClauses = map display $ isClause' contractDefinition
 
 -------------------------------------------------------------------------------
 -- ContractPart
@@ -347,6 +480,85 @@ instance Parseable ContractPart where
   display (ContractPartStateVariableDeclaration v) = display v
 
 
+instance Parseable (ContractPart' SourceRange) where
+  parser = try (choice
+    [ do
+        start <- getPosition
+        i <- (keyword "using" *> whitespace *> parser) <* whitespace <* keyword "for" <* whitespace
+        tn <- ((Nothing <$ char '*') <|> (Just <$> parser)) <* whitespace <* char ';'
+        end <- getPosition
+        return (ContractPartUsingForDeclaration' i tn $ SourceRange start end)
+    , do
+        start <- getPosition
+        i <- keyword "struct" *> whitespace *> parser <* whitespace <* char '{' <* whitespace
+        vs <- many (parser <* whitespace <* char ';' <* whitespace) <* char '}'
+        end <- getPosition
+        return (ContractPartStructDefinition' i vs $ SourceRange start end)
+    , do
+        start <- getPosition
+        i <- keyword "modifier" *> whitespace *> parser <* whitespace
+        pl <- ((Just <$> parser) <|> return Nothing) <* whitespace
+        b <- parser
+        end <- getPosition
+        return (ContractPartModifierDefinition' i pl b $ SourceRange start end)
+    , do
+        start <- getPosition
+        mi <- keyword "function" *> whitespace *> parser <* whitespace
+        ps <- parser <* whitespace
+        ts <- many (parser <* whitespace)
+        mps' <- (try (Just <$> keyword "returns" *> whitespace *> parser) <|> return Nothing) <* whitespace
+        b <- ((const Nothing <$> char ';') <|> (Just <$> parser))
+        end <- getPosition
+        return (ContractPartFunctionDefinition' mi ps ts mps' b $ SourceRange start end)
+    , do
+        start <- getPosition
+        ps <- keyword "constructor" *> whitespace *> parser <* whitespace
+        ts <- many (parser <* whitespace)
+        b <- ((const Nothing <$> char ';') <|> (Just <$> parser))
+        end <- getPosition
+        return (ContractPartConstructorDefinition' ps ts b $ SourceRange start end)
+    , char 'e' *> (
+        do
+          start <- getPosition
+          i <- keyword "num" *> whitespace *> parser <* whitespace <* char '{' <* whitespace
+          vs <- commaSep parser <* whitespace <* char '}'
+          end <- getPosition
+          return (ContractPartEnumDefinition' i vs $ SourceRange start end)
+        <|>
+        do
+          start <- getPosition
+          i <- keyword "vent" *> whitespace *> parser <* whitespace
+          ipl <- parser <* whitespace
+          a <- (const True <$> keyword "anonymous" <|> return False) <* whitespace <* char ';'
+          end <- getPosition
+          return (ContractPartEventDefinition' i ipl a $ SourceRange start end)
+      )
+    ]) <|> (do
+        start <- getPosition
+        d <- parser
+        end <- getPosition
+        return (ContractPartStateVariableDeclaration' d $ SourceRange start end)
+      )
+
+
+  display (ContractPartUsingForDeclaration' v t _) =
+    "using "++display v++" for "++maybe "*" display t ++ ";"
+  display (ContractPartEnumDefinition' i vs _) =
+    "enum "++display i ++" {"++intercalate ", " (map display vs)++"}"
+  display (ContractPartStructDefinition' i vs _) =
+    "struct "++display i ++" {\n"++indent (intercalate ";\n" (map display vs) ++";")++"}"
+  display (ContractPartModifierDefinition' i pl b _) =
+    "modifier "++display i++maybe "" _display pl++_display b
+  display (ContractPartFunctionDefinition' mi pl ts mpl' mb _) =
+    "function" ++ maybe "" _display mi ++ _display pl ++
+    concatMap _display ts ++ maybe "" ((" returns " ++) . display) mpl' ++ maybe ";" _display mb
+  display (ContractPartConstructorDefinition' pl ts mb _) =
+    "constructor" ++ _display pl ++
+    concatMap _display ts ++ maybe ";" _display mb
+  display (ContractPartEventDefinition' i ipl a _) =
+    "event "++display i++_display ipl++(if a then " anonymous" else "") ++ ";"
+  display (ContractPartStateVariableDeclaration' v _) = display v
+
 -------------------------------------------------------------------------------
 -- StateVariableDeclaration = TypeName ( 'public' | 'internal' | 'private' | 'constant' | 'immutable' )? Identifier ('=' Expression)? ';'
 
@@ -380,6 +592,33 @@ instance Parseable StateVariableDeclaration where
     ";"
 
 
+instance Parseable (StateVariableDeclaration' SourceRange) where
+  parser =
+    do
+      start <- getPosition
+      _typename' <- parser <* whitespace
+      _visibility' <- many (choice
+          [ try $ keyword "public"
+          , try $ keyword "private"
+          , try $ keyword "internal"
+          , try $ keyword "constant"
+          , try $ keyword "immutable"
+          ] <* whitespace
+        )
+      _variableName' <- parser <* whitespace
+      _initialValue' <- try (Just <$> (char '=' *> whitespace *> parser)) <|> return Nothing
+      _ <- whitespace *> char ';'
+      end <- getPosition
+      return $ StateVariableDeclaration' _typename' _visibility' _variableName' _initialValue' $ SourceRange start end
+
+  display v =
+    display (typename' v) ++
+    (if null (visibility' v) then "" else (" "++unwords (visibility' v))) ++
+    _display (variableName' v) ++
+    maybe "" (\i -> " = "++display i) (initialValue' v)++
+    ";"
+
+
 -------------------------------------------------------------------------------
 -- InheritanceSpecifier = UserDefinedTypeName ( '(' Expression ( ',' Expression )* ')' )?
 
@@ -396,6 +635,19 @@ instance Parseable InheritanceSpecifier where
     display (userDefinedTypeName spec) ++
     (if null (inheritanceParameters spec) then "" else "("++intercalate ", " (map display $ inheritanceParameters spec)++")")
 
+instance Parseable (InheritanceSpecifier' SourceRange) where
+  parser =
+    do
+      start <- getPosition
+      _userDefinedTypeName' <- parser <* whitespace
+      _inheritanceParameters' <- try (char '(' *> whitespace *> commaSep1 parser <* whitespace <* char ')') <|> return []
+      end <- getPosition
+      return $ InheritanceSpecifier' _userDefinedTypeName' _inheritanceParameters' $ SourceRange start end
+
+  display spec =
+    display (userDefinedTypeName' spec) ++
+    (if null (inheritanceParameters' spec) then "" else "("++intercalate ", " (map display $ inheritanceParameters' spec)++")")
+
 -------------------------------------------------------------------------------
 -- ModifierInvocation = Identifier ( '(' ExpressionList? ')' )?
 
@@ -409,6 +661,18 @@ instance Parseable ModifierInvocation where
   display mi =
     display (modifierInvocationIdentifier mi) ++
     maybe "" (\s -> "("++display s++")") (modifierInvocationParameters mi)
+
+instance Parseable (ModifierInvocation' SourceRange) where
+  parser =
+    do
+      start <- getPosition
+      i <- parser <* whitespace
+      _ <- if (display i `notElem` ["returns"]) then return () else mzero
+      es <- try (char '(' *> whitespace *> parser <* whitespace <* char ')') <|> return Nothing
+      ModifierInvocation' i es . SourceRange start <$> getPosition
+  display mi =
+    display (modifierInvocationIdentifier' mi) ++
+    maybe "" (\s -> "("++display s++")") (modifierInvocationParameters' mi)
 
 -------------------------------------------------------------------------------
 -- FunctionDefinitionTag = ModifierInvocation | StateMutability | 'public' | 'internal' | 'private'
@@ -426,11 +690,33 @@ instance Parseable FunctionDefinitionTag where
     , try $ FunctionDefinitionTagModifierInvocation <$> parser
     ]
 
+instance Parseable (FunctionDefinitionTag' SourceRange) where
+  display (FunctionDefinitionTagModifierInvocation' m) = display m
+  display (FunctionDefinitionTagStateMutability' s) = display s
+  display (FunctionDefinitionTagPublic' _) = "public"
+  display (FunctionDefinitionTagPrivate' _) = "private"
+
+  parser =
+    choice
+    [
+    do
+      start <- getPosition
+      _ <- keyword "public"
+      FunctionDefinitionTagPublic' . SourceRange start <$> getPosition
+    , do
+      start <- getPosition
+      _ <- keyword "private"
+      FunctionDefinitionTagPrivate' . SourceRange start <$> getPosition
+    , try $ FunctionDefinitionTagStateMutability' <$> parser
+    , try $ FunctionDefinitionTagModifierInvocation' <$> parser
+    ]
+
 
 -------------------------------------------------------------------------------
 -- EnumValue = Identifier
 
 type EnumValue = Identifier
+type EnumValue' = Identifier
 
 -------------------------------------------------------------------------------
 -- IndexedParameterList =
@@ -439,6 +725,10 @@ type EnumValue = Identifier
 instance Parseable IndexedParameterList where
   display (IndexedParameterList ps) = "(" ++ intercalate ", " (map display ps) ++")"
   parser = IndexedParameterList <$> (char '(' *> whitespace *> commaSep parser <* whitespace <* char ')')
+
+instance Parseable (IndexedParameterList' SourceRange) where
+  display (IndexedParameterList' ps) = "(" ++ intercalate ", " (map display ps) ++")"
+  parser = IndexedParameterList' <$> (char '(' *> whitespace *> commaSep parser <* whitespace <* char ')')
 
 instance Parseable IndexedParameter where
   display ip =
@@ -456,6 +746,20 @@ instance Parseable IndexedParameter where
         indexedParameterIdentifier = identifier
       }
 
+instance Parseable (IndexedParameter' SourceRange) where
+  display ip =
+    display (indexedParameterType' ip) ++
+    (if indexedParameterIndexed' ip then " indexed" else "")++
+    maybe "" _display (indexedParameterIdentifier' ip)
+  parser =
+    do
+      start <- getPosition
+      paramType' <- parser <* whitespace
+      indexed' <- (try (return True <$> keyword "indexed") <|> return False) <* whitespace
+      identifier' <- parser
+      end <- getPosition
+      return $ IndexedParameter' paramType'  indexed' identifier' (SourceRange start end)
+
 -------------------------------------------------------------------------------
 -- UntypedParameterList = '(' ( Identifier (',' Identifier)* )? ')'
 
@@ -463,12 +767,21 @@ instance Parseable UntypedParameterList where
   display (UntypedParameterList ps) = "(" ++ intercalate ", " (map display ps) ++")"
   parser = UntypedParameterList <$> (char '(' *> whitespace *> commaSep parser <* whitespace <* char ')')
 
+instance Parseable (UntypedParameterList' SourceRange) where
+  display (UntypedParameterList' ps) = "(" ++ intercalate ", " (map display ps) ++")"
+  parser = UntypedParameterList' <$> (char '(' *> whitespace *> commaSep parser <* whitespace <* char ')')
+
+
 -------------------------------------------------------------------------------
 -- ParameterList = '(' ( TypeName Identifier? (',' TypeName Identifier?)* )? ')'
 
 instance Parseable ParameterList where
   display (ParameterList ps) = "(" ++ intercalate ", " (map display ps) ++")"
   parser = ParameterList <$> (char '(' *> whitespace *> commaSep parser <* whitespace <* char ')')
+
+instance Parseable (ParameterList' SourceRange) where
+  display (ParameterList' ps) = "(" ++ intercalate ", " (map display ps) ++")"
+  parser = ParameterList' <$> (char '(' *> whitespace *> commaSep parser <* whitespace <* char ')')
 
 instance Parseable Parameter where
   display p =
@@ -486,6 +799,18 @@ instance Parseable Parameter where
         parameterIdentifier = identifier
       }
 
+instance Parseable (Parameter' SourceRange) where
+  display p =
+    display (parameterType' p) ++
+    maybe "" _display (parameterStorageLocation' p) ++
+    maybe "" _display (parameterIdentifier' p)
+  parser =
+    do
+      start <- getPosition
+      paramType' <- parser <* whitespace
+      storageLocation' <- (try (Just <$> parser) <|> return Nothing) <* whitespace
+      identifier' <- try (Just <$> parser) <|> return Nothing
+      Parameter' paramType' storageLocation' identifier' . SourceRange start <$> getPosition
 
 -------------------------------------------------------------------------------
 -- TypeNameList = '(' ( TypeName (',' TypeName )* )? ')'
@@ -875,8 +1200,8 @@ instance Parseable Statement where
 
 
 instance Parseable (Statement' SourceRange)  where
-  display (IfStatement' e t me _) = "if ("++display e++") "++display t++ maybe "" (\s -> 
-        case s of 
+  display (IfStatement' e t me _) = "if ("++display e++") "++display t++ maybe "" (\s ->
+        case s of
         BlockStatement' (Block' [] _) -> ""
         _ -> " else " ++ display s ) me
   display (WhileStatement' e s _) = "while (" ++ display e++") "++display s
@@ -1061,8 +1386,7 @@ instance Parseable (Statement' SourceRange)  where
           do
             start <- getPosition
             e <- parser <* whitespace <* char ';'
-            end <- getPosition
-            return (SimpleStatementExpression' e $ SourceRange start end)
+            SimpleStatementExpression' e . SourceRange start <$> getPosition
         )
 
 -------------------------------------------------------------------------------
