@@ -101,6 +101,6 @@ contract flipper {
 }
 |]
 
-  e :: SolidityCode' SourceRange <- parseIO solidityCode5
+  e :: SolidityCode SourceRange <- parseIO solidityCode5
   print e
 

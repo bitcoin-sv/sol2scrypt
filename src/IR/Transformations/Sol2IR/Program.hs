@@ -19,7 +19,7 @@ import System.FilePath (replaceExtensions)
 
 -- from SolidityCode to IProgram'
 
-instance ToIRTransformable Sol.SolidityCode IProgram' where
+instance ToIRTransformable (Sol.SolidityCode SourceRange) IProgram' where
   _toIR (Sol.SolidityCode (SourceUnit sourceUnits)) = do
     let contracts =
           filter
@@ -44,11 +44,11 @@ instance ToIRTransformable Sol.SolidityCode IProgram' where
 
     return $ Just $ IR.Program (catMaybes imports') (catMaybes contracts') [] $ reverse $ Map.elems structs
 
-instance ToIRTransformable Sol.SourceUnit1 IContract' where
+instance ToIRTransformable (Sol.SourceUnit1 SourceRange) IContract' where
   _toIR (Sol.SourceUnit1_ContractDefinition contractDef) = _toIR contractDef
 
-instance ToIRTransformable Sol.SourceUnit1 IImportDirective' where
+instance ToIRTransformable (Sol.SourceUnit1 SourceRange) IImportDirective' where
   _toIR (Sol.SourceUnit1_ImportDirective ip) = _toIR ip
 
-instance ToIRTransformable Sol.ImportDirective IImportDirective' where
-  _toIR (Sol.ImportDirective _ (Sol.StringLiteral path)) = return $ Just $ IR.ImportDirective $ replaceExtensions path "scrypt"
+instance ToIRTransformable (Sol.ImportDirective SourceRange) IImportDirective' where
+  _toIR (Sol.ImportDirective _ (Sol.StringLiteral path _) _) = return $ Just $ IR.ImportDirective $ replaceExtensions path "scrypt"
