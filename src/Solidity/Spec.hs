@@ -428,7 +428,7 @@ data TypeName' a
   | TypeNameFunctionTypeName' (TypeNameList' a) [StateMutability' a] (Maybe (TypeNameList' a)) a
   | TypeNameElementaryTypeName' (ElementaryTypeName' a) a
   | TypeNameUserDefinedTypeName' (UserDefinedTypeName' a) a
-  | TypeNameArrayTypeName' (TypeName' a) (Maybe Expression) -- a
+  | TypeNameArrayTypeName' (TypeName' a) (Maybe (Expression' a)) a
   deriving (Eq, Ord, Show)
 
 instance Annotated TypeName' a where
@@ -436,7 +436,8 @@ instance Annotated TypeName' a where
   ann (TypeNameFunctionTypeName' _ _ _ a) = a
   ann (TypeNameElementaryTypeName' _ a) = a
   ann (TypeNameUserDefinedTypeName' _ a) = a
-  ann (TypeNameArrayTypeName' t _) = ann t
+  ann (TypeNameArrayTypeName' _ _ a) = a
+
 -------------------------------------------------------------------------------
 -- UserDefinedTypeName = Identifier ( '.' Identifier )*
 

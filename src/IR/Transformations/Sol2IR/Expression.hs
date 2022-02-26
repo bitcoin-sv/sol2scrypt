@@ -22,7 +22,16 @@ instance ToIRTransformable Sol.Expression Int where
   _toIR (Literal (PrimaryExpressionNumberLiteral (NumberLiteralHex n _))) = return (fst $ head $ readHex n)
   _toIR e = error $ "unsupported expression to Integer : `" ++ show e ++ "`"
 
+instance ToIRTransformable (Sol.Expression' SourceRange) Int where
+  _toIR (Literal' (PrimaryExpressionNumberLiteral' (NumberLiteral' (NumberLiteralDec n _) _))) = return (fst $ head $ readDec n)
+  _toIR (Literal' (PrimaryExpressionNumberLiteral' (NumberLiteral' (NumberLiteralHex n _) _))) = return (fst $ head $ readHex n)
+  _toIR e = error $ "unsupported expression to Integer : `" ++ show e ++ "`"
+
 instance ToIRTransformable (Maybe Sol.Expression) Int where
+  _toIR (Just e) = _toIR e
+  _toIR e = error $ "unsupported expression to Integer : `" ++ show e ++ "`"
+
+instance ToIRTransformable (Maybe (Sol.Expression' SourceRange)) Int where
   _toIR (Just e) = _toIR e
   _toIR e = error $ "unsupported expression to Integer : `" ++ show e ++ "`"
 

@@ -25,7 +25,7 @@ import Text.Parsec
 import Text.Parsec.String
 import Data.Char hiding (DecimalNumber)
 import Data.List
-
+import Data.Maybe
 -- import Parseable
 import Solidity.Spec
 
@@ -904,7 +904,7 @@ instance Parseable (TypeName' SourceRange) where
   display (TypeNameMapping' t1 t2 _) = "mapping ("++display t1++" => "++display t2++")"
   display (TypeNameElementaryTypeName' t _) = display t
   display (TypeNameUserDefinedTypeName' t _) = display t
-  display (TypeNameArrayTypeName' t me ) = display t ++"["++maybe "" display me++"]"
+  display (TypeNameArrayTypeName' t me _) = display t ++"["++maybe "" display me++"]"
   display (TypeNameFunctionTypeName' tl ms mtl' _) =
     "function " ++ display tl ++ (if null ms then "" else " " ++ unwords (map display ms)) ++
     maybe "" (\r -> " returns "++display r) mtl'
@@ -913,7 +913,10 @@ instance Parseable (TypeName' SourceRange) where
     do
       t <- addSource parserBasic <* whitespace
       mes <- many (parseArrayBrackets <* whitespace)
-      return $ construct t mes
+      let a = if null mes || isNothing (last mes)
+                then ann t
+                else mergeRange (ann t) (ann $ fromJust $ last mes)
+      return $ construct t mes a
     where
       parserBasic = choice
         [ do
@@ -935,8 +938,8 @@ instance Parseable (TypeName' SourceRange) where
           me <- (char ']' *> return Nothing) <|> (Just <$> parser <* whitespace <* char ']')
           return me
 
-      construct t [] = t
-      construct t (me:mes) = construct (TypeNameArrayTypeName' t me ) mes
+      construct t [] _ = t
+      construct t (me:mes) a = construct (TypeNameArrayTypeName' t me a) mes a
 
 -------------------------------------------------------------------------------
 -- UserDefinedTypeName = Identifier ( '.' Identifier )*
