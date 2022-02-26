@@ -14,6 +14,8 @@
 
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use lambda-case" #-}
 -- Bug in Sublime Text syntax highlighting for Haskel ("()"...
 
 module Solidity.Parser where
@@ -515,7 +517,19 @@ instance Parseable VariableDeclaration where
         variableDeclarationName = i
       }
 
-
+instance Parseable (VariableDeclaration' SourceRange) where
+  display v =
+    display (variableDeclarationType' v ) ++
+    maybe "" _display (variableDeclarationStorageLocation' v ) ++
+    _display (variableDeclarationName' v )
+  parser =
+    do
+      start <- getPosition
+      t <- parser <* whitespace
+      sl <- parser <* whitespace
+      i <- parser
+      end <- getPosition
+      return $ VariableDeclaration' t sl i $ SourceRange start end
 -------------------------------------------------------------------------------
 -- TypeName
 --          = 'mapping' '(' ElementaryTypeName '=>' TypeName ')'
@@ -621,7 +635,20 @@ instance Parseable StorageLocation where
   display CallData = "calldata"
   parser = (const Memory <$> keyword "memory")
        <|> (const Storage <$> keyword "storage")
-       <|> (const Storage <$> keyword "calldata")
+       <|> (const CallData <$> keyword "calldata")
+
+instance Parseable (StorageLocation' SourceRange) where
+  display (StorageLocation'  Memory _) = "memory"
+  display (StorageLocation'  Storage _) = "storage"
+  display (StorageLocation'  CallData _) = "calldata"
+  parser = addSource $ StorageLocation' <$> p
+    where
+    p = choice
+      [ const Memory <$> keyword "memory"
+      , const Storage <$> keyword "storage"
+      , const CallData <$> keyword "calldata"
+      ]
+
 
 -------------------------------------------------------------------------------
 -- StateMutability = 'internal' | 'external' | 'pure' | 'constant' | 'view' | 'payable'
@@ -671,6 +698,11 @@ instance Parseable IdentifierList where
   parser =
     IdentifierList <$> (char '(' *> whitespace *> commaSep (parser <* whitespace) <* char ')')
 
+instance Parseable (IdentifierList'  SourceRange) where
+  display (IdentifierList' is) =
+      "(" ++ intercalate ", " (map display is) ++ ")"
+  parser = IdentifierList' <$> (char '(' *> whitespace *> commaSep (parser <* whitespace) <* char ')')
+
 -------------------------------------------------------------------------------
 -- Block = '{' Statement* '}'
 
@@ -678,6 +710,9 @@ instance Parseable Block where
   display (Block ss) = "{\n"++indent (intercalate "\n" (map display ss))++"}"
   parser = Block <$> (char '{' *> whitespace *> many (parser <* whitespace) <* char '}')
 
+instance Parseable (Block' SourceRange)  where
+  display (Block' ss _) = "{\n"++indent (intercalate "\n" (map display ss))++"}"
+  parser = addSource $ Block' <$> (char '{' *> whitespace *> many (parser <* whitespace) <* char '}')
 
 -------------------------------------------------------------------------------
 -- Statement = IfStatement | WhileStatement | ForStatement | Block | InlineAssemblyStatement |
@@ -837,6 +872,198 @@ instance Parseable Statement where
           )
         <|>
         SimpleStatementExpression <$> parser <* whitespace <* char ';'
+
+
+instance Parseable (Statement' SourceRange)  where
+  display (IfStatement' e t me _) = "if ("++display e++") "++display t++ maybe "" (\s -> 
+        case s of 
+        BlockStatement' (Block' [] _) -> ""
+        _ -> " else " ++ display s ) me
+  display (WhileStatement' e s _) = "while (" ++ display e++") "++display s
+  display (InlineAssemblyStatement' ms b _) = "assembly "++maybe " " (\s -> display s++" ") ms++display b
+  display (ForStatement' (ms, me1, me2) s _) =
+    "for ("++
+      maybe "; " (\s -> display s ++" ") ms ++
+      maybe "" display me1 ++"; "++
+      maybe "" display me2 ++
+    ") "++display s
+  display (BlockStatement' b) = display b
+
+  display (DoWhileStatement' s e _) = "do "++display s++" while ("++display e++");"
+  display (PlaceholderStatement' _) = "_;"
+  display (Continue' _) = "continue;"
+  display (Break' _) = "break;"
+  display (Return' me _) = "return"++maybe "" (\e -> " "++display e) me++";"
+  display (Throw' _) = "throw;"
+  display (EmitStatement' e _) = "emit "++ display e ++";"
+
+  display (SimpleStatementExpression' e _) = display e++";"
+  display (SimpleStatementVariableList' il me _) = "var " ++ display il ++ maybe "" (\e -> " = "++display e) me++";"
+  -- display (SimpleStatementVariableDeclaration v me) = display v ++ maybe "" (\e -> " = "++display e) me ++";"
+  display (SimpleStatementVariableDeclarationList' [v] [] _) = display v ++";"
+  display (SimpleStatementVariableDeclarationList' [v] [d] _) = display v ++ " = " ++ display d ++";"
+  display (SimpleStatementVariableDeclarationList' vs [] _) = "(" ++ intercalate ", " (map display vs) ++ ")" ++";"
+  display (SimpleStatementVariableDeclarationList' vs me _) = "(" ++ intercalate ", " (map display vs) ++ ")" ++ " = " ++ "(" ++ intercalate ", " (map display me) ++ ")" ++";"
+
+  display (SimpleStatementVariableAssignmentList' [v] [] _) = display v ++";"
+  display (SimpleStatementVariableAssignmentList' [v] [d] _) = display v ++ " = " ++ display d ++";"
+  display (SimpleStatementVariableAssignmentList' vs [] _) = "(" ++ intercalate ", " (map display vs) ++ ")" ++";"
+  display (SimpleStatementVariableAssignmentList' vs me _) = "(" ++ intercalate ", " (map display vs) ++ ")" ++ " = " ++ "(" ++ intercalate ", " (map display me) ++ ")" ++";"
+
+  parser =
+    try (choice
+      [ do
+          start <- getPosition
+          s <- keyword "do" *> whitespace *> parser <* whitespace <* keyword "while" <* whitespace <* char '(' <* whitespace
+          e <- parser <* whitespace <* char ')' <* whitespace <* char ';'
+          end <- getPosition
+          return (DoWhileStatement' s e $ SourceRange start end)
+      , do
+          start <- getPosition
+          _ <- (char '_' <* whitespace <* char ';')
+          end <- getPosition
+          return $ PlaceholderStatement' $ SourceRange start end
+      , do
+          start <- getPosition
+          _ <- (keyword "continue" <* whitespace <* char ';')
+          end <- getPosition
+          return $ Continue' $ SourceRange start end
+      , do
+          start <- getPosition
+          _ <- (keyword "break" <* whitespace <* char ';')
+          end <- getPosition
+          return $ Break' $ SourceRange start end
+      , do
+          start <- getPosition
+          _ <- (keyword "throw" <* whitespace <* char ';')
+          end <- getPosition
+          return $ Throw' $ SourceRange start end
+      , do
+          start <- getPosition
+          e <- (keyword "emit" *> whitespace *> parser <* whitespace <* char ';')
+          end <- getPosition
+          return $ EmitStatement' e $ SourceRange start end
+      , do
+          start <- getPosition
+          e <- (keyword "return" *> whitespace *> ((Just <$> parser) <|> return Nothing) <* whitespace <* char ';')
+          end <- getPosition
+          return $ Return' e $ SourceRange start end
+
+      , do
+          start <- getPosition
+          c <- keyword "if" *> whitespace *> char '(' *> whitespace *> parser <* whitespace <* char ')' <* whitespace
+          t <- parser <* whitespace
+          e <- (Just <$> keyword "else" *> whitespace *> parser) <|> return Nothing
+          end <- getPosition
+          return (IfStatement' c t e $ SourceRange start end)
+      , do
+          start <- getPosition
+          c <- keyword "while" *> whitespace *> char '(' *> whitespace *> parser <* whitespace <* char ')' <* whitespace
+          s <- parser
+          end <- getPosition
+          return (WhileStatement' c s $ SourceRange start end)
+      , BlockStatement' <$> parser
+      , do
+          start <- getPosition
+          n <- keyword "assembly" *> whitespace *> ((Just <$> parser) <|> return Nothing) <* whitespace
+          b <- parser
+          end <- getPosition
+          return (InlineAssemblyStatement' n b $ SourceRange start end)
+      , do
+          start <- getPosition
+          s1 <- keyword "for" *> whitespace *> char '(' *> whitespace *>
+                  (try (Just <$> parseSimpleStatement) <|> (char ';' *> return Nothing)) <* whitespace
+          s2 <- (try (Just <$> parser) <|> return Nothing) <* whitespace <* char ';' <* whitespace
+          s3 <- (try (Just <$> parser) <|> return Nothing) <* whitespace <* char ')' <* whitespace
+          b <- parser
+          end <- getPosition
+          return (ForStatement' (s1,s2,s3) b $ SourceRange start end)
+      ]
+    ) <|> parseSimpleStatement
+    where
+      parseSimpleStatement =
+        try (
+          do
+            start <- getPosition
+            il <- keyword "var" *> whitespace *> parser <* whitespace <* char '=' <* whitespace
+            me <- try (Just <$> parser) <|> return Nothing
+            _  <- whitespace *> char ';'
+            end <- getPosition
+            return (SimpleStatementVariableList' il me $ SourceRange start end)
+          )
+        <|>
+        -- try (
+        --   do
+        --     vd <- try (char '(' *> whitespace *> parser <* whitespace <* char ')') <|> parser
+        --     whitespace
+        --     me <- try (Just <$> (char '=' *> whitespace *> parser)) <|> return Nothing
+        --     _  <- whitespace *> char ';'
+        --     return (SimpleStatementVariableDeclaration vd me)
+        --   )
+        -- <|>
+        try (
+          do
+            start <- getPosition
+            char '('
+            whitespace
+            char ')'
+            whitespace
+            char ';'
+            end <- getPosition
+            return (SimpleStatementVariableDeclarationList' [] [] $ SourceRange start end)
+          )
+        <|>
+        try (
+          do
+            start <- getPosition
+            optional (char '(') <* whitespace
+            vd <- commaSep1 (try (Just <$> whitespace *> parser <* whitespace) <|> (char ' ' *> whitespace *> return Nothing))
+            optional (char ')') <* whitespace
+            r <- try( do char '=' <* whitespace
+                         me <- (whitespace *> parser <* whitespace)
+                         whitespace <* char ';'
+                         return [me])
+                  <|>
+                  try( do char '=' <* whitespace
+                          optional (char '(')
+                          mes <- try (commaSep1 (whitespace *> parser <* whitespace)) <|> return []
+                          optional (char ')')
+                          whitespace <* char ';'
+                          return mes)
+                  <|> return [] <$> whitespace <* char ';'
+            end <- getPosition
+            return (SimpleStatementVariableDeclarationList' vd r $ SourceRange start end)
+          )
+        <|>
+        try (
+          do
+            start <- getPosition
+            optional (char '(') <* whitespace
+            vd <- commaSep1 (try (Just <$> whitespace *> parser <* whitespace) <|> (char ' ' *> whitespace *> return Nothing))
+            optional (char ')') <* whitespace
+            r <- try( do char '=' <* whitespace
+                         me <- (whitespace *> parser <* whitespace)
+                         whitespace <* char ';'
+                         return [me])
+                  <|>
+                  try( do char '=' <* whitespace
+                          optional (char '(')
+                          mes <- try (commaSep1 (whitespace *> parser <* whitespace)) <|> return []
+                          optional (char ')')
+                          whitespace <* char ';'
+                          return mes)
+                  -- <|> return [] <$> whitespace <* char ';'
+            end <- getPosition
+            return (SimpleStatementVariableAssignmentList' vd r $ SourceRange start end)
+          )
+        <|>
+        try (
+          do
+            start <- getPosition
+            e <- parser <* whitespace <* char ';'
+            end <- getPosition
+            return (SimpleStatementExpression' e $ SourceRange start end)
+        )
 
 -------------------------------------------------------------------------------
 --  Precedence by order (see github.com/ethereum/solidity/pull/732)
