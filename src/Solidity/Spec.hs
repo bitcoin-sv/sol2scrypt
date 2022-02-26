@@ -54,10 +54,10 @@ module Solidity.Spec (
   NumberLiteral' (..), HexLiteral' (..), StringLiteral' (..), BooleanLiteral' (..),
   SolidityCode' (..), SourceUnit' (..), ImportDirective' (..), ImportDirective1' (..),
   ContractDefinition' (..), ContractPart' (..), StateVariableDeclaration' (..), InheritanceSpecifier' (..),
-  ModifierInvocation' (..), FunctionDefinitionTag' (..), EnumValue' (..), IndexedParameterList' (..), IndexedParameter' (..),
+  ModifierInvocation' (..), FunctionDefinitionTag' (..), IndexedParameterList' (..), IndexedParameter' (..),
   UntypedParameterList' (..), ParameterList' (..), Parameter' (..), VariableDeclaration' (..),
   StorageLocation' (..), IdentifierList' (..), Block' (..),
-  Statement' (..),
+  Statement' (..), Import' (..), PragmaDirective' (..), SourceUnit1' (..),
 
 
   Annotated (..),
@@ -171,17 +171,16 @@ data Import = ImportAll | ImportId Identifier deriving (Show, Eq, Ord)
 data ImportDirective1' a =
   ImportDirective1' {
     name' :: Import' a,
-    as'   :: Maybe (Identifier' a),
-    annot :: a
+    as'   :: Maybe (Identifier' a)
   } deriving (Show, Eq, Ord)
 
-data Import' a = ImportAll' a | ImportId' (Identifier' a) a deriving (Show, Eq, Ord)
+data Import' a = ImportAll' a | ImportId' (Identifier' a) deriving (Show, Eq, Ord)
 instance Annotated Import' a where
   ann (ImportAll' a) = a
-  ann (ImportId' _ a) = a
+  ann (ImportId' i) = ann i
 
 instance Annotated ImportDirective1' a where
-  ann (ImportDirective1' _ _ a) = a
+  ann (ImportDirective1' n _) = ann n
 -------------------------------------------------------------------------------
 -- ContractDefinition = ( 'contract' | 'library' | 'interface' ) Identifier
 --                      ( 'is' InheritanceSpecifier (',' InheritanceSpecifier )* )?
@@ -327,10 +326,8 @@ instance Annotated FunctionDefinitionTag' a where
 -- EnumValue = Identifier
 
 type EnumValue = Identifier
-data EnumValue' a = EnumValue' (Identifier' a) a deriving (Show, Eq, Ord)
+type EnumValue' = Identifier'
 
-instance Annotated EnumValue' a where
-  ann (EnumValue' _ a) = a
 
 -------------------------------------------------------------------------------
 -- IndexedParameterList =
