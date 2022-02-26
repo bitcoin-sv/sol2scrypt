@@ -19,14 +19,39 @@ instance ToIRTransformable Parameter IParam' where
     return $ IR.Param <$> t' <*> i'
   _toIR p = error $ "unsupported parameter `" ++ show p ++ "`"
 
+instance ToIRTransformable (Parameter' SourceRange) IParam' where
+  _toIR (Parameter' t _ (Just i) _) = do
+    t' <- _toIR t
+    i' <- _toIR i
+    return $ IR.Param <$> t' <*> i'
+  _toIR p = error $ "unsupported parameter `" ++ show p ++ "`"
+
+
 instance ToIRTransformable VariableDeclaration IParam' where
   _toIR (Sol.VariableDeclaration t _ i) = do
     t' <- _toIR t
     i' <- _toIR i
     return $ IR.Param <$> t' <*> i'
 
+instance ToIRTransformable (VariableDeclaration' SourceRange) IParam' where
+  _toIR (Sol.VariableDeclaration' t _ i _) = do
+    t' <- _toIR t
+    i' <- _toIR i
+    return $ IR.Param <$> t' <*> i'
+
 instance ToIRTransformable Sol.StateVariableDeclaration IStateVariable' where
   _toIR (Sol.StateVariableDeclaration t vis i expr) = do
+    t' <- _toIR t
+    vis' <- toIRVisibility vis
+    i' <- _toIR i
+    expr' <- _toIR expr
+    isConstant' <- isConstant vis
+    isImmutable' <- isImmutable vis
+    return $ IR.StateVariable <$> i' <*> t' <*> Just vis' <*> Just expr' <*> Just isConstant' <*> Just isImmutable' 
+
+
+instance ToIRTransformable (Sol.StateVariableDeclaration' SourceRange) IStateVariable' where
+  _toIR (Sol.StateVariableDeclaration' t vis i expr _) = do
     t' <- _toIR t
     vis' <- toIRVisibility vis
     i' <- _toIR i

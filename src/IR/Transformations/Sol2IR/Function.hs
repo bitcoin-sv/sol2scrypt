@@ -1,6 +1,8 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use lambda-case" #-}
 
 module IR.Transformations.Sol2IR.Function where
 
@@ -42,8 +44,26 @@ instance ToIRTransformable ContractPart IFunction' where
     return $ Function (IR.Identifier fn) <$> ps' <*> body <*> targetType retTransResult <*> Just vis
   _toIR _ = return Nothing
 
-instance ToIRTransformable ContractPart IConstructor' where
-  _toIR (Sol.ContractPartConstructorDefinition pl tags (Just block)) = do
+
+instance ToIRTransformable (ContractPart' SourceRange) IFunction' where
+  _toIR (ContractPartFunctionDefinition' (Just (Sol.Identifier' fn _)) pl tags maybeRets (Just block) _) = do
+    modify $ \s -> s {stateInFuncMappingCounter = Map.empty}
+    vis <- toIRFuncVis tags
+    retTransResult <- toIRFuncRet vis maybeRets
+    (ps, blkTfromParam) <- toIRFuncParams pl tags retTransResult vis block
+    body <- toIRFuncBody block vis blkTfromParam retTransResult
+
+    mCounter <- gets stateInFuncMappingCounter
+    let paramsForMap = fst $ transForMappingAccess mCounter
+    let ps' = case ps of
+          Just (ParamList pps) -> Just (ParamList $ pps ++ paramsForMap)
+          _ -> Just $ ParamList paramsForMap
+
+    return $ Function (IR.Identifier fn) <$> ps' <*> body <*> targetType retTransResult <*> Just vis
+  _toIR _ = return Nothing
+
+instance ToIRTransformable (ContractPart' SourceRange) IConstructor' where
+  _toIR (Sol.ContractPartConstructorDefinition' pl tags (Just block) _) = do
     (ps, blkTfromParam) <- toIRConstructorParams pl tags block
     body <- toIRConstructorBody block blkTfromParam
     return $ IR.Constructor <$> ps <*> body
@@ -54,6 +74,19 @@ toIRFuncVis tags
   | FunctionDefinitionTagStateMutability External `elem` tags = return Public
   | FunctionDefinitionTagPrivate `elem` tags || FunctionDefinitionTagStateMutability Internal `elem` tags = return Private
   | otherwise = return Default
+
+toIRFuncVis' :: [FunctionDefinitionTag' SourceRange] -> Transformation IVisibility
+toIRFuncVis' tags
+  | Public `elem` tags' = return Public
+  | Private `elem` tags' = return Private
+  | otherwise = return Default
+  where  
+    tags' = map (\tag -> case tag of
+              FunctionDefinitionTagStateMutability' (StateMutability' External _) -> Public
+              FunctionDefinitionTagStateMutability' (StateMutability' Internal _) -> Private
+              FunctionDefinitionTagPrivate' _ -> Private
+              _ -> Default) tags
+  
 
 toIRFuncRet :: IVisibility -> Maybe ParameterList -> Transformation FuncRetTransResult
 toIRFuncRet _ Nothing = return $ FuncRetTransResult (Just $ ElementaryType IR.Bool) Nothing Nothing
@@ -67,6 +100,8 @@ toIRFuncRet vis (Just (ParameterList [x])) = do
         _ -> t
   return $ FuncRetTransResult t' t n
 toIRFuncRet _ _ = return $ FuncRetTransResult Nothing Nothing Nothing -- error "mutiple-returns function not implemented"
+
+
 
 toIRFuncParams :: ParameterList -> [FunctionDefinitionTag] -> FuncRetTransResult -> IVisibility -> Block -> Transformation (IParamList', TFStmtWrapper)
 toIRFuncParams (ParameterList pl) tags (FuncRetTransResult rt ort rn) vis funcBlk = do

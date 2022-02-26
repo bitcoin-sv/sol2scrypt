@@ -39,6 +39,10 @@ instance ToIRTransformable (Maybe Sol.Expression) IExpression' where
   _toIR (Just e) = _toIR e
   _toIR Nothing = return Nothing
 
+instance ToIRTransformable (Maybe (Sol.Expression' SourceRange)) IExpression' where
+  _toIR (Just e) = _toIR e
+  _toIR Nothing = return Nothing
+
 instance ToIRTransformable Sol.Expression IExpression' where
   _toIR (Literal (PrimaryExpressionBooleanLiteral (Sol.BooleanLiteral b))) =
     return $ Just $ LiteralExpr $ IR.BoolLiteral ("true" == toLower b)
@@ -151,6 +155,87 @@ instance ToIRTransformable Sol.Expression IExpression' where
     return $ Just $ ArrayLiteralExpr $ catMaybes array'
   _toIR e = error $ "unsupported expression : `" ++ headWord (show e) ++ "`"
 
+
+
+instance ToIRTransformable (Sol.Expression' SourceRange) IExpression' where
+  _toIR (Literal' (PrimaryExpressionBooleanLiteral' (Sol.BooleanLiteral' b _))) =
+    return $ Just $ LiteralExpr $ IR.BoolLiteral ("true" == toLower b)
+  _toIR (Literal' (PrimaryExpressionNumberLiteral' (NumberLiteral' (NumberLiteralHex n Nothing) _ ))) =
+    return $ Just $ LiteralExpr $ IR.IntLiteral True (fst $ head $ readHex n)
+  _toIR (Literal' (PrimaryExpressionNumberLiteral' (NumberLiteral' (NumberLiteralDec n Nothing) _ ))) =
+    return $ Just $ LiteralExpr $ IR.IntLiteral False (fst $ head $ readDec n)
+  _toIR (Literal' (PrimaryExpressionHexLiteral' (HexLiteral' h _))) =
+    return $ Just $ LiteralExpr $ IR.BytesLiteral $ parseHex h
+  _toIR (Literal' (PrimaryExpressionStringLiteral' (Sol.StringLiteral' s _))) =
+    return $ Just $ LiteralExpr $ IR.StringLiteral s
+  _toIR (Literal' (PrimaryExpressionIdentifier' i)) = do
+    i' <- _toIR i
+    i'' <- maybeStateVarId i'
+    return $ IdentifierExpr <$> i''
+  _toIR (Unary' opStr e _) = do
+    e' <- _toIR e
+    let allIncDecOps = ["++", "--", "()++", "()--"]
+    when (opStr `elem` allIncDecOps) $
+      checkLHSmapExpr e'
+    return $ transformUnaryExpr opStr e'
+  _toIR e@(Binary' "[]" e1 e2 _) = do
+    let arrayIndexAccess = \arr idx -> do
+          arr' <- _toIR arr
+          idx' <- _toIR idx
+          return $ BinaryExpr Index <$> arr' <*> idx'
+    baseId <- baseIdOfBinaryIndexExpr' e
+    case baseId of
+      -- due to the lack of semantics, only `IdentifierExpr` can get resolved type here.
+      Just i -> do
+        i' <- lookupSym $ case i of
+          IR.Identifier n -> IR.Identifier $ stripThis n
+          ReservedId n -> ReservedId $ stripThis n
+        case i' of
+          -- mapping-typed var access
+          Just (Symbol _ (Mapping _ vt) _) -> do
+            mc <- gets stateInFuncMappingCounter
+            let mapExpr = Just $ IdentifierExpr i
+            keyExpr <- keyExprOfMapping' e []
+            modify $ \s -> s {stateInFuncMappingCounter = incExprCounter mc mapExpr keyExpr vt}
+            -- transpile to a value expression
+            let e' = BinaryExpr Index <$> mapExpr <*> keyExpr
+            return $ valueExprOfMapping e' "" -- with empty postfix
+          _ -> arrayIndexAccess e1 e2
+      -- other exprs whose type is `Mapping` will not be correctly transpiled below due to the same above.
+      _ -> arrayIndexAccess e1 e2
+  _toIR (Binary' opStr e1 e2 _) = do
+    e1' <- _toIR e1
+    e2' <- _toIR e2
+    -- TODO: check e1's type, it should be `bytes` for bytesOnlyAssignOps
+    let bytesOnlyAssignOps = ["%=", "&=", "|=", "^=", "<<=", ">>="]
+        assignOps = ["+=", "-=", "*=", "/="] ++ bytesOnlyAssignOps
+    when (opStr `elem` assignOps) $
+      checkLHSmapExpr e1'
+    return $ BinaryExpr (str2BinaryOp opStr) <$> e1' <*> e2'
+  _toIR (Ternary' _ e1 e2 e3 _) = do
+    e1' <- _toIR e1
+    e2' <- _toIR e2
+    e3' <- _toIR e3
+    return $ TernaryExpr <$> e1' <*> e2' <*> e3'
+  _toIR (Sol.MemberAccess' (Literal' (PrimaryExpressionIdentifier' (Sol.Identifier' "msg" _))) (Sol.Identifier' "sender" _) _) = do
+    return $ Just $ IR.IdentifierExpr (IR.ReservedId varMsgSender)
+  _toIR (Sol.MemberAccess' (Literal' (PrimaryExpressionIdentifier' (Sol.Identifier' "msg" _))) (Sol.Identifier' "value" _) _) = do
+    return $ Just $ IR.IdentifierExpr (IR.ReservedId varMsgValue)
+  _toIR (Sol.MemberAccess' e i _) = do
+    e' <- _toIR e
+    i' <- _toIR i
+    return $ IR.MemberAccessExpr <$> e' <*> i'
+  _toIR (FunctionCallExpressionList' fe pl _) = do
+    fe' <- _toIR fe
+    ps' <- case pl of
+      Nothing -> return []
+      Just (ExpressionList' ps) -> mapM _toIR ps
+    return $ FunctionCallExpr <$> fe' <*> sequence ps'
+  _toIR (Literal' (PrimaryExpressionTupleExpression' (SquareBrackets' array _))) = do
+    array' <- mapM _toIR array
+    return $ Just $ ArrayLiteralExpr $ catMaybes array'
+  _toIR e = error $ "unsupported expression : `" ++ headWord (show e) ++ "`"
+
 transformUnaryExpr :: String -> IExpression' -> IExpression'
 transformUnaryExpr opStr e' =
   case opStr of
@@ -218,6 +303,13 @@ baseIdOfBinaryIndexExpr (Binary "[]" (Literal (PrimaryExpressionIdentifier i)) _
   maybeStateVarId i'
 baseIdOfBinaryIndexExpr _ = return Nothing
 
+baseIdOfBinaryIndexExpr' :: Expression' SourceRange -> Transformation IIdentifier'
+baseIdOfBinaryIndexExpr' (Binary' "[]" e@(Binary' "[]" _ _ _) _ _) = baseIdOfBinaryIndexExpr' e
+baseIdOfBinaryIndexExpr' (Binary' "[]" (Literal' (PrimaryExpressionIdentifier' i)) _ _) = do
+  i' <- _toIR i
+  maybeStateVarId i'
+baseIdOfBinaryIndexExpr' _ = return Nothing
+
 -- get expression for the key of mapping
 keyExprOfMapping :: Expression -> [Expression] -> Transformation IExpression'
 keyExprOfMapping (Binary "[]" e@(Binary "[]" _ _) ke) keys = keyExprOfMapping e $ ke : keys
@@ -235,6 +327,25 @@ keyExprOfMapping (Binary "[]" _ ke) keys =
       -- use StructLiteralExpr for nested-mapping keys
       return $ StructLiteralExpr <$> sequence keys'
 keyExprOfMapping _ _ = return Nothing
+
+
+keyExprOfMapping' :: (Expression' SourceRange) -> [Expression' SourceRange] -> Transformation IExpression'
+keyExprOfMapping' (Binary' "[]" e@(Binary' "[]" _ _ _) ke _) keys = keyExprOfMapping' e $ ke : keys
+keyExprOfMapping' (Binary' "[]" _ ke _) keys =
+  if null keys
+    then do
+      e <- _toIR ke
+      let ke' = case toExprName <$> e of
+            Just kn -> if kn `elem` reservedNames then Just (IR.ReservedId kn) else Just (IR.Identifier kn)
+            _ -> Nothing
+      -- use IdentifierExpr for non-nested-mapping key
+      return $ IdentifierExpr <$> ke'
+    else do
+      keys' <- mapM _toIR $ ke : keys
+      -- use StructLiteralExpr for nested-mapping keys
+      return $ StructLiteralExpr <$> sequence keys'
+keyExprOfMapping' _ _ = return Nothing
+
 
 -- name for mapping expression, e.x. use `mapping_key` as name of expr `mapping[key]`
 valueNameOfMapping :: IExpression' -> String -> Maybe String
