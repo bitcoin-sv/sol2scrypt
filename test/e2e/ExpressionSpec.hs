@@ -20,7 +20,7 @@ transpileSol sol = do
 spec :: IO TestTree
 spec = testSpec "Transpile Expression" $ do
   let itexpr title sol scrypt = it ("should transpile Solidity `" ++ title ++ "` correctly") $ do
-        tr :: TranspileResult Expression IExpression' (Maybe (Expr Ann)) <- transpile sol
+        tr :: TranspileResult (Expression SourceRange) IExpression' (Maybe (Expr Ann)) <- transpile sol
         scryptCode tr `shouldBe` scrypt
   
   let itThrow sol err = it ("should throw when transpiling Solidity Expression `" ++ sol ++ "`") $ do
@@ -111,7 +111,7 @@ spec = testSpec "Transpile Expression" $ do
                   let mapSym = Symbol (IR.Identifier leftExpr) (Mapping (ElementaryType Address) (ElementaryType IR.Int)) False
                       initEnv =  [Map.insert (IR.Identifier leftExpr) mapSym Map.empty]
                       sol = leftExpr ++ "[" ++ rightExpr ++ "]" 
-                  tr :: TranspileResult Expression IExpression' (Maybe (Expr Ann)) <- 
+                  tr :: TranspileResult (Expression SourceRange) IExpression' (Maybe (Expr Ann)) <- 
                           transpile' (TransformState initEnv Nothing Map.empty [] Map.empty) sol
                   scryptCode tr `shouldBe` scrypt
 
