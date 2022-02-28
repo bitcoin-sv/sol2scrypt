@@ -279,17 +279,12 @@ transForFuncWithMsgValue =
       []
   )
 
-msgSenderExpr :: Sol.Expression SourceRange -> Bool 
-msgSenderExpr e = 
-  case e of 
-    Sol.MemberAccess (Sol.Literal (PrimaryExpressionIdentifier (Sol.Identifier "msg" _))) (Sol.Identifier "sender" _) _ -> True 
-    _ -> False 
+msgSenderExpr :: Sol.Expression SourceRange
+msgSenderExpr = Sol.MemberAccess (Sol.Literal (PrimaryExpressionIdentifier (Sol.Identifier "msg" defaultSourceRange))) (Sol.Identifier "sender" defaultSourceRange) defaultSourceRange
 
-msgValueExpr :: Sol.Expression SourceRange -> Bool 
-msgValueExpr e = 
-    case e of 
-    Sol.MemberAccess (Sol.Literal (PrimaryExpressionIdentifier (Sol.Identifier "msg" _))) (Sol.Identifier "value" _) _ -> True 
-    _ -> False 
+msgValueExpr :: Sol.Expression SourceRange 
+msgValueExpr = Sol.MemberAccess (Sol.Literal (PrimaryExpressionIdentifier (Sol.Identifier "msg" defaultSourceRange))) (Sol.Identifier "value" defaultSourceRange ) defaultSourceRange
+
 
 
 toIRConstructorParams :: ParameterList SourceRange -> [FunctionDefinitionTag SourceRange] -> Block SourceRange -> Transformation (IParamList', TFStmtWrapper)
