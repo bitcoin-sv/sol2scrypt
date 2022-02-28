@@ -98,14 +98,14 @@ instance ToIRTransformable (Sol.Statement SourceRange) IStatement' where
 instance ToIRTransformable (Sol.Block SourceRange) IBlock' where
   _toIR (Sol.Block stmts _) = do
     enterScope
-    stmts' <- transBlockStmtsWithReturn' stmts []
+    stmts' <- transBlockStmtsWithReturn stmts []
     leaveScope
     return $ Just $ IR.Block $ catMaybes stmts'
 
 -- transplie block statments that may have returned in middle
-transBlockStmtsWithReturn' :: [Statement SourceRange] -> [IStatement'] -> Transformation [IStatement']
-transBlockStmtsWithReturn' [] results = return results
-transBlockStmtsWithReturn' ss@(stmt : rss) results = do
+transBlockStmtsWithReturn :: [Statement SourceRange] -> [IStatement'] -> Transformation [IStatement']
+transBlockStmtsWithReturn [] results = return results
+transBlockStmtsWithReturn ss@(stmt : rss) results = do
   returned <- gets stateReturnedInBlock
   (ss', results') <-
     case returned of
@@ -131,7 +131,7 @@ transBlockStmtsWithReturn' ss@(stmt : rss) results = do
       _ -> do
         stmt' <- _toIR stmt
         return (rss, results ++ [stmt'])
-  transBlockStmtsWithReturn' ss' results'
+  transBlockStmtsWithReturn ss' results'
   where
     -- wrap `stmts` to `if (!returned) { <stmts> }`
     wrapWithIfReturn stmts = do
