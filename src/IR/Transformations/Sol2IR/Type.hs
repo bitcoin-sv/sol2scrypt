@@ -14,28 +14,28 @@ import Solidity.Spec as Sol
 import Utils
 
 -- from TypeName to IType'
-instance ToIRTransformable TypeName IType' where
-  _toIR (TypeNameElementaryTypeName Sol.BoolType) = return $ Just $ ElementaryType Bool
-  _toIR (TypeNameElementaryTypeName (Sol.IntType _)) = return $ Just $ ElementaryType Int
-  _toIR (TypeNameElementaryTypeName (Sol.UintType _)) = return $ Just $ ElementaryType Int
-  _toIR (TypeNameElementaryTypeName (Sol.BytesType _)) = return $ Just $ ElementaryType Bytes
-  _toIR (TypeNameElementaryTypeName Sol.ByteType) = return $ Just $ ElementaryType Bytes
-  _toIR (TypeNameElementaryTypeName Sol.StringType) = return $ Just $ ElementaryType String
-  _toIR (TypeNameElementaryTypeName Sol.AddressType) = return $ Just $ ElementaryType Address
-  _toIR (TypeNameElementaryTypeName Sol.VarType) = return $ Just $ ElementaryType Any
-  _toIR (TypeNameArrayTypeName t e) = do
+instance ToIRTransformable (TypeName SourceRange) IType' where
+  _toIR (TypeNameElementaryTypeName (ElementaryTypeName Sol.BoolType _) _) = return $ Just $ ElementaryType Bool
+  _toIR (TypeNameElementaryTypeName (ElementaryTypeName (Sol.IntType _) _) _) = return $ Just $ ElementaryType Int
+  _toIR (TypeNameElementaryTypeName (ElementaryTypeName (Sol.UintType _) _) _) = return $ Just $ ElementaryType Int
+  _toIR (TypeNameElementaryTypeName (ElementaryTypeName (Sol.BytesType _) _) _) = return $ Just $ ElementaryType Bytes
+  _toIR (TypeNameElementaryTypeName (ElementaryTypeName Sol.ByteType _) _) = return $ Just $ ElementaryType Bytes
+  _toIR (TypeNameElementaryTypeName (ElementaryTypeName Sol.StringType _) _) = return $ Just $ ElementaryType String
+  _toIR (TypeNameElementaryTypeName (ElementaryTypeName Sol.AddressType _) _) = return $ Just $ ElementaryType Address
+  _toIR (TypeNameElementaryTypeName (ElementaryTypeName Sol.VarType _) _) = return $ Just $ ElementaryType Any
+  _toIR (TypeNameArrayTypeName t e _) = do
     t' <- _toIR t
     sub <- _toIR e
     let arr = flip Array sub
     return $ arr <$> t'
-  _toIR (TypeNameMapping kt vt) = toIRMappingType (TypeNameElementaryTypeName kt) vt []
+  _toIR (TypeNameMapping kt vt _) = toIRMappingType (TypeNameElementaryTypeName kt $ ann kt) vt []
   _toIR t = error $ "unsupported type `" ++ headWord (show t) ++ "`"
 
 -- transpile Sol mapping type to a flattened IR mapping type
-toIRMappingType :: TypeName -> TypeName -> [IType'] -> Transformation IType'
-toIRMappingType kt (TypeNameMapping vkt vvt) flattendKeyTypes = do
+toIRMappingType :: TypeName SourceRange -> TypeName SourceRange -> [IType'] -> Transformation IType'
+toIRMappingType kt (TypeNameMapping vkt vvt a) flattendKeyTypes = do
   kt' <- _toIR kt
-  toIRMappingType (TypeNameElementaryTypeName vkt) vvt $ flattendKeyTypes ++ [kt']
+  toIRMappingType (TypeNameElementaryTypeName vkt $ mergeRange (ann kt) a) vvt $ flattendKeyTypes ++ [kt']
 toIRMappingType kt vt flattendKeyTypes = do
   kt' <- _toIR kt
   vt' <- _toIR vt
@@ -59,7 +59,7 @@ toIRMappingType kt vt flattendKeyTypes = do
                         Map.insert
                           kts
                           ( IR.Struct sn $
-                              zipWith (\ft i -> Param ft $ IR.Identifier $ "key" ++ show i) kts [0 ..]
+                              zipWith (\ft i -> Param ft $ IR.Identifier $ "key" ++ show (i :: Integer)) kts [0 ..]
                           )
                           mapKeySTs
                     }

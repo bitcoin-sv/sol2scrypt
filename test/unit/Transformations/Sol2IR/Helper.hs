@@ -6,6 +6,7 @@ import Test.Tasty
 import Test.Tasty.Hspec
 import Transformations.Helper
 import IR.Transformations.Sol2IR.Helper
+import Solidity.Spec as Sol
 
 spec :: IO TestTree
 spec = testSpec "Sol2IR Helper" $ do

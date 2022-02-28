@@ -17,41 +17,41 @@ import Solidity.Spec as Sol
 import Utils
 
 -- only used by Transfer array sub. eg. int[20]
-instance ToIRTransformable Sol.Expression Int where
-  _toIR (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec n _))) = return (fst $ head $ readDec n)
-  _toIR (Literal (PrimaryExpressionNumberLiteral (NumberLiteralHex n _))) = return (fst $ head $ readHex n)
+instance ToIRTransformable (Sol.Expression SourceRange) Int where
+  _toIR (Literal (PrimaryExpressionNumberLiteral (NumberLiteral (NumberLiteralDec n _) _))) = return (fst $ head $ readDec n)
+  _toIR (Literal (PrimaryExpressionNumberLiteral (NumberLiteral (NumberLiteralHex n _) _))) = return (fst $ head $ readHex n)
   _toIR e = error $ "unsupported expression to Integer : `" ++ show e ++ "`"
 
-instance ToIRTransformable (Maybe Sol.Expression) Int where
+instance ToIRTransformable (Maybe (Sol.Expression SourceRange)) Int where
   _toIR (Just e) = _toIR e
   _toIR e = error $ "unsupported expression to Integer : `" ++ show e ++ "`"
 
-instance ToIRTransformable (Maybe Sol.Expression) IExpression' where
+instance ToIRTransformable (Maybe (Sol.Expression SourceRange)) IExpression' where
   _toIR (Just e) = _toIR e
   _toIR Nothing = return Nothing
 
-instance ToIRTransformable Sol.Expression IExpression' where
-  _toIR (Literal (PrimaryExpressionBooleanLiteral (Sol.BooleanLiteral b))) =
+instance ToIRTransformable (Sol.Expression SourceRange) IExpression' where
+  _toIR (Literal (PrimaryExpressionBooleanLiteral (Sol.BooleanLiteral b _))) =
     return $ Just $ LiteralExpr $ IR.BoolLiteral ("true" == toLower b)
-  _toIR (Literal (PrimaryExpressionNumberLiteral (NumberLiteralHex n Nothing))) =
+  _toIR (Literal (PrimaryExpressionNumberLiteral (NumberLiteral (NumberLiteralHex n Nothing) _ ))) =
     return $ Just $ LiteralExpr $ IR.IntLiteral True (fst $ head $ readHex n)
-  _toIR (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec n Nothing))) =
+  _toIR (Literal (PrimaryExpressionNumberLiteral (NumberLiteral (NumberLiteralDec n Nothing) _ ))) =
     return $ Just $ LiteralExpr $ IR.IntLiteral False (fst $ head $ readDec n)
-  _toIR (Literal (PrimaryExpressionHexLiteral (HexLiteral h))) =
+  _toIR (Literal (PrimaryExpressionHexLiteral (HexLiteral h _))) =
     return $ Just $ LiteralExpr $ IR.BytesLiteral $ parseHex h
-  _toIR (Literal (PrimaryExpressionStringLiteral (Sol.StringLiteral s))) =
+  _toIR (Literal (PrimaryExpressionStringLiteral (Sol.StringLiteral s _))) =
     return $ Just $ LiteralExpr $ IR.StringLiteral s
   _toIR (Literal (PrimaryExpressionIdentifier i)) = do
     i' <- _toIR i
     i'' <- maybeStateVarId i'
     return $ IdentifierExpr <$> i''
-  _toIR (Unary opStr e) = do
+  _toIR (Unary opStr e _) = do
     e' <- _toIR e
     let allIncDecOps = ["++", "--", "()++", "()--"]
     when (opStr `elem` allIncDecOps) $
       checkLHSmapExpr e'
     return $ transformUnaryExpr opStr e'
-  _toIR e@(Binary "[]" e1 e2) = do
+  _toIR e@(Binary "[]" e1 e2 _) = do
     let arrayIndexAccess = \arr idx -> do
           arr' <- _toIR arr
           idx' <- _toIR idx
@@ -76,7 +76,7 @@ instance ToIRTransformable Sol.Expression IExpression' where
           _ -> arrayIndexAccess e1 e2
       -- other exprs whose type is `Mapping` will not be correctly transpiled below due to the same above.
       _ -> arrayIndexAccess e1 e2
-  _toIR (Binary opStr e1 e2) = do
+  _toIR (Binary opStr e1 e2 _) = do
     e1' <- _toIR e1
     e2' <- _toIR e2
     -- TODO: check e1's type, it should be `bytes` for bytesOnlyAssignOps
@@ -85,14 +85,14 @@ instance ToIRTransformable Sol.Expression IExpression' where
     when (opStr `elem` assignOps) $
       checkLHSmapExpr e1'
     return $ BinaryExpr (str2BinaryOp opStr) <$> e1' <*> e2'
-  _toIR (Ternary _ e1 e2 e3) = do
+  _toIR (Ternary _ e1 e2 e3 _) = do
     e1' <- _toIR e1
     e2' <- _toIR e2
     e3' <- _toIR e3
     return $ TernaryExpr <$> e1' <*> e2' <*> e3'
-  _toIR (Sol.MemberAccess e i) = do
+  _toIR (Sol.MemberAccess e i _) = do
       case (e, i) of
-        (Literal (PrimaryExpressionIdentifier (Sol.Identifier ne)), Sol.Identifier ni) -> do
+        (Literal (PrimaryExpressionIdentifier (Sol.Identifier ne _)), Sol.Identifier ni _) -> do
           case (ne, ni) of
             ("msg", "sender") ->
               return $ Just $ IR.IdentifierExpr (IR.ReservedId varMsgSender)
@@ -110,9 +110,9 @@ instance ToIRTransformable Sol.Expression IExpression' where
               e' <- _toIR e
               i' <- _toIR i
               return $ IR.MemberAccessExpr <$> e' <*> i'
-  _toIR (FunctionCallExpressionList fe pl) = do
+  _toIR (FunctionCallExpressionList fe pl _) = do
     case fe of
-      (Literal (PrimaryExpressionIdentifier (Sol.Identifier fn))) -> do
+      (Literal (PrimaryExpressionIdentifier (Sol.Identifier fn _))) -> do
               if isBuiltInFnSupported fn
                 then do
                   if shouldIgnoreBuiltInTypes fn
@@ -126,10 +126,10 @@ instance ToIRTransformable Sol.Expression IExpression' where
                       Just (ExpressionList ps) -> mapM _toIR ps
                     return $ FunctionCallExpr <$> fe' <*> sequence ps'
                 else error $ "unsupported function call : `" ++ fn ++ "`"
-      (New (TypeNameElementaryTypeName (BytesType Nothing))) -> do -- eg. transpile Solidity `new bytes(3)` to `num2bin(0, 3)`
+      (New (TypeNameElementaryTypeName (ElementaryTypeName (BytesType Nothing) a) _) _) -> do -- eg. transpile Solidity `new bytes(3)` to `num2bin(0, 3)`
             ps' <- case pl of
               Nothing -> return []
-              Just (ExpressionList ps) -> mapM _toIR (Literal (PrimaryExpressionNumberLiteral (NumberLiteralDec "0" Nothing)) : ps)
+              Just (ExpressionList ps) -> mapM _toIR (Literal (PrimaryExpressionNumberLiteral (NumberLiteral (NumberLiteralDec "0" Nothing) a)) : ps)
             return $ FunctionCallExpr (IR.IdentifierExpr (IR.Identifier "num2bin")) <$> sequence ps'
       _ -> do
         fe' <- _toIR fe
@@ -137,10 +137,11 @@ instance ToIRTransformable Sol.Expression IExpression' where
           Nothing -> return []
           Just (ExpressionList ps) -> mapM _toIR ps
         return $ FunctionCallExpr <$> fe' <*> sequence ps'
-  _toIR (Literal (PrimaryExpressionTupleExpression (SquareBrackets array))) = do
+  _toIR (Literal (PrimaryExpressionTupleExpression (SquareBrackets array _))) = do
     array' <- mapM _toIR array
     return $ Just $ ArrayLiteralExpr $ catMaybes array'
   _toIR e = error $ "unsupported expression : `" ++ headWord (show e) ++ "`"
+
 
 transformUnaryExpr :: String -> IExpression' -> IExpression'
 transformUnaryExpr opStr e' =
@@ -202,17 +203,17 @@ incExprCounter ec (Just mapping) (Just key) et = Map.insert en (MECEntry et mapp
 incExprCounter ec _ _ _ = ec
 
 -- get base identifier for binary index expression: `a[x][y]` -> `a`
-baseIdOfBinaryIndexExpr :: Expression -> Transformation IIdentifier'
-baseIdOfBinaryIndexExpr (Binary "[]" e@(Binary "[]" _ _) _) = baseIdOfBinaryIndexExpr e
-baseIdOfBinaryIndexExpr (Binary "[]" (Literal (PrimaryExpressionIdentifier i)) _) = do
+baseIdOfBinaryIndexExpr :: Expression SourceRange -> Transformation IIdentifier'
+baseIdOfBinaryIndexExpr (Binary "[]" e@(Binary "[]" _ _ _) _ _) = baseIdOfBinaryIndexExpr e
+baseIdOfBinaryIndexExpr (Binary "[]" (Literal (PrimaryExpressionIdentifier i)) _ _) = do
   i' <- _toIR i
   maybeStateVarId i'
 baseIdOfBinaryIndexExpr _ = return Nothing
 
 -- get expression for the key of mapping
-keyExprOfMapping :: Expression -> [Expression] -> Transformation IExpression'
-keyExprOfMapping (Binary "[]" e@(Binary "[]" _ _) ke) keys = keyExprOfMapping e $ ke : keys
-keyExprOfMapping (Binary "[]" _ ke) keys =
+keyExprOfMapping :: Expression SourceRange -> [Expression SourceRange] -> Transformation IExpression'
+keyExprOfMapping (Binary "[]" e@(Binary "[]" _ _ _) ke _) keys = keyExprOfMapping e $ ke : keys
+keyExprOfMapping (Binary "[]" _ ke _) keys =
   if null keys
     then do
       e <- _toIR ke

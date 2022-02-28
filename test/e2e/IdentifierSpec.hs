@@ -14,7 +14,7 @@ import Utils
 spec :: IO TestTree
 spec = testSpec "Transpile Identifier" $ do
   let itIdentifier sol scrypt = it ("should transpile Solidity `" ++ sol ++ "` correctly") $ do
-        tr :: TranspileResult Sol.Identifier IR.IIdentifier' (Maybe (NameAnn Ann)) <- transpile sol
+        tr :: TranspileResult (Sol.Identifier SourceRange) IR.IIdentifier' (Maybe (NameAnn Ann)) <- transpile sol
         scryptCode tr `shouldBe` scrypt
   describe "#Identifier" $ do
     itIdentifier "aaa" "aaa"

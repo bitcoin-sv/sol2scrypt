@@ -1,6 +1,8 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use lambda-case" #-}
 
 module IR.Transformations.Sol2IR.Function where
 
@@ -25,8 +27,9 @@ data FuncRetTransResult = FuncRetTransResult
   }
   deriving (Show, Eq, Ord)
 
-instance ToIRTransformable ContractPart IFunction' where
-  _toIR (ContractPartFunctionDefinition (Just (Sol.Identifier fn)) pl tags maybeRets (Just block)) = do
+
+instance ToIRTransformable (ContractPart SourceRange) IFunction' where
+  _toIR (ContractPartFunctionDefinition (Just (Sol.Identifier fn _)) pl tags maybeRets (Just block) _) = do
     modify $ \s -> s {stateInFuncMappingCounter = Map.empty}
     vis <- toIRFuncVis tags
     retTransResult <- toIRFuncRet vis maybeRets
@@ -42,20 +45,36 @@ instance ToIRTransformable ContractPart IFunction' where
     return $ Function (IR.Identifier fn) <$> ps' <*> body <*> targetType retTransResult <*> Just vis
   _toIR _ = return Nothing
 
-instance ToIRTransformable ContractPart IConstructor' where
-  _toIR (Sol.ContractPartConstructorDefinition pl tags (Just block)) = do
+instance ToIRTransformable (ContractPart SourceRange) IConstructor' where
+  _toIR (Sol.ContractPartConstructorDefinition pl tags (Just block) _) = do
     (ps, blkTfromParam) <- toIRConstructorParams pl tags block
     body <- toIRConstructorBody block blkTfromParam
     return $ IR.Constructor <$> ps <*> body
   _toIR c = error $ "unsupported constructor definition `" ++ headWord (show c) ++ "`"
 
-toIRFuncVis :: [FunctionDefinitionTag] -> Transformation IVisibility
-toIRFuncVis tags
-  | FunctionDefinitionTagStateMutability External `elem` tags = return Public
-  | FunctionDefinitionTagPrivate `elem` tags || FunctionDefinitionTagStateMutability Internal `elem` tags = return Private
-  | otherwise = return Default
 
-toIRFuncRet :: IVisibility -> Maybe ParameterList -> Transformation FuncRetTransResult
+toIRFuncVis :: [FunctionDefinitionTag SourceRange] -> Transformation IVisibility
+toIRFuncVis tags
+  | Public `elem` tags' = return Public
+  | Private `elem` tags' = return Private
+  | otherwise = return Default
+  where  
+    tags' = map (\tag -> case tag of
+              FunctionDefinitionTagStateMutability (StateMutability External _) -> Public
+              FunctionDefinitionTagStateMutability (StateMutability Internal _) -> Private
+              FunctionDefinitionTagPrivate _ -> Private
+              _ -> Default) tags
+
+hasMutability :: StateMutability_ -> [FunctionDefinitionTag SourceRange] -> Bool 
+hasMutability sm tags =  sm `elem` tags'
+  where 
+    tags' = map (\(FunctionDefinitionTagStateMutability (StateMutability ability _)) -> ability) tags''
+      where 
+        tags'' = filter (\tag -> case tag of 
+                  FunctionDefinitionTagStateMutability _ -> True
+                  _ -> False) tags
+
+toIRFuncRet :: IVisibility -> Maybe (ParameterList SourceRange) -> Transformation FuncRetTransResult
 toIRFuncRet _ Nothing = return $ FuncRetTransResult (Just $ ElementaryType IR.Bool) Nothing Nothing
 toIRFuncRet vis (Just (ParameterList [x])) = do
   n <- case parameterIdentifier x of
@@ -68,7 +87,9 @@ toIRFuncRet vis (Just (ParameterList [x])) = do
   return $ FuncRetTransResult t' t n
 toIRFuncRet _ _ = return $ FuncRetTransResult Nothing Nothing Nothing -- error "mutiple-returns function not implemented"
 
-toIRFuncParams :: ParameterList -> [FunctionDefinitionTag] -> FuncRetTransResult -> IVisibility -> Block -> Transformation (IParamList', TFStmtWrapper)
+
+
+toIRFuncParams :: ParameterList SourceRange -> [FunctionDefinitionTag SourceRange] -> FuncRetTransResult -> IVisibility -> Block SourceRange -> Transformation (IParamList', TFStmtWrapper)
 toIRFuncParams (ParameterList pl) tags (FuncRetTransResult rt ort rn) vis funcBlk = do
   params <- mapM _toIR pl
 
@@ -104,7 +125,7 @@ toIRFuncParams (ParameterList pl) tags (FuncRetTransResult rt ort rn) vis funcBl
           else (extraParams1, blkT1)
 
   let needPreimageParam
-        | FunctionDefinitionTagStateMutability Pure `elem` tags = False -- pure function do ont need preimage
+        | hasMutability Pure tags = False -- pure function do ont need preimage
         | vis == IR.Public = True
         | msgValueExist = True
         | otherwise = False
@@ -119,8 +140,8 @@ toIRFuncParams (ParameterList pl) tags (FuncRetTransResult rt ort rn) vis funcBl
 
   return (IR.ParamList <$> params', blkT3)
 
-toIRFuncBody :: Block -> IVisibility -> TFStmtWrapper -> FuncRetTransResult -> Transformation IBlock'
-toIRFuncBody blk@(Sol.Block _) vis wrapperFromParam (FuncRetTransResult _ ort rn) = do
+toIRFuncBody :: Block SourceRange -> IVisibility -> TFStmtWrapper -> FuncRetTransResult -> Transformation IBlock'
+toIRFuncBody blk@(Sol.Block _ _) vis wrapperFromParam (FuncRetTransResult _ ort rn) = do
   modify $ \s -> s {stateReturnedInBlock = []}
   blk' <- _toIR blk
   let stmts = case blk' of
@@ -258,13 +279,15 @@ transForFuncWithMsgValue =
       []
   )
 
-msgSenderExpr :: Sol.Expression
-msgSenderExpr = Sol.MemberAccess (Sol.Literal (PrimaryExpressionIdentifier (Sol.Identifier "msg"))) (Sol.Identifier "sender")
+msgSenderExpr :: Sol.Expression SourceRange
+msgSenderExpr = Sol.MemberAccess (Sol.Literal (PrimaryExpressionIdentifier (Sol.Identifier "msg" defaultSourceRange))) (Sol.Identifier "sender" defaultSourceRange) defaultSourceRange
 
-msgValueExpr :: Sol.Expression
-msgValueExpr = Sol.MemberAccess (Sol.Literal (PrimaryExpressionIdentifier (Sol.Identifier "msg"))) (Sol.Identifier "value")
+msgValueExpr :: Sol.Expression SourceRange 
+msgValueExpr = Sol.MemberAccess (Sol.Literal (PrimaryExpressionIdentifier (Sol.Identifier "msg" defaultSourceRange))) (Sol.Identifier "value" defaultSourceRange ) defaultSourceRange
 
-toIRConstructorParams :: ParameterList -> [FunctionDefinitionTag] -> Block -> Transformation (IParamList', TFStmtWrapper)
+
+
+toIRConstructorParams :: ParameterList SourceRange -> [FunctionDefinitionTag SourceRange] -> Block SourceRange -> Transformation (IParamList', TFStmtWrapper)
 toIRConstructorParams (ParameterList pl) _ funcBlk = do
   params <- mapM _toIR pl
 
@@ -282,8 +305,8 @@ toIRConstructorParams (ParameterList pl) _ funcBlk = do
 
   return (IR.ParamList <$> params', blkT1)
 
-toIRConstructorBody :: Block -> TFStmtWrapper -> Transformation IBlock'
-toIRConstructorBody (Sol.Block ss) (TFStmtWrapper prepends appends) = do
+toIRConstructorBody :: Block SourceRange -> TFStmtWrapper -> Transformation IBlock'
+toIRConstructorBody (Sol.Block ss _) (TFStmtWrapper prepends appends) = do
   stmts' <- mapM _toIR ss
   let stmts'' = map Just prepends ++ stmts' ++ map Just appends
   return $ Just $ IR.Block $ catMaybes stmts''

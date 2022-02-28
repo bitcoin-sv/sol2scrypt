@@ -12,21 +12,23 @@ import IR.Transformations.Sol2IR.Identifier ()
 import IR.Transformations.Sol2IR.Type ()
 import Solidity.Spec as Sol
 
-instance ToIRTransformable Parameter IParam' where
-  _toIR (Parameter t _ (Just i)) = do
+instance ToIRTransformable (Parameter SourceRange) IParam' where
+  _toIR (Parameter t _ (Just i) _) = do
     t' <- _toIR t
     i' <- _toIR i
     return $ IR.Param <$> t' <*> i'
   _toIR p = error $ "unsupported parameter `" ++ show p ++ "`"
 
-instance ToIRTransformable VariableDeclaration IParam' where
-  _toIR (Sol.VariableDeclaration t _ i) = do
+
+instance ToIRTransformable (VariableDeclaration SourceRange) IParam' where
+  _toIR (Sol.VariableDeclaration t _ i _) = do
     t' <- _toIR t
     i' <- _toIR i
     return $ IR.Param <$> t' <*> i'
 
-instance ToIRTransformable Sol.StateVariableDeclaration IStateVariable' where
-  _toIR (Sol.StateVariableDeclaration t vis i expr) = do
+
+instance ToIRTransformable (Sol.StateVariableDeclaration SourceRange) IStateVariable' where
+  _toIR (Sol.StateVariableDeclaration t vis i expr _) = do
     t' <- _toIR t
     vis' <- toIRVisibility vis
     i' <- _toIR i

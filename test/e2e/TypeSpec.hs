@@ -12,13 +12,13 @@ import Transpiler
 
 transpileSol :: String -> IO String
 transpileSol sol = do
-  tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile sol
+  tr :: TranspileResult (TypeName SourceRange) IType' (Maybe Type) <- transpile sol
   return $ scryptCode tr
 
 spec :: IO TestTree
 spec = testSpec "Transpile Type" $ do
   let itType sol scrypt = it ("should transpile Solidity `" ++ sol ++ "` correctly") $ do
-        tr :: TranspileResult TypeName IType' (Maybe Type) <- transpile sol
+        tr :: TranspileResult (TypeName SourceRange) IType' (Maybe Type) <- transpile sol
         scryptCode tr `shouldBe` scrypt
 
   

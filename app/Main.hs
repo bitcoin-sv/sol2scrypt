@@ -1,5 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 module Main where
 
@@ -16,6 +17,7 @@ import System.FilePath (takeBaseName, (</>))
 scryptExtension :: String
 scryptExtension = ".scrypt"
 
+
 main :: IO ()
 main = run =<< execParser cli
 
@@ -28,6 +30,4 @@ run (Transpile outputDir maybeSrc) = do
   writeFile scryptFile result
   putStrLn $ "transpile result written to `" ++ scryptFile ++ "`"
     
-run Version = putStrLn $ "Version: " ++ showVersion version ++ "+commit." ++  take 7 $(gitHash)
-
-
+run Cli.Version = putStrLn $ "Version: " ++ showVersion version ++ "+commit." ++  take 7 $(gitHash)

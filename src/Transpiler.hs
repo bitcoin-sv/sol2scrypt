@@ -59,6 +59,6 @@ loadFile srcPath = do
 transpileFile :: FilePath -> IO String
 transpileFile srcPath = do
   sol <- loadFile srcPath
-  tr :: TranspileResult SolidityCode IProgram' (Maybe (Scr.Program Ann)) <- transpile sol
+  tr :: TranspileResult (SolidityCode SourceRange) IProgram' (Maybe (Scr.Program Ann)) <- transpile sol
   return $ scryptCode tr
 

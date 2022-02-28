@@ -15,7 +15,7 @@ import Utils
 spec :: IO TestTree
 spec = testSpec "Transpile Program" $ do
   let itProgram title sol scrypt = it ("should transpile Solidity `" ++ title ++ "` correctly") $ do
-        tr :: TranspileResult SolidityCode IProgram' (Maybe (Scr.Program Ann)) <- transpile sol
+        tr :: TranspileResult (Sol.SolidityCode SourceRange) IProgram' (Maybe (Scr.Program Ann)) <- transpile sol
         scryptCode tr `shouldBe` scrypt
 
 

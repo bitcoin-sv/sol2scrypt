@@ -16,8 +16,8 @@ import IR.Transformations.Sol2IR.Function (buildPropagateState)
 import Solidity.Spec as Sol
 import Data.Maybe
 import Utils
-instance ToIRTransformable ContractDefinition IContract' where
-  _toIR (Sol.ContractDefinition "contract" cn [] cps) = do
+instance ToIRTransformable (ContractDefinition SourceRange) IContract' where
+  _toIR (Sol.ContractDefinition "contract" cn [] cps _) = do
     cn' <- _toIR cn
     addSym $ Symbol <$> cn' <*> Just contractSymType <*> Just False
     enterScope
@@ -31,16 +31,16 @@ instance ToIRTransformable ContractDefinition IContract' where
 
 
 
-instance ToIRTransformable Sol.PragmaDirective IR.IEmpty where
+instance ToIRTransformable (Sol.PragmaDirective SourceRange) IR.IEmpty where
   _toIR _ = return IR.Empty
 
-instance ToIRTransformable Sol.ContractPart IContractBodyElement' where
-  _toIR (Sol.ContractPartStateVariableDeclaration e) = do
+instance ToIRTransformable (Sol.ContractPart SourceRange) IContractBodyElement' where
+  _toIR (Sol.ContractPartStateVariableDeclaration e _) = do
     e' :: IStateVariable' <- _toIR e
     addSym $ Symbol <$> (stateVarName <$> e') <*> (stateVarType <$> e') <*> Just True
     return $ Just $ IR.StateVariableDeclaration (fromJust e')
   _toIR Sol.ContractPartEventDefinition {} = return Nothing
-  _toIR func@(Sol.ContractPartFunctionDefinition (Just fn) _ _ _ _) = do
+  _toIR func@(Sol.ContractPartFunctionDefinition (Just fn) _ _ _ _ _) = do
     fn' <- _toIR fn
     addSym $ Symbol <$> fn' <*> Just functionSymType <*> Just False
     enterScope
