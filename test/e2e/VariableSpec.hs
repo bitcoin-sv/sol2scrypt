@@ -14,18 +14,18 @@ import Control.Exception
 
 transpileProperty :: String -> IO String
 transpileProperty sol = do
-  tr :: TranspileResult ContractPart IContractBodyElement' (Maybe (Scr.Param Ann)) <- transpile sol
+  tr :: TranspileResult (ContractPart SourceRange) IContractBodyElement' (Maybe (Scr.Param Ann)) <- transpile sol
   return $ scryptCode tr
 
 
 transpileParameter :: String -> IO String
 transpileParameter sol = do
-  tr :: TranspileResult Parameter IParam' (Maybe (Scr.Param Ann)) <- transpile sol
+  tr :: TranspileResult (Parameter SourceRange) IParam' (Maybe (Scr.Param Ann)) <- transpile sol
   return $ scryptCode tr
 
 transpileStatic :: String -> IO String
 transpileStatic sol = do
-  tr :: TranspileResult ContractPart IContractBodyElement' (Maybe (Scr.Param Ann)) <- transpile sol
+  tr :: TranspileResult (ContractPart SourceRange) IContractBodyElement' (Maybe (Scr.Param Ann)) <- transpile sol
   return $ scryptCode tr
 
 spec :: IO TestTree

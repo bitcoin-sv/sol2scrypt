@@ -126,10 +126,10 @@ instance ToIRTransformable (Sol.Expression SourceRange) IExpression' where
                       Just (ExpressionList ps) -> mapM _toIR ps
                     return $ FunctionCallExpr <$> fe' <*> sequence ps'
                 else error $ "unsupported function call : `" ++ fn ++ "`"
-      (New (TypeNameElementaryTypeName (ElementaryTypeName (BytesType Nothing) _) _) _) -> do -- eg. transpile Solidity `new bytes(3)` to `num2bin(0, 3)`
+      (New (TypeNameElementaryTypeName (ElementaryTypeName (BytesType Nothing) a) _) _) -> do -- eg. transpile Solidity `new bytes(3)` to `num2bin(0, 3)`
             ps' <- case pl of
               Nothing -> return []
-              Just (ExpressionList ps) -> mapM _toIR (Literal (PrimaryExpressionNumberLiteral (NumberLiteral (NumberLiteralDec "0" Nothing) _)) : ps)
+              Just (ExpressionList ps) -> mapM _toIR (Literal (PrimaryExpressionNumberLiteral (NumberLiteral (NumberLiteralDec "0" Nothing) a)) : ps)
             return $ FunctionCallExpr (IR.IdentifierExpr (IR.Identifier "num2bin")) <$> sequence ps'
       _ -> do
         fe' <- _toIR fe

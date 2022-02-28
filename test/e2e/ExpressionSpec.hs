@@ -13,7 +13,7 @@ import Utils
 
 transpileSol :: String -> IO String
 transpileSol sol = do
-  tr :: TranspileResult Expression IExpression' (Maybe (Expr Ann)) <- transpile sol
+  tr :: TranspileResult (Expression SourceRange) IExpression' (Maybe (Expr Ann)) <- transpile sol
   return $ scryptCode tr
 
 
