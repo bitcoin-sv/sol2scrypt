@@ -15,13 +15,13 @@ import Utils
 -- transpile full solidity contract
 transpileSol :: String -> IO String
 transpileSol sol = do
-  tr :: TranspileResult Sol.ContractDefinition IContract' (Maybe (Scr.Contract Ann)) <- transpile sol
+  tr :: TranspileResult (Sol.ContractDefinition SourceRange) IContract' (Maybe (Scr.Contract Ann)) <- transpile sol
   return $ scryptCode tr
 
 -- transpile part of solidity contract to Scr.Param 
 transpileSolContractPart2Param :: String -> IO String
 transpileSolContractPart2Param sol = do
-  tr :: TranspileResult Sol.ContractPart IContractBodyElement' (Maybe (Scr.Param Ann)) <- transpile sol
+  tr :: TranspileResult (Sol.ContractPart SourceRange) IContractBodyElement' (Maybe (Scr.Param Ann)) <- transpile sol
   return $ scryptCode tr
 
 
@@ -238,7 +238,7 @@ spec = testSpec "Transpile Contract" $ do
 
   describe "#ContractPartEventDefinition" $ do
     let itEvent sol = it "should transpile Solidity event correctly" $ do
-          tr :: TranspileResult Sol.ContractPart IR.IContractBodyElement' (Maybe (Scr.Param Ann)) <- transpile sol 
+          tr :: TranspileResult (Sol.ContractPart SourceRange) IR.IContractBodyElement' (Maybe (Scr.Param Ann)) <- transpile sol 
           scryptCode tr `shouldBe` ""
 
     itEvent "event Sent(address from, address to, uint amount);"

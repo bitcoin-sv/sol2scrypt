@@ -32,13 +32,13 @@ spec :: IO TestTree
 spec = testSpec "Transpile Variable" $ do
 
   let itProperty sol scrypt = it ("should transpile Solidity `" ++ sol ++ "` correctly") $ do
-        tr :: TranspileResult ContractPart IContractBodyElement' (Maybe (Scr.Param Ann)) <- transpile sol
+        tr :: TranspileResult (ContractPart SourceRange) IContractBodyElement' (Maybe (Scr.Param Ann)) <- transpile sol
         scryptCode tr `shouldBe` scrypt
   let itParameter sol scrypt = it ("should transpile Solidity `" ++ sol ++ "` correctly") $ do
-        tr :: TranspileResult Parameter IParam' (Maybe (Scr.Param Ann)) <- transpile sol
+        tr :: TranspileResult (Parameter SourceRange) IParam' (Maybe (Scr.Param Ann)) <- transpile sol
         scryptCode tr `shouldBe` scrypt
   let itStatic sol scrypt = it ("should transpile Solidity `" ++ sol ++ "` correctly") $ do
-            tr :: TranspileResult ContractPart IContractBodyElement' (Maybe (Scr.Static Ann)) <- transpile sol
+            tr :: TranspileResult (ContractPart SourceRange) IContractBodyElement' (Maybe (Scr.Static Ann)) <- transpile sol
             scryptCode tr `shouldBe` scrypt
 
   let itPropertyThrow sol err = it ("should throw when transpiling Solidity `" ++ sol ++ "`") $ do

@@ -16,7 +16,7 @@ import Utils
 spec :: IO TestTree
 spec = testSpec "Transpile Function" $ do
   let itTranspile title sol scr = it ("should transpile Solidity " ++ title ++ " correctly") $ do
-        tr :: TranspileResult Sol.ContractPart IFunction' (Maybe (Scr.Function Ann)) <- transpile sol
+        tr :: TranspileResult (Sol.ContractPart SourceRange) IFunction' (Maybe (Scr.Function Ann)) <- transpile sol
         scryptCode tr `shouldBe` scr
 
   itTranspile
@@ -727,7 +727,7 @@ public function get(SigHashPreimage txPreimage) {
           it "should transpile function with mapping-typed var correctly" $ do
             let mapSym = Symbol (IR.Identifier mapName) (Mapping (ElementaryType Address) (ElementaryType IR.Int)) False
                 initEnv =  [Map.insert (IR.Identifier mapName) mapSym Map.empty]
-            tr :: TranspileResult Sol.ContractPart IFunction' (Maybe (Scr.Function Ann)) <- 
+            tr :: TranspileResult (Sol.ContractPart SourceRange) IFunction' (Maybe (Scr.Function Ann)) <- 
                           transpile' (TransformState initEnv Nothing Map.empty [] Map.empty) sol
             scryptCode tr `shouldBe` scrypt
 
