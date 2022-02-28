@@ -435,14 +435,8 @@ instance Parseable (FunctionDefinitionTag SourceRange) where
 
   parser =
     choice
-      [ do
-          start <- getPosition
-          _ <- keyword "public"
-          FunctionDefinitionTagPublic . SourceRange start <$> getPosition,
-        do
-          start <- getPosition
-          _ <- keyword "private"
-          FunctionDefinitionTagPrivate . SourceRange start <$> getPosition,
+      [ try $ addSource $ FunctionDefinitionTagPublic <$ keyword "public",
+        try $ addSource $ FunctionDefinitionTagPrivate <$ keyword "private",
         try $ FunctionDefinitionTagStateMutability <$> parser,
         try $ FunctionDefinitionTagModifierInvocation <$> parser
       ]

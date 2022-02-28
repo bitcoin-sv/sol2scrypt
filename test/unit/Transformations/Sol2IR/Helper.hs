@@ -25,7 +25,7 @@ spec = testSpec "Sol2IR Helper" $ do
   let itCheckEIE expr expr' = it ("should check `" ++ expr ++ "` expression's existance in expression correctly") $ do
         e <- sol2Expr expr
         e' <- sol2Expr expr'
-        exprExistsInExpr msgSenderExpr e' `shouldBe` True
+        exprExistsInExpr msgValueExpr e' `shouldBe` True
 
   let itCheckEIS expr stmt = it ("should check `" ++ expr ++ "` expression's existance in statement correctly") $ do
         e <- sol2Expr expr
