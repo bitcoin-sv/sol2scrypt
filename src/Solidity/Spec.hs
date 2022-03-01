@@ -38,7 +38,7 @@ module Solidity.Spec (
         NumberLiteral_ (..), NumberLiteral (..), NumberUnit (..), HexLiteral (..), StringLiteral (..), BooleanLiteral (..),
         InlineAssemblyBlock (..), AssemblyItem (..), FunctionalAssemblyExpression (..),
         Block (..),
-
+    ErrorDefinition (..),
   IdentifierList (..), Identifier (..),
   IndexedParameterList (..), IndexedParameter (..),
   UntypedParameterList (..), ParameterList (..), Parameter (..),
@@ -78,7 +78,7 @@ type ModifierName = Identifier
 newtype SolidityCode a = SolidityCode (SourceUnit a) deriving (Eq, Ord, Show)
 
 -------------------------------------------------------------------------------
--- SourceUnit = (PragmaDirective | ImportDirective | ContractDefinition)*
+-- SourceUnit = (PragmaDirective | ImportDirective | ContractDefinition | ErrorDefinition)*
 
 newtype SourceUnit a = SourceUnit [SourceUnit1 a] deriving (Show, Eq, Ord)
 
@@ -86,6 +86,7 @@ data SourceUnit1 a
   = SourceUnit1_PragmaDirective (PragmaDirective a)
   | SourceUnit1_ImportDirective (ImportDirective a)
   | SourceUnit1_ContractDefinition (ContractDefinition a)
+  | SourceUnit1_ErrorDefinition (ErrorDefinition a)
   deriving (Show, Eq, Ord)
 
 instance Annotated SourceUnit1 a where
@@ -149,12 +150,24 @@ instance Annotated Import a where
   ann (ImportId i) = ann i
 
 -------------------------------------------------------------------------------
+-- ErrorDefinition = ( 'error' ) Identifier ParameterList
+        
+data ErrorDefinition a =
+  ErrorDefinition {
+    errorName :: Identifier a,
+    parameters :: ParameterList a,
+    annot :: a
+  } deriving (Show, Eq, Ord)
+
+-------------------------------------------------------------------------------
 -- ContractDefinition = ( 'contract' | 'library' | 'interface' ) Identifier
 --                      ( 'is' InheritanceSpecifier (',' InheritanceSpecifier )* )?
 --                      '{' ContractPart* '}'
 
 data ContractDefinition a = ContractDefinition
-  { definitionType :: String,
+  {
+    abstract :: Bool,
+    definitionType :: String,
     definitionName :: Identifier a,
     isClause :: [InheritanceSpecifier a],
     contractParts :: [ContractPart a],
@@ -163,7 +176,8 @@ data ContractDefinition a = ContractDefinition
   deriving (Show, Eq, Ord)
 
 instance Annotated ContractDefinition a where
-  ann (ContractDefinition _ _ _ _ a) = a
+  ann (ContractDefinition _ _ _ _ _ a) = a
+
 
 -------------------------------------------------------------------------------
 -- ContractPart
@@ -408,6 +422,7 @@ data Statement a
   | Return (Maybe (Expression a)) a
   | Throw a
   | EmitStatement (Expression a) a
+  | RevertStatement (Expression a) a
   | SimpleStatementExpression (Expression a) a
   | SimpleStatementVariableList (IdentifierList a) (Maybe (Expression a)) a
   | -- | SimpleStatementVariableDeclaration VariableDeclaration (Maybe Expression)
@@ -428,6 +443,7 @@ instance Annotated Statement a where
   ann (Return _ a) = a
   ann (Throw a) = a
   ann (EmitStatement _ a) = a
+  ann (RevertStatement _ a) = a
   ann (SimpleStatementExpression _ a) = a
   ann (SimpleStatementVariableList _ _ a) = a
   ann (SimpleStatementVariableDeclarationList _ _ a) = a

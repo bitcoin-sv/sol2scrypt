@@ -95,7 +95,7 @@ instance Parseable (SolidityCode SourceRange) where
   parser = whitespace *> (SolidityCode <$> parser) <* whitespace <* eof
 
 -------------------------------------------------------------------------------
--- SourceUnit = (PragmaDirective | ImportDirective | ContractDefinition)*
+-- SourceUnit = (PragmaDirective | ImportDirective | ContractDefinition | ErrorDefinition)*
 
 instance Parseable (SourceUnit SourceRange) where
   parser =
@@ -105,10 +105,12 @@ instance Parseable (SourceUnit SourceRange) where
 
 instance Parseable (SourceUnit1 SourceRange) where
   parser =
-    try (SourceUnit1_PragmaDirective <$> parser)
-      <|> try (SourceUnit1_ImportDirective <$> parser)
-      <|> SourceUnit1_ContractDefinition <$> parser
+    try (SourceUnit1_PragmaDirective <$> parser) <|>
+    try (SourceUnit1_ImportDirective <$> parser) <|>
+    try (SourceUnit1_ErrorDefinition <$> parser) <|>
+    (SourceUnit1_ContractDefinition <$> parser)
   display (SourceUnit1_ContractDefinition contract_definition) = display contract_definition
+  display (SourceUnit1_ErrorDefinition error_definition) = display error_definition
   display (SourceUnit1_ImportDirective import_directive) = display import_directive
   display (SourceUnit1_PragmaDirective pragma_directive) = display pragma_directive
 
@@ -254,6 +256,20 @@ instance Parseable (ImportDirective SourceRange) where
               Nothing -> ""
               Just identifier' -> " as " ++ display identifier'
 
+
+-------------------------------------------------------------------------------
+-- ErrorDefinition = 'error' Identifier ParameterList ';'
+
+instance Parseable (ErrorDefinition SourceRange)  where
+  parser =
+    do
+      start <- getPosition
+      i <- keyword "error" *> whitespace *> parser <* whitespace
+      pl <- parser <* whitespace <* char ';'
+      end <- getPosition
+      return $ ErrorDefinition i pl (SourceRange start end) 
+  display err = "error " ++ _display (errorName err) ++ _display (parameters err) ++ ";"
+
 -------------------------------------------------------------------------------
 -- ContractDefinition = ( 'contract' | 'library' | 'interface' ) Identifier
 --                      ( 'is' InheritanceSpecifier (',' InheritanceSpecifier )* )?
@@ -262,11 +278,12 @@ instance Parseable (ImportDirective SourceRange) where
 instance Parseable (ContractDefinition SourceRange) where
   parser = do
     start <- getPosition
+    _abstract <- (try (keyword "abstract" *> return True) <|> return False) <* whitespace
     _definitionType' <- (keyword "contract" <|> keyword "library" <|> keyword "interface") <* whitespace
     _definitionName' <- parser <* whitespace
     _isClause' <- (try (keyword "is" *> whitespace *> commaSep1 parser) <|> return []) <* whitespace
     _contractParts' <- char '{' *> whitespace *> many (parser <* whitespace) <* char '}'
-    ContractDefinition _definitionType' _definitionName' _isClause' _contractParts' . SourceRange start <$> getPosition
+    ContractDefinition _abstract _definitionType' _definitionName' _isClause' _contractParts' . SourceRange start <$> getPosition
 
   display contractDefinition =
     definitionType contractDefinition ++ _display (definitionName contractDefinition)
@@ -648,6 +665,7 @@ instance Parseable (Block SourceRange) where
 -- SimpleStatement =
 --    Expression | ('var' IdentifierList ( '=' Expression ) | VariableDeclaration ( '=' Expression )?
 
+
 instance Parseable (Statement SourceRange) where
   display (IfStatement e t me _) =
     "if (" ++ display e ++ ") " ++ display t
@@ -672,6 +690,7 @@ instance Parseable (Statement SourceRange) where
   display (BlockStatement b) = display b
   display (DoWhileStatement s e _) = "do " ++ display s ++ " while (" ++ display e ++ ");"
   display (PlaceholderStatement _) = "_;"
+  display (RevertStatement exp _) = "revert "++(display exp)++";"
   display (Continue _) = "continue;"
   display (Break _) = "break;"
   display (Return me _) = "return" ++ maybe "" (\e -> " " ++ display e) me ++ ";"
@@ -713,14 +732,18 @@ instance Parseable (Statement SourceRange) where
               start <- getPosition
               _ <- keyword "throw" <* whitespace <* char ';'
               Throw . SourceRange start <$> getPosition,
-            do
+            try (do 
               start <- getPosition
               e <- keyword "emit" *> whitespace *> parser <* whitespace <* char ';'
-              EmitStatement e . SourceRange start <$> getPosition,
-            do
+              EmitStatement e . SourceRange start <$> getPosition),
+            try (do
+              start <- getPosition
+              e <- keyword "revert" *> whitespace *> parser <* whitespace <* char ';'
+              RevertStatement e . SourceRange start <$> getPosition),
+            try (do
               start <- getPosition
               e <- keyword "return" *> whitespace *> (Just <$> parser <|> return Nothing) <* whitespace <* char ';'
-              Return e . SourceRange start <$> getPosition,
+              Return e . SourceRange start <$> getPosition),
             do
               start <- getPosition
               c <- keyword "if" *> whitespace *> char '(' *> whitespace *> parser <* whitespace <* char ')' <* whitespace

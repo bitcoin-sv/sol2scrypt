@@ -13,12 +13,19 @@ import Transpiler
 import Text.RawString.QQ
 import Utils
 
+-- transpile full solidity function
+transpileSol :: String -> IO String
+transpileSol sol = do
+  tr :: TranspileResult (Sol.ContractPart SourceRange) IFunction' (Maybe (Scr.Function Ann)) <- transpile sol
+  return $ scryptCode tr
+
 spec :: IO TestTree
 spec = testSpec "Transpile Function" $ do
   let itTranspile title sol scr = it ("should transpile Solidity " ++ title ++ " correctly") $ do
-        tr :: TranspileResult (Sol.ContractPart SourceRange) IFunction' (Maybe (Scr.Function Ann)) <- transpile sol
-        scryptCode tr `shouldBe` scr
-
+        tr  <- transpileSol sol
+        tr `shouldBe` scr
+  let itThrow title sol err = it ("should throw when transpiling Solidity `" ++ title ++ "`") $ do
+        transpileSol sol `shouldThrow` err  
   itTranspile
     "external pure function without return"
     "function set(uint x) external pure { uint y = x; }"
@@ -750,6 +757,12 @@ public function send(PubKeyHash receiver, int amount, SigHashPreimage txPreimage
   require(this.propagateState(txPreimage));
 }|]
 
+
+  describe "#Throw" $ do
+    itThrow "public function access msg.sender" [r|function send(address receiver, uint amount) public {
+    balances[msg.sender] -= amount;
+    balances[receiver] += amount;
+}|] (errorCall  "using `msg.sender` in non-external function is not supported yet")
 
       
 

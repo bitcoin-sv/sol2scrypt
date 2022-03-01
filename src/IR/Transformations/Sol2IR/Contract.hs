@@ -16,8 +16,9 @@ import IR.Transformations.Sol2IR.Function (buildPropagateState)
 import Solidity.Spec as Sol
 import Data.Maybe
 import Utils
+
 instance ToIRTransformable (ContractDefinition SourceRange) IContract' where
-  _toIR (Sol.ContractDefinition "contract" cn [] cps _) = do
+  _toIR (Sol.ContractDefinition False "contract" cn [] cps _) = do
     cn' <- _toIR cn
     addSym $ Symbol <$> cn' <*> Just contractSymType <*> Just False
     enterScope
@@ -27,6 +28,8 @@ instance ToIRTransformable (ContractDefinition SourceRange) IContract' where
     let propagateState = [buildPropagateState | appendPropagateState]
     let cps'' = catMaybes  cps' ++ propagateState
     return $ Just $ IR.Contract (fromJust cn') cps''
+  _toIR (Sol.ContractDefinition True _ _ _ _ _) = do
+    error "unsupported abstract contract definition"
   _toIR c = error $ "unsupported contract definition `" ++ headWord (show c) ++ "`"
 
 
