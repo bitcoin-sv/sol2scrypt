@@ -260,15 +260,14 @@ instance Parseable (ImportDirective SourceRange) where
 -------------------------------------------------------------------------------
 -- ErrorDefinition = 'error' Identifier ParameterList ';'
 
-instance Parseable ErrorDefinition where
+instance Parseable (ErrorDefinition SourceRange)  where
   parser =
     do
+      start <- getPosition
       i <- keyword "error" *> whitespace *> parser <* whitespace
       pl <- parser <* whitespace <* char ';'
-      return ErrorDefinition {
-        errorName = i,
-        parameters = pl
-      }
+      end <- getPosition
+      return $ ErrorDefinition i pl (SourceRange start end) 
   display err = "error " ++ _display (errorName err) ++ _display (parameters err) ++ ";"
 
 -------------------------------------------------------------------------------
@@ -733,18 +732,18 @@ instance Parseable (Statement SourceRange) where
               start <- getPosition
               _ <- keyword "throw" <* whitespace <* char ';'
               Throw . SourceRange start <$> getPosition,
-            do
+            try (do 
               start <- getPosition
               e <- keyword "emit" *> whitespace *> parser <* whitespace <* char ';'
-              EmitStatement e . SourceRange start <$> getPosition,
-            do
+              EmitStatement e . SourceRange start <$> getPosition),
+            try (do
               start <- getPosition
               e <- keyword "revert" *> whitespace *> parser <* whitespace <* char ';'
-              RevertStatement e . SourceRange start <$> getPosition,
-            do
+              RevertStatement e . SourceRange start <$> getPosition),
+            try (do
               start <- getPosition
               e <- keyword "return" *> whitespace *> (Just <$> parser <|> return Nothing) <* whitespace <* char ';'
-              Return e . SourceRange start <$> getPosition,
+              Return e . SourceRange start <$> getPosition),
             do
               start <- getPosition
               c <- keyword "if" *> whitespace *> char '(' *> whitespace *> parser <* whitespace <* char ')' <* whitespace

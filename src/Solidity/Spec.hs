@@ -155,7 +155,8 @@ instance Annotated Import a where
 data ErrorDefinition a =
   ErrorDefinition {
     errorName :: Identifier a,
-    parameters :: ParameterList a
+    parameters :: ParameterList a,
+    annot :: a
   } deriving (Show, Eq, Ord)
 
 -------------------------------------------------------------------------------
@@ -442,6 +443,7 @@ instance Annotated Statement a where
   ann (Return _ a) = a
   ann (Throw a) = a
   ann (EmitStatement _ a) = a
+  ann (RevertStatement _ a) = a
   ann (SimpleStatementExpression _ a) = a
   ann (SimpleStatementVariableList _ _ a) = a
   ann (SimpleStatementVariableDeclarationList _ _ a) = a
