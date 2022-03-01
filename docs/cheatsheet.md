@@ -41,6 +41,7 @@ Contract Property | `contract Coin {` <br> &nbsp; `address public minter;` <br>&
 Contract Creation | `Contract c = new Contract(args);` |  **NO**  | |
 Interfaces |`interface HelloWorld { ... }`| **NO**  | |
 Library |`library HelloWorld { ... }`| **NO**  | |
+Inheritance |`contract ERC20 is IERC20 { ... }`| **NO**  | |
 Public function |`function get() public view returns (uint) {` <br> &nbsp; `return storedData;` <br> `}` | **Yes**  | `function get() : int {` <br> &nbsp; `return this.storedData;` <br> `}` |
 External function | `function set(uint x) external {`<br> &nbsp; `storedData = x;` <br>`}`| **Yes**  | `public function set(int x, SigHashPreimage txPreimage) {` <br>  &nbsp;  `this.storedData = x;` <br> &nbsp; `require(this.propagateState(txPreimage));` <br>  `}`| *auto add a function called `propagateState`*
 Event |`event Event();`| **Yes**  | *Empty* |
@@ -65,7 +66,7 @@ Try Catch | `try ... {}` <br> `catch Error(...)` <br> `{ ... }` | **NO** |  |
 Units, global constants and type ranges | `1 ether`<br>`1 wei`<br>`1 gwei` <br>`1 seconds`<br>`1 minutes`<br>`1 hours`<br>`1 days`<br>`1 weeks`<br>`type(uint).min`<br>`type(uint).max`<br>`type(int8).min`<br>`type(uint8).max`<br>...<br> |  **NO** |  |
 Block and transaction properties| `blockhash(blockNumber)` <br>`block.coinbase` <br>`block.difficulty` <br>`block.gaslimit` <br>`block.number`<br>`block.timestamp`<br>`gasleft()` <br>`msg.data` <br>`msg.gas` <br>`msg.sig` <br>`tx.gasprice` <br>`tx.origin` <br>|**NO** |  |
 msg.sender | `msg.sender;` | **Yes**  |  `PubKeyHash msgSender = hash160(pubKey);` <br> `require(checkSig(sig, pubKey));` | *will automatically add two parameters to the function signature： `Sig sig, PubKey pubKey`*
-msg.sender | `msg.value;` | **Yes**  |  `SigHash.value(txPreimage);` | *will automatically add one parameters to the function signature： `SigHashPreimage txPreimage`*
+msg.value | `msg.value;` | **Yes**  |  `SigHash.value(txPreimage);` | *will automatically add one parameters to the function signature： `SigHashPreimage txPreimage`*
 
 
 
