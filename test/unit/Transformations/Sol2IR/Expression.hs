@@ -22,15 +22,19 @@ spec = testSpec "instance ToIRTransformable Sol.Expression IExpr'" $ do
 
   let itUnary op solidityCode = it ("should transfrom Solidity `" ++ solidityCode ++ "` to IR Expression correctly") $ do
         r1 <- sol2Ir sol2Expr solidityCode
-        r1 `shouldBe` transformUnaryExpr op (Just (IR.IdentifierExpr $ IR.Identifier "a"))
+        r1 `shouldBe` Just (UnaryExpr  op (IR.IdentifierExpr $ IR.Identifier "a"))
+
+  let itParens solidityCode = it ("should transfrom Solidity `" ++ solidityCode ++ "` to IR Expression correctly") $ do
+        r1 <- sol2Ir sol2Expr solidityCode
+        r1 `shouldBe` Just (ParensExpr (IR.IdentifierExpr $ IR.Identifier "a"))
 
   let itBinary op solidityCode = it ("should transfrom Solidity `" ++ solidityCode ++ "` to IR Expression correctly") $ do
         r1 <- sol2Ir sol2Expr solidityCode
-        r1 `shouldBe` Just (BinaryExpr (str2BinaryOp op) (LiteralExpr $ IR.IntLiteral False 1) (LiteralExpr $ IR.IntLiteral False 2))
+        r1 `shouldBe` Just (BinaryExpr op (LiteralExpr $ IR.IntLiteral False 1) (LiteralExpr $ IR.IntLiteral False 2))
 
   let itBinary' op solidityCode = it ("should transfrom Solidity `" ++ solidityCode ++ "` to IR Expression correctly") $ do
         r1 <- sol2Ir sol2Expr solidityCode
-        r1 `shouldBe` Just (BinaryExpr (str2BinaryOp op) (LiteralExpr $ IR.BoolLiteral False) (LiteralExpr $ IR.BoolLiteral True))
+        r1 `shouldBe` Just (BinaryExpr op (LiteralExpr $ IR.BoolLiteral False) (LiteralExpr $ IR.BoolLiteral True))
 
   describe "#PrimaryExpressionBooleanLiteral" $ do
     itExpr "true" (IR.BoolLiteral True)
@@ -44,34 +48,34 @@ spec = testSpec "instance ToIRTransformable Sol.Expression IExpr'" $ do
     itExpr "hex\"010113\"" (IR.BytesLiteral [01, 01, 19])
 
   describe "#Unary" $ do
-    itUnary "-" "-a"
-    itUnary "()" "(a)"
+    itUnary IR.Negate "-a"
+    itParens  "(a)"
 
-    itUnary "++" "++a"
-    itUnary "()++" "a++"
-    itUnary "--" "--a"
-    itUnary "()--" "a--"
-    itUnary "!" "!a"
+    itUnary IR.PreIncrement "++a"
+    itUnary IR.PostIncrement "a++"
+    itUnary IR.PreDecrement "--a"
+    itUnary IR.PostDecrement "a--"
+    itUnary IR.Not "!a"
 
   describe "#Binary" $ do
-    itBinary "+" "1 + 2"
-    itBinary "-" "1 - 2"
-    itBinary "*" "1 * 2"
-    itBinary "/" "1 / 2"
-    itBinary "%" "1 % 2"
-    itBinary "+=" "1 += 2"
-    itBinary "-=" "1 -= 2"
-    itBinary "/=" "1 /= 2"
-    itBinary "*=" "1 *= 2"
-    itBinary "%=" "1 %= 2"
-    itBinary "==" "1 == 2"
-    itBinary "!=" "1 != 2"
-    itBinary "<" "1 < 2"
-    itBinary "<=" "1 <= 2"
-    itBinary ">" "1 > 2"
-    itBinary ">=" "1 >= 2"
-    itBinary' "||" "false || true"
-    itBinary' "&&" "false && true"
+    itBinary IR.Add "1 + 2"
+    itBinary IR.Sub "1 - 2"
+    itBinary IR.Mul "1 * 2"
+    itBinary IR.Div "1 / 2"
+    itBinary IR.Mod "1 % 2"
+    itBinary IR.AddAssign  "1 += 2"
+    itBinary IR.SubAssign  "1 -= 2"
+    itBinary IR.DivAssign  "1 /= 2"
+    itBinary IR.MulAssign "1 *= 2"
+    itBinary IR.ModAssign "1 %= 2"
+    itBinary IR.Equal "1 == 2"
+    itBinary IR.Neq "1 != 2"
+    itBinary IR.LessThan "1 < 2"
+    itBinary IR.LessThanOrEqual "1 <= 2"
+    itBinary IR.GreaterThan  "1 > 2"
+    itBinary IR.GreaterThanOrEqual "1 >= 2"
+    itBinary' IR.BoolOr "false || true"
+    itBinary' IR.BoolAnd  "false && true"
 
   describe "#Ternary" $ do
     itExpr' "true? 1: 2" (TernaryExpr {ternaryCond = LiteralExpr (BoolLiteral True), ternaryTrueBranch = LiteralExpr (IntLiteral {isHex = False, intVal = 1}), ternaryFalseBranch = LiteralExpr (IntLiteral {isHex = False, intVal = 2})})
