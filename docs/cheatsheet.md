@@ -63,7 +63,7 @@ Require | `require(x > y, "message");` | **Yes**  | `require(x > y);` |
 Error Definition | `error Unauthorized();` | **Yes**  |  *Empty* |
 Revert | `revert Unauthorized();` | **Yes**  | `require(false);` |
 Try Catch | `try ... {} catch Error(...) { ... }` | <font color="red" >NO</font> |  |
-Units, global constants and type ranges | <code> 1 ether </br> 1 wei </br>1 gwei </br>1 seconds</br>1 minutes</br>1 hours</br>1 days</br>1 weeks</br>1 years  // deprecated</br>type(uint).min</br>type(uint).max</br>type(int8).min</br>type(int8).max</br>...</br></code> |  <font color="red" >NO</font> |  |
+Units, global constants and type ranges | <code> 1 ether <br> 1 wei <br>1 gwei </br>1 seconds</br>1 minutes</br>1 hours</br>1 days</br>1 weeks</br>1 years  // deprecated</br>type(uint).min</br>type(uint).max</br>type(int8).min</br>type(int8).max</br>...</br></code> |  <font color="red" >NO</font> |  |
 Block and transaction properties| <code> blockhash(blockNumber) </br>block.coinbase </br>block.difficulty </br>block.gaslimit </br>block.number</br>block.timestamp</br>gasleft() </br>msg.data </br>msg.gas </br>msg.sig </br>tx.gasprice </br>tx.origin </br></code>|<font color="red" >NO</font> |  |
 msg.sender | `msg.sender;` | **Yes**  |  <code>PubKeyHash msgSender = hash160(pubKey); </br> require(checkSig(sig, pubKey)); </code> | *will automatically add two parameters to the function signature： `Sig sig, PubKey pubKey`*
 msg.sender | `msg.value;` | **Yes**  |  `SigHash.value(txPreimage);` | *will automatically add one parameters to the function signature： `SigHashPreimage txPreimage`*
