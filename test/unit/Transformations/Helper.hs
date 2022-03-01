@@ -7,11 +7,7 @@ module Transformations.Helper where
 
 import qualified Data.Map.Lazy as Map
 import IR
-import Transpiler 
-import Utils
 import Solidity.Spec as Sol
-import Scrypt.Spec as Scr
-import Scrypt.Generables.Base
 
 
 sol2Stmt :: String -> IO (Sol.Statement SourceRange)
@@ -65,10 +61,5 @@ sol2Ir = sol2Ir' (TransformState [] Nothing Map.empty [] Map.empty)
 sol2Ir' :: ToIRTransformable sol b => TransformState -> (String -> IO sol) -> String -> IO b
 sol2Ir' initState f solidityCode = do
     ast <- f solidityCode
-    transform2IR initState ast
-
--- sol2scr :: (ToIRTransformable sol ir, ToScryptTransformable ir scr) => (String -> IO sol) -> String -> IO b
--- sol2scr f solidityCode = do
---     ir' :: ir <- sol2Ir f solidityCode
---     scr :: scr <- transform2Scrypt ir'
---     return scr
+    (ir, _) <- transform2IR initState ast
+    return ir

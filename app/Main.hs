@@ -7,7 +7,6 @@ module Main where
 import Transpiler
 import Cli
 import Data.Version (showVersion)
-import Control.Monad
 import Data.Maybe
 import Options.Applicative
 import Development.GitRev

@@ -124,6 +124,7 @@ test-suite e2e
       ContractSpec
       ExpressionSpec
       FunctionSpec
+      Helper
       IdentifierSpec
       PragmaSpec
       ProgramSpec
@@ -138,6 +139,7 @@ test-suite e2e
       base >=4.7 && <5
     , containers
     , hspec
+    , parsec
     , raw-strings-qq
     , sol2scrypt
     , tasty
@@ -184,6 +186,7 @@ test-suite unit
       base >=4.7 && <5
     , containers
     , hspec
+    , parsec
     , raw-strings-qq
     , sol2scrypt
     , tasty

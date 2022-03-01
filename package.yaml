@@ -71,6 +71,7 @@ tests:
     - hspec
     - raw-strings-qq
     - containers
+    - parsec
   e2e:
     main:                Main.hs
     source-dirs:         test/e2e
@@ -85,3 +86,4 @@ tests:
     - hspec
     - raw-strings-qq
     - containers
+    - parsec

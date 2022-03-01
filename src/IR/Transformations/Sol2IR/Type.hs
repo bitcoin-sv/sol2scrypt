@@ -23,13 +23,17 @@ instance ToIRTransformable (TypeName SourceRange) IType' where
   _toIR (TypeNameElementaryTypeName (ElementaryTypeName Sol.StringType _) _) = return $ Just $ ElementaryType String
   _toIR (TypeNameElementaryTypeName (ElementaryTypeName Sol.AddressType _) _) = return $ Just $ ElementaryType Address
   _toIR (TypeNameElementaryTypeName (ElementaryTypeName Sol.VarType _) _) = return $ Just $ ElementaryType Any
-  _toIR (TypeNameArrayTypeName t e _) = do
+  _toIR (TypeNameArrayTypeName t e a) = do
     t' <- _toIR t
-    sub <- _toIR e
-    let arr = flip Array sub
-    return $ arr <$> t'
+    sub <- case e of
+             Just e' -> do
+               sub' <- _toIR e'
+               return $ Just sub'
+             _ -> reportError "array length should be explicitly specified" a >> return Nothing
+    let arr = flip Array <$> sub
+    return $ arr <*> t'
   _toIR (TypeNameMapping kt vt _) = toIRMappingType (TypeNameElementaryTypeName kt $ ann kt) vt []
-  _toIR t = error $ "unsupported type `" ++ headWord (show t) ++ "`"
+  _toIR t = reportError ("unsupported type `" ++ headWord (show t) ++ "`") (ann t) >> return Nothing
 
 -- transpile Sol mapping type to a flattened IR mapping type
 toIRMappingType :: TypeName SourceRange -> TypeName SourceRange -> [IType'] -> Transformation IType'

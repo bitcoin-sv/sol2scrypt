@@ -39,7 +39,7 @@ module Solidity.Spec (
         InlineAssemblyBlock (..), AssemblyItem (..), FunctionalAssemblyExpression (..),
         Block (..),
     ErrorDefinition (..),
-  IdentifierList (..), Identifier (..),
+  IdentifierList (..), Identifier (..), Operator (..),
   IndexedParameterList (..), IndexedParameter (..),
   UntypedParameterList (..), ParameterList (..), Parameter (..),
   TypeNameList (..), TypeName (..), UserDefinedTypeName (..), 
@@ -475,10 +475,15 @@ instance Annotated Statement a where
 --   | Expression '.' Identifier                                              -- member access
 --   | 'new' Typename
 
+data Operator a = Operator String a deriving (Show, Eq, Ord)
+
+instance Annotated Operator a where
+  ann (Operator _ a) = a
+
 data Expression a
-  = Unary String (Expression a) a
-  | Binary String (Expression a) (Expression a) a
-  | Ternary String (Expression a) (Expression a) (Expression a) a
+  = Unary (Operator a) (Expression a) a
+  | Binary (Operator a) (Expression a) (Expression a) a
+  | Ternary (Operator a) (Expression a) (Expression a) (Expression a) a
   | FunctionCallNameValueList (Expression a) (Maybe (NameValueList a)) a
   | FunctionCallExpressionList (Expression a) (Maybe (ExpressionList a)) a
   | MemberAccess (Expression a) (Identifier a) a

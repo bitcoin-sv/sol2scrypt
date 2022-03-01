@@ -6,7 +6,6 @@
 module IR.Transformations.Sol2IR.Statement where
 
 import Control.Monad.State
-import qualified Data.Map.Lazy as Map
 import Data.Maybe
 import IR.Spec as IR
 import IR.Transformations.Base
@@ -20,7 +19,7 @@ import Utils
 
 
 instance ToIRTransformable (Sol.Statement SourceRange) IStatement' where
-  _toIR (SimpleStatementExpression (Binary "=" le re _) _) = do
+  _toIR (SimpleStatementExpression (Binary (Operator "=" _) le re _) _) = do
     le' <- _toIR le
     checkLHSmapExpr le'
     re' <- _toIR re

@@ -4,10 +4,12 @@ module IR.Transformations.Base where
 
 import Control.Applicative hiding (Const)
 import Control.Monad.State
+import Control.Monad.Writer hiding (Any)
 import qualified Data.Map.Lazy as Map
 import Data.Maybe
 import IR.Spec as IR
 import Solidity.Parser
+import Solidity.Spec
 import Text.Parsec hiding (try, (<|>))
 
 parseIO :: Parseable a => String -> IO a
@@ -29,13 +31,29 @@ data TransformState = TransformState
   }
   deriving (Show, Eq, Ord)
 
-type Transformation a = StateT TransformState IO a
+data LogLevel = ErrorLevel | WarnningLevel deriving (Show, Eq, Ord)
+
+data Log = Log
+  { logLevel :: LogLevel,
+    logContent :: String,
+    logSrc :: SourceRange
+  }
+  deriving (Show, Eq, Ord)
+
+type Logs = [Log]
+
+type Transformation a = StateT TransformState (Writer Logs) a
+
+reportError :: String -> SourceRange -> Transformation ()
+reportError err src = tell [Log ErrorLevel err src]
 
 class Parseable sol => ToIRTransformable sol ir where
   _toIR :: sol -> Transformation ir
 
-transform2IR :: ToIRTransformable sol ir => TransformState -> sol -> IO ir
-transform2IR ts sol = fst <$> runStateT (_toIR sol) ts
+transform2IR :: ToIRTransformable sol ir => TransformState -> sol -> IO (ir, Logs)
+transform2IR ts sol = return (ir, logs)
+  where
+    ((ir, _), logs) = runWriter $ runStateT (_toIR sol) ts
 
 type ExprName = String
 

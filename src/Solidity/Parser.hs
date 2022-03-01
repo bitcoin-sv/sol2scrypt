@@ -23,8 +23,6 @@ import Control.Monad
 import Data.Char hiding (DecimalNumber)
 import Data.Functor
 import Data.List
-import Data.Maybe
--- import Parseable
 import Solidity.Spec
 import Text.Parsec
 import Text.Parsec.String
@@ -553,12 +551,14 @@ instance Parseable (TypeName SourceRange) where
 
   parser =
     do
+      start <- getPosition
       t <- addSource parserBasic <* whitespace
-      mes <- many (parseArrayBrackets <* whitespace)
+      mes <- many (try $ whitespace *> parseArrayBrackets)
+      end <- getPosition <* whitespace1
       let a =
-            if null mes || isNothing (last mes)
+            if null mes
               then ann t
-              else mergeRange (ann t) (ann $ fromJust $ last mes)
+              else SourceRange start end
       return $ construct t mes a
     where
       parserBasic =
@@ -894,17 +894,17 @@ instance Parseable (Expression SourceRange) where
   display (Literal e) = display e
   display (FunctionCallNameValueList e mvs _) = display e ++ "({" ++ maybe "" display mvs ++ "})"
   display (FunctionCallExpressionList e mvs _) = display e ++ "(" ++ maybe "" display mvs ++ ")"
-  display (Unary "delete" e _) = "delete " ++ display e
-  display (Unary "()++" e _) = display e ++ "++"
-  display (Unary "()--" e _) = "(" ++ display e ++ ")--"
-  display (Unary "()" e _) = "(" ++ display e ++ ")"
-  display (Unary "[]" e _) = display e ++ "[]"
+  display (Unary (Operator "delete" _) e _) = "delete " ++ display e
+  display (Unary (Operator "()++" _) e _) = display e ++ "++"
+  display (Unary (Operator "()--" _) e _) = "(" ++ display e ++ ")--"
+  display (Unary (Operator "()" _) e _) = "(" ++ display e ++ ")"
+  display (Unary (Operator "[]" _) e _) = display e ++ "[]"
   -- Remaining: ! ~ + - ++ --
-  display (Unary op e _) = op ++ display e
-  display (Binary "[]" e1 e2 _) = display e1 ++ "[" ++ display e2 ++ "]"
+  display (Unary (Operator op _) e _) = op ++ display e
+  display (Binary (Operator "[]" _) e1 e2 _) = display e1 ++ "[" ++ display e2 ++ "]"
   -- Remaining = |= ^= &= <<= >>= += -= *= /= %= || && == != <= >= < > + - * ** / % ^ | & >> <<
-  display (Binary op e1 e2 _) = display e1 ++ " " ++ op ++ " " ++ display e2
-  display (Ternary op e1 e2 e3 _) = display e1 ++ op ++ display e2 ++ ":" ++ display e3
+  display (Binary (Operator op _) e1 e2 _) = display e1 ++ " " ++ op ++ " " ++ display e2
+  display (Ternary (Operator op _) e1 e2 e3 _) = display e1 ++ op ++ display e2 ++ ":" ++ display e3
 
   parser = parserPrec (15 :: Integer)
     where
@@ -914,8 +914,8 @@ instance Parseable (Expression SourceRange) where
           p1 <- parserPrec (n -1) <* whitespace
           try
             ( do
-                op <- anyString ops <* whitespace
-                p2 <- parserPrec n
+                op <- addSource $ Operator <$> anyString ops
+                p2 <- whitespace *> parserPrec n
                 return (Binary op p1 p2 $ mergeRange (ann p1) (ann p2))
             )
             <|> return p1
@@ -925,9 +925,10 @@ instance Parseable (Expression SourceRange) where
         try
           ( do
               p1 <- parserPrec 13 <* whitespace
-              p2 <- char '?' *> whitespace *> parserPrec 13 <* whitespace
+              op <- addSource $ Operator <$> anyString ["?"]
+              p2 <- whitespace *> parserPrec 13 <* whitespace
               p3 <- char ':' *> whitespace *> parserPrec 13
-              return (Ternary "?" p1 p2 p3 $ mergeRange (ann p1) (ann p3))
+              return (Ternary op p1 p2 p3 $ mergeRange (ann p1) (ann p3))
           )
           <|> parserPrec 13
       parserPrec 13 = binaryOperators 13 ["||"]
@@ -945,8 +946,8 @@ instance Parseable (Expression SourceRange) where
         try
           ( do
               start <- getPosition
-              op <- (anyString ["++", "--", "+", "-", "!", "~"] <|> keyword "delete") <* whitespace
-              p <- parserPrec 15
+              op <- addSource $ Operator <$> (anyString ["++", "--", "+", "-", "!", "~"] <|> keyword "delete")
+              p <- whitespace *> parserPrec 15
               return (Unary op p $ (ann p) {srcStart = start})
           )
           <|> parserPrec 1
@@ -956,8 +957,8 @@ instance Parseable (Expression SourceRange) where
           [ try $ do
               start <- getPosition
               p <- parserPrec 0 <* whitespace
-              op <- anyString ["++", "--"]
-              return (Unary ('(' : ')' : op) p $ (ann p) {srcStart = start})
+              (Operator op a) <- addSource $ Operator <$> anyString ["++", "--"]
+              return (Unary (Operator ('(' : ')' : op) a) p $ (ann p) {srcStart = start})
           ]
           <|> parserPrec 0
       parserPrec 0 =
@@ -969,8 +970,10 @@ instance Parseable (Expression SourceRange) where
           addBottomLevelOperators p1 =
             choice
               [ try $ do
+                  start <- getPosition
                   p2 <- char '[' *> whitespace *> parserPrec 15 <* whitespace <* char ']'
-                  addBottomLevelOperators (Binary "[]" p1 p2 $ mergeRange (ann p1) (ann p2)),
+                  end <- getPosition
+                  addBottomLevelOperators (Binary (Operator "[]" $ SourceRange start end) p1 p2 $ mergeRange (ann p1) (ann p2)),
                 try
                   ( do
                       i <- char '.' *> whitespace *> parser
@@ -984,7 +987,7 @@ instance Parseable (Expression SourceRange) where
                         char '{' *> whitespace *> (FunctionCallNameValueList p1 <$> (parser <* whitespace <* char '}' <* whitespace <* char ')'))
                           <|> FunctionCallExpressionList p1 <$> (parser <* whitespace <* char ')')
                       end <- getPosition
-                      addBottomLevelOperators (result $ SourceRange start end)
+                      addBottomLevelOperators (result $ mergeRange (ann p1) $ SourceRange start end)
                   ),
                 return p1
               ]
@@ -992,7 +995,12 @@ instance Parseable (Expression SourceRange) where
           parserPrecBasic =
             choice
               [ try $ addSource $ New <$> (keyword "new" *> whitespace *> parser),
-                try $ addSource $ Unary "()" <$> (char '(' *> whitespace *> parserPrec 15 <* whitespace <* char ')'),
+                try $ do
+                  start <- getPosition
+                  expr <- char '(' *> whitespace *> parserPrec 15 <* whitespace <* char ')'
+                  end <- getPosition
+                  let sr = SourceRange start end
+                  return $ Unary (Operator "()" sr) expr sr,
                 Literal <$> parser
               ]
       parserPrec x = error $ "Invalid param value `" ++ show x ++ "` for function `parserPrec`"
