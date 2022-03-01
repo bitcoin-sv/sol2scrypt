@@ -106,6 +106,14 @@ spec = testSpec "Transpile Expression" $ do
 
       itBinary ">="
 
+      itexpr "|=" "b |= a" "b |= a"
+      itexpr "&=" "b &= a" "b &= a"
+      itexpr ">>" "b >> a" "b >> a"
+      itexpr "<<" "b << a" "b << a"
+      itexpr ">>=" "b >>= a" "b >>= a"
+      itexpr "<<=" "b <<= a" "b <<= a"
+      itexpr "^=" "b ^= a" "b ^= a"
+
       describe "operator `[]`" $ do
         let squareBracketExpr = \leftExpr rightExpr -> leftExpr ++ "[" ++ rightExpr ++ "]"
 
@@ -161,6 +169,7 @@ spec = testSpec "Transpile Expression" $ do
     itComplex "amount <= msg.value / 2" "amount <= msgValue / 2"
     itComplex "uint(1)" "1"
     itComplex "bytes1(hex\"00\")" "b'00'"
+    itComplex "a[i+1]" "a[i + 1]"
 
   describe "#PrimaryExpressionTupleExpression" $ do
     itexpr "number array" "[1,3,1,3]" "[1, 3, 1, 3]"
@@ -178,8 +187,6 @@ spec = testSpec "Transpile Expression" $ do
     itReportError "1 | 1 " "unsupported binary operator `|`" (3, 4)
     itReportError "1 ^ 1 " "unsupported binary operator `^`" (3, 4)
     itReportError "~a " "unsupported unary operator `~`" (1, 2)
-    itReportError "A << 1 " "unsupported binary operator `<<`" (3, 5)
-    itReportError "A >> 1 " "unsupported binary operator `>>`" (3, 5)
     -- -- buildin function
     itReportError "new uint[](3) " "unsupported expression : `New`" (1, 11)
     itReportError "assert(true) " "unsupported function call : `assert`" (1, 13)
