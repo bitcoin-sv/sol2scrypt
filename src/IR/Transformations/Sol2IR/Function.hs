@@ -50,7 +50,7 @@ instance ToIRTransformable (ContractPart SourceRange) IConstructor' where
     (ps, blkTfromParam) <- toIRConstructorParams pl tags block
     body <- toIRConstructorBody block blkTfromParam
     return $ IR.Constructor <$> ps <*> body
-  _toIR c = error $ "unsupported constructor definition `" ++ headWord (show c) ++ "`"
+  _toIR c = reportError ("unsupported constructor definition `" ++ headWord (show c) ++ "`") (ann c) >> return Nothing
 
 
 toIRFuncVis :: [FunctionDefinitionTag SourceRange] -> Transformation IVisibility
@@ -107,17 +107,19 @@ toIRFuncParams (ParameterList pl) tags (FuncRetTransResult rt ort rn) vis funcBl
 
   -- for function that uses `msg.sender`
   let (extraParams1, blkT1) =
-        if exprExistsInStmt msgSenderExpr (Sol.BlockStatement funcBlk)
+        if fst exists
           then
             if vis == Public
               then let (ps, blkT_) = transForFuncWithMsgSender in (map Just ps ++ extraParams0, mergeTFStmtWrapper blkT0 blkT_)
               else error "using `msg.sender` in non-external function is not supported yet"
           else (extraParams0, blkT0)
+          where
+            exists = exprExistsInStmt msgSenderExpr (Sol.BlockStatement funcBlk)
 
   -- for function that uses `msg.value`
   let msgValueExist = exprExistsInStmt msgValueExpr (Sol.BlockStatement funcBlk)
   let (extraParams2, blkT2) =
-        if msgValueExist
+        if fst msgValueExist
           then
             if vis == Public
               then let (ps, blkT_) = transForFuncWithMsgValue in (map Just ps ++ extraParams1, mergeTFStmtWrapper blkT1 blkT_)
@@ -127,7 +129,7 @@ toIRFuncParams (ParameterList pl) tags (FuncRetTransResult rt ort rn) vis funcBl
   let needPreimageParam
         | hasMutability Pure tags = False -- pure function do ont need preimage
         | vis == IR.Public = True
-        | msgValueExist = True
+        | fst msgValueExist = True
         | otherwise = False
   let (extraParams3, blkT3) =
         if needPreimageParam
@@ -297,7 +299,7 @@ toIRConstructorParams (ParameterList pl) _ funcBlk = do
 
   -- for function that uses `msg.sender`
   let (extraParams1, blkT1) =
-        if exprExistsInStmt msgSenderExpr (Sol.BlockStatement funcBlk)
+        if fst (exprExistsInStmt msgSenderExpr (Sol.BlockStatement funcBlk))
           then let (ps, blkT_) = transForConstructorWithMsgSender in (map Just ps ++ extraParams0, mergeTFStmtWrapper blkT0 blkT_)
           else (extraParams0, blkT0)
 
