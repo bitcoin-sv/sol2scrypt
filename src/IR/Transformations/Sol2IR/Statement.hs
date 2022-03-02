@@ -19,11 +19,13 @@ import Utils
 
 
 instance ToIRTransformable (Sol.Statement SourceRange) IStatement' where
-  _toIR (SimpleStatementExpression (Binary (Operator "=" _) le re _) _) = do
+  _toIR (SimpleStatementExpression (Binary (Operator "=" _) le re _) a) = do
     le' <- _toIR le
     checkLHSmapExpr le'
     re' <- _toIR re
-    return $ AssignStmt <$> sequence [le'] <*> sequence [re']
+    case le' of
+      Just (BinaryExpr Index _ (IdentifierExpr _)) -> reportError "unsupported assign Statement, subscript cannot be a variable" a >> return Nothing
+      _ -> return $ AssignStmt <$> sequence [le'] <*> sequence [re']
   _toIR (SimpleStatementExpression (FunctionCallExpressionList (Literal (PrimaryExpressionIdentifier (Sol.Identifier "require" _))) (Just (ExpressionList (e:_))) _) _) = do
     e' <- _toIR e
     return $ Just $ IR.RequireStmt $ fromJust e'
@@ -37,13 +39,13 @@ instance ToIRTransformable (Sol.Statement SourceRange) IStatement' where
     i'' <- maybeStateVarId i'
     checkLHSmapExpr $ IdentifierExpr <$> i''
     return $ AssignStmt <$> sequence [IdentifierExpr <$> i''] <*> sequence [e']
-  _toIR SimpleStatementVariableAssignmentList {} = error "unsupported SimpleStatementVariableAssignmentList"
+  _toIR (SimpleStatementVariableAssignmentList _ _ a) = reportError "unsupported SimpleStatementVariableAssignmentList" a >> return Nothing
   _toIR (SimpleStatementVariableDeclarationList [Just localVar] [e] _) = do
     e' <- _toIR e
     localVar' <- _toIR localVar
     addSym $ Symbol <$> (paramName <$> localVar') <*> (paramType <$> localVar') <*> Just False
-    return $ Just $ DeclareStmt [localVar'] [fromJust e']
-  _toIR SimpleStatementVariableDeclarationList {} = error "unsupported SimpleStatementVariableDeclarationList"
+    return $ DeclareStmt [localVar'] <$>  sequence [e']
+  _toIR (SimpleStatementVariableDeclarationList _ _ a) = reportError "unsupported SimpleStatementVariableDeclarationList" a >> return Nothing
   _toIR (Return e _) = do
     returned <- gets stateReturnedInBlock
     case e of
@@ -93,7 +95,7 @@ instance ToIRTransformable (Sol.Statement SourceRange) IStatement' where
         elsestmt' <- _toIR $ wrapSingleRet elsestmt
         return $ ret <*> (Just <$> elsestmt')
       Nothing -> return $ ret <*> Just Nothing
-  _toIR s = error $ "unsupported statement `" ++ headWord (show s) ++ "`"
+  _toIR s = reportError ("unsupported statement `" ++ headWord (show s) ++ "`") (ann s) >> return Nothing
 
 instance ToIRTransformable (Sol.Block SourceRange) IBlock' where
   _toIR (Sol.Block stmts _) = do
