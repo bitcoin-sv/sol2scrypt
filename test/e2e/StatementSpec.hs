@@ -14,7 +14,7 @@ import Helper
 
 transpileSol :: String -> IO (String, Logs)
 transpileSol sol = do
-  tr :: TranspileResult (Sol.Statement SourceRange) IStatement' (Maybe (Scr.Statement Ann)) <- transpile sol
+  tr :: TranspileResult (Sol.Statement SourceRange) IStatement' (Maybe (Scr.Statement Ann)) <- transpile sol ""
   return (scryptCode tr, transpileLogs tr)
 
 spec :: IO TestTree
