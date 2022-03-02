@@ -17,7 +17,7 @@ instance ToIRTransformable (Parameter SourceRange) IParam' where
     t' <- _toIR t
     i' <- _toIR i
     return $ IR.Param <$> t' <*> i'
-  _toIR p = error $ "unsupported parameter `" ++ show p ++ "`"
+  _toIR p = reportError ("unsupported parameter `" ++ show p ++ "`") (ann p) >> return Nothing
 
 
 instance ToIRTransformable (VariableDeclaration SourceRange) IParam' where
