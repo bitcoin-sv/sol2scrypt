@@ -16,7 +16,7 @@ import Utils
 -- transpile full solidity function
 transpileSol :: String -> IO String
 transpileSol sol = do
-  tr :: TranspileResult (Sol.ContractPart SourceRange) IFunction' (Maybe (Scr.Function Ann)) <- transpile sol
+  tr :: TranspileResult (Sol.ContractPart SourceRange) IFunction' (Maybe (Scr.Function Ann)) <- transpile sol ""
   return $ scryptCode tr
 
 spec :: IO TestTree
@@ -735,7 +735,7 @@ public function get(SigHashPreimage txPreimage) {
             let mapSym = Symbol (IR.Identifier mapName) (Mapping (ElementaryType Address) (ElementaryType IR.Int)) False
                 initEnv =  [Map.insert (IR.Identifier mapName) mapSym Map.empty]
             tr :: TranspileResult (Sol.ContractPart SourceRange) IFunction' (Maybe (Scr.Function Ann)) <- 
-                          transpile' (TransformState initEnv Nothing Map.empty [] Map.empty) sol
+                          transpile' (TransformState initEnv Nothing Map.empty [] Map.empty) sol ""
             scryptCode tr `shouldBe` scrypt
 
     itTranspileWithMapping

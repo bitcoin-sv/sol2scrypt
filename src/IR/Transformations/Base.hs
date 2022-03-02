@@ -12,8 +12,8 @@ import Solidity.Parser
 import Solidity.Spec
 import Text.Parsec hiding (try, (<|>))
 
-parseIO :: Parseable a => String -> IO a
-parseIO solidityCode = either (fail . (parseError ++) . show) return $ parse parser "" solidityCode
+parseIO :: Parseable a => String -> SourceName -> IO a
+parseIO solidityCode file = either (fail . (parseError ++) . show) return $ parse parser file solidityCode
   where
     parseError = "Error during parsing of <" ++ solidityCode ++ ">\n"
 
@@ -31,11 +31,15 @@ data TransformState = TransformState
   }
   deriving (Show, Eq, Ord)
 
-data LogLevel = ErrorLevel | WarnningLevel deriving (Show, Eq, Ord)
+data LogLevel = ErrorLevel | WarnningLevel deriving (Eq, Ord)
+
+instance Show LogLevel where
+  show ErrorLevel = "Error"
+  show WarnningLevel = "Warnning"
 
 data Log = Log
   { logLevel :: LogLevel,
-    logContent :: String,
+    logMessage :: String,
     logSrc :: SourceRange
   }
   deriving (Show, Eq, Ord)
@@ -166,6 +170,14 @@ mergeTFStmtWrapper (TFStmtWrapper preA appA) (TFStmtWrapper preB appB) =
 wrapTFStmtWrapper :: TFStmtWrapper -> TFStmtWrapper -> TFStmtWrapper
 wrapTFStmtWrapper (TFStmtWrapper preOuter appOuter) (TFStmtWrapper preInner appInner) =
   TFStmtWrapper (preOuter ++ preInner) (appInner ++ appOuter)
+
+sourceFile :: Log -> FilePath
+sourceFile (Log _ _ (SourceRange start _)) = sourceName start
+
+serializeSourceRange :: SourceRange -> String
+serializeSourceRange (SourceRange start end) = sourceName start ++ ":" ++ showPos start ++ ":" ++ showPos end
+  where
+    showPos p = show (sourceLine p) ++ ":" ++ show (sourceColumn p)
 
 -----------------  IR to sCrypt  -----------------
 

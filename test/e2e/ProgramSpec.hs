@@ -16,7 +16,7 @@ import Utils
 -- transpile full solidity Program
 transpileSol :: String -> IO String
 transpileSol sol = do
-  tr :: TranspileResult (Sol.SolidityCode SourceRange) IProgram' (Maybe (Scr.Program Ann)) <- transpile sol
+  tr :: TranspileResult (Sol.SolidityCode SourceRange) IProgram' (Maybe (Scr.Program Ann)) <- transpile sol ""
   return $ scryptCode tr
 
 spec :: IO TestTree

@@ -15,13 +15,13 @@ import Helper
 
 transpileSol :: String -> IO (String, Logs)
 transpileSol sol = do
-  tr :: TranspileResult (Expression SourceRange) IExpression' (Maybe (Expr Ann)) <- transpile sol
+  tr :: TranspileResult (Expression SourceRange) IExpression' (Maybe (Expr Ann)) <- transpile sol ""
   return (scryptCode tr, transpileLogs tr)
 
 spec :: IO TestTree
 spec = testSpec "Transpile Expression" $ do
   let itexpr title sol scrypt = it ("should transpile Solidity `" ++ title ++ "` correctly") $ do
-        tr :: TranspileResult (Expression SourceRange) IExpression' (Maybe (Expr Ann)) <- transpile sol
+        tr :: TranspileResult (Expression SourceRange) IExpression' (Maybe (Expr Ann)) <- transpile sol ""
         scryptCode tr `shouldBe` scrypt
   
   let itReportError sol err colRange = it ("should throw when transpiling Solidity Expression `" ++ sol ++ "`") $ do
@@ -116,7 +116,7 @@ spec = testSpec "Transpile Expression" $ do
                       initEnv =  [Map.insert (IR.Identifier leftExpr) mapSym Map.empty]
                       sol = leftExpr ++ "[" ++ rightExpr ++ "]" 
                   tr :: TranspileResult (Expression SourceRange) IExpression' (Maybe (Expr Ann)) <- 
-                          transpile' (TransformState initEnv Nothing Map.empty [] Map.empty) sol
+                          transpile' (TransformState initEnv Nothing Map.empty [] Map.empty) sol ""
                   scryptCode tr `shouldBe` scrypt
 
           itSBExpr "a" "0" "a_0"

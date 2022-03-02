@@ -55,6 +55,11 @@ executables:
     - utf8-string
     - gitrev
     - filepath
+    - mtl
+    - aeson
+    - aeson-pretty
+    - text
+    - bytestring
 
 tests:
   unit:

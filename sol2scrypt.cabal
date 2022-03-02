@@ -103,17 +103,23 @@ executable sol2scrypt
   main-is: Main.hs
   other-modules:
       Cli
+      Json
       Paths_sol2scrypt
   hs-source-dirs:
       app
   ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N -fno-warn-orphans
   build-depends:
-      base >=4.7 && <5
+      aeson
+    , aeson-pretty
+    , base >=4.7 && <5
+    , bytestring
     , filepath
     , gitrev
+    , mtl
     , optparse-applicative
     , raw-strings-qq
     , sol2scrypt
+    , text
     , utf8-string
   default-language: Haskell2010
 

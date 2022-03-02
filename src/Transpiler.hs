@@ -21,12 +21,12 @@ data TranspilePath sol ir scr = TranspilePath sol ir scr
 
 data TranspileResult a b c = TranspileResult {scryptCode :: String, tranpilePath :: TranspilePath a b c, transpileLogs :: Logs}
 
-transpile :: (Parseable a, ToIRTransformable a b, ToScryptTransformable b c, Generable c) => String -> IO (TranspileResult a b c)
+transpile :: (Parseable a, ToIRTransformable a b, ToScryptTransformable b c, Generable c) => String -> FilePath -> IO (TranspileResult a b c)
 transpile = transpile' (TransformState [] Nothing Map.empty [] Map.empty)
 
-transpile' :: (Parseable a, ToIRTransformable a b, ToScryptTransformable b c, Generable c) => TransformState -> String -> IO (TranspileResult a b c)
-transpile' initState solidityCode = do
-  sol :: a <- parseIO solidityCode
+transpile' :: (Parseable a, ToIRTransformable a b, ToScryptTransformable b c, Generable c) => TransformState -> String -> FilePath -> IO (TranspileResult a b c)
+transpile' initState solidityCode file = do
+  sol :: a <- parseIO solidityCode file
   (itmd, logs) :: b <- transform2IR initState sol
   scr :: c <- transform2Scrypt itmd
   code <- generateScrypt (CodeGenState 0) scr
@@ -52,8 +52,7 @@ loadFile srcPath = do
       checkFilesExist [srcPath]
       liftIO . fmap T.unpack . S.readFile $ srcPath
 
-transpileFile :: FilePath -> IO String
+transpileFile :: FilePath -> IO (TranspileResult (SolidityCode SourceRange) IProgram' (Maybe (Scr.Program Ann)))
 transpileFile srcPath = do
   sol <- loadFile srcPath
-  tr :: TranspileResult (SolidityCode SourceRange) IProgram' (Maybe (Scr.Program Ann)) <- transpile sol
-  return $ scryptCode tr
+  transpile sol srcPath
