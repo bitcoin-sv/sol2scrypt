@@ -23,11 +23,8 @@ spec = testSpec "Transpile Statement" $ do
   let itstmt title sol scrypt = it ("should transpile Solidity `" ++ title ++ "` correctly") $ do
         tr  <- transpileSol sol
         tr `shouldBe` (scrypt, [])
-
-  let itThrow sol err = it ("should throw when transpiling Solidity Statement `" ++ sol ++ "`") $ do
-        transpileSol sol `shouldThrow` err  
         
-  let itReportError sol errs = it ("should throw when transpiling Solidity Expression `" ++ sol ++ "`") $ do
+  let itReportError sol errs = it ("should throw when transpiling Solidity Statement `" ++ sol ++ "`") $ do
         (code, logs) <- transpileSol sol
         code `shouldBe` ""
         logs `shouldBe` map (\(e, colRange) -> Log ErrorLevel e $ firstLineSR colRange) errs

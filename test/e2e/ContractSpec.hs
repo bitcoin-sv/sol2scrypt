@@ -11,31 +11,36 @@ import Test.Tasty.Hspec
 import Text.RawString.QQ
 import Transpiler
 import Utils
+import Helper
 
 -- transpile full solidity contract
-transpileSol :: String -> IO String
+transpileSol :: String -> IO (String, Logs)
 transpileSol sol = do
   tr :: TranspileResult (Sol.ContractDefinition SourceRange) IContract' (Maybe (Scr.Contract Ann)) <- transpile sol ""
-  return $ scryptCode tr
+  return (scryptCode tr, transpileLogs tr)
 
 -- transpile part of solidity contract to Scr.Param 
-transpileSolContractPart2Param :: String -> IO String
+transpileSolContractPart2Param :: String -> IO (String, Logs)
 transpileSolContractPart2Param sol = do
   tr :: TranspileResult (Sol.ContractPart SourceRange) IContractBodyElement' (Maybe (Scr.Param Ann)) <- transpile sol ""
-  return $ scryptCode tr
+  return (scryptCode tr, transpileLogs tr)
 
 
 spec :: IO TestTree
 spec = testSpec "Transpile Contract" $ do
   let itTransContract title sol scrypt = it ("should transpile Solidity " ++ title ++ " correctly") $ do
         tr  <- transpileSol sol
-        tr `shouldBe` scrypt
+        tr `shouldBe` (scrypt, [])
 
-  let itThrow sol err = it ("should throw when transpiling Solidity Contract `" ++ sol ++ "`") $ do
-        transpileSol sol `shouldThrow` err  
+  let itReportError sol errs = it ("should throw when transpiling Solidity Contract `" ++ sol ++ "`") $ do
+        (code, logs) <- transpileSol sol
+        code `shouldBe` ""
+        logs `shouldBe` map (uncurry (Log ErrorLevel)) errs
 
-  let itThrowContractPart sol err = it ("should throw when transpiling Solidity ContractPart `" ++ sol ++ "`") $ do
-        transpileSolContractPart2Param sol `shouldThrow` err  
+  let itReportErrorContractPart sol errs = it ("should throw when transpiling Solidity ContractPart `" ++ sol ++ "`") $ do
+        (code, logs) <- transpileSolContractPart2Param sol
+        code `shouldBe` ""
+        logs `shouldBe` map (uncurry (Log ErrorLevel)) errs
 
   itTransContract "contract A with state `a` and no constructor"
     [r|contract A {
@@ -473,12 +478,25 @@ spec = testSpec "Transpile Contract" $ do
 }|]
 
   describe "#Throw" $ do
-    itThrowContractPart "modifier onlyAfter(uint _time) { require(_time > 0); _; }" (errorCall  "unsupported contract part `ContractPartModifierDefinition`")
-    itThrowContractPart "enum State { Created, Locked, Inactive }" (errorCall  "unsupported contract part `ContractPartEnumDefinition`")
-    itThrowContractPart "struct Bid {bytes32 blindedBid; uint deposit;}" (errorCall  "unsupported contract part `ContractPartStructDefinition`")
-    itThrowContractPart "using Set for Data;" (errorCall  "unsupported contract part `ContractPartUsingForDeclaration`")
-    itThrow "library D {}" (errorCall  "unsupported contract definition `ContractDefinition`")
-    itThrow "interface D {}" (errorCall  "unsupported contract definition `ContractDefinition`")
-    itThrow "abstract contract Feline { }" (errorCall  "unsupported abstract contract definition")
-    itThrow "contract Cat is Feline { }" (errorCall  "unsupported contract definition `ContractDefinition`")
+    itReportErrorContractPart "modifier onlyAfter(uint _time) { require(_time > 0); _; }" 
+      [("unsupported contract part `ContractPartModifierDefinition`", 
+        newSR (1, 1) (1, 58))]
+    itReportErrorContractPart "enum State { Created, Locked, Inactive }" 
+      [("unsupported contract part `ContractPartEnumDefinition`", 
+        newSR (1, 2) (1, 41))]
+    itReportErrorContractPart "struct Bid {bytes32 blindedBid; uint deposit;}" 
+      [("unsupported contract part `ContractPartStructDefinition`", 
+        newSR (1, 1) (1, 47))]
+
+    itReportErrorContractPart "using Set for Data;" 
+      [("unsupported contract part `ContractPartUsingForDeclaration`", 
+        newSR (1, 1) (1, 20))]
+    itReportError "library D {}" [("unsupported contract definition `ContractDefinition`", 
+      newSR (1, 1) (1, 13))]
+    itReportError "abstract contract Feline { }" [("unsupported abstract contract definition", 
+      newSR (1, 1) (1, 29))]
+    itReportError "interface D {}" [("unsupported contract definition `ContractDefinition`", 
+      newSR (1, 1) (1, 15))]
+    itReportError "contract Cat is Feline { }" [("unsupported contract definition `ContractDefinition`", 
+      newSR (1, 1) (1, 27))]
 

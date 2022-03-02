@@ -39,10 +39,10 @@ spec = testSpec "Variables" $ do
     itStateVariable "address a;" (ElementaryType Address) Default Nothing 
     itStateVariable "address public a;" (ElementaryType Address) Public Nothing 
     itStateVariable "address private a;" (ElementaryType Address) Private Nothing 
-    itStateVariable "int private a = 1;" (ElementaryType Int) Private (Just (LiteralExpr $ IR.IntLiteral False 1))
+    itStateVariable "int private a;" (ElementaryType Int) Private Nothing 
+    itStateVariable "int[3] private a;" (Array (ElementaryType Int) 3) Private Nothing 
 
   describe "#immutable" $ do
     itImmutable "int immutable a;" (ElementaryType Int) Default Nothing 
-    itImmutable "int immutable a = 4;" (ElementaryType Int) Default (Just (LiteralExpr $ IR.IntLiteral False 4))
     itImmutable "address immutable a;" (ElementaryType Address) Default Nothing 
 

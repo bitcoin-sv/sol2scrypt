@@ -28,14 +28,17 @@ instance ToIRTransformable (VariableDeclaration SourceRange) IParam' where
 
 
 instance ToIRTransformable (Sol.StateVariableDeclaration SourceRange) IStateVariable' where
-  _toIR (Sol.StateVariableDeclaration t vis i expr _) = do
+  _toIR (Sol.StateVariableDeclaration t vis i expr a) = do
     t' <- _toIR t
     vis' <- toIRVisibility vis
     i' <- _toIR i
     expr' <- _toIR expr
     isConstant' <- isConstant vis
     isImmutable' <- isImmutable vis
-    return $ IR.StateVariable <$> i' <*> t' <*> Just vis' <*> Just expr' <*> Just isConstant' <*> Just isImmutable' 
+    case (isConstant', expr') of 
+      (False, Just _)  -> reportError "unsupported state variable with init value" a >> return Nothing
+      (True , Nothing)  -> return Nothing
+      _ -> return $ IR.StateVariable <$> i' <*> t' <*> Just vis' <*> Just expr' <*> Just isConstant' <*> Just isImmutable' 
 
 toIRVisibility :: [String] -> Transformation IVisibility
 toIRVisibility tags

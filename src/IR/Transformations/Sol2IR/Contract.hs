@@ -41,7 +41,7 @@ instance ToIRTransformable (Sol.ContractPart SourceRange) IContractBodyElement' 
   _toIR (Sol.ContractPartStateVariableDeclaration e _) = do
     e' :: IStateVariable' <- _toIR e
     addSym $ Symbol <$> (stateVarName <$> e') <*> (stateVarType <$> e') <*> Just True
-    return $ Just $ IR.StateVariableDeclaration (fromJust e')
+    return $ IR.StateVariableDeclaration <$> e'
   _toIR Sol.ContractPartEventDefinition {} = return Nothing
   _toIR func@(Sol.ContractPartFunctionDefinition (Just fn) _ _ _ _ _) = do
     fn' <- _toIR fn
