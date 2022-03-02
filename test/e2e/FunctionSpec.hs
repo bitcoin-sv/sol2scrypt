@@ -30,28 +30,30 @@ spec = testSpec "Transpile Function" $ do
     "external pure function without return"
     "function set(uint x) external pure { uint y = x; }"
     [r|
-public function set(int x) {
+public function set(int x, SigHashPreimage txPreimage) {
   int y = x;
-  require(true);
+  require(this.propagateState(txPreimage));
 }|]
 
   itTranspile
     "external pure function with named return"
     "function set(uint x) external pure returns (uint y) { y = x; }"
     [r|
-public function set(int x, int _y) {
+public function set(int x, SigHashPreimage txPreimage, int _y) {
   int y = 0;
   y = x;
   require(y == _y);
+  require(this.propagateState(txPreimage));
 }|]
 
   itTranspile
     "external pure function with unnamed return"
     "function set(uint x) external pure returns (uint) { y = x; return y; }"
     [r|
-public function set(int x, int retVal) {
+public function set(int x, SigHashPreimage txPreimage, int retVal) {
   y = x;
   require(y == retVal);
+  require(this.propagateState(txPreimage));
 }|]
 
   itTranspile
@@ -70,8 +72,8 @@ public function set(int x, SigHashPreimage txPreimage) {
 public function set(int x, SigHashPreimage txPreimage, int _y) {
   int y = 0;
   y = x;
-  require(this.propagateState(txPreimage));
   require(y == _y);
+  require(this.propagateState(txPreimage));
 }|]
 
   itTranspile
@@ -582,26 +584,25 @@ function test6(int x) : bool {
   describe "#external " $ do
 
     itTranspile
-      "get function"
-      "function get() external payable { return x; }"
+      "external get function without return type"
+      "function get() external payable { return ; }"
       [r|
 public function get(SigHashPreimage txPreimage) {
   require(this.propagateState(txPreimage));
-  require(x == retVal);
 }|]
 
     itTranspile
-      "pure get function"
-      "function get() external pure { return x; }"
-      "\npublic function get() {\n  require(x == retVal);\n}"
+      "view external get function with return type"
+      "function get() external view returns (uint) { return storedData; }"
+      "\npublic function get(SigHashPreimage txPreimage, int retVal) {\n  require(storedData == retVal);\n  require(this.propagateState(txPreimage));\n}"
 
     itTranspile
-      "constant get function"
-      "function get() external constant { return x; }"
+      "pure external get function with return type"
+      "function get2() external pure returns (uint) { return 1 + 1; }"
       [r|
-public function get(SigHashPreimage txPreimage) {
+public function get2(SigHashPreimage txPreimage, int retVal) {
+  require(1 + 1 == retVal);
   require(this.propagateState(txPreimage));
-  require(x == retVal);
 }|]
 
     itTranspile
@@ -610,7 +611,6 @@ public function get(SigHashPreimage txPreimage) {
       [r|
 public function get(SigHashPreimage txPreimage) {
   require(this.propagateState(txPreimage));
-  require(x == retVal);
 }|]
 
     itTranspile
@@ -620,7 +620,6 @@ public function get(SigHashPreimage txPreimage) {
       [r|
 public function get(SigHashPreimage txPreimage) {
   require(this.propagateState(txPreimage));
-  require(x == retVal);
 }|]
 
     itTranspile
@@ -634,7 +633,7 @@ public function set(int x, SigHashPreimage txPreimage) {
 
     itTranspile
       "constant set function"
-      "function set(uint x) external constant { storedData = x; }"
+      "function set(uint x) external { storedData = x; }"
       [r|
 public function set(int x, SigHashPreimage txPreimage) {
   storedData = x;
@@ -642,12 +641,13 @@ public function set(int x, SigHashPreimage txPreimage) {
 }|]
 
     itTranspile
-      "pure set function"
-      "function set(uint x) external pure { storedData = x; }"
+      "set function with retrun"
+      "function set(uint x) external returns (uint) { storedData = x; return storedData; }"
       [r|
-public function set(int x) {
+public function set(int x, SigHashPreimage txPreimage, int retVal) {
   storedData = x;
-  require(true);
+  require(storedData == retVal);
+  require(this.propagateState(txPreimage));
 }|]
 
     itTranspile
@@ -673,8 +673,8 @@ public function set(int x, SigHashPreimage txPreimage) {
       "function get() external view returns (uint) { return storedData; }"
       [r|
 public function get(SigHashPreimage txPreimage, int retVal) {
-  require(this.propagateState(txPreimage));
   require(storedData == retVal);
+  require(this.propagateState(txPreimage));
 }|]
 
 
@@ -691,8 +691,8 @@ public function get(SigHashPreimage txPreimage, int retVal) {
       true;
     }
   }
-  require(this.propagateState(txPreimage));
   require(storedData == retVal);
+  require(this.propagateState(txPreimage));
 }|]
 
   describe "#msg" $ do
