@@ -48,30 +48,17 @@ instance ToIRTransformable (Sol.Statement SourceRange) IStatement' where
   _toIR (SimpleStatementVariableDeclarationList _ _ a) = reportError "unsupported SimpleStatementVariableDeclarationList" a >> return Nothing
   _toIR (Return e _) = do
     returned <- gets stateReturnedInBlock
+    modify $ \s -> s {stateReturnedInBlock = True : drop 1 returned}
     e' <- _toIR e
-    let e'' = if isJust e' then e' else Just (LiteralExpr (BoolLiteral True))
-    case returned of
-      -- for the outermost return, transpile to `return returned ? retVal : e;`
-      [True] -> do
-        return $ ReturnStmt
-          <$> ( TernaryExpr
-                  <$> Just (IdentifierExpr (IR.ReservedId varReturned))
-                  <*> Just (IdentifierExpr (IR.ReservedId varRetVal))
-                  <*> e''
-              )
-      -- for the non-outermost return (at least two flags in `stateReturnedInBlock`), transplie to `{ returned = true; retVal = e; }`
-      _ : _ : _ -> do
-        -- set current block's returned flag
-        modify $ \s -> s {stateReturnedInBlock = True : drop 1 returned}
-        return $
-          BlockStmt
-            <$> ( IR.Block
-                    <$> sequence
-                      [ AssignStmt <$> Just [IdentifierExpr (IR.ReservedId varRetVal)] <*> sequence [e''],
-                        Just $ AssignStmt [IdentifierExpr (IR.ReservedId varReturned)] [LiteralExpr $ BoolLiteral True]
-                      ]
-                )
-      _ -> return $ ReturnStmt <$> e''
+    let e'' = (if isJust e' then e' else Just (LiteralExpr (BoolLiteral True)))
+    return $
+      BlockStmt
+        <$> ( IR.Block
+                <$> sequence
+                  [ AssignStmt <$> Just [IdentifierExpr (IR.ReservedId varRetVal)] <*> sequence [e''],
+                    Just $ AssignStmt [IdentifierExpr (IR.ReservedId varReturned)] [LiteralExpr $ BoolLiteral True]
+                  ]
+            )
 
   _toIR (Sol.BlockStatement blk) = do
     blk' <- _toIR blk

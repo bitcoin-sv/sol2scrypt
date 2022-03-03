@@ -137,7 +137,10 @@ spec = testSpec "Transpile Statement" $ do
       returned = true;
     }
   }
-  return returned ? ret : z;
+  {
+    ret = z;
+    returned = true;
+  }
 }|]
 
     itstmt "BlockStatement with embeded if & return"
@@ -206,7 +209,10 @@ spec = testSpec "Transpile Statement" $ do
     x = x + amount;
     x += 20 / amount - 12;
   }
-  return returned ? ret : x;
+  {
+    ret = x;
+    returned = true;
+  }
 }|]
 
     describe "#Fix Sol Parser bug #9" $ do

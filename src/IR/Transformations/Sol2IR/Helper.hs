@@ -212,3 +212,33 @@ exprExistsInExprEx decExpr ancExpr = if fst r1 then r1 else r2
 
 defaultSourceRange :: SourceRange
 defaultSourceRange = SourceRange (newPos "" 0 0) (newPos "" 0 0)
+
+
+existsReturn :: [Statement SourceRange] -> Bool
+existsReturn [] = False
+existsReturn (stmt:xs) = (case stmt of
+                                            Return _ _ -> True
+                                            BlockStatement (Block stmts _) -> existsReturn stmts
+                                            IfStatement _ st (Just st') _ -> existsReturn [st] || existsReturn [st']
+                                            IfStatement _ st Nothing _ -> existsReturn [st] 
+                                            ForStatement (Just st', _, _) st _  -> existsReturn [st] || existsReturn [st']
+                                            ForStatement (Nothing, _, _) st _  -> existsReturn [st] 
+                                            WhileStatement _ st _  -> existsReturn [st]
+                                            DoWhileStatement st _ _  -> existsReturn [st]
+                                            _ -> False) || existsReturn xs
+
+
+
+existsMiddleReturn :: [Statement SourceRange] -> Bool
+existsMiddleReturn [] = False
+existsMiddleReturn [stmt] = case stmt of
+                              BlockStatement (Block stmts _) -> existsReturn stmts 
+                              IfStatement _ st (Just st') _ -> existsReturn [st] || existsReturn [st']
+                              IfStatement _ st Nothing _ -> existsReturn [st] 
+                              ForStatement (Just st', _, _) st _  -> existsReturn [st] || existsReturn [st']
+                              ForStatement (Nothing, _, _) st _  -> existsReturn [st] 
+                              WhileStatement _ st _  -> existsReturn [st]
+                              DoWhileStatement st _ _  -> existsReturn [st]
+                              _ -> False
+existsMiddleReturn stmts@(_:_:_) = existsReturn (init stmts) || existsMiddleReturn [last stmts]
+  

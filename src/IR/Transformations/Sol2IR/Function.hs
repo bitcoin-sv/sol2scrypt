@@ -142,41 +142,42 @@ toIRFuncParams (ParameterList pl) tags (FuncRetTransResult rt ort rn) vis funcBl
   return (IR.ParamList <$> params', blkT3)
 
 toIRFuncBody :: Block SourceRange -> IVisibility -> TFStmtWrapper -> FuncRetTransResult -> Transformation IBlock'
-toIRFuncBody blk@(Sol.Block _ _) vis wrapperFromParam (FuncRetTransResult _ ort rn) = do
+toIRFuncBody blk@(Sol.Block solstmt _) vis wrapperFromParam (FuncRetTransResult _ ort rn) = do
   modify $ \s -> s {stateReturnedInBlock = []}
   blk' <- _toIR blk
   let stmts = case blk' of
         Just (IR.Block ss) -> map Just ss
         Nothing -> []
   returned <- gets stateReturnedInBlock
-  let returnedInMiddle = case returned of
+
+  let returnedInMiddle = (case returned of
+        [True] -> existsMiddleReturn solstmt
         True : _ -> True
-        _ -> False
+        _ -> False)
 
   mCounter <- gets stateInFuncMappingCounter
   let (TFStmtWrapper prepends appends) = wrapTFStmtWrapper wrapperFromParam $ snd $ transForMappingAccess mCounter
 
   let hasRetStmt =
-        not (null stmts)
-          && case last stmts of
-            Just (ReturnStmt _) -> True
+        not (null solstmt)
+          && case last solstmt of
+            Return {} -> True
             _ -> False
 
   let stmts' = case (vis == Public, hasRetStmt) of
         (True, True) -> case last stmts of
-          Just (ReturnStmt r) -> case ort of
+          -- last one must be BlockStmt, because we tr Sol.Return into BlockStmt
+          (Just (IR.BlockStmt (IR.Block [(IR.AssignStmt _ [r]), _]))) -> case ort of
             -- drop `return ;`
             Nothing  -> init stmts
             -- use `require(nonBoolExpr == injectedParamName);` to replace `return nonBoolExpr;`
-            Just _ ->
-              let e = fromMaybe (IR.Identifier "retVal") rn
-                  r' = case r of
-                        te@TernaryExpr {} -> ParensExpr te
-                        _ -> r
-                in init stmts ++ [Just $ requireEqualStmt r' e]
+            _ ->
 
-          _ -> error "last statement is not return statement"
-        (True, False) ->
+              let e = fromMaybe (IR.Identifier "retVal") rn
+                  r' = if returnedInMiddle then ParensExpr $ TernaryExpr (IdentifierExpr (IR.ReservedId varReturned)) (IdentifierExpr (IR.ReservedId varRetVal)) r else r
+                    in init stmts ++ [Just $ requireEqualStmt r' e]
+          _ -> error "last statement is not IR.BlockStmt"
+        (True, False) -> -- public function without RetStmt
           stmts ++ case rn of
             Just r -> [Just $ requireEqualStmt (IdentifierExpr r) $ mirror rn]
             _ -> []
@@ -202,7 +203,15 @@ toIRFuncBody blk@(Sol.Block _ _) vis wrapperFromParam (FuncRetTransResult _ ort 
                   [Just $ ReturnStmt $ IdentifierExpr $ IR.ReservedId varRetVal]
                 else -- append `return <defaultValue>;` / `return true;`
                   [Just $ ReturnStmt $ maybe (LiteralExpr $ BoolLiteral True) defaultValueExpr ort]
-        _ -> stmts
+        (False, True) -> case last stmts of
+          (Just (IR.BlockStmt (IR.Block [(IR.AssignStmt _ [r]), _]))) -> case ort of
+            -- replace last BlockStmt with  `return true;`
+            Nothing  -> init stmts ++ [Just $ ReturnStmt r]
+            -- use `return expr` to replace BlockStmt
+            _ -> if returnedInMiddle 
+              then init stmts ++ [Just $ ReturnStmt $ TernaryExpr (IdentifierExpr (IR.ReservedId varReturned)) (IdentifierExpr (IR.ReservedId varRetVal)) r]
+              else init stmts ++ [Just $ ReturnStmt r]
+          _ -> error "last statement is not IR.BlockStmt"
 
   let stmts'' = map Just prepends ++ stmts' ++ map Just appends
 

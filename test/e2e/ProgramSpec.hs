@@ -745,6 +745,27 @@ contract SimpleStorage {
 
     function get3() external view returns (uint) { {true; {true;} } return storedData; }
 
+    function set4(uint x) public {
+
+      uint a = 3;
+      if(x > a) {
+          return;
+      }
+      a++;
+    }
+
+    function set5(uint x) external {
+      storedData = x;
+      return;
+      storedData++;
+    }
+
+    function set6(uint x) external {
+      storedData = x;
+      return;
+      storedData++;
+      return;
+    }
 }
 |] [r|contract SimpleStorage {
   @state
@@ -853,6 +874,50 @@ contract SimpleStorage {
       }
     }
     require(this.storedData == retVal);
+    require(this.propagateState(txPreimage));
+  }
+
+  function set4(int x) : bool {
+    bool ret = false;
+    bool returned = false;
+    int a = 3;
+    if (x > a) {
+      {
+        ret = true;
+        returned = true;
+      }
+    }
+    if (!returned) {
+      a++;
+    }
+    return ret;
+  }
+
+  public function set5(int x, SigHashPreimage txPreimage) {
+    bool ret = false;
+    bool returned = false;
+    this.storedData = x;
+    {
+      ret = true;
+      returned = true;
+    }
+    if (!returned) {
+      this.storedData++;
+    }
+    require(this.propagateState(txPreimage));
+  }
+
+  public function set6(int x, SigHashPreimage txPreimage) {
+    bool ret = false;
+    bool returned = false;
+    this.storedData = x;
+    {
+      ret = true;
+      returned = true;
+    }
+    if (!returned) {
+      this.storedData++;
+    }
     require(this.propagateState(txPreimage));
   }
 
