@@ -24,7 +24,7 @@ spec = testSpec "Transpile Expression" $ do
         tr :: TranspileResult (Expression SourceRange) IExpression' (Maybe (Expr Ann)) <- transpile sol ""
         scryptCode tr `shouldBe` scrypt
   
-  let itReportError sol err colRange = it ("should throw when transpiling Solidity Expression `" ++ sol ++ "`") $ do
+  let itReportError sol err colRange = it ("should report error when transpiling Solidity Expression `" ++ sol ++ "`") $ do
         (code, logs) <- transpileSol sol
         code `shouldBe` ""
         logs `shouldBe` [Log ErrorLevel err $ firstLineSR colRange]

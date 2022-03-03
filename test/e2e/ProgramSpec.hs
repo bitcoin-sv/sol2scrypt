@@ -25,7 +25,7 @@ spec = testSpec "Transpile Program" $ do
         tr  <- transpileSol sol
         tr `shouldBe` (scrypt, [])
 
-  let itReportError sol errs = it ("should throw when transpiling Solidity Expression `" ++ sol ++ "`") $ do
+  let itReportError title sol errs = it ("should report error when transpiling Solidity Program `" ++ title ++ "`") $ do
         (code, logs) <- transpileSol sol
         code `shouldBe` ""
         logs `shouldBe` map (uncurry (Log ErrorLevel)) errs
@@ -669,9 +669,11 @@ contract VendingMachine {
 
 
 
-  describe "#Throw" $ do
+  describe "#ReportError" $ do
 
-    itReportError [r|
+    itReportError 
+      "abstract / inheritance contract"
+      [r|
   pragma solidity ^0.8.10;
   abstract contract Feline {
   }

@@ -42,17 +42,17 @@ spec = testSpec "Transpile Variable" $ do
         tr  <- transpileStatic sol
         tr `shouldBe` (scrypt, [])
 
-  let itPropertyReportError sol errs = it ("should throw when transpiling Solidity Property `" ++ sol ++ "`") $ do
+  let itPropertyReportError sol errs = it ("should report error when transpiling Solidity Property `" ++ sol ++ "`") $ do
         (code, logs) <- transpileProperty sol
         code `shouldBe` ""
         logs `shouldBe` map (uncurry (Log ErrorLevel)) errs
 
-  let itParameterReportError sol errs = it ("should throw when transpiling Solidity Parameter `" ++ sol ++ "`") $ do
+  let itParameterReportError sol errs = it ("should report error when transpiling Solidity Parameter `" ++ sol ++ "`") $ do
         (code, logs) <- transpileParameter sol
         code `shouldBe` ""
         logs `shouldBe` map (uncurry (Log ErrorLevel)) errs
 
-  let itStaticReportError sol errs = it ("should throw when transpiling Solidity constant Property `" ++ sol ++ "`") $ do
+  let itStaticReportError sol errs = it ("should report error when transpiling Solidity constant Property `" ++ sol ++ "`") $ do
         (code, logs) <- transpileStatic sol
         code `shouldBe` ""
         logs `shouldBe` map (uncurry (Log ErrorLevel)) errs

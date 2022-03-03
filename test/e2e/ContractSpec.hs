@@ -32,12 +32,12 @@ spec = testSpec "Transpile Contract" $ do
         tr  <- transpileSol sol
         tr `shouldBe` (scrypt, [])
 
-  let itReportError sol errs = it ("should throw when transpiling Solidity Contract `" ++ sol ++ "`") $ do
+  let itReportError sol errs = it ("should report error when transpiling Solidity Contract `" ++ sol ++ "`") $ do
         (code, logs) <- transpileSol sol
         code `shouldBe` ""
         logs `shouldBe` map (uncurry (Log ErrorLevel)) errs
 
-  let itReportErrorContractPart sol errs = it ("should throw when transpiling Solidity ContractPart `" ++ sol ++ "`") $ do
+  let itReportErrorContractPart sol errs = it ("should report error when transpiling Solidity ContractPart `" ++ sol ++ "`") $ do
         (code, logs) <- transpileSolContractPart2Param sol
         code `shouldBe` ""
         logs `shouldBe` map (uncurry (Log ErrorLevel)) errs
@@ -477,7 +477,7 @@ spec = testSpec "Transpile Contract" $ do
   }
 }|]
 
-  describe "#Throw" $ do
+  describe "#ReportError" $ do
     itReportErrorContractPart "modifier onlyAfter(uint _time) { require(_time > 0); _; }" 
       [("unsupported contract part `ContractPartModifierDefinition`", 
         newSR (1, 1) (1, 58))]
