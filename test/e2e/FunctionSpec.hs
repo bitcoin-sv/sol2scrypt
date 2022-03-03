@@ -12,20 +12,24 @@ import Test.Tasty.Hspec
 import Transpiler
 import Text.RawString.QQ
 import Utils
+import Helper
 
 -- transpile full solidity function
-transpileSol :: String -> IO String
+transpileSol :: String -> IO (String, Logs)
 transpileSol sol = do
-  tr :: TranspileResult (Sol.ContractPart SourceRange) IFunction' (Maybe (Scr.Function Ann)) <- transpile sol
-  return $ scryptCode tr
+  tr :: TranspileResult (Sol.ContractPart SourceRange) IFunction' (Maybe (Scr.Function Ann)) <- transpile sol ""
+  return (scryptCode tr, transpileLogs tr)
 
 spec :: IO TestTree
 spec = testSpec "Transpile Function" $ do
   let itTranspile title sol scr = it ("should transpile Solidity " ++ title ++ " correctly") $ do
-        tr  <- transpileSol sol
-        tr `shouldBe` scr
-  let itThrow title sol err = it ("should throw when transpiling Solidity `" ++ title ++ "`") $ do
-        transpileSol sol `shouldThrow` err  
+        (code, _)  <- transpileSol sol
+        code `shouldBe` scr
+  let itReportError title sol err startPos endPos scr = it ("should report error when transpiling Solidity `" ++ title ++ "`") $ do
+        (code, logs) <- transpileSol sol
+        code `shouldBe` scr
+        logs `shouldBe` [Log ErrorLevel err $ newSR startPos endPos]
+
   itTranspile
     "external pure function without return"
     "function set(uint x) external pure { uint y = x; }"
@@ -735,7 +739,7 @@ public function get(SigHashPreimage txPreimage) {
             let mapSym = Symbol (IR.Identifier mapName) (Mapping (ElementaryType Address) (ElementaryType IR.Int)) False
                 initEnv =  [Map.insert (IR.Identifier mapName) mapSym Map.empty]
             tr :: TranspileResult (Sol.ContractPart SourceRange) IFunction' (Maybe (Scr.Function Ann)) <- 
-                          transpile' (TransformState initEnv Nothing Map.empty [] Map.empty) sol
+                          transpile' (TransformState initEnv Nothing Map.empty [] Map.empty) sol ""
             scryptCode tr `shouldBe` scrypt
 
     itTranspileWithMapping
@@ -758,11 +762,19 @@ public function send(PubKeyHash receiver, int amount, SigHashPreimage txPreimage
 }|]
 
 
-  describe "#Throw" $ do
-    itThrow "public function access msg.sender" [r|function send(address receiver, uint amount) public {
+  describe "#ReportError" $ do
+    itReportError "public function access msg.sender" 
+      [r|function send(address receiver, uint amount) public {
     balances[msg.sender] -= amount;
     balances[receiver] += amount;
-}|] (errorCall  "using `msg.sender` in non-external function is not supported yet")
+}|]
+      "using `msg.sender` in non-external function is not supported yet" (2, 14) (2, 24)
+      [r|
+function send(PubKeyHash receiver, int amount) : bool {
+  balances[msgSender] -= amount;
+  balances[receiver] += amount;
+  return true;
+}|]
 
       
 

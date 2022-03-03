@@ -55,6 +55,11 @@ executables:
     - utf8-string
     - gitrev
     - filepath
+    - mtl
+    - aeson
+    - aeson-pretty
+    - text
+    - bytestring
 
 tests:
   unit:
@@ -71,6 +76,7 @@ tests:
     - hspec
     - raw-strings-qq
     - containers
+    - parsec
   e2e:
     main:                Main.hs
     source-dirs:         test/e2e
@@ -85,3 +91,4 @@ tests:
     - hspec
     - raw-strings-qq
     - containers
+    - parsec

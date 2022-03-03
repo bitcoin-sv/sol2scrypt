@@ -2,6 +2,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+
 {-# HLINT ignore "Use lambda-case" #-}
 
 module IR.Transformations.Sol2IR.Function where
@@ -27,7 +28,6 @@ data FuncRetTransResult = FuncRetTransResult
   }
   deriving (Show, Eq, Ord)
 
-
 instance ToIRTransformable (ContractPart SourceRange) IFunction' where
   _toIR (ContractPartFunctionDefinition (Just (Sol.Identifier fn _)) pl tags maybeRets (Just block) _) = do
     modify $ \s -> s {stateInFuncMappingCounter = Map.empty}
@@ -50,29 +50,36 @@ instance ToIRTransformable (ContractPart SourceRange) IConstructor' where
     (ps, blkTfromParam) <- toIRConstructorParams pl tags block
     body <- toIRConstructorBody block blkTfromParam
     return $ IR.Constructor <$> ps <*> body
-  _toIR c = error $ "unsupported constructor definition `" ++ headWord (show c) ++ "`"
-
+  _toIR c = reportError "unsupported constructor definition: missing body" (ann c) >> return Nothing
 
 toIRFuncVis :: [FunctionDefinitionTag SourceRange] -> Transformation IVisibility
 toIRFuncVis tags
   | Public `elem` tags' = return Public
   | Private `elem` tags' = return Private
   | otherwise = return Default
-  where  
-    tags' = map (\tag -> case tag of
-              FunctionDefinitionTagStateMutability (StateMutability External _) -> Public
-              FunctionDefinitionTagStateMutability (StateMutability Internal _) -> Private
-              FunctionDefinitionTagPrivate _ -> Private
-              _ -> Default) tags
+  where
+    tags' =
+      map
+        ( \tag -> case tag of
+            FunctionDefinitionTagStateMutability (StateMutability External _) -> Public
+            FunctionDefinitionTagStateMutability (StateMutability Internal _) -> Private
+            FunctionDefinitionTagPrivate _ -> Private
+            _ -> Default
+        )
+        tags
 
-hasMutability :: StateMutability_ -> [FunctionDefinitionTag SourceRange] -> Bool 
-hasMutability sm tags =  sm `elem` tags'
-  where 
+hasMutability :: StateMutability_ -> [FunctionDefinitionTag SourceRange] -> Bool
+hasMutability sm tags = sm `elem` tags'
+  where
     tags' = map (\(FunctionDefinitionTagStateMutability (StateMutability ability _)) -> ability) tags''
-      where 
-        tags'' = filter (\tag -> case tag of 
-                  FunctionDefinitionTagStateMutability _ -> True
-                  _ -> False) tags
+      where
+        tags'' =
+          filter
+            ( \tag -> case tag of
+                FunctionDefinitionTagStateMutability _ -> True
+                _ -> False
+            )
+            tags
 
 toIRFuncRet :: IVisibility -> Maybe (ParameterList SourceRange) -> Transformation FuncRetTransResult
 toIRFuncRet _ Nothing = return $ FuncRetTransResult (Just $ ElementaryType IR.Bool) Nothing Nothing
@@ -85,9 +92,9 @@ toIRFuncRet vis (Just (ParameterList [x])) = do
         Public -> Just $ ElementaryType IR.Bool
         _ -> t
   return $ FuncRetTransResult t' t n
-toIRFuncRet _ _ = return $ FuncRetTransResult Nothing Nothing Nothing -- error "mutiple-returns function not implemented"
-
-
+toIRFuncRet _ (Just (ParameterList el)) = do
+  reportError "unsupported function definition: mutiple-returns" (mergeRange (ann $ head el) (ann $ last el))
+  return $ FuncRetTransResult Nothing Nothing Nothing
 
 toIRFuncParams :: ParameterList SourceRange -> [FunctionDefinitionTag SourceRange] -> FuncRetTransResult -> IVisibility -> Block SourceRange -> Transformation (IParamList', TFStmtWrapper)
 toIRFuncParams (ParameterList pl) tags (FuncRetTransResult rt ort rn) vis funcBlk = do
@@ -106,28 +113,34 @@ toIRFuncParams (ParameterList pl) tags (FuncRetTransResult rt ort rn) vis funcBl
             _ -> []
 
   -- for function that uses `msg.sender`
-  let (extraParams1, blkT1) =
-        if exprExistsInStmt msgSenderExpr (Sol.BlockStatement funcBlk)
-          then
+  let msgSenderExist = exprExistsInStmt msgSenderExpr (Sol.BlockStatement funcBlk)
+  (extraParams1, blkT1) <-
+        if fst msgSenderExist
+          then do
             if vis == Public
-              then let (ps, blkT_) = transForFuncWithMsgSender in (map Just ps ++ extraParams0, mergeTFStmtWrapper blkT0 blkT_)
-              else error "using `msg.sender` in non-external function is not supported yet"
-          else (extraParams0, blkT0)
+              then
+                let (ps, blkT_) = transForFuncWithMsgSender in return (map Just ps ++ extraParams0, mergeTFStmtWrapper blkT0 blkT_)
+              else do
+                reportError "using `msg.sender` in non-external function is not supported yet" (snd msgSenderExist)
+                return (extraParams0, blkT0)
+          else return (extraParams0, blkT0)
 
   -- for function that uses `msg.value`
   let msgValueExist = exprExistsInStmt msgValueExpr (Sol.BlockStatement funcBlk)
-  let (extraParams2, blkT2) =
-        if msgValueExist
+  (extraParams2, blkT2) <-
+        if fst msgValueExist
           then
             if vis == Public
-              then let (ps, blkT_) = transForFuncWithMsgValue in (map Just ps ++ extraParams1, mergeTFStmtWrapper blkT1 blkT_)
-              else error "using `msg.value` in non-external function is not supported yet"
-          else (extraParams1, blkT1)
+              then let (ps, blkT_) = transForFuncWithMsgValue in return (map Just ps ++ extraParams1, mergeTFStmtWrapper blkT1 blkT_)
+              else do
+                reportError "using `msg.value` in non-external function is not supported yet" (snd msgValueExist)
+                return (extraParams1, blkT1) 
+          else return (extraParams1, blkT1)
 
   let needPreimageParam
         | hasMutability Pure tags = False -- pure function do ont need preimage
         | vis == IR.Public = True
-        | msgValueExist = True
+        | fst msgValueExist = True
         | otherwise = False
   let (extraParams3, blkT3) =
         if needPreimageParam
@@ -238,10 +251,10 @@ transForPreimageFunc =
       []
       -- appends statements
       [ -- require(this.propagateState(preimage));
-          IR.RequireStmt $
-            IR.FunctionCallExpr
-              (IR.MemberAccessExpr (IdentifierExpr (IR.Identifier "this")) (IR.Identifier "propagateState"))
-              [IdentifierExpr (IR.ReservedId varTxPreimage)]
+        IR.RequireStmt $
+          IR.FunctionCallExpr
+            (IR.MemberAccessExpr (IdentifierExpr (IR.Identifier "this")) (IR.Identifier "propagateState"))
+            [IdentifierExpr (IR.ReservedId varTxPreimage)]
       ]
   )
 
@@ -282,10 +295,8 @@ transForFuncWithMsgValue =
 msgSenderExpr :: Sol.Expression SourceRange
 msgSenderExpr = Sol.MemberAccess (Sol.Literal (PrimaryExpressionIdentifier (Sol.Identifier "msg" defaultSourceRange))) (Sol.Identifier "sender" defaultSourceRange) defaultSourceRange
 
-msgValueExpr :: Sol.Expression SourceRange 
-msgValueExpr = Sol.MemberAccess (Sol.Literal (PrimaryExpressionIdentifier (Sol.Identifier "msg" defaultSourceRange))) (Sol.Identifier "value" defaultSourceRange ) defaultSourceRange
-
-
+msgValueExpr :: Sol.Expression SourceRange
+msgValueExpr = Sol.MemberAccess (Sol.Literal (PrimaryExpressionIdentifier (Sol.Identifier "msg" defaultSourceRange))) (Sol.Identifier "value" defaultSourceRange) defaultSourceRange
 
 toIRConstructorParams :: ParameterList SourceRange -> [FunctionDefinitionTag SourceRange] -> Block SourceRange -> Transformation (IParamList', TFStmtWrapper)
 toIRConstructorParams (ParameterList pl) _ funcBlk = do
@@ -297,7 +308,7 @@ toIRConstructorParams (ParameterList pl) _ funcBlk = do
 
   -- for function that uses `msg.sender`
   let (extraParams1, blkT1) =
-        if exprExistsInStmt msgSenderExpr (Sol.BlockStatement funcBlk)
+        if fst (exprExistsInStmt msgSenderExpr (Sol.BlockStatement funcBlk))
           then let (ps, blkT_) = transForConstructorWithMsgSender in (map Just ps ++ extraParams0, mergeTFStmtWrapper blkT0 blkT_)
           else (extraParams0, blkT0)
 
@@ -439,14 +450,19 @@ defaultValueExpr (ElementaryType IR.Bool) = LiteralExpr $ BoolLiteral False
 defaultValueExpr (ElementaryType IR.Bytes) = LiteralExpr $ BytesLiteral []
 defaultValueExpr tp = error $ "unsupported default value for type `" ++ show tp ++ "`"
 
-
 -- build `propagateState` function, in this way we can call `require(this.propagateState(txPreimage));` in other public functions
 buildPropagateState :: IR.IContractBodyElement
-buildPropagateState = IR.FunctionDefinition $ IR.Function (IR.Identifier "propagateState") 
-  (IR.ParamList [IR.Param (BuiltinType "SigHashPreimage") $ IR.ReservedId varTxPreimage]) (IR.Block body) (ElementaryType Bool) Default
-  where 
-    body = [ 
-        -- add `require(Tx.checkPreimage(txPreimage));`
+buildPropagateState =
+  IR.FunctionDefinition $
+    IR.Function
+      (IR.Identifier "propagateState")
+      (IR.ParamList [IR.Param (BuiltinType "SigHashPreimage") $ IR.ReservedId varTxPreimage])
+      (IR.Block body)
+      (ElementaryType Bool)
+      Default
+  where
+    body =
+      [ -- add `require(Tx.checkPreimage(txPreimage));`
         IR.RequireStmt $
           IR.FunctionCallExpr
             (IR.MemberAccessExpr (IdentifierExpr (IR.ReservedId libTx)) (IR.Identifier "checkPreimage"))

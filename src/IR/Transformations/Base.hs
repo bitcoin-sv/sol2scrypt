@@ -4,14 +4,16 @@ module IR.Transformations.Base where
 
 import Control.Applicative hiding (Const)
 import Control.Monad.State
+import Control.Monad.Writer hiding (Any)
 import qualified Data.Map.Lazy as Map
 import Data.Maybe
 import IR.Spec as IR
 import Solidity.Parser
+import Solidity.Spec
 import Text.Parsec hiding (try, (<|>))
 
-parseIO :: Parseable a => String -> IO a
-parseIO solidityCode = either (fail . (parseError ++) . show) return $ parse parser "" solidityCode
+parseIO :: Parseable a => String -> SourceName -> IO a
+parseIO solidityCode file = either (fail . (parseError ++) . show) return $ parse parser file solidityCode
   where
     parseError = "Error during parsing of <" ++ solidityCode ++ ">\n"
 
@@ -29,13 +31,33 @@ data TransformState = TransformState
   }
   deriving (Show, Eq, Ord)
 
-type Transformation a = StateT TransformState IO a
+data LogLevel = ErrorLevel | WarnningLevel deriving (Eq, Ord)
+
+instance Show LogLevel where
+  show ErrorLevel = "Error"
+  show WarnningLevel = "Warnning"
+
+data Log = Log
+  { logLevel :: LogLevel,
+    logMessage :: String,
+    logSrc :: SourceRange
+  }
+  deriving (Show, Eq, Ord)
+
+type Logs = [Log]
+
+type Transformation a = StateT TransformState (Writer Logs) a
+
+reportError :: String -> SourceRange -> Transformation ()
+reportError err src = tell [Log ErrorLevel err src]
 
 class Parseable sol => ToIRTransformable sol ir where
   _toIR :: sol -> Transformation ir
 
-transform2IR :: ToIRTransformable sol ir => TransformState -> sol -> IO ir
-transform2IR ts sol = fst <$> runStateT (_toIR sol) ts
+transform2IR :: ToIRTransformable sol ir => TransformState -> sol -> IO (ir, Logs)
+transform2IR ts sol = return (ir, logs)
+  where
+    ((ir, _), logs) = runWriter $ runStateT (_toIR sol) ts
 
 type ExprName = String
 
@@ -148,6 +170,14 @@ mergeTFStmtWrapper (TFStmtWrapper preA appA) (TFStmtWrapper preB appB) =
 wrapTFStmtWrapper :: TFStmtWrapper -> TFStmtWrapper -> TFStmtWrapper
 wrapTFStmtWrapper (TFStmtWrapper preOuter appOuter) (TFStmtWrapper preInner appInner) =
   TFStmtWrapper (preOuter ++ preInner) (appInner ++ appOuter)
+
+sourceFile :: Log -> FilePath
+sourceFile (Log _ _ (SourceRange start _)) = sourceName start
+
+serializeSourceRange :: SourceRange -> String
+serializeSourceRange (SourceRange start end) = sourceName start ++ ":" ++ showPos start ++ ":" ++ showPos end
+  where
+    showPos p = show (sourceLine p) ++ ":" ++ show (sourceColumn p)
 
 -----------------  IR to sCrypt  -----------------
 

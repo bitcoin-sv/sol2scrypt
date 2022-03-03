@@ -28,9 +28,9 @@ instance ToIRTransformable (ContractDefinition SourceRange) IContract' where
     let propagateState = [buildPropagateState | appendPropagateState]
     let cps'' = catMaybes  cps' ++ propagateState
     return $ Just $ IR.Contract (fromJust cn') cps''
-  _toIR (Sol.ContractDefinition True _ _ _ _ _) = do
-    error "unsupported abstract contract definition"
-  _toIR c = error $ "unsupported contract definition `" ++ headWord (show c) ++ "`"
+  _toIR (Sol.ContractDefinition True _ _ _ _ a) = do
+    reportError "unsupported abstract contract definition" a >> return Nothing
+  _toIR c = reportError ("unsupported contract definition `" ++ headWord (show c) ++ "`") (ann c) >> return Nothing
 
 
 
@@ -41,7 +41,7 @@ instance ToIRTransformable (Sol.ContractPart SourceRange) IContractBodyElement' 
   _toIR (Sol.ContractPartStateVariableDeclaration e _) = do
     e' :: IStateVariable' <- _toIR e
     addSym $ Symbol <$> (stateVarName <$> e') <*> (stateVarType <$> e') <*> Just True
-    return $ Just $ IR.StateVariableDeclaration (fromJust e')
+    return $ IR.StateVariableDeclaration <$> e'
   _toIR Sol.ContractPartEventDefinition {} = return Nothing
   _toIR func@(Sol.ContractPartFunctionDefinition (Just fn) _ _ _ _ _) = do
     fn' <- _toIR fn
@@ -53,8 +53,7 @@ instance ToIRTransformable (Sol.ContractPart SourceRange) IContractBodyElement' 
   _toIR ctor@Sol.ContractPartConstructorDefinition {} = do
       ctor' <- _toIR ctor
       return $ IR.ConstructorDefinition <$> ctor'
-
-  _toIR c = error $ "unsupported contract part `" ++ headWord (show c) ++ "`"
+  _toIR c = reportError ("unsupported contract part `" ++ headWord (show c) ++ "`") (ann c) >> return Nothing
 
 
 

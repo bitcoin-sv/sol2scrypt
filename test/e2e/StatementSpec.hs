@@ -10,22 +10,25 @@ import Test.Tasty
 import Test.Tasty.Hspec
 import Text.RawString.QQ
 import Utils
+import Helper
 
-
-transpileSol :: String -> IO String
+transpileSol :: String -> IO (String, Logs)
 transpileSol sol = do
-  tr :: TranspileResult (Sol.Statement SourceRange) IStatement' (Maybe (Scr.Statement Ann)) <- transpile sol
-  return $ scryptCode tr
+  tr :: TranspileResult (Sol.Statement SourceRange) IStatement' (Maybe (Scr.Statement Ann)) <- transpile sol ""
+  return (scryptCode tr, transpileLogs tr)
 
 spec :: IO TestTree
 spec = testSpec "Transpile Statement" $ do
 
   let itstmt title sol scrypt = it ("should transpile Solidity `" ++ title ++ "` correctly") $ do
         tr  <- transpileSol sol
-        tr `shouldBe` scrypt
+        tr `shouldBe` (scrypt, [])
+        
+  let itReportError sol errs = it ("should report error when transpiling Solidity Statement `" ++ sol ++ "`") $ do
+        (code, logs) <- transpileSol sol
+        code `shouldBe` ""
+        logs `shouldBe` map (\(e, colRange) -> Log ErrorLevel e $ firstLineSR colRange) errs
 
-  let itThrow sol err = it ("should throw when transpiling Solidity Statement `" ++ sol ++ "`") $ do
-        transpileSol sol `shouldThrow` err  
 
   describe "#SimpleStatementExpression" $ do
     describe "#NumberLiteral" $ do
@@ -360,13 +363,12 @@ else
   describe "#PlaceholderStatement" $ do
       itstmt "PlaceholderStatement" "_;" ""
 
-  describe "#Throw" $ do
-    itThrow "while (j != 0) {  len++;  j /= 10; }" (errorCall  "unsupported statement `WhileStatement`")
-    itThrow "D newD = new D(1);" (errorCall  "unsupported expression : `New`")
-    itThrow "for (uint p = 0; p < proposals.length; p++) { p++; }" (errorCall  "unsupported statement `ForStatement`")
-    itThrow "a[i] = 3;" anyErrorCall
-    itThrow "assembly { let size := extcodesize(_addr) }" (errorCall  "unsupported statement `InlineAssemblyStatement`")
-    itThrow "assembly { let size := extcodesize(_addr) }" (errorCall  "unsupported statement `InlineAssemblyStatement`")
+  describe "#ReportError" $ do
+    itReportError  "while (j != 0) {  len++;  j /= 10; }"  [( "unsupported statement `WhileStatement`", (1, 37))]
+    itReportError "D newD = new D(1);" [("unsupported expression : `New`", (10, 15)), ("unsupported type `TypeNameUserDefinedTypeName`", (1, 2))]
+    itReportError "for (uint p = 0; p < proposals.length; p++) { p++; }" [("unsupported statement `ForStatement`", (1, 53))]
+    itReportError "a[i] = 3;" [("unsupported assign Statement, subscript cannot be a variable", (1, 10))]
+    itReportError "assembly { let size := extcodesize(_addr) }" [("unsupported statement `InlineAssemblyStatement`", (1, 44))]
 
 
 

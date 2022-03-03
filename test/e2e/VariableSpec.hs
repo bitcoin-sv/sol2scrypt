@@ -11,44 +11,51 @@ import Test.Tasty.Hspec
 import Transpiler
 import Utils
 import Control.Exception
+import Helper
 
-transpileProperty :: String -> IO String
+transpileProperty :: String -> IO (String, Logs)
 transpileProperty sol = do
-  tr :: TranspileResult (ContractPart SourceRange) IContractBodyElement' (Maybe (Scr.Param Ann)) <- transpile sol
-  return $ scryptCode tr
+  tr :: TranspileResult (ContractPart SourceRange) IContractBodyElement' (Maybe (Scr.Param Ann)) <- transpile sol ""
+  return (scryptCode tr, transpileLogs tr)
 
 
-transpileParameter :: String -> IO String
+transpileParameter :: String -> IO (String, Logs)
 transpileParameter sol = do
-  tr :: TranspileResult (Parameter SourceRange) IParam' (Maybe (Scr.Param Ann)) <- transpile sol
-  return $ scryptCode tr
+  tr :: TranspileResult (Parameter SourceRange) IParam' (Maybe (Scr.Param Ann)) <- transpile sol ""
+  return (scryptCode tr, transpileLogs tr)
 
-transpileStatic :: String -> IO String
+transpileStatic :: String -> IO (String, Logs)
 transpileStatic sol = do
-  tr :: TranspileResult (ContractPart SourceRange) IContractBodyElement' (Maybe (Scr.Param Ann)) <- transpile sol
-  return $ scryptCode tr
+  tr :: TranspileResult (ContractPart SourceRange) IContractBodyElement' (Maybe (Scr.Static Ann)) <- transpile sol ""
+  return (scryptCode tr, transpileLogs tr)
 
 spec :: IO TestTree
 spec = testSpec "Transpile Variable" $ do
 
   let itProperty sol scrypt = it ("should transpile Solidity `" ++ sol ++ "` correctly") $ do
-        tr :: TranspileResult (ContractPart SourceRange) IContractBodyElement' (Maybe (Scr.Param Ann)) <- transpile sol
-        scryptCode tr `shouldBe` scrypt
+        tr  <- transpileProperty sol
+        tr `shouldBe` (scrypt, [])
   let itParameter sol scrypt = it ("should transpile Solidity `" ++ sol ++ "` correctly") $ do
-        tr :: TranspileResult (Parameter SourceRange) IParam' (Maybe (Scr.Param Ann)) <- transpile sol
-        scryptCode tr `shouldBe` scrypt
+        tr  <- transpileParameter sol
+        tr `shouldBe` (scrypt, [])
   let itStatic sol scrypt = it ("should transpile Solidity `" ++ sol ++ "` correctly") $ do
-            tr :: TranspileResult (ContractPart SourceRange) IContractBodyElement' (Maybe (Scr.Static Ann)) <- transpile sol
-            scryptCode tr `shouldBe` scrypt
+        tr  <- transpileStatic sol
+        tr `shouldBe` (scrypt, [])
 
-  let itPropertyThrow sol err = it ("should throw when transpiling Solidity `" ++ sol ++ "`") $ do
-        transpileProperty sol `shouldThrow` err  
+  let itPropertyReportError sol errs = it ("should report error when transpiling Solidity Property `" ++ sol ++ "`") $ do
+        (code, logs) <- transpileProperty sol
+        code `shouldBe` ""
+        logs `shouldBe` map (uncurry (Log ErrorLevel)) errs
 
-  let itParameterThrow sol err = it ("should throw when transpiling Solidity `" ++ sol ++ "`") $ do
-        transpileProperty sol `shouldThrow` err  
+  let itParameterReportError sol errs = it ("should report error when transpiling Solidity Parameter `" ++ sol ++ "`") $ do
+        (code, logs) <- transpileParameter sol
+        code `shouldBe` ""
+        logs `shouldBe` map (uncurry (Log ErrorLevel)) errs
 
-  let itStaticThrow sol err = it ("should throw when transpiling Solidity `" ++ sol ++ "`") $ do
-        transpileStatic sol `shouldThrow` err  
+  let itStaticReportError sol errs = it ("should report error when transpiling Solidity constant Property `" ++ sol ++ "`") $ do
+        (code, logs) <- transpileStatic sol
+        code `shouldBe` ""
+        logs `shouldBe` map (uncurry (Log ErrorLevel)) errs
 
   describe "#Property" $ do
       itProperty "uint storedData;" "\n@state\nint storedData;"
@@ -59,10 +66,14 @@ spec = testSpec "Transpile Variable" $ do
       itProperty "bytes public a;" "\n@state\npublic bytes a;"
       itProperty "string public a;" "\n@state\npublic bytes a;"
       itProperty "address public a;" "\n@state\npublic PubKeyHash a;"
-      itPropertyThrow "uint aa = 3;" (errorCall "IStateVariable to (Scr.Param Ann) `StateVariable {stateVarName = (Identifier \"aa\"), stateVarType = ElementaryType Int, stateVisibility = Default, stateInitialValue = Just (LiteralExpr (IntLiteral {isHex = False, intVal = 3})), stateIsConstant = False, stateIsImmutable = False}` not implemented in scrypt")
-      itPropertyThrow "uint[] aa;" (errorCall "unsupported expression to Integer : `Nothing`")
-      itPropertyThrow "address immutable owner = msg.sender;" (errorCall "IStateVariable to (Scr.Param Ann) `StateVariable {stateVarName = (Identifier \"owner\"), stateVarType = ElementaryType Address, stateVisibility = Default, stateInitialValue = Just (IdentifierExpr (ReservedId \"msgSender\")), stateIsConstant = False, stateIsImmutable = True}` not implemented in scrypt")
-      itPropertyThrow "address payable a;" (errorCall "unsupported type `TypeNameElementaryTypeName`")
+      itPropertyReportError "uint aa = 3;" 
+        [("unsupported state variable with init value", newSR (1, 1) (1, 13))]
+      itPropertyReportError "uint[] aa;" 
+        [("array length should be explicitly specified", newSR (1, 1) (1, 7))]
+      itPropertyReportError "address immutable owner = msg.sender;" 
+        [("unsupported state variable with init value", newSR (1, 1) (1, 38))]
+      itPropertyReportError "address payable a;" 
+        [("unsupported type `TypeNameElementaryTypeName`", newSR (1, 1) (1, 16))]  
   describe "#Parameter" $ do
     itParameter "int a" "int a"
     itParameter "uint a" "int a"
@@ -71,12 +82,14 @@ spec = testSpec "Transpile Variable" $ do
     itParameter "string a" "bytes a"
     itParameter "address a" "PubKeyHash a"
     itParameter "bool a" "bool a"
-    itParameterThrow "bytes[1] x"  anyIOException
-
+    itParameterReportError "bytes[] memory x" 
+        [("array length should be explicitly specified", newSR (1, 1) (1, 8))]
+    itParameterReportError "address payable a" 
+        [("unsupported type `TypeNameElementaryTypeName`", newSR (1, 1) (1, 16))] 
   describe "#Static" $ do
     itStatic "uint constant x = 1;" "\nstatic const int x = 1;"
     itStatic "uint constant x = 1 + 1 *(1-1);" "\nstatic const int x = 1 + 1 * (1 - 1);"
     itStatic "bool constant x = true;" "\nstatic const bool x = true;"
     itStatic "int constant internal INT_TWO = 2;" "\nstatic const int INT_TWO = 2;"
-    itStaticThrow "int constant internal UINT_MIN = int(2 ** 4);" anyException
-    itStaticThrow "int constant  UINT_MIN = 1 + 3;" (errorCall "IStateVariable to (Scr.Param Ann) `StateVariable {stateVarName = (Identifier \"UINT_MIN\"), stateVarType = ElementaryType Int, stateVisibility = Default, stateInitialValue = Just (BinaryExpr {binaryOp = Add, lExpr = LiteralExpr (IntLiteral {isHex = False, intVal = 1}), rExpr = LiteralExpr (IntLiteral {isHex = False, intVal = 3})}), stateIsConstant = True, stateIsImmutable = False}` not implemented in scrypt")
+    itStaticReportError "int constant internal UINT_MIN = int(2 ** 4);" 
+        [("unsupported binary operator `**`", newSR (1, 40) (1, 42))] 

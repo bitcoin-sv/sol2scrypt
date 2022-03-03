@@ -8,22 +8,24 @@ import Solidity as Sol
 import Test.Tasty
 import Test.Tasty.Hspec
 import Transpiler
+import Helper
 
-
-transpileSol :: String -> IO String
+transpileSol :: String -> IO (String, Logs)
 transpileSol sol = do
-  tr :: TranspileResult (TypeName SourceRange) IType' (Maybe Type) <- transpile sol
-  return $ scryptCode tr
+  tr :: TranspileResult (TypeName SourceRange) IType' (Maybe Type) <- transpile sol ""
+  return (scryptCode tr, transpileLogs tr)
 
 spec :: IO TestTree
 spec = testSpec "Transpile Type" $ do
   let itType sol scrypt = it ("should transpile Solidity `" ++ sol ++ "` correctly") $ do
-        tr :: TranspileResult (TypeName SourceRange) IType' (Maybe Type) <- transpile sol
+        tr :: TranspileResult (TypeName SourceRange) IType' (Maybe Type) <- transpile sol ""
         scryptCode tr `shouldBe` scrypt
 
   
-  let itThrow sol err = it ("should throw when transpiling Solidity `" ++ sol ++ "`") $ do
-        transpileSol sol `shouldThrow` err  
+  let itReportError sol err colRange = it ("should report error when transpiling Solidity `" ++ sol ++ "`") $ do
+        (code, logs) <- transpileSol sol
+        code `shouldBe` ""
+        logs `shouldBe` [Log ErrorLevel err $ firstLineSR colRange]
 
   describe "#ElementaryTypeName" $ do
     describe "#BoolType" $ do
@@ -250,14 +252,14 @@ spec = testSpec "Transpile Type" $ do
     itType "int[20]" "int[20]"
     itType "uint[20]" "int[20]"
     itType "bool[20]" "bool[20]"
-    itType "bytes[20]" "bytes[20]"
+    itType "bytes[20] " "bytes[20]"
 
   describe "#TypeNameMapping" $ do
     itType "mapping (address => uint)" "HashedMap<PubKeyHash, int>"
     itType "mapping (address => mapping (address => uint))" "HashedMap<MapKeyST0, int>"
 
-  describe "#unsupported type should throw" $ do
-    itThrow "aaaE" (errorCall "unsupported type `TypeNameUserDefinedTypeName`")
-    itThrow "uint[]" (errorCall "unsupported expression to Integer : `Nothing`")
-    itThrow "bool[2][]" (errorCall "unsupported expression to Integer : `Nothing`")
+  describe "#unsupported type should report error1" $ do
+    itReportError "aaaE " "unsupported type `TypeNameUserDefinedTypeName`" (1, 5)
+    itReportError "uint []  " "array length should be explicitly specified" (1, 8)
+    itReportError "bool [2] []  " "array length should be explicitly specified" (1, 12)
      

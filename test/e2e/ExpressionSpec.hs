@@ -1,4 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# OPTIONS_GHC -Wno-deferred-out-of-scope-variables #-}
 
 module ExpressionSpec where
 
@@ -10,21 +11,24 @@ import Test.Tasty
 import Test.Tasty.Hspec
 import Transpiler
 import Utils
+import Helper
 
-transpileSol :: String -> IO String
+transpileSol :: String -> IO (String, Logs)
 transpileSol sol = do
-  tr :: TranspileResult (Expression SourceRange) IExpression' (Maybe (Expr Ann)) <- transpile sol
-  return $ scryptCode tr
-
+  tr :: TranspileResult (Expression SourceRange) IExpression' (Maybe (Expr Ann)) <- transpile sol ""
+  return (scryptCode tr, transpileLogs tr)
 
 spec :: IO TestTree
 spec = testSpec "Transpile Expression" $ do
   let itexpr title sol scrypt = it ("should transpile Solidity `" ++ title ++ "` correctly") $ do
-        tr :: TranspileResult (Expression SourceRange) IExpression' (Maybe (Expr Ann)) <- transpile sol
+        tr :: TranspileResult (Expression SourceRange) IExpression' (Maybe (Expr Ann)) <- transpile sol ""
         scryptCode tr `shouldBe` scrypt
   
-  let itThrow sol err = it ("should throw when transpiling Solidity Expression `" ++ sol ++ "`") $ do
-        transpileSol sol `shouldThrow` err  
+  let itReportError sol err colRange = it ("should report error when transpiling Solidity Expression `" ++ sol ++ "`") $ do
+        (code, logs) <- transpileSol sol
+        code `shouldBe` ""
+        logs `shouldBe` [Log ErrorLevel err $ firstLineSR colRange]
+  
   describe "#PrimaryExpression" $ do
     describe "Identifier" $ do
       itexpr "Identifier" "aZ_$0" "aZ__0"
@@ -112,7 +116,7 @@ spec = testSpec "Transpile Expression" $ do
                       initEnv =  [Map.insert (IR.Identifier leftExpr) mapSym Map.empty]
                       sol = leftExpr ++ "[" ++ rightExpr ++ "]" 
                   tr :: TranspileResult (Expression SourceRange) IExpression' (Maybe (Expr Ann)) <- 
-                          transpile' (TransformState initEnv Nothing Map.empty [] Map.empty) sol
+                          transpile' (TransformState initEnv Nothing Map.empty [] Map.empty) sol ""
                   scryptCode tr `shouldBe` scrypt
 
           itSBExpr "a" "0" "a_0"
@@ -168,41 +172,41 @@ spec = testSpec "Transpile Expression" $ do
 
   describe "#New Expression" $ do
     itexpr "new bytes" "new bytes(7)" "num2bin(0, 7)"
-  describe "#Throw" $ do
+  describe "#ReportError" $ do
     -- operator
-    itThrow "1 & 1" (errorCall "unsupported binary operator `&`")
-    itThrow "1 | 1" (errorCall "unsupported binary operator `|`")
-    itThrow "1 ^ 1" (errorCall "unsupported binary operator `^`")
-    itThrow "~a" anyErrorCall
-    itThrow "A << 1" (errorCall "unsupported binary operator `<<`")
-    itThrow "A >> 1" (errorCall "unsupported binary operator `>>`")
-    -- buildin function
-    itThrow "new uint[](3)" (errorCall "unsupported expression : `New`")
-    itThrow "assert(true)" (errorCall "unsupported function call : `assert`")
-    itThrow "keccak256(a)" (errorCall "unsupported function call : `keccak256`")
-    itThrow "ecrecover(hash, v, r, s)" (errorCall "unsupported function call : `ecrecover`")
-    itThrow "addmod(4, 5, 3)" (errorCall "unsupported function call : `addmod`")
-    itThrow "mulmod(4, 5, 3)" (errorCall "unsupported function call : `mulmod`")
-    itThrow "revert(4, 5, 3)" (errorCall "unsupported function call : `revert`")
-    itThrow "selfdestruct(a)" (errorCall "unsupported function call : `selfdestruct`")
-    itThrow "type(int).min" (errorCall "unsupported function call : `type`")
+    itReportError "1 & 1 " "unsupported binary operator `&`" (3, 4)
+    itReportError "1 | 1 " "unsupported binary operator `|`" (3, 4)
+    itReportError "1 ^ 1 " "unsupported binary operator `^`" (3, 4)
+    itReportError "~a " "unsupported unary operator `~`" (1, 2)
+    itReportError "A << 1 " "unsupported binary operator `<<`" (3, 5)
+    itReportError "A >> 1 " "unsupported binary operator `>>`" (3, 5)
+    -- -- buildin function
+    itReportError "new uint[](3) " "unsupported expression : `New`" (1, 11)
+    itReportError "assert(true) " "unsupported function call : `assert`" (1, 13)
+    itReportError "keccak256(a) " "unsupported function call : `keccak256`" (1, 13)
+    itReportError "ecrecover(hash, v, r, s) " "unsupported function call : `ecrecover`" (1, 25)
+    itReportError "addmod(4, 5, 3) " "unsupported function call : `addmod`" (1, 16)
+    itReportError "mulmod(4, 5, 3) " "unsupported function call : `mulmod`" (1, 16)
+    itReportError "revert(4, 5, 3) " "unsupported function call : `revert`" (1, 16)
+    itReportError "selfdestruct(a) " "unsupported function call : `selfdestruct`" (1, 16)
+    itReportError "type(int) .min" "unsupported function call : `type`" (1, 10)
     
-    -- Time Units
-    itThrow "1 seconds" (errorCall "unsupported expression : `Literal`")
-    itThrow "1 days" (errorCall "unsupported expression : `Literal`")
-    itThrow "1 wei" (errorCall "unsupported expression : `Literal`")
-    -- block
-    itThrow "block.number" (errorCall "unsupported expression: `block.number`")
-    itThrow "block.timestamp" (errorCall "unsupported expression: `block.timestamp`")
-    itThrow "block.basefee" (errorCall "unsupported expression: `block.basefee`")
-    itThrow "block.chainid" (errorCall "unsupported expression: `block.chainid`")
-    itThrow "block.coinbase" (errorCall "unsupported expression: `block.coinbase`")
-    itThrow "msg.sig" (errorCall "unsupported expression: `msg.sig`")
-    itThrow "msg.data" (errorCall "unsupported expression: `msg.data`")
-    itThrow "tx.origin" (errorCall "unsupported expression: `tx.origin`")
-    itThrow "abi.encodePacked(arr, \"AAAA\", \"BBBB\")" (errorCall "unsupported expression: `abi.encodePacked`")
-    -- tuple
-    itThrow "(1, 2, 3, 4, 5)" (errorCall "unsupported expression : `Literal`")
+    -- -- Time Units
+    itReportError "1 seconds " "unsupported expression : `Literal`" (1, 10)
+    itReportError "1 days " "unsupported expression : `Literal`" (1, 7)
+    itReportError "1 wei " "unsupported expression : `Literal`" (1, 6)
+    -- -- block
+    itReportError "block.number " "unsupported expression: `block.number`" (1, 13)
+    itReportError "block.timestamp " "unsupported expression: `block.timestamp`" (1, 16)
+    itReportError "block.basefee " "unsupported expression: `block.basefee`" (1, 14)
+    itReportError "block.chainid " "unsupported expression: `block.chainid`" (1, 14)
+    itReportError "block.coinbase " "unsupported expression: `block.coinbase`" (1, 15)
+    itReportError "msg.sig " "unsupported expression: `msg.sig`" (1, 8)
+    itReportError "msg.data " "unsupported expression: `msg.data`" (1, 9)
+    itReportError "tx.origin " "unsupported expression: `tx.origin`" (1, 10)
+    itReportError "abi.encodePacked (arr, \"AAAA\", \"BBBB\")" "unsupported expression: `abi.encodePacked`" (1, 17)
+    -- -- tuple
+    itReportError "(1, 2, 3, 4, 5) " "unsupported expression : `Literal`" (1, 16)
 
     
       

@@ -11,22 +11,24 @@ import Test.Tasty.Hspec
 import Text.RawString.QQ
 import Transpiler
 import Utils
-
+import Helper
 
 -- transpile full solidity Program
-transpileSol :: String -> IO String
+transpileSol :: String -> IO (String, Logs)
 transpileSol sol = do
-  tr :: TranspileResult (Sol.SolidityCode SourceRange) IProgram' (Maybe (Scr.Program Ann)) <- transpile sol
-  return $ scryptCode tr
+  tr :: TranspileResult (Sol.SolidityCode SourceRange) IProgram' (Maybe (Scr.Program Ann)) <- transpile sol ""
+  return (scryptCode tr, transpileLogs tr)
 
 spec :: IO TestTree
 spec = testSpec "Transpile Program" $ do
   let itProgram title sol scrypt = it ("should transpile Solidity `" ++ title ++ "` correctly") $ do
         tr  <- transpileSol sol
-        tr `shouldBe` scrypt
+        tr `shouldBe` (scrypt, [])
 
-  let itThrow sol err = it "should throw when transpiling Solidity Program " $ do
-        transpileSol sol `shouldThrow` err  
+  let itReportError title sol errs = it ("should report error when transpiling Solidity Program `" ++ title ++ "`") $ do
+        (code, logs) <- transpileSol sol
+        code `shouldBe` ""
+        logs `shouldBe` map (uncurry (Log ErrorLevel)) errs
 
   itProgram "Program only with a contract "
       [r|
@@ -630,7 +632,7 @@ contract ERC20 {
 }|]
 
 
-  itProgram "a contract with revert and error defined " 
+  itProgram "a contract with revert and error defined "
    [r|
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.10;
@@ -667,8 +669,11 @@ contract VendingMachine {
 
 
 
-  describe "#Throw" $ do
-    itThrow [r|
+  describe "#ReportError" $ do
+
+    itReportError 
+      "abstract / inheritance contract"
+      [r|
   pragma solidity ^0.8.10;
   abstract contract Feline {
   }
@@ -676,4 +681,5 @@ contract VendingMachine {
   contract Cat is Feline {
       
   }
-|] (errorCall  "unsupported abstract contract definition") 
+|] [( "unsupported abstract contract definition", newSR (3, 3) (4, 4)), 
+       ( "unsupported contract definition `ContractDefinition`", newSR (6, 3) (8, 4) ) ]

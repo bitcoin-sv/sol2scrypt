@@ -84,53 +84,53 @@ spec = testSpec "instance ToScryptTransformable IExpr (Scr.Expr Ann)" $ do
       (Scr.UnaryExpr Scr.Not (Scr.Var "a" False nil) nil)
 
   describe "#BinaryExpr" $ do
-    let itBinary op = it ("should transform IR  `" ++ op ++ "` to sCrypt BinaryExpr correctly") $ do
-          r1 <- transform2Scrypt $ Just (IR.BinaryExpr (str2BinaryOp op) (LiteralExpr $ IR.IntLiteral True 15) (LiteralExpr $ IR.IntLiteral True 15))
-          r1 `shouldBe` Just (Scr.BinaryExpr (toScryptBinaryOp $ str2BinaryOp op) (Scr.IntLiteral True 15 nil) (Scr.IntLiteral True 15 nil) nil)
+    let itBinary op op' = it ("should transform IR  `" ++ op ++ "` to sCrypt BinaryExpr correctly") $ do
+          r1 <- transform2Scrypt $ Just (IR.BinaryExpr op' (LiteralExpr $ IR.IntLiteral True 15) (LiteralExpr $ IR.IntLiteral True 15))
+          r1 `shouldBe` Just (Scr.BinaryExpr (toScryptBinaryOp op') (Scr.IntLiteral True 15 nil) (Scr.IntLiteral True 15 nil) nil)
 
-    let itBinary' op = it ("should transform IR  `" ++ op ++ "` to sCrypt BinaryExpr correctly") $ do
-          r1 <- transform2Scrypt $ Just (IR.BinaryExpr (str2BinaryOp op) (IdentifierExpr $ IR.Identifier "a") (LiteralExpr $ IR.IntLiteral True 15))
-          r1 `shouldBe` Just (Scr.BinaryExpr (toScryptBinaryOp $ str2BinaryOp op) (Scr.Var "a" False nil) (Scr.IntLiteral True 15 nil) nil)
+    let itBinary' op op' = it ("should transform IR  `" ++ op ++ "` to sCrypt BinaryExpr correctly") $ do
+          r1 <- transform2Scrypt $ Just (IR.BinaryExpr op' (IdentifierExpr $ IR.Identifier "a") (LiteralExpr $ IR.IntLiteral True 15))
+          r1 `shouldBe` Just (Scr.BinaryExpr (toScryptBinaryOp  op') (Scr.Var "a" False nil) (Scr.IntLiteral True 15 nil) nil)
 
-    let itBinary'' op = it ("should transform IR  `" ++ op ++ "` to sCrypt BinaryExpr correctly") $ do
-          r1 <- transform2Scrypt $ Just (IR.BinaryExpr (str2BinaryOp op) (LiteralExpr $ IR.BoolLiteral True) (LiteralExpr $ IR.BoolLiteral False))
-          r1 `shouldBe` Just (Scr.BinaryExpr (toScryptBinaryOp $ str2BinaryOp op) (Scr.BoolLiteral True nil) (Scr.BoolLiteral False nil) nil)
+    let itBinary'' op op' = it ("should transform IR  `" ++ op ++ "` to sCrypt BinaryExpr correctly") $ do
+          r1 <- transform2Scrypt $ Just (IR.BinaryExpr op' (LiteralExpr $ IR.BoolLiteral True) (LiteralExpr $ IR.BoolLiteral False))
+          r1 `shouldBe` Just (Scr.BinaryExpr (toScryptBinaryOp op') (Scr.BoolLiteral True nil) (Scr.BoolLiteral False nil) nil)
 
-    itBinary "+"
+    itBinary "+" IR.Add
 
-    itBinary "-"
+    itBinary "-" IR.Sub 
 
-    itBinary "*"
+    itBinary "*" IR.Mul 
 
-    itBinary "/"
+    itBinary "/" IR.Div
 
-    itBinary "%"
+    itBinary "%" IR.Mod
 
-    itBinary' "+="
+    itBinary' "+=" IR.AddAssign
 
-    itBinary' "-="
+    itBinary' "-=" IR.SubAssign
 
-    itBinary' "*="
+    itBinary' "*=" IR.MulAssign
 
-    itBinary' "/="
+    itBinary' "/=" IR.DivAssign
 
-    itBinary' "%="
+    itBinary' "%=" IR.ModAssign
 
-    itBinary' "=="
+    itBinary' "==" IR.Equal 
 
-    itBinary' "!="
+    itBinary' "!=" IR.Neq 
 
-    itBinary' "<"
+    itBinary' "<" IR.LessThan 
 
-    itBinary' "<="
+    itBinary' "<=" IR.LessThanOrEqual 
 
-    itBinary' ">"
+    itBinary' ">" IR.GreaterThan 
 
-    itBinary' ">="
+    itBinary' ">=" IR.GreaterThanOrEqual 
 
-    itBinary'' "&&"
+    itBinary'' "&&" IR.BoolAnd 
 
-    itBinary'' "||"
+    itBinary'' "||" IR.BoolOr 
 
   describe "#Ternary" $ do
     itExpr

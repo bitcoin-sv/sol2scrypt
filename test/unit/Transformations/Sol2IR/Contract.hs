@@ -28,11 +28,7 @@ spec = testSpec "instance ToIRTransformable Contractpart IContractBodyElement'" 
     itContractPart "uint private a;" $ Just (IR.StateVariableDeclaration (IR.StateVariable (IR.Identifier "a") (ElementaryType Int) Private Nothing False False))
     itContractPart "uint public a;" $ Just (IR.StateVariableDeclaration (IR.StateVariable (IR.Identifier "a") (ElementaryType Int) Public Nothing False False))
     itContractPart "int public a;" $ Just (IR.StateVariableDeclaration (IR.StateVariable (IR.Identifier "a") (ElementaryType Int) Public Nothing False False))
-    itContractPart "int public a = 1;" $ Just (IR.StateVariableDeclaration (IR.StateVariable (IR.Identifier "a") (ElementaryType Int) Public
-      (Just (LiteralExpr (IntLiteral {isHex = False, intVal = 1}))) False False))
     itContractPart "bool a;" $ Just (IR.StateVariableDeclaration (IR.StateVariable (IR.Identifier "a") (ElementaryType Bool) Default Nothing False False))
-    itContractPart "bool a = true;" $ Just (IR.StateVariableDeclaration (IR.StateVariable (IR.Identifier "a") (ElementaryType Bool) Default
-      (Just (LiteralExpr (BoolLiteral True))) False False))
 
   describe "constant property" $ do
     itContractPart "uint constant a = 8;" $ Just (IR.StateVariableDeclaration (IR.StateVariable (IR.Identifier "a") (ElementaryType Int) Default (Just (LiteralExpr (IntLiteral {isHex = False, intVal = 8}))) True False))
@@ -48,6 +44,5 @@ spec = testSpec "instance ToIRTransformable Contractpart IContractBodyElement'" 
     itContractPart "constructor(int a, bool b) { c = a++; d=b; }" $ Just (ConstructorDefinition (Constructor {ctorParams = ParamList [Param {paramType = ElementaryType Int, paramName = IR.Identifier "a"},Param {paramType = ElementaryType Bool, paramName = IR.Identifier "b"}], ctorBody = IR.Block [AssignStmt [IR.IdentifierExpr (IR.Identifier "c")] [UnaryExpr {unaryOp = PostIncrement, uExpr = IdentifierExpr (IR.Identifier "a")}],AssignStmt [IR.IdentifierExpr (IR.Identifier "d")] [IdentifierExpr (IR.Identifier "b")]]}))
 
   describe "immutable property" $ do
-    itContractPart "uint immutable a = 8;" $ Just (IR.StateVariableDeclaration (IR.StateVariable (IR.Identifier "a") (ElementaryType Int) Default (Just (LiteralExpr (IntLiteral {isHex = False, intVal = 8}))) False True))
     itContractPart "uint immutable a;" $ Just (IR.StateVariableDeclaration (IR.StateVariable (IR.Identifier "a") (ElementaryType Int) Default Nothing False True))
-    itContractPart "address immutable owner = msg.sender;" $ Just (IR.StateVariableDeclaration (IR.StateVariable (IR.Identifier "owner") (ElementaryType Address) Default (Just (IdentifierExpr (ReservedId "msgSender"))) False True))
+    itContractPart "address immutable owner;" $ Just (IR.StateVariableDeclaration (IR.StateVariable (IR.Identifier "owner") (ElementaryType Address) Default Nothing False True))
