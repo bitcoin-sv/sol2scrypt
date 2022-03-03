@@ -21,10 +21,7 @@ Number Literal | `1` <br> `0x1` | `1` <br> `0x1` |
 NumberUnit | `1 days` <br> `1 wei` |  *Not Supported* | |
 Hex Literal | `hex"0101"` |  `b'0101'`  |
 String Literal | `"hello world"` | `"hello world"`  |
-Array literal | `[1, 2, 3]` | `[1, 2, 3]`
-Array length | `s.length;` |  *Not Supported* |  
-Array Index | `a[1]` <br> `a[i]` | `a[1]` <br>  `a[i]`  *only support for read array value* |
-Add/remove  Array element| `a.push(3);`, `a.pop();` | *Not Supported* |   | 
+Array  | *literal* <br> `[1, 2, 3]` <br> *length* <br> `s.length;` <br> *Index by number* <br> `a[1]` <br> *Index by expression* <br> `a[i + 1]` <br> *push/pop element* <br> `a.push(3);`, `a.pop();`  | *literal* <br> `[1, 2, 3]` <br> *length* <br> *Not Supported*  <br> *Index by number* <br> `a[1]` <br> *Index by expression* <br> `a[i + 1]` *some restrictions* <br> *push/pop element* <br> *Not Supported* | *only a [compile-time constant](https://scryptdoc.readthedocs.io/en/latest/ctc.html) (CTC) can be used as an index when writing array in sCrypt*
 Increment and Decrement | `i++`, `++i`, `i--`, `--i` | `i++`, `++i`, `i--`, `--i`
 Binary Operator | `+=`, `-=`, `*=`, `/=`, `%=` <br>  `+`, `-`, `*`, `/`, `%` <br> `&=`, `\|=`, `^=`, `<<=`, `>>=` <br> `==`, `!=`, `<`, `<=`, `>` , `>=`, `&&`, `\|\|` | `+=`, `-=`, `*=`, `/=`, `%=` <br> `+`, `-`, `*`, `/`, `%` <br> `&=`, `\|=`, `^=`, `<<=`, `>>=` <br> `==`, `!=`, `<`, `<=`, `>` , `>=`, `&&`, `\|\|` | `&=`, `\|=`, `^=`, `<<=`, `>>=` *only works on bytes in sCrypt*
 Ternary Operator | `x > 0 ? x : -x` |  `x > 0 ? x : -x` | 
