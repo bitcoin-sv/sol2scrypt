@@ -176,6 +176,8 @@ str2BinaryOp ">=" _ = return $ Just GreaterThanOrEqual
 str2BinaryOp "&&" _ = return $ Just BoolAnd
 str2BinaryOp "||" _ = return $ Just BoolOr
 str2BinaryOp "[]" _ = return $ Just Index
+str2BinaryOp "<<" _ = return $ Just LShift
+str2BinaryOp ">>" _ = return $ Just RShift
 str2BinaryOp s a = reportError ("unsupported binary operator `" ++ s ++ "`") a >> return Nothing
 
 -- give an expression a var name which can be used in transformation, for example, declare a var for the expression.
