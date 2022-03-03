@@ -101,7 +101,7 @@ toIRFuncParams (ParameterList pl) tags (FuncRetTransResult rt ort rn) vis funcBl
   params <- mapM _toIR pl
 
   -- add parameter for public function whose original return type is not `Bool`
-  let extraParams0 = [IR.Param <$> ort <*> rn' | vis == Public && isJust ort && ort /= rt]
+  let extraParams0 = [IR.Param <$> ort <*> rn' | vis == Public && isJust ort]
         where
           rn' = Just $ if isJust rn then mirror rn else IR.Identifier "retVal"
 
@@ -138,7 +138,6 @@ toIRFuncParams (ParameterList pl) tags (FuncRetTransResult rt ort rn) vis funcBl
           else return (extraParams1, blkT1)
 
   let needPreimageParam
-        | hasMutability Pure tags = False -- pure function do ont need preimage
         | vis == IR.Public = True
         | fst msgValueExist = True
         | otherwise = False
@@ -177,17 +176,21 @@ toIRFuncBody blk@(Sol.Block _ _) vis wrapperFromParam (FuncRetTransResult _ ort 
   let stmts' = case (vis == Public, hasRetStmt) of
         (True, True) -> case last stmts of
           Just (ReturnStmt r) -> case ort of
-            -- use `require(boolExpr);` to replace `return boolExpr;`
-            Just (ElementaryType IR.Bool) -> init stmts ++ [Just $ RequireStmt r]
+            -- drop `return ;`
+            Nothing  -> init stmts
             -- use `require(nonBoolExpr == injectedParamName);` to replace `return nonBoolExpr;`
-            _ ->
+            Just _ ->
               let e = fromMaybe (IR.Identifier "retVal") rn
-               in init stmts ++ [Just $ requireEqualStmt r e]
+                  r' = case r of
+                        te@TernaryExpr {} -> ParensExpr te
+                        _ -> r
+                in init stmts ++ [Just $ requireEqualStmt r' e]
+
           _ -> error "last statement is not return statement"
         (True, False) ->
           stmts ++ case rn of
             Just r -> [Just $ requireEqualStmt (IdentifierExpr r) $ mirror rn]
-            _ -> [Just $ RequireStmt trueExpr]
+            _ -> []
         (False, False) -> case rn of
           Just n ->
             stmts
@@ -212,7 +215,7 @@ toIRFuncBody blk@(Sol.Block _ _) vis wrapperFromParam (FuncRetTransResult _ ort 
                   [Just $ ReturnStmt $ maybe (LiteralExpr $ BoolLiteral True) defaultValueExpr ort]
         _ -> stmts
 
-  let stmts'' = map Just prepends ++ init stmts' ++ map Just appends ++ [last stmts']
+  let stmts'' = map Just prepends ++ stmts' ++ map Just appends
 
   let stmts''' = case reverse stmts'' of
         -- ignore the last `require(true)` if the penultimate is already a `require` stmt
@@ -431,7 +434,15 @@ transForMappingAccess mCounter =
 
 -- prepends some init statements for functions that have returned in middle.
 prependsForReturnedInit :: IType' -> [IStatement]
-prependsForReturnedInit Nothing = []
+prependsForReturnedInit Nothing = [ -- `<T> ret = <defaultValueExprueofT>;`
+    IR.DeclareStmt
+      [Just $ IR.Param (ElementaryType Bool) (IR.ReservedId varRetVal)]
+      [defaultValueExpr (ElementaryType Bool)],
+    -- `bool returned = false;`
+    IR.DeclareStmt
+      [Just $ IR.Param (ElementaryType IR.Bool) (IR.ReservedId varReturned)]
+      [LiteralExpr $ BoolLiteral False]
+  ]
 prependsForReturnedInit (Just t) =
   [ -- `<T> ret = <defaultValueExprueofT>;`
     IR.DeclareStmt

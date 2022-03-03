@@ -457,10 +457,15 @@ spec = testSpec "Transpile Contract" $ do
   }
 
   public function mint(PubKeyHash receiver, int amount, SigHashPreimage txPreimage, Sig sig, PubKey pubKey) {
+    bool ret = false;
+    bool returned = false;
     PubKeyHash msgSender = hash160(pubKey);
     require(checkSig(sig, pubKey));
     if (msgSender != this.minter) {
-      exit(false);
+      {
+        ret = true;
+        returned = true;
+      }
     }
     require(this.propagateState(txPreimage));
   }

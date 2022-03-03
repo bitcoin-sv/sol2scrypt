@@ -360,27 +360,41 @@ contract Coin {
   }
 
   public function mint(PubKeyHash receiver, int amount, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, int this_balances_receiver, int this_balances_receiver_index) {
+    bool ret = false;
+    bool returned = false;
     PubKeyHash msgSender = hash160(pubKey);
     require(checkSig(sig, pubKey));
     require((!this.balances.has(receiver, this_balances_receiver_index)) || this.balances.canGet(receiver, this_balances_receiver, this_balances_receiver_index));
     if (msgSender != this.minter) {
-      exit(false);
+      {
+        ret = true;
+        returned = true;
+      }
     }
-    this_balances_receiver += amount;
+    if (!returned) {
+      this_balances_receiver += amount;
+    }
     require(this.balances.set(receiver, this_balances_receiver, this_balances_receiver_index));
     require(this.propagateState(txPreimage));
   }
 
   public function send(PubKeyHash receiver, int amount, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, int this_balances_msgSender, int this_balances_msgSender_index, int this_balances_receiver, int this_balances_receiver_index) {
+    bool ret = false;
+    bool returned = false;
     PubKeyHash msgSender = hash160(pubKey);
     require(checkSig(sig, pubKey));
     require((!this.balances.has(msgSender, this_balances_msgSender_index)) || this.balances.canGet(msgSender, this_balances_msgSender, this_balances_msgSender_index));
     require((!this.balances.has(receiver, this_balances_receiver_index)) || this.balances.canGet(receiver, this_balances_receiver, this_balances_receiver_index));
     if (this_balances_msgSender < amount) {
-      exit(false);
+      {
+        ret = true;
+        returned = true;
+      }
     }
-    this_balances_msgSender -= amount;
-    this_balances_receiver += amount;
+    if (!returned) {
+      this_balances_msgSender -= amount;
+      this_balances_receiver += amount;
+    }
     require(this.balances.set(msgSender, this_balances_msgSender, this_balances_msgSender_index));
     require(this.balances.set(receiver, this_balances_receiver, this_balances_receiver_index));
     require(this.propagateState(txPreimage));
@@ -422,11 +436,12 @@ contract EIP20 {
     return this_allowed__owner__spender;
   }
 
-  public function approve(PubKeyHash _spender, int _value, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, int this_allowed_msgSender__spender, int this_allowed_msgSender__spender_index) {
+  public function approve(PubKeyHash _spender, int _value, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, bool retVal, int this_allowed_msgSender__spender, int this_allowed_msgSender__spender_index) {
     PubKeyHash msgSender = hash160(pubKey);
     require(checkSig(sig, pubKey));
     require((!this.allowed.has({msgSender, _spender}, this_allowed_msgSender__spender_index)) || this.allowed.canGet({msgSender, _spender}, this_allowed_msgSender__spender, this_allowed_msgSender__spender_index));
     this_allowed_msgSender__spender = _value;
+    require(true == retVal);
     require(this.allowed.set({msgSender, _spender}, this_allowed_msgSender__spender, this_allowed_msgSender__spender_index));
     require(this.propagateState(txPreimage));
   }
@@ -493,7 +508,7 @@ contract MM {
 }|]
 
 
-  itProgram "a simple ERC20 contract "
+  itProgram "a simple ERC20 contract"
     [r|
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
@@ -567,28 +582,30 @@ contract ERC20 {
 
   static const int decimals = 18;
 
-  public function transfer(PubKeyHash recipient, int amount, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, int this_balanceOf_msgSender, int this_balanceOf_msgSender_index, int this_balanceOf_recipient, int this_balanceOf_recipient_index) {
+  public function transfer(PubKeyHash recipient, int amount, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, bool retVal, int this_balanceOf_msgSender, int this_balanceOf_msgSender_index, int this_balanceOf_recipient, int this_balanceOf_recipient_index) {
     PubKeyHash msgSender = hash160(pubKey);
     require(checkSig(sig, pubKey));
     require((!this.balanceOf.has(msgSender, this_balanceOf_msgSender_index)) || this.balanceOf.canGet(msgSender, this_balanceOf_msgSender, this_balanceOf_msgSender_index));
     require((!this.balanceOf.has(recipient, this_balanceOf_recipient_index)) || this.balanceOf.canGet(recipient, this_balanceOf_recipient, this_balanceOf_recipient_index));
     this_balanceOf_msgSender -= amount;
     this_balanceOf_recipient += amount;
+    require(true == retVal);
     require(this.balanceOf.set(msgSender, this_balanceOf_msgSender, this_balanceOf_msgSender_index));
     require(this.balanceOf.set(recipient, this_balanceOf_recipient, this_balanceOf_recipient_index));
     require(this.propagateState(txPreimage));
   }
 
-  public function approve(PubKeyHash spender, int amount, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, int this_allowance_msgSender_spender, int this_allowance_msgSender_spender_index) {
+  public function approve(PubKeyHash spender, int amount, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, bool retVal, int this_allowance_msgSender_spender, int this_allowance_msgSender_spender_index) {
     PubKeyHash msgSender = hash160(pubKey);
     require(checkSig(sig, pubKey));
     require((!this.allowance.has({msgSender, spender}, this_allowance_msgSender_spender_index)) || this.allowance.canGet({msgSender, spender}, this_allowance_msgSender_spender, this_allowance_msgSender_spender_index));
     this_allowance_msgSender_spender = amount;
+    require(true == retVal);
     require(this.allowance.set({msgSender, spender}, this_allowance_msgSender_spender, this_allowance_msgSender_spender_index));
     require(this.propagateState(txPreimage));
   }
 
-  public function transferFrom(PubKeyHash sender, PubKeyHash recipient, int amount, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, int this_allowance_sender_msgSender, int this_allowance_sender_msgSender_index, int this_balanceOf_recipient, int this_balanceOf_recipient_index, int this_balanceOf_sender, int this_balanceOf_sender_index) {
+  public function transferFrom(PubKeyHash sender, PubKeyHash recipient, int amount, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, bool retVal, int this_allowance_sender_msgSender, int this_allowance_sender_msgSender_index, int this_balanceOf_recipient, int this_balanceOf_recipient_index, int this_balanceOf_sender, int this_balanceOf_sender_index) {
     PubKeyHash msgSender = hash160(pubKey);
     require(checkSig(sig, pubKey));
     require((!this.allowance.has({sender, msgSender}, this_allowance_sender_msgSender_index)) || this.allowance.canGet({sender, msgSender}, this_allowance_sender_msgSender, this_allowance_sender_msgSender_index));
@@ -597,6 +614,7 @@ contract ERC20 {
     this_allowance_sender_msgSender -= amount;
     this_balanceOf_sender -= amount;
     this_balanceOf_recipient += amount;
+    require(true == retVal);
     require(this.allowance.set({sender, msgSender}, this_allowance_sender_msgSender, this_allowance_sender_msgSender_index));
     require(this.balanceOf.set(recipient, this_balanceOf_recipient, this_balanceOf_recipient_index));
     require(this.balanceOf.set(sender, this_balanceOf_sender, this_balanceOf_sender_index));
@@ -667,7 +685,235 @@ contract VendingMachine {
   }
 }|]
 
+  itProgram "a contract to test return  "
+   [r|
+pragma solidity ^0.8.10;
 
+contract SimpleStorage {
+    uint storedData;
+
+    function set(uint x) external {
+        storedData++;
+        uint a = 3;
+        if(x > a) {
+            return;
+        }
+
+        storedData = x;
+    }
+
+    function set1(uint x) public {
+
+        uint a = 3;
+        if(x > a) {
+            return;
+        }
+        a++;
+    }
+
+    function set2(uint x) external returns (uint) {
+        storedData++;
+        uint a = 3;
+        if(x > a) {
+            return storedData;
+        }
+
+        storedData = x;
+        return storedData;
+    }
+
+    function set3(uint x) external view returns (uint y) { y = x; }
+
+    function foo() private {
+        if (true) return;
+        int a = 1;
+    }
+
+    function foo1() private {
+        return;
+    }
+
+    function foo2() external {
+        return;
+    }
+
+    function get() external payable { return ; }
+
+    function get1() external view returns (uint) { return storedData; }
+
+    function get2() external pure returns (uint) { return 1 + 1; }
+
+    function get3() external view returns (uint) { {true; {true;} } return storedData; }
+
+}
+|] [r|contract SimpleStorage {
+  @state
+  int storedData;
+
+  public function set(int x, SigHashPreimage txPreimage) {
+    bool ret = false;
+    bool returned = false;
+    this.storedData++;
+    int a = 3;
+    if (x > a) {
+      {
+        ret = true;
+        returned = true;
+      }
+    }
+    if (!returned) {
+      this.storedData = x;
+    }
+    require(this.propagateState(txPreimage));
+  }
+
+  function set1(int x) : bool {
+    bool ret = false;
+    bool returned = false;
+    int a = 3;
+    if (x > a) {
+      {
+        ret = true;
+        returned = true;
+      }
+    }
+    if (!returned) {
+      a++;
+    }
+    return ret;
+  }
+
+  public function set2(int x, SigHashPreimage txPreimage, int retVal) {
+    int ret = 0;
+    bool returned = false;
+    this.storedData++;
+    int a = 3;
+    if (x > a) {
+      {
+        ret = this.storedData;
+        returned = true;
+      }
+    }
+    if (!returned) {
+      this.storedData = x;
+    }
+    require((returned ? ret : this.storedData) == retVal);
+    require(this.propagateState(txPreimage));
+  }
+
+  public function set3(int x, SigHashPreimage txPreimage, int _y) {
+    int y = 0;
+    y = x;
+    require(y == _y);
+    require(this.propagateState(txPreimage));
+  }
+
+  private function foo() : bool {
+    bool ret = false;
+    bool returned = false;
+    if (true) {
+      {
+        ret = true;
+        returned = true;
+      }
+    }
+    if (!returned) {
+      int a = 1;
+    }
+    return ret;
+  }
+
+  private function foo1() : bool {
+    return true;
+  }
+
+  public function foo2(SigHashPreimage txPreimage) {
+    require(this.propagateState(txPreimage));
+  }
+
+  public function get(SigHashPreimage txPreimage) {
+    require(this.propagateState(txPreimage));
+  }
+
+  public function get1(SigHashPreimage txPreimage, int retVal) {
+    require(this.storedData == retVal);
+    require(this.propagateState(txPreimage));
+  }
+
+  public function get2(SigHashPreimage txPreimage, int retVal) {
+    require(1 + 1 == retVal);
+    require(this.propagateState(txPreimage));
+  }
+
+  public function get3(SigHashPreimage txPreimage, int retVal) {
+    {
+      true;
+      {
+        true;
+      }
+    }
+    require(this.storedData == retVal);
+    require(this.propagateState(txPreimage));
+  }
+
+  function propagateState(SigHashPreimage txPreimage) : bool {
+    require(Tx.checkPreimage(txPreimage));
+    bytes outputScript = this.getStateScript();
+    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    return hash256(output) == SigHash.hashOutputs(txPreimage);
+  }
+}|]
+
+
+  itProgram "test function with return statment and without return statment" [r|
+pragma solidity ^0.8.10;
+
+contract SimpleStorage {
+    uint s;
+    function foo() external {
+  
+    }
+
+    function foo1() external {
+      return;
+    }
+
+    function foo2() public {
+      
+    }
+
+    function foo3() public {
+      return;
+    }
+}
+
+|] [r|contract SimpleStorage {
+  @state
+  int s;
+
+  public function foo(SigHashPreimage txPreimage) {
+    require(this.propagateState(txPreimage));
+  }
+
+  public function foo1(SigHashPreimage txPreimage) {
+    require(this.propagateState(txPreimage));
+  }
+
+  function foo2() : bool {
+    return true;
+  }
+
+  function foo3() : bool {
+    return true;
+  }
+
+  function propagateState(SigHashPreimage txPreimage) : bool {
+    require(Tx.checkPreimage(txPreimage));
+    bytes outputScript = this.getStateScript();
+    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    return hash256(output) == SigHash.hashOutputs(txPreimage);
+  }
+}|]
 
   describe "#ReportError" $ do
 
