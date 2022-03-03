@@ -865,7 +865,55 @@ contract SimpleStorage {
 }|]
 
 
+  itProgram "test function with return statment and without return statment" [r|
+pragma solidity ^0.8.10;
 
+contract SimpleStorage {
+    uint s;
+    function foo() external {
+  
+    }
+
+    function foo1() external {
+      return;
+    }
+
+    function foo2() public {
+      
+    }
+
+    function foo3() public {
+      return;
+    }
+}
+
+|] [r|contract SimpleStorage {
+  @state
+  int s;
+
+  public function foo(SigHashPreimage txPreimage) {
+    require(this.propagateState(txPreimage));
+  }
+
+  public function foo1(SigHashPreimage txPreimage) {
+    require(this.propagateState(txPreimage));
+  }
+
+  function foo2() : bool {
+    return true;
+  }
+
+  function foo3() : bool {
+    return true;
+  }
+
+  function propagateState(SigHashPreimage txPreimage) : bool {
+    require(Tx.checkPreimage(txPreimage));
+    bytes outputScript = this.getStateScript();
+    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    return hash256(output) == SigHash.hashOutputs(txPreimage);
+  }
+}|]
 
   describe "#ReportError" $ do
 
