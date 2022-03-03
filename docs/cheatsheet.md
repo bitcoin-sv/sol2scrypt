@@ -3,7 +3,7 @@
 # All supported features 
 
 | Feature | Solidity | sCrypt | Note |
-| :--- | :--- | :--- | ---: |
+| :--- | :--- | :--- | :--- |
 Pragma Directive | `pragma solidity ^0.8.10;` <br> `pragma experimental ABIEncoderV2;` | *empty* | |
 Import Directive | `import "./Foo.sol";` | `import "./Foo.sol";` | only support local file
 Type **address** | `address` | `PubKeyHash` | 
