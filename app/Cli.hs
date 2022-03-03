@@ -14,10 +14,10 @@ destParser :: Parser FilePath
 destParser = strOption $ long "output-dir" <> short 'o' <> metavar "OUTPUTDIR" <> value "." <> help "Output directory if given, default to current directory"
 
 logToFileParser :: Parser Bool
-logToFileParser = switch $ long "log" <> short 'L' <> help "Whether to output transpile log in json format"
+logToFileParser = switch $ long "log" <> short 'L' <> help "Whether to output errors in json format"
 
 forceOutputParser :: Parser Bool
-forceOutputParser = switch $ long "force" <> short 'F' <> help "Whether to output transpile result fileeven got errors"
+forceOutputParser = switch $ long "force" <> short 'F' <> help "Whether to output result file despite errors"
 
 commandsParser :: Parser Options
 commandsParser =
