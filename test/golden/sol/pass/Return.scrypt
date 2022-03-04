@@ -1,0 +1,361 @@
+contract Return {
+  @state
+  int storedData;
+
+  function test0(int amount) : int {
+    int ret = 0;
+    bool returned = false;
+    int x = 3;
+    if (x == 0) {
+      x++;
+      {
+        ret = x;
+        returned = true;
+      }
+    }
+    if (!returned) {
+      x = x + amount;
+    }
+    return returned ? ret : x;
+  }
+
+  function test1(int amount) : int {
+    int ret = 0;
+    bool returned = false;
+    int x = 3;
+    if (x == 3) {
+      {
+        ret = x;
+        returned = true;
+      }
+    }
+    else {
+      {
+        ret = x++;
+        returned = true;
+      }
+    }
+    return ret;
+  }
+
+  function test2(int amount) : int {
+    int ret = 0;
+    bool returned = false;
+    int x = 3;
+    if (x > 0) {
+      if (x == 3) {
+        {
+          ret = x;
+          returned = true;
+        }
+      }
+      if (!returned) {
+        x++;
+      }
+    }
+    else {
+      {
+        ret = x;
+        returned = true;
+      }
+    }
+    if (!returned) {
+      x = x + amount;
+    }
+    return returned ? ret : x;
+  }
+
+  function test3(int amount, int y) : int {
+    int ret = 0;
+    bool returned = false;
+    int x = 3;
+    if (x > 0) {
+      if (x > 1) {
+        x /= 2;
+        if (x == 2) {
+          {
+            ret = x;
+            returned = true;
+          }
+        }
+        if (!returned) {
+          x--;
+          if (x == 3) {
+            {
+              ret = x;
+              returned = true;
+            }
+          }
+          else {
+            x += y;
+          }
+          if (!returned) {
+            x += 2 * amount + 1;
+          }
+        }
+      }
+      if (!returned) {
+        x++;
+        x += 11;
+      }
+    }
+    else {
+      --x;
+    }
+    if (!returned) {
+      x = x + amount;
+      x += 20 / amount - 12;
+    }
+    return returned ? ret : x;
+  }
+
+  function test4(int amount, int y) : int {
+    int ret = 0;
+    bool returned = false;
+    int x = 3;
+    if (x > 0) {
+      x++;
+    }
+    else {
+      --x;
+      {
+        ret = x;
+        returned = true;
+      }
+    }
+    if (!returned) {
+      x = x + amount;
+      x += 20 / amount - 12;
+    }
+    return returned ? ret : x;
+  }
+
+  function test5(int amount, int y) : int {
+    int ret = 0;
+    bool returned = false;
+    int x = 3;
+    if (x > 0) {
+      x++;
+      if (x == 3) {
+        {
+          ret = x;
+          returned = true;
+        }
+      }
+      else if (x == 5) {
+        x++;
+      }
+      else if (x == 2) {
+        x--;
+      }
+      if (!returned) {
+        x += 3;
+        {
+          ret = x;
+          returned = true;
+        }
+      }
+    }
+    else {
+      --x;
+    }
+    if (!returned) {
+      x = x + amount;
+      x += 20 / amount - 12;
+    }
+    return returned ? ret : x;
+  }
+
+  function test6(int x) : bool {
+    bool ret = false;
+    bool returned = false;
+    if (x == 0) {
+      {
+        ret = true;
+        returned = true;
+      }
+    }
+    return returned ? ret : false;
+  }
+
+  function test7(int x) : bytes {
+    bytes ret = b'';
+    bool returned = false;
+    if (x == 0) {
+      if (x > 1) {
+        if (x > 9) {
+          {
+            ret = b'ff00';
+            returned = true;
+          }
+        }
+        if (!returned) {
+          {
+            ret = b'ff00';
+            returned = true;
+          }
+        }
+      }
+      if (!returned) {
+        {
+          ret = b'ff00';
+          returned = true;
+        }
+      }
+    }
+    return returned ? ret : b'ff00';
+  }
+
+  function test8(int x) : int {
+    int ret = 0;
+    bool returned = false;
+    int y = 1;
+    if (x == 0) {
+      if (x > 1) {
+        if (x > 9) {
+          {
+            ret = ((x * x + y) > x * y) ? x-- : ((y * x) - 9);
+            returned = true;
+          }
+        }
+        else {
+          x = x * 9 - y + (x * y / 100);
+        }
+        if (!returned) {
+          {
+            ret = (x-- - 200) * y;
+            returned = true;
+          }
+        }
+      }
+      if (!returned) {
+        {
+          ret = x - 9;
+          returned = true;
+        }
+      }
+    }
+    if (!returned) {
+      x++;
+    }
+    return ret;
+  }
+
+  function test9(int x) : int {
+    int y = 1;
+    return 0;
+  }
+
+  public function set(int x, SigHashPreimage txPreimage) {
+    bool ret = false;
+    bool returned = false;
+    this.storedData++;
+    int a = 3;
+    if (x > a) {
+      {
+        ret = true;
+        returned = true;
+      }
+    }
+    if (!returned) {
+      this.storedData = x;
+    }
+    require(this.propagateState(txPreimage));
+  }
+
+  function set1(int x) : bool {
+    bool ret = false;
+    bool returned = false;
+    int a = 3;
+    if (x > a) {
+      {
+        ret = true;
+        returned = true;
+      }
+    }
+    if (!returned) {
+      a++;
+    }
+    return ret;
+  }
+
+  public function set2(int x, SigHashPreimage txPreimage, int retVal) {
+    int ret = 0;
+    bool returned = false;
+    this.storedData++;
+    int a = 3;
+    if (x > a) {
+      {
+        ret = this.storedData;
+        returned = true;
+      }
+    }
+    if (!returned) {
+      this.storedData = x;
+    }
+    require((returned ? ret : this.storedData) == retVal);
+    require(this.propagateState(txPreimage));
+  }
+
+  public function set3(int x, SigHashPreimage txPreimage, int _y) {
+    int y = 0;
+    y = x;
+    require(y == _y);
+    require(this.propagateState(txPreimage));
+  }
+
+  private function foo() : bool {
+    bool ret = false;
+    bool returned = false;
+    if (true) {
+      {
+        ret = true;
+        returned = true;
+      }
+    }
+    if (!returned) {
+      int a = 1;
+    }
+    return ret;
+  }
+
+  private function foo1() : bool {
+    return true;
+  }
+
+  public function foo2(SigHashPreimage txPreimage) {
+    require(this.propagateState(txPreimage));
+  }
+
+  public function get(SigHashPreimage txPreimage) {
+    require(this.propagateState(txPreimage));
+  }
+
+  public function get1(SigHashPreimage txPreimage, int retVal) {
+    require(this.storedData == retVal);
+    require(this.propagateState(txPreimage));
+  }
+
+  public function get2(SigHashPreimage txPreimage, int retVal) {
+    require(1 + 1 == retVal);
+    require(this.propagateState(txPreimage));
+  }
+
+  public function get3(SigHashPreimage txPreimage, int retVal) {
+    {
+      true;
+      {
+        true;
+      }
+    }
+    require(this.storedData == retVal);
+    require(this.propagateState(txPreimage));
+  }
+
+  function propagateState(SigHashPreimage txPreimage) : bool {
+    require(Tx.checkPreimage(txPreimage));
+    bytes outputScript = this.getStateScript();
+    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    return hash256(output) == SigHash.hashOutputs(txPreimage);
+  }
+}
