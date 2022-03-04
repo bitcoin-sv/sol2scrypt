@@ -92,3 +92,21 @@ tests:
     - raw-strings-qq
     - containers
     - parsec
+  golden:
+    source-dirs: test/golden
+    main: Main.hs
+    dependencies:
+    - base
+    - sol2scrypt
+    - tasty
+    - tasty-golden
+    - filepath
+    - bytestring
+    - aeson
+    - aeson-pretty
+    - text
+    ghc-options:
+    - -rtsopts
+    - -threaded
+    - -with-rtsopts=-N
+    - -fno-warn-orphans

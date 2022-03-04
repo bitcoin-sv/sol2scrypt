@@ -1,0 +1,22 @@
+[
+    {
+        "src": "test/golden/sol/fail/shib.sol:17:1:86:2",
+        "type": "Error",
+        "message": "unsupported contract definition `ContractDefinition`"
+    },
+    {
+        "src": "test/golden/sol/fail/shib.sol:105:1:196:2",
+        "type": "Error",
+        "message": "unsupported contract definition `ContractDefinition`"
+    },
+    {
+        "src": "test/golden/sol/fail/shib.sol:227:1:426:2",
+        "type": "Error",
+        "message": "unsupported contract definition `ContractDefinition`"
+    },
+    {
+        "src": "test/golden/sol/fail/shib.sol:441:1:497:2",
+        "type": "Error",
+        "message": "unsupported contract definition `ContractDefinition`"
+    }
+]

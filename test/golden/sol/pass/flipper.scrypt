@@ -1,0 +1,17 @@
+contract flipper {
+  @state
+  private bool value;
+
+  constructor(bool initvalue) {
+    this.value = initvalue;
+  }
+
+  function flip() : bool {
+    this.value = !this.value;
+    return true;
+  }
+
+  function get() : bool {
+    return this.value;
+  }
+}

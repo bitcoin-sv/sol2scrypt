@@ -1,0 +1,18 @@
+contract Counter {
+  @state
+  public int count;
+
+  function get() : int {
+    return this.count;
+  }
+
+  function inc() : bool {
+    this.count += 1;
+    return true;
+  }
+
+  function set(int _count) : bool {
+    this.count = _count;
+    return true;
+  }
+}
