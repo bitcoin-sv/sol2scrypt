@@ -198,7 +198,7 @@ spec = testSpec "Transpile Expression" $ do
     itReportError "selfdestruct(a) " "unsupported function call : `selfdestruct`" (1, 16)
     itReportError "type(int) .min" "unsupported function call : `type`" (1, 10)
     itReportError "gasleft() " "unsupported function call : `gasleft`" (1, 10)
-    
+    itReportError "blockhash(1) " "unsupported function call : `blockhash`" (1, 13)
     -- -- Time Units
     itReportError "1 seconds " "unsupported expression : `Literal`" (1, 10)
     itReportError "1 days " "unsupported expression : `Literal`" (1, 7)
