@@ -95,6 +95,11 @@
         "message": "unsupported type `TypeNameUserDefinedTypeName`"
     },
     {
+        "src": "test/golden/sol/fail/fail1.sol:91:9:91:39",
+        "type": "Error",
+        "message": "unsupported SimpleStatementVariableDeclarationList"
+    },
+    {
         "src": "test/golden/sol/fail/fail1.sol:94:9:96:10",
         "type": "Error",
         "message": "unsupported statement `WhileStatement`"
