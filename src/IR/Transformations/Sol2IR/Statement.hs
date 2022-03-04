@@ -40,11 +40,13 @@ instance ToIRTransformable (Sol.Statement SourceRange) IStatement' where
     checkLHSmapExpr $ IdentifierExpr <$> i''
     return $ AssignStmt <$> sequence [IdentifierExpr <$> i''] <*> sequence [e']
   _toIR (SimpleStatementVariableAssignmentList _ _ a) = reportError "unsupported SimpleStatementVariableAssignmentList" a >> return Nothing
-  _toIR (SimpleStatementVariableDeclarationList [Just localVar] [e] _) = do
+  _toIR (SimpleStatementVariableDeclarationList [Just localVar] [e] a) = do
     e' <- _toIR e
     localVar' <- _toIR localVar
     addSym $ Symbol <$> (paramName <$> localVar') <*> (paramType <$> localVar') <*> Just False
-    return $ DeclareStmt [localVar'] <$>  sequence [e']
+    case localVar' of 
+      Nothing -> reportError "unsupported SimpleStatementVariableDeclarationList" a >> return Nothing
+      Just _ -> return $ DeclareStmt [localVar'] <$>  sequence [e']
   _toIR (SimpleStatementVariableDeclarationList _ _ a) = reportError "unsupported SimpleStatementVariableDeclarationList" a >> return Nothing
   _toIR (Return e _) = do
     returned <- gets stateReturnedInBlock
