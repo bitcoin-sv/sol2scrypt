@@ -16,7 +16,7 @@ Type **string** | `string` | `bytes` |
 Comment | `// comment` , `/*  comment */` | *empty* |
 Boolean Literal | `true` , `false` | `true` , `false` |
 Number Literal | `1` <br> `0x1` | `1` <br> `0x1` |
-Hex Literal | `hex"0101"` |  `b'0101'`  |
+Hex Literal | `hex"0101"` |  `b'0101'`  | *Not Supported* `hex"ff00_0000_0000_0004"`
 String Literal | `"hello world"` | `"hello world"`  |
 Array  | *literal* <br> `[1, 2, 3]` <br> *length* <br> `s.length;` <br> *Index by number* <br> `a[1]` <br> *Index by expression* <br> `a[i + 1]` <br> *push/pop element* <br> `a.push(3);`, `a.pop();`  | *literal* <br> `[1, 2, 3]` <br> *length* <br> *Not Supported*  <br> *Index by number* <br> `a[1]` <br> *Index by expression* <br> `a[i + 1]` *some restrictions* <br> *push/pop element* <br> *Not Supported* | *only a [compile-time constant](https://scryptdoc.readthedocs.io/en/latest/ctc.html) (CTC) can be used as an index when writing array in sCrypt*
 Increment and Decrement | `i++`, `++i`, `i--`, `--i` | `i++`, `++i`, `i--`, `--i`
