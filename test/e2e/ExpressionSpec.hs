@@ -197,6 +197,7 @@ spec = testSpec "Transpile Expression" $ do
     itReportError "revert(4, 5, 3) " "unsupported function call : `revert`" (1, 16)
     itReportError "selfdestruct(a) " "unsupported function call : `selfdestruct`" (1, 16)
     itReportError "type(int) .min" "unsupported function call : `type`" (1, 10)
+    itReportError "gasleft() " "unsupported function call : `gasleft`" (1, 10)
     
     -- -- Time Units
     itReportError "1 seconds " "unsupported expression : `Literal`" (1, 10)
@@ -209,6 +210,7 @@ spec = testSpec "Transpile Expression" $ do
     itReportError "block.chainid " "unsupported expression: `block.chainid`" (1, 14)
     itReportError "block.coinbase " "unsupported expression: `block.coinbase`" (1, 15)
     itReportError "msg.sig " "unsupported expression: `msg.sig`" (1, 8)
+    itReportError "msg.gas " "unsupported expression: `msg.gas`" (1, 8)
     itReportError "msg.data " "unsupported expression: `msg.data`" (1, 9)
     itReportError "tx.origin " "unsupported expression: `tx.origin`" (1, 10)
     itReportError "abi.encodePacked (arr, \"AAAA\", \"BBBB\")" "unsupported expression: `abi.encodePacked`" (1, 17)

@@ -263,13 +263,14 @@ checkLHSmapExpr e = do
 
 -- some solidity buildin functions are not supported
 isBuiltInFnSupported :: String -> Bool
-isBuiltInFnSupported fn = fn `notElem` ["assert", "keccak256", "ecrecover", "addmod", "mulmod", "revert", "selfdestruct", "type"]
+isBuiltInFnSupported fn = fn `notElem` ["assert", "keccak256", "ecrecover", "addmod", "mulmod", "revert", "selfdestruct", "type", "gasleft"]
 
 -- some solidity buildin member access are not supported
 isMemberAccessSupported :: (String, String) -> Bool
 isMemberAccessSupported (e, i) = case (e, i) of
   ("msg", "sig") -> False
   ("msg", "data") -> False
+  ("msg", "gas") -> False
   ("block", _) -> False
   ("tx", _) -> False
   ("abi", _) -> False
