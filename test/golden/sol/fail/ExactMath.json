@@ -1,7 +1,0 @@
-[
-    {
-        "src": "test/golden/sol/fail/ExactMath.sol:6:1:77:2",
-        "type": "Error",
-        "message": "unsupported contract definition `ContractDefinition`"
-    }
-]
