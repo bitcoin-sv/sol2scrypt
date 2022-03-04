@@ -1,0 +1,19 @@
+contract Return {
+  @state
+  int counter;
+
+  function test(int x) : int {
+    int ret = 0;
+    bool returned = false;
+    if (x > 0) {
+      {
+        ret = -1;
+        returned = true;
+      }
+    }
+    if (!returned) {
+      this.counter++;
+    }
+    return returned ? ret : 1;
+  }
+}
