@@ -20,7 +20,7 @@ solTests = testGroup "sol" <$> sequence [makeTests "pass" ".scrypt", makeTests "
 
 makeTests :: String -> String -> IO TestTree
 makeTests groupName extension = do
-  srcFiles <- findByExtension [".sol"] $ "test/golden/sol/" ++ groupName
+  srcFiles <- findByExtension [".sol"] $ "test/golden/" ++ groupName
   return $
     testGroup
       groupName

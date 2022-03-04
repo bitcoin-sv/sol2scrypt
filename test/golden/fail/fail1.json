@@ -1,126 +1,126 @@
 [
     {
-        "src": "test/golden/sol/fail/fail1.sol:3:1:7:2",
+        "src": "test/golden/fail/fail1.sol:3:1:7:2",
         "type": "Error",
         "message": "unsupported contract definition `ContractDefinition`"
     },
     {
-        "src": "test/golden/sol/fail/fail1.sol:16:1:21:2",
+        "src": "test/golden/fail/fail1.sol:16:1:21:2",
         "type": "Error",
         "message": "unsupported contract definition `ContractDefinition`"
     },
     {
-        "src": "test/golden/sol/fail/fail1.sol:27:6:33:6",
+        "src": "test/golden/fail/fail1.sol:27:6:33:6",
         "type": "Error",
         "message": "unsupported contract part `ContractPartEnumDefinition`"
     },
     {
-        "src": "test/golden/sol/fail/fail1.sol:35:5:38:6",
+        "src": "test/golden/fail/fail1.sol:35:5:38:6",
         "type": "Error",
         "message": "unsupported contract part `ContractPartStructDefinition`"
     },
     {
-        "src": "test/golden/sol/fail/fail1.sol:39:5:39:9",
+        "src": "test/golden/fail/fail1.sol:39:5:39:9",
         "type": "Error",
         "message": "unsupported type `TypeNameUserDefinedTypeName`"
     },
     {
-        "src": "test/golden/sol/fail/fail1.sol:39:5:39:11",
+        "src": "test/golden/fail/fail1.sol:39:5:39:11",
         "type": "Error",
         "message": "array length should be explicitly specified"
     },
     {
-        "src": "test/golden/sol/fail/fail1.sol:46:5:52:6",
+        "src": "test/golden/fail/fail1.sol:46:5:52:6",
         "type": "Error",
         "message": "unsupported contract part `ContractPartModifierDefinition`"
     },
     {
-        "src": "test/golden/sol/fail/fail1.sol:65:20:65:57",
+        "src": "test/golden/fail/fail1.sol:65:20:65:57",
         "type": "Error",
         "message": "unsupported expression : `FunctionCallNameValueList`"
     },
     {
-        "src": "test/golden/sol/fail/fail1.sol:75:5:75:23",
+        "src": "test/golden/fail/fail1.sol:75:5:75:23",
         "type": "Error",
         "message": "unsupported state variable with init value"
     },
     {
-        "src": "test/golden/sol/fail/fail1.sol:77:26:77:34",
+        "src": "test/golden/fail/fail1.sol:77:26:77:34",
         "type": "Error",
         "message": "unsupported expression: `msg.data`"
     },
     {
-        "src": "test/golden/sol/fail/fail1.sol:79:19:79:28",
+        "src": "test/golden/fail/fail1.sol:79:19:79:28",
         "type": "Error",
         "message": "unsupported expression : `Literal`"
     },
     {
-        "src": "test/golden/sol/fail/fail1.sol:80:19:80:28",
+        "src": "test/golden/fail/fail1.sol:80:19:80:28",
         "type": "Error",
         "message": "unsupported function call : `type`"
     },
     {
-        "src": "test/golden/sol/fail/fail1.sol:81:18:81:30",
+        "src": "test/golden/fail/fail1.sol:81:18:81:30",
         "type": "Error",
         "message": "unsupported expression: `block.number`"
     },
     {
-        "src": "test/golden/sol/fail/fail1.sol:83:21:83:30",
+        "src": "test/golden/fail/fail1.sol:83:21:83:30",
         "type": "Error",
         "message": "unsupported expression: `tx.origin`"
     },
     {
-        "src": "test/golden/sol/fail/fail1.sol:85:9:85:24",
+        "src": "test/golden/fail/fail1.sol:85:9:85:24",
         "type": "Error",
         "message": "unsupported function call : `addmod`"
     },
     {
-        "src": "test/golden/sol/fail/fail1.sol:87:9:87:24",
+        "src": "test/golden/fail/fail1.sol:87:9:87:24",
         "type": "Error",
         "message": "unsupported function call : `mulmod`"
     },
     {
-        "src": "test/golden/sol/fail/fail1.sol:89:9:89:25",
+        "src": "test/golden/fail/fail1.sol:89:9:89:25",
         "type": "Error",
         "message": "unsupported SimpleStatementVariableAssignmentList"
     },
     {
-        "src": "test/golden/sol/fail/fail1.sol:91:19:91:26",
+        "src": "test/golden/fail/fail1.sol:91:19:91:26",
         "type": "Error",
         "message": "unsupported expression : `New`"
     },
     {
-        "src": "test/golden/sol/fail/fail1.sol:91:9:91:12",
+        "src": "test/golden/fail/fail1.sol:91:9:91:12",
         "type": "Error",
         "message": "unsupported type `TypeNameUserDefinedTypeName`"
     },
     {
-        "src": "test/golden/sol/fail/fail1.sol:91:9:91:39",
+        "src": "test/golden/fail/fail1.sol:91:9:91:39",
         "type": "Error",
         "message": "unsupported SimpleStatementVariableDeclarationList"
     },
     {
-        "src": "test/golden/sol/fail/fail1.sol:94:9:96:10",
+        "src": "test/golden/fail/fail1.sol:94:9:96:10",
         "type": "Error",
         "message": "unsupported statement `WhileStatement`"
     },
     {
-        "src": "test/golden/sol/fail/fail1.sol:98:9:107:10",
+        "src": "test/golden/fail/fail1.sol:98:9:107:10",
         "type": "Error",
         "message": "unsupported statement `ForStatement`"
     },
     {
-        "src": "test/golden/sol/fail/fail1.sol:114:24:114:26",
+        "src": "test/golden/fail/fail1.sol:114:24:114:26",
         "type": "Error",
         "message": "unsupported binary operator `**`"
     },
     {
-        "src": "test/golden/sol/fail/fail1.sol:115:9:115:43",
+        "src": "test/golden/fail/fail1.sol:115:9:115:43",
         "type": "Error",
         "message": "unsupported function call : `keccak256`"
     },
     {
-        "src": "test/golden/sol/fail/fail1.sol:119:26:119:41",
+        "src": "test/golden/fail/fail1.sol:119:26:119:41",
         "type": "Error",
         "message": "unsupported type `TypeNameElementaryTypeName`"
     }
