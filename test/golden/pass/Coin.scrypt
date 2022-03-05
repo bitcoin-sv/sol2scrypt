@@ -5,15 +5,23 @@ contract Coin {
   @state
   public HashedMap<PubKeyHash, int> balances;
 
+  @state
+  public HashedMap<PubKeyHash, bool> b1;
+
+  @state
+  public HashedMap<PubKeyHash, bytes> b2;
+
   constructor(PubKeyHash msgSender) {
     this.minter = msgSender;
   }
 
-  public function mint(PubKeyHash receiver, int amount, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, int this_balances_receiver, int this_balances_receiver_index) {
+  public function mint(PubKeyHash receiver, int amount, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, bool this_b1_receiver, int this_b1_receiver_index, bytes this_b2_receiver, int this_b2_receiver_index, int this_balances_receiver, int this_balances_receiver_index) {
     bool ret = false;
     bool returned = false;
     PubKeyHash msgSender = hash160(pubKey);
     require(checkSig(sig, pubKey));
+    require((!this.b1.has(receiver, this_b1_receiver_index) && this_b1_receiver == false) || this.b1.canGet(receiver, this_b1_receiver, this_b1_receiver_index));
+    require((!this.b2.has(receiver, this_b2_receiver_index) && this_b2_receiver == b'') || this.b2.canGet(receiver, this_b2_receiver, this_b2_receiver_index));
     require((!this.balances.has(receiver, this_balances_receiver_index) && this_balances_receiver == 0) || this.balances.canGet(receiver, this_balances_receiver, this_balances_receiver_index));
     if (msgSender != this.minter) {
       {
@@ -23,16 +31,21 @@ contract Coin {
     }
     if (!returned) {
       this_balances_receiver += amount;
+      this_b1_receiver != true;
+      this_b2_receiver = b'0001';
     }
+    require(this.b2.set(receiver, this_b2_receiver, this_b2_receiver_index));
     require(this.balances.set(receiver, this_balances_receiver, this_balances_receiver_index));
     require(this.propagateState(txPreimage));
   }
 
-  public function send(PubKeyHash receiver, int amount, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, int this_balances_msgSender, int this_balances_msgSender_index, int this_balances_receiver, int this_balances_receiver_index) {
+  public function send(PubKeyHash receiver, int amount, bool a, bytes b, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, bool this_b1_receiver, int this_b1_receiver_index, bytes this_b2_receiver, int this_b2_receiver_index, int this_balances_msgSender, int this_balances_msgSender_index, int this_balances_receiver, int this_balances_receiver_index) {
     bool ret = false;
     bool returned = false;
     PubKeyHash msgSender = hash160(pubKey);
     require(checkSig(sig, pubKey));
+    require((!this.b1.has(receiver, this_b1_receiver_index) && this_b1_receiver == false) || this.b1.canGet(receiver, this_b1_receiver, this_b1_receiver_index));
+    require((!this.b2.has(receiver, this_b2_receiver_index) && this_b2_receiver == b'') || this.b2.canGet(receiver, this_b2_receiver, this_b2_receiver_index));
     require((!this.balances.has(msgSender, this_balances_msgSender_index) && this_balances_msgSender == 0) || this.balances.canGet(msgSender, this_balances_msgSender, this_balances_msgSender_index));
     require((!this.balances.has(receiver, this_balances_receiver_index) && this_balances_receiver == 0) || this.balances.canGet(receiver, this_balances_receiver, this_balances_receiver_index));
     if (this_balances_msgSender < amount) {
@@ -44,7 +57,10 @@ contract Coin {
     if (!returned) {
       this_balances_msgSender -= amount;
       this_balances_receiver += amount;
+      this_b1_receiver != a;
+      this_b2_receiver = b;
     }
+    require(this.b2.set(receiver, this_b2_receiver, this_b2_receiver_index));
     require(this.balances.set(msgSender, this_balances_msgSender, this_balances_msgSender_index));
     require(this.balances.set(receiver, this_balances_receiver, this_balances_receiver_index));
     require(this.propagateState(txPreimage));
