@@ -356,10 +356,10 @@ transForMappingAccess mCounter =
       $ Map.elems mCounter,
     -- injected statements
     Map.foldl'
-      ( \mc (MECEntry _ me ke _ updated) ->
+      ( \mc (MECEntry t me ke _ updated) ->
           mergeTFStmtWrapper mc $
             TFStmtWrapper
-              [preCheckStmt me ke initTag]
+              [preCheckStmt t me ke initTag]
               [afterCheckStmt me ke initTag | updated]
       )
       (TFStmtWrapper [] [])
@@ -401,7 +401,7 @@ transForMappingAccess mCounter =
             }
 
     -- require((!<mapExpr>.has(<keyExpr>, <idxExpr>)) || <mapExpr>.canGet(<keyExpr>, <valExpr>, <idxExpr>));
-    preCheckStmt mapExpr keyExpr postfix =
+    preCheckStmt t mapExpr keyExpr postfix =
       let e = Just $ BinaryExpr Index mapExpr keyExpr
        in IR.RequireStmt $
             BinaryExpr
@@ -409,7 +409,10 @@ transForMappingAccess mCounter =
                 lExpr =
                   ParensExpr
                     { enclosedExpr =
-                        UnaryExpr
+                        BinaryExpr {
+                          
+                          binaryOp = BoolAnd ,
+                          lExpr = UnaryExpr
                           { unaryOp = Not,
                             uExpr =
                               FunctionCallExpr
@@ -423,7 +426,14 @@ transForMappingAccess mCounter =
                                       fromJust $ indexExprOfMapping e postfix
                                     ]
                                 }
+                          },
+                          rExpr = BinaryExpr {
+                            binaryOp = IR.Equal,
+                            lExpr = fromJust $ valueExprOfMapping e postfix,
+                            rExpr = defaultValueExpr t
                           }
+                        }
+                        
                     },
                 rExpr = mapCanGetExpr mapExpr keyExpr postfix
               }
