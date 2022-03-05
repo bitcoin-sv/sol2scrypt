@@ -752,8 +752,8 @@ public function get(SigHashPreimage txPreimage) {
 public function send(PubKeyHash receiver, int amount, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, int balances_msgSender, int balances_msgSender_index, int balances_receiver, int balances_receiver_index) {
   PubKeyHash msgSender = hash160(pubKey);
   require(checkSig(sig, pubKey));
-  require((!balances.has(msgSender, balances_msgSender_index)) || balances.canGet(msgSender, balances_msgSender, balances_msgSender_index));
-  require((!balances.has(receiver, balances_receiver_index)) || balances.canGet(receiver, balances_receiver, balances_receiver_index));
+  require((!balances.has(msgSender, balances_msgSender_index) && balances_msgSender == 0) || balances.canGet(msgSender, balances_msgSender, balances_msgSender_index));
+  require((!balances.has(receiver, balances_receiver_index) && balances_receiver == 0) || balances.canGet(receiver, balances_receiver, balances_receiver_index));
   balances_msgSender -= amount;
   balances_receiver += amount;
   require(balances.set(msgSender, balances_msgSender, balances_msgSender_index));
