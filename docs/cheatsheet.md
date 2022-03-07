@@ -51,6 +51,7 @@ Type **Fixed** | `fixed4x4` |  |
 Type **Ufixed** | `ufixed4x4` |  |
 NumberUnit | `1 days` <br> `1 wei` | |
 Parallel Assignment  | `(x, y) = (0, 1);` |  |
+Enum | `enum Status { Pending, Accepted }` |
 Contract Creation | `Contract c = new Contract(args);`  | |
 Interfaces |`interface HelloWorld { ... }` | |
 Library |`library HelloWorld { ... }` | |
