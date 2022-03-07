@@ -10,13 +10,13 @@ Type **address** | `address` | `PubKeyHash` |
 Type **int** | `int` , `int8` , `int16` , ... , `int248` , `int256`  | `int` | 
 Type **uint** | `uint` , `uint8` , `uint16` , ... , `uint248` , `uint256` | `int` | 
 Type **bytes** | `bytes` , `bytes1` , `bytes2` , ...,  `bytes31` , `bytes32` | `bytes` |
-Type **Array** | `uint[]` <br> `uint[3]` | *Not Supported*  <br> `int[3]` |  |
+Type **Array** | `uint[]` <br> `uint[3]`  <br> `int[3]` |  |
 Type **bool** | `bool` | `bool` |
 Type **string** | `string` | `bytes` |
 Comment | `// comment` , `/*  comment */` | *empty* |
 Boolean Literal | `true` , `false` | `true` , `false` |
 Number Literal | `1` <br> `0x1` | `1` <br> `0x1` |
-Hex Literal | `hex"0101"` |  `b'0101'`  | *Not Supported* `hex"ff00_0000_0000_0004"`
+Hex Literal | `hex"0101"` |  `b'0101'`  `hex"ff00_0000_0000_0004"`
 String Literal | `"hello world"` | `"hello world"`  |
 Array  | *literal* <br> `[1, 2, 3]` <br> *length* <br> `s.length;` <br> *Index by number* <br> `a[1]` <br> *Index by expression* <br> `a[i + 1]` <br> *push/pop element* <br> `a.push(3);`, `a.pop();`  | *literal* <br> `[1, 2, 3]` <br> *length* <br> *Not Supported*  <br> *Index by number* <br> `a[1]` <br> *Index by expression* <br> `a[i + 1]` *some restrictions* <br> *push/pop element* <br> *Not Supported* | *only a [compile-time constant](https://scryptdoc.readthedocs.io/en/latest/ctc.html) (CTC) can be used as an index when writing array in sCrypt*
 Increment and Decrement | `i++`, `++i`, `i--`, `--i` | `i++`, `++i`, `i--`, `--i`
@@ -43,27 +43,27 @@ msg.sender | `msg.sender;` |  `PubKeyHash msgSender = hash160(pubKey);` <br> `re
 msg.value | `msg.value;` |   `SigHash.value(txPreimage);` | *will automatically add one parameters to the function signature： `SigHashPreimage txPreimage`*
 
 
-# All unsupported features 
+# Currently unsupported features 
 
-| Feature | Solidity | sCrypt |
+| Feature | Solidity |
 | :--- | :--- | :--- | 
-Type **Fixed** | `fixed4x4` | *Not Supported* |  |
-Type **Ufixed** | `ufixed4x4` | *Not Supported* |  |
-NumberUnit | `1 days` <br> `1 wei` |  *Not Supported* | |
-Parallel Assignment  | `(x, y) = (0, 1);` |  *Not Supported* |  |
-Contract Creation | `Contract c = new Contract(args);` |  *Not Supported*  | |
-Interfaces |`interface HelloWorld { ... }`| *Not Supported*  | |
-Library |`library HelloWorld { ... }`| *Not Supported*  | |
-Inheritance |`contract ERC20 is IERC20 { ... }`| *Not Supported*  | |
-For loop | `for (uint i = 0; i < 3; i++) {` <br>  &nbsp;  `...` <br> `}` | *Not Supported*   |  |
-While loop | `while (a > 0) {` <br>  &nbsp;  `...` <br> `}`| *Not Supported*  |  |
-Do-While loop | `do {` <br> &nbsp; `...` <br> `} while (a > 0);`| *Not Supported*  |  |
-Assembly | `assembly {` <br> &nbsp; `...` <br> `}`| *Not Supported*  |  |
-Break |`break;`| *Not Supported*  | |
-Continue |`continue;`| *Not Supported*  | |
-Try Catch | `try ... {}` <br> `catch Error(...)` <br> `{ ... }` | *Not Supported* |  |
-Units, global constants and type ranges | `1 ether`<br>`1 wei`<br>`1 gwei` <br>`1 seconds`<br>`1 minutes`<br>`1 hours`<br>`1 days`<br>`1 weeks`<br>`type(uint).min`<br>`type(uint).max`<br>`type(int8).min`<br>`type(uint8).max`<br>...<br> |  *Not Supported* |  |
-Block and transaction properties| `blockhash(blockNumber)` <br>`block.coinbase` <br>`block.difficulty` <br>`block.gaslimit` <br>`block.number`<br>`block.timestamp`<br>`gasleft()` <br>`msg.data` <br>`msg.gas` <br>`msg.sig` <br>`tx.gasprice` <br>`tx.origin` <br>|*Not Supported* |  |
+Type **Fixed** | `fixed4x4` |  |
+Type **Ufixed** | `ufixed4x4` |  |
+NumberUnit | `1 days` <br> `1 wei` | |
+Parallel Assignment  | `(x, y) = (0, 1);` |  |
+Contract Creation | `Contract c = new Contract(args);`  | |
+Interfaces |`interface HelloWorld { ... }` | |
+Library |`library HelloWorld { ... }` | |
+Inheritance |`contract ERC20 is IERC20 { ... }` | |
+For loop | `for (uint i = 0; i < 3; i++) {` <br>  &nbsp;  `...` <br> `}`   |  |
+While loop | `while (a > 0) {` <br>  &nbsp;  `...` <br> `}` |  |
+Do-While loop | `do {` <br> &nbsp; `...` <br> `} while (a > 0);` |  |
+Assembly | `assembly {` <br> &nbsp; `...` <br> `}` |  |
+Break |`break;` | |
+Continue |`continue;` | |
+Try Catch | `try ... {}` <br> `catch Error(...)` <br> `{ ... }` |  |
+Units, global constants and type ranges | `1 ether`<br>`1 wei`<br>`1 gwei` <br>`1 seconds`<br>`1 minutes`<br>`1 hours`<br>`1 days`<br>`1 weeks`<br>`type(uint).min`<br>`type(uint).max`<br>`type(int8).min`<br>`type(uint8).max`<br>...<br> |  |
+Block and transaction properties| `blockhash(blockNumber)` <br>`block.coinbase` <br>`block.difficulty` <br>`block.gaslimit` <br>`block.number`<br>`block.timestamp`<br>`gasleft()` <br>`msg.data` <br>`msg.gas` <br>`msg.sig` <br>`tx.gasprice` <br>`tx.origin` <br>| |
 
 
 
