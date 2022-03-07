@@ -489,9 +489,6 @@ spec = testSpec "Transpile Contract" $ do
     itReportErrorContractPart "enum State { Created, Locked, Inactive }" 
       [("unsupported contract part `ContractPartEnumDefinition`", 
         newSR (1, 2) (1, 41))]
-    itReportErrorContractPart "struct Bid {bytes32 blindedBid; uint deposit;}" 
-      [("unsupported contract part `ContractPartStructDefinition`", 
-        newSR (1, 1) (1, 47))]
 
     itReportErrorContractPart "using Set for Data;" 
       [("unsupported contract part `ContractPartUsingForDeclaration`", 

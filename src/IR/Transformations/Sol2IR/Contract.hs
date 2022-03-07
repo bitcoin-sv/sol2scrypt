@@ -8,6 +8,7 @@
 module IR.Transformations.Sol2IR.Contract where
 
 import IR.Spec as IR
+import Control.Monad.State
 import IR.Transformations.Base
 import IR.Transformations.Sol2IR.Identifier ()
 import IR.Transformations.Sol2IR.Expression ()
@@ -53,6 +54,20 @@ instance ToIRTransformable (Sol.ContractPart SourceRange) IContractBodyElement' 
   _toIR ctor@Sol.ContractPartConstructorDefinition {} = do
       ctor' <- _toIR ctor
       return $ IR.ConstructorDefinition <$> ctor'
+
+  _toIR (Sol.ContractPartStructDefinition (Sol.Identifier n _)  fields _) = do
+
+    case findMappingFields fields of
+      Nothing  -> do
+        ss <- gets stateStructs
+        fields' :: [IParam'] <- mapM _toIR fields
+        modify $ \s ->
+          s
+            { stateStructs =
+                IR.Struct n (catMaybes fields') : ss
+            }
+        return Nothing
+      (Just a) -> reportError "unsupported struct with mapping field" a >> return Nothing
   _toIR c = reportError ("unsupported contract part `" ++ headWord (show c) ++ "`") (ann c) >> return Nothing
 
 
@@ -72,3 +87,12 @@ findPreimageFunction (x:xs) = case x of
                           IR.FunctionDefinition (IR.Function _ pl _ _ _) -> findPreimageParam pl
                           _ -> False
                     in  if finded then finded else  findPreimageFunction xs
+                    
+-- if a struct contains a mapping fields
+findMappingFields :: [VariableDeclaration SourceRange] -> Maybe SourceRange
+findMappingFields [] = Nothing 
+findMappingFields (x:xs) = case x of
+    (VariableDeclaration TypeNameMapping {} _ _ a ) -> Just a
+    _ -> findMappingFields xs
+
+

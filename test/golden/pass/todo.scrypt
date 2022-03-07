@@ -1,0 +1,26 @@
+struct Todo {
+  bytes text;
+  bool completed;
+}
+
+contract Todos {
+  @state
+  Todo[3] todos;
+
+  public function create(bytes _text, SigHashPreimage txPreimage) {
+    this.todos[0] = {_text, false};
+    this.todos[0] = {_text, false};
+    bool completed = this.todos[0].completed;
+    Todo t1 = this.todos[0];
+    t1.completed = false;
+    this.todos[0].completed = false;
+    require(this.propagateState(txPreimage));
+  }
+
+  function propagateState(SigHashPreimage txPreimage) : bool {
+    require(Tx.checkPreimage(txPreimage));
+    bytes outputScript = this.getStateScript();
+    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    return hash256(output) == SigHash.hashOutputs(txPreimage);
+  }
+}

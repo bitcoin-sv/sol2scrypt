@@ -15,16 +15,6 @@
         "message": "unsupported contract part `ContractPartEnumDefinition`"
     },
     {
-        "src": "test/golden/fail/fail1.sol:35:5:38:6",
-        "type": "Error",
-        "message": "unsupported contract part `ContractPartStructDefinition`"
-    },
-    {
-        "src": "test/golden/fail/fail1.sol:39:5:39:9",
-        "type": "Error",
-        "message": "unsupported type `TypeNameUserDefinedTypeName`"
-    },
-    {
         "src": "test/golden/fail/fail1.sol:39:5:39:11",
         "type": "Error",
         "message": "array length should be explicitly specified"
@@ -33,11 +23,6 @@
         "src": "test/golden/fail/fail1.sol:46:5:52:6",
         "type": "Error",
         "message": "unsupported contract part `ContractPartModifierDefinition`"
-    },
-    {
-        "src": "test/golden/fail/fail1.sol:65:20:65:57",
-        "type": "Error",
-        "message": "unsupported expression : `FunctionCallNameValueList`"
     },
     {
         "src": "test/golden/fail/fail1.sol:75:5:75:23",

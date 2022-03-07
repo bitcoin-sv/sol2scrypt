@@ -11,6 +11,7 @@ import IR.Spec as IR
 import Solidity.Parser
 import Solidity.Spec
 import Text.Parsec hiding (try, (<|>))
+import Data.List
 
 parseIO :: Parseable a => String -> SourceName -> IO a
 parseIO solidityCode file = either (fail . (parseError ++) . show) return $ parse parser file solidityCode
@@ -27,7 +28,8 @@ data TransformState = TransformState
     -- have returned previously in current block
     stateReturnedInBlock :: [Bool],
     -- structs used as key type for nested maps
-    stateMapKeyStructs :: Map.Map [IType] IStruct
+    stateMapKeyStructs :: Map.Map [IType] IStruct,
+    stateStructs :: [IStruct]
   }
   deriving (Show, Eq, Ord)
 
@@ -178,6 +180,12 @@ serializeSourceRange :: SourceRange -> String
 serializeSourceRange (SourceRange start end) = sourceName start ++ ":" ++ showPos start ++ ":" ++ showPos end
   where
     showPos p = show (sourceLine p) ++ ":" ++ show (sourceColumn p)
+
+lookupStruct :: String -> Transformation (Maybe IStruct)
+lookupStruct fn = do
+  ss <- gets stateStructs
+  return $ find (\s -> structName s == fn) ss
+
 
 -----------------  IR to sCrypt  -----------------
 

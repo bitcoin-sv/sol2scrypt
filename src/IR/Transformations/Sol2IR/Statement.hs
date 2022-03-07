@@ -46,6 +46,11 @@ instance ToIRTransformable (Sol.Statement SourceRange) IStatement' where
     addSym $ Symbol <$> (paramName <$> localVar') <*> (paramType <$> localVar') <*> Just False
     case localVar' of 
       Nothing -> reportError "unsupported SimpleStatementVariableDeclarationList" a >> return Nothing
+      Just (IR.Param (UserDefinedType i) _) -> do
+        st' <- lookupStruct i
+        if isJust st' 
+          then return $ DeclareStmt [localVar'] <$>  sequence [e'] 
+          else reportError ("no user defined type `" ++ i ++ "` found") a >> return Nothing
       Just _ -> return $ DeclareStmt [localVar'] <$>  sequence [e']
   _toIR (SimpleStatementVariableDeclarationList _ _ a) = reportError "unsupported SimpleStatementVariableDeclarationList" a >> return Nothing
   _toIR (Return e _) = do
