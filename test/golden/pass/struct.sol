@@ -1,13 +1,36 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
+
+struct ST {
+    string text;
+    bool completed;
+    uint8[3] cl;
+}
+
+
+struct STW {
+    ST[1] st;
+    string text;
+}
+
+
 contract Todos {
     struct Todo {
         string text;
         bool completed;
     }
 
+    struct TodoW {
+        string text;
+        bool completed;
+        STW stw;
+    }
+
     Todo[3] todos;
+    STW stw;
+
+    TodoW tw;
     function create(string memory _text) public returns (Todo memory) {
         // 3 ways to initialize a struct
         // 1. calling it like a function
@@ -45,6 +68,29 @@ contract Todos {
         }
 
         return todos;
+    }
+
+    function return3(string memory _text) public returns (STW memory) {
+
+        if(true) {
+            return stw;
+        }
+        return STW([ST(_text, false, [1,3,3])], _text);
+    }
+
+    function return4(string memory _text) public returns (TodoW memory) {
+
+        if(true) {
+            return tw;
+        }
+        return tw;
+    }
+
+
+    function param(TodoW memory tw) public  {
+
+        TodoW memory a = tw;
+
     }
     
 }

@@ -20,6 +20,8 @@ module IR.Transformer
     module IR.Transformations.IR2Scr.Contract,
     module IR.Transformations.Sol2IR.Program,
     module IR.Transformations.IR2Scr.Program,
+    module IR.Transformations.Sol2IR.Struct,
+    module IR.Transformations.IR2Scr.Struct,
   )
 where
 
@@ -43,6 +45,8 @@ import IR.Transformations.Sol2IR.Type
 import IR.Transformations.Sol2IR.Variable
 import IR.Transformations.Sol2IR.Program
 import IR.Transformations.IR2Scr.Program
+import IR.Transformations.Sol2IR.Struct
+import IR.Transformations.IR2Scr.Struct
 
 
 class Node a where

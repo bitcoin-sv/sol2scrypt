@@ -1,11 +1,34 @@
+struct TodoW {
+  bytes text;
+  bool completed;
+  STW stw;
+}
+
 struct Todo {
   bytes text;
   bool completed;
 }
 
+struct STW {
+  ST[1] st;
+  bytes text;
+}
+
+struct ST {
+  bytes text;
+  bool completed;
+  int[3] cl;
+}
+
 contract Todos {
   @state
   Todo[3] todos;
+
+  @state
+  STW stw;
+
+  @state
+  TodoW tw;
 
   function create(bytes _text) : Todo {
     this.todos[0] = {_text, false};
@@ -39,5 +62,34 @@ contract Todos {
       }
     }
     return returned ? ret : this.todos;
+  }
+
+  function return3(bytes _text) : STW {
+    STW ret = {[{"", false, [0, 0, 0]}], ""};
+    bool returned = false;
+    if (true) {
+      {
+        ret = this.stw;
+        returned = true;
+      }
+    }
+    return returned ? ret : {[{_text, false, [1, 3, 3]}], _text};
+  }
+
+  function return4(bytes _text) : TodoW {
+    TodoW ret = {"", false, {[{"", false, [0, 0, 0]}], ""}};
+    bool returned = false;
+    if (true) {
+      {
+        ret = this.tw;
+        returned = true;
+      }
+    }
+    return returned ? ret : this.tw;
+  }
+
+  function param(TodoW tw) : bool {
+    TodoW a = tw;
+    return true;
   }
 }

@@ -106,12 +106,13 @@ instance Parseable (SourceUnit1 SourceRange) where
     try (SourceUnit1_PragmaDirective <$> parser) <|>
     try (SourceUnit1_ImportDirective <$> parser) <|>
     try (SourceUnit1_ErrorDefinition <$> parser) <|>
+    try (SourceUnit1_StructDefinition <$> parser) <|>
     (SourceUnit1_ContractDefinition <$> parser)
   display (SourceUnit1_ContractDefinition contract_definition) = display contract_definition
   display (SourceUnit1_ErrorDefinition error_definition) = display error_definition
   display (SourceUnit1_ImportDirective import_directive) = display import_directive
   display (SourceUnit1_PragmaDirective pragma_directive) = display pragma_directive
-
+  display (SourceUnit1_StructDefinition s) = display s
 -------------------------------------------------------------------------------
 -- data VersionComparator = Less | More | Equal | LessOrEqual | MoreOrEqual deriving (Show, Eq, Ord)
 
@@ -264,9 +265,23 @@ instance Parseable (ErrorDefinition SourceRange)  where
       start <- getPosition
       i <- keyword "error" *> whitespace *> parser <* whitespace
       pl <- parser <* whitespace <* char ';'
-      end <- getPosition
-      return $ ErrorDefinition i pl (SourceRange start end) 
+      ErrorDefinition i pl . SourceRange start <$> getPosition
   display err = "error " ++ _display (errorName err) ++ _display (parameters err) ++ ";"
+
+
+-------------------------------------------------------------------------------
+-- StructDefinition = 'error' Identifier ParameterList ';'
+
+instance Parseable (StructDefinition SourceRange)  where
+  parser =
+    do
+      start <- getPosition
+      i <- keyword "struct" *> whitespace *> parser <* whitespace <* char '{' <* whitespace
+      vs <- many (parser <* whitespace <* char ';' <* whitespace) <* char '}'
+      StructDefinition i vs . SourceRange start <$> getPosition
+  display (StructDefinition i vs _) = "struct " ++ display i ++ " {\n" ++ indent (intercalate ";\n" (map display vs) ++ ";") ++ "}"
+
+
 
 -------------------------------------------------------------------------------
 -- ContractDefinition = ( 'contract' | 'library' | 'interface' ) Identifier
@@ -732,7 +747,7 @@ instance Parseable (Statement SourceRange) where
               start <- getPosition
               _ <- keyword "throw" <* whitespace <* char ';'
               Throw . SourceRange start <$> getPosition,
-            try (do 
+            try (do
               start <- getPosition
               e <- keyword "emit" *> whitespace *> parser <* whitespace <* char ';'
               EmitStatement e . SourceRange start <$> getPosition),

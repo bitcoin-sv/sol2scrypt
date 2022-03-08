@@ -38,7 +38,7 @@ module Solidity.Spec (
         NumberLiteral_ (..), NumberLiteral (..), NumberUnit (..), HexLiteral (..), StringLiteral (..), BooleanLiteral (..),
         InlineAssemblyBlock (..), AssemblyItem (..), FunctionalAssemblyExpression (..),
         Block (..),
-    ErrorDefinition (..),
+    ErrorDefinition (..), StructDefinition (..),
   IdentifierList (..), Identifier (..), Operator (..),
   IndexedParameterList (..), IndexedParameter (..),
   UntypedParameterList (..), ParameterList (..), Parameter (..),
@@ -87,13 +87,15 @@ data SourceUnit1 a
   | SourceUnit1_ImportDirective (ImportDirective a)
   | SourceUnit1_ContractDefinition (ContractDefinition a)
   | SourceUnit1_ErrorDefinition (ErrorDefinition a)
+  | SourceUnit1_StructDefinition (StructDefinition a)
   deriving (Show, Eq, Ord)
 
 instance Annotated SourceUnit1 a where
   ann (SourceUnit1_PragmaDirective p) = ann p
   ann (SourceUnit1_ImportDirective i) = ann i
   ann (SourceUnit1_ContractDefinition c) = ann c
-
+  ann (SourceUnit1_StructDefinition s) = ann s
+  ann (SourceUnit1_ErrorDefinition e) = ann e
 -------------------------------------------------------------------------------
 -- VersionComparator = '^' | '>' | '<' | '<=' | '>='
 
@@ -158,6 +160,17 @@ data ErrorDefinition a =
     parameters :: ParameterList a,
     annot :: a
   } deriving (Show, Eq, Ord)
+
+instance Annotated ErrorDefinition a where
+  ann (ErrorDefinition _ _ a) = a
+
+-------------------------------------------------------------------------------
+-- StructDefinition = ( 'struct' ) Identifier [VariableDeclaration]
+        
+data StructDefinition a = StructDefinition (Identifier a) [VariableDeclaration a] a deriving (Show, Eq, Ord)
+
+instance Annotated StructDefinition a where
+  ann (StructDefinition _ _ a) = a
 
 -------------------------------------------------------------------------------
 -- ContractDefinition = ( 'contract' | 'library' | 'interface' ) Identifier
