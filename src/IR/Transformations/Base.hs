@@ -182,9 +182,9 @@ serializeSourceRange (SourceRange start end) = sourceName start ++ ":" ++ showPo
     showPos p = show (sourceLine p) ++ ":" ++ show (sourceColumn p)
 
 lookupStruct :: String -> Transformation (Maybe IStruct)
-lookupStruct fn = do
+lookupStruct sn = do
   ss <- gets stateStructs
-  return $ find (\s -> structName s == fn) ss
+  return $ find (\s -> structName s == sn) ss
 
 
 -----------------  IR to sCrypt  -----------------
