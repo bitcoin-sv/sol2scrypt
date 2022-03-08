@@ -1,0 +1,12 @@
+[
+    {
+        "src": "test/golden/fail/struct.sol:9:5:11:6",
+        "type": "Error",
+        "message": "struct `ST` already defined"
+    },
+    {
+        "src": "test/golden/fail/struct.sol:15:5:18:6",
+        "type": "Error",
+        "message": "struct `ST` already defined"
+    }
+]
