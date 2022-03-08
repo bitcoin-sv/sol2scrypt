@@ -215,12 +215,23 @@ toIRFuncBody blk@(Sol.Block _ _) vis wrapperFromParam (FuncRetTransResult _ ort 
                   [Just $ ReturnStmt $ maybe (LiteralExpr $ BoolLiteral True) defaultValueExpr ort]
         _ -> stmts
 
-  let stmts'' = map Just prepends ++ stmts' ++ map Just appends
+  let stmts'' = if vis == Public then map Just prepends ++ stmts' ++ map Just appends
+                else case laststmts of
+                      ss@(Just (IR.ReturnStmt _)) -> map Just prepends ++ init stmts' ++ map Just appends ++ [ss]
+                      _ -> map Just prepends ++ stmts' ++ map Just appends
+                      where 
+                        laststmts = last stmts'
+    
+    
+    
 
-  let stmts''' = case reverse stmts'' of
-        -- ignore the last `require(true)` if the penultimate is already a `require` stmt
-        (Just (RequireStmt (LiteralExpr (BoolLiteral True)))) : (Just (RequireStmt _)) : _ -> init stmts''
-        _ -> stmts''
+  let stmts''' = if vis == Public then
+             case reverse stmts'' of
+              -- ignore the last `require(true)` if the penultimate is already a `require` stmt
+              (Just (RequireStmt (LiteralExpr (BoolLiteral True)))) : (Just (RequireStmt _)) : _ -> init stmts''
+              _ -> stmts''
+            else stmts''
+
 
   let stmts4 =
         if returnedInMiddle
@@ -241,10 +252,7 @@ trueExpr = LiteralExpr $ BoolLiteral True
 
 declareLocalVarStmt :: IParam' -> [IStatement]
 declareLocalVarStmt Nothing = []
-declareLocalVarStmt (Just p@(IR.Param (IR.ElementaryType IR.Bool) _)) = [IR.DeclareStmt [Just p] [LiteralExpr (IR.BoolLiteral False)]]
-declareLocalVarStmt (Just p@(IR.Param (IR.ElementaryType IR.Int) _)) = [IR.DeclareStmt [Just p] [LiteralExpr (IR.IntLiteral False 0)]]
-declareLocalVarStmt (Just p@(IR.Param (IR.ElementaryType IR.Bytes) _)) = [IR.DeclareStmt [Just p] [LiteralExpr (IR.BytesLiteral [])]]
-declareLocalVarStmt (Just (IR.Param t _)) = error $ "unimpmented init statement for type `" ++ show t ++ "`"
+declareLocalVarStmt (Just p@(IR.Param t _)) = [IR.DeclareStmt [Just p] [defaultValueExpr t]]
 
 -- transformations for functions that need access preimage
 transForPreimageFunc :: ([IParam], TFStmtWrapper)
@@ -469,6 +477,8 @@ defaultValueExpr :: IType -> IExpression
 defaultValueExpr (ElementaryType IR.Int) = LiteralExpr $ IntLiteral False 0
 defaultValueExpr (ElementaryType IR.Bool) = LiteralExpr $ BoolLiteral False
 defaultValueExpr (ElementaryType IR.Bytes) = LiteralExpr $ BytesLiteral []
+defaultValueExpr (ElementaryType IR.Address) = FunctionCallExpr (IdentifierExpr (IR.ReservedId "Ripemd160")) [LiteralExpr $ BytesLiteral []]
+defaultValueExpr (ElementaryType IR.String) =  LiteralExpr $ IR.StringLiteral ""
 defaultValueExpr tp = error $ "unsupported default value for type `" ++ show tp ++ "`"
 
 -- build `propagateState` function, in this way we can call `require(this.propagateState(txPreimage));` in other public functions
