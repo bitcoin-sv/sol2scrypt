@@ -7,20 +7,37 @@ contract Todos {
   @state
   Todo[3] todos;
 
-  public function create(bytes _text, SigHashPreimage txPreimage) {
+  function create(bytes _text) : Todo {
     this.todos[0] = {_text, false};
     this.todos[0] = {_text, false};
     bool completed = this.todos[0].completed;
     Todo t1 = this.todos[0];
     t1.completed = false;
     this.todos[0].completed = false;
-    require(this.propagateState(txPreimage));
+    return {"", false};
   }
 
-  function propagateState(SigHashPreimage txPreimage) : bool {
-    require(Tx.checkPreimage(txPreimage));
-    bytes outputScript = this.getStateScript();
-    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
-    return hash256(output) == SigHash.hashOutputs(txPreimage);
+  function return1(bytes _text) : Todo {
+    Todo ret = {"", false};
+    bool returned = false;
+    if (true) {
+      {
+        ret = {_text, false};
+        returned = true;
+      }
+    }
+    return returned ? ret : this.todos[0];
+  }
+
+  function return2(bytes _text) : Todo[3] {
+    Todo[3] ret = [{"", false}, {"", false}, {"", false}];
+    bool returned = false;
+    if (true) {
+      {
+        ret = this.todos;
+        returned = true;
+      }
+    }
+    return returned ? ret : this.todos;
   }
 }

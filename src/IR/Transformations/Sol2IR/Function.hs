@@ -134,7 +134,7 @@ toIRFuncParams (ParameterList pl) tags (FuncRetTransResult rt ort rn) vis funcBl
               then let (ps, blkT_) = transForFuncWithMsgValue in return (map Just ps ++ extraParams1, mergeTFStmtWrapper blkT1 blkT_)
               else do
                 reportError "using `msg.value` in non-external function is not supported yet" (snd msgValueExist)
-                return (extraParams1, blkT1) 
+                return (extraParams1, blkT1)
           else return (extraParams1, blkT1)
 
   let needPreimageParam
@@ -172,6 +172,8 @@ toIRFuncBody blk@(Sol.Block _ _) vis wrapperFromParam (FuncRetTransResult _ ort 
           && case last stmts of
             Just (ReturnStmt _) -> True
             _ -> False
+
+  returnExpr <- defaultValueExpr' ort
 
   let stmts' = case (vis == Public, hasRetStmt) of
         (True, True) -> case last stmts of
@@ -212,7 +214,7 @@ toIRFuncBody blk@(Sol.Block _ _) vis wrapperFromParam (FuncRetTransResult _ ort 
                 then -- append `return ret;`
                   [Just $ ReturnStmt $ IdentifierExpr $ IR.ReservedId varRetVal]
                 else -- append `return <defaultValue>;` / `return true;`
-                  [Just $ ReturnStmt $ maybe (LiteralExpr $ BoolLiteral True) defaultValueExpr ort]
+                  [Just $ ReturnStmt (maybe (LiteralExpr $ BoolLiteral True) (const returnExpr) ort)]
         _ -> stmts
 
   let stmts'' = if vis == Public then map Just prepends ++ stmts' ++ map Just appends
@@ -230,9 +232,10 @@ toIRFuncBody blk@(Sol.Block _ _) vis wrapperFromParam (FuncRetTransResult _ ort 
             else stmts''
 
 
+  preStmts <- prependsForReturnedInit ort
   let stmts4 =
         if returnedInMiddle
-          then map Just (prependsForReturnedInit ort) ++ stmts'''
+          then map Just preStmts ++ stmts'''
           else stmts'''
 
   return $ Just $ IR.Block $ catMaybes stmts4
@@ -438,7 +441,7 @@ transForMappingAccess mCounter =
                             rExpr = defaultValueExpr t
                           }
                         }
-                        
+
                     },
                 rExpr = mapCanGetExpr mapExpr keyExpr postfix
               }
@@ -448,26 +451,21 @@ transForMappingAccess mCounter =
       IR.RequireStmt $ mapSetExpr mapExpr keyExpr postfix
 
 -- prepends some init statements for functions that have returned in middle.
-prependsForReturnedInit :: IType' -> [IStatement]
-prependsForReturnedInit Nothing = [ -- `<T> ret = <defaultValueExprueofT>;`
+prependsForReturnedInit :: IType' -> Transformation [IStatement]
+prependsForReturnedInit t = do
+  e <- defaultValueExpr' t
+  let t' = case t of
+          Nothing -> ElementaryType Bool
+          Just a -> a
+  return [ -- `<T> ret = <defaultValueExprueofT>;`
     IR.DeclareStmt
-      [Just $ IR.Param (ElementaryType Bool) (IR.ReservedId varRetVal)]
-      [defaultValueExpr (ElementaryType Bool)],
+      [Just $ IR.Param t' (IR.ReservedId varRetVal)]
+      [e],
     -- `bool returned = false;`
     IR.DeclareStmt
       [Just $ IR.Param (ElementaryType IR.Bool) (IR.ReservedId varReturned)]
       [LiteralExpr $ BoolLiteral False]
-  ]
-prependsForReturnedInit (Just t) =
-  [ -- `<T> ret = <defaultValueExprueofT>;`
-    IR.DeclareStmt
-      [Just $ IR.Param t (IR.ReservedId varRetVal)]
-      [defaultValueExpr t],
-    -- `bool returned = false;`
-    IR.DeclareStmt
-      [Just $ IR.Param (ElementaryType IR.Bool) (IR.ReservedId varReturned)]
-      [LiteralExpr $ BoolLiteral False]
-  ]
+    ]
 
 -- get default value expression for type `tp`
 defaultValueExpr :: IType -> IExpression
@@ -477,6 +475,25 @@ defaultValueExpr (ElementaryType IR.Bytes) = LiteralExpr $ BytesLiteral []
 defaultValueExpr (ElementaryType IR.Address) = FunctionCallExpr (IdentifierExpr (IR.ReservedId "Ripemd160")) [LiteralExpr $ BytesLiteral []]
 defaultValueExpr (ElementaryType IR.String) =  LiteralExpr $ IR.StringLiteral ""
 defaultValueExpr tp = error $ "unsupported default value for type `" ++ show tp ++ "`"
+
+
+defaultValueExpr' :: IType'  -> Transformation IExpression
+defaultValueExpr' Nothing = return $ LiteralExpr (BoolLiteral False)
+defaultValueExpr' (Just (ElementaryType IR.Int)) = return $  LiteralExpr $ IntLiteral False 0
+defaultValueExpr' (Just (ElementaryType IR.Bool)) = return $  LiteralExpr $ BoolLiteral False
+defaultValueExpr' (Just (ElementaryType IR.Bytes)) = return $  LiteralExpr $ BytesLiteral []
+defaultValueExpr' (Just (ElementaryType IR.String)) = return $  LiteralExpr $ IR.StringLiteral ""
+defaultValueExpr' (Just (UserDefinedType n)) = do
+  st' <- lookupStruct n
+  case st' of
+    Nothing -> error $ "unsupported default value for type `" ++ n ++ "`"
+    Just st -> do
+      fields <- mapM (\(Param t _) -> defaultValueExpr' (Just t)) (structFields st)
+      return $ StructLiteralExpr fields
+defaultValueExpr' (Just (Array arr n)) = do
+  e <- defaultValueExpr' (Just arr)
+  return $ ArrayLiteralExpr $  replicate n e
+defaultValueExpr' tp = error $ "unsupported default value for type `" ++ show tp ++ "`"
 
 -- build `propagateState` function, in this way we can call `require(this.propagateState(txPreimage));` in other public functions
 buildPropagateState :: IR.IContractBodyElement
