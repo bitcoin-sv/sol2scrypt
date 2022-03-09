@@ -222,9 +222,6 @@ toIRFuncBody blk@(Sol.Block _ _) vis wrapperFromParam (FuncRetTransResult _ ort 
                       where 
                         laststmts = last stmts'
     
-    
-    
-
   let stmts''' = if vis == Public then
              case reverse stmts'' of
               -- ignore the last `require(true)` if the penultimate is already a `require` stmt

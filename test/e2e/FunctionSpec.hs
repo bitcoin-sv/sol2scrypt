@@ -554,7 +554,7 @@ function test6(int x) : bool {
       "\nprivate function privateFunc() : bool {\n  return true;\n}"
 
     itTranspile
-      "private function with returns"
+      "private function without returns"
       [r|function _approve(
     address owner,
     address to,

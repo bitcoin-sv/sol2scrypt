@@ -115,6 +115,7 @@ instance ToIRTransformable (Sol.Expression SourceRange) IExpression' where
               then case pl of
                 Just (ExpressionList [p]) -> _toIR p
                 _ -> reportError ("unsupported function call : `" ++ fn ++ "`") fa >> return Nothing
+              -- transpile sol `address(0)` to sCrypt `Ripemd160(b'')`
               else if isAddress0 fe pl then return $ Just $ FunctionCallExpr (IdentifierExpr (IR.ReservedId "Ripemd160")) [LiteralExpr $ BytesLiteral []] 
               else do
                 i' <- _toIR i
