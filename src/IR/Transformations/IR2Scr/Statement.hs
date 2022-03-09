@@ -15,6 +15,9 @@ import Utils
 instance ToScryptTransformable IStatement' (Maybe (Scr.Statement Ann)) where
   _toScrypt = (<$>) _toScrypt
 
+instance ToScryptTransformable [IStatement'] [Maybe (Scr.Statement Ann)] where
+  _toScrypt = map _toScrypt
+
 instance ToScryptTransformable IStatement (Scr.Statement Ann) where
   _toScrypt (IR.ExprStmt e) = Scr.ExprStmt (_toScrypt e) nil
   -- Only the following assignment are allowed
@@ -54,4 +57,5 @@ instance ToScryptTransformable IStatement (Scr.Statement Ann) where
         elsestmt' = _toScrypt elsestmt
     in Scr.If e' ifstmt' elsestmt' nil
   _toScrypt (IR.ExitStmt e) = Scr.Exit (_toScrypt e) nil
+  _toScrypt (IR.LoopStmt c var body) = Scr.Loop (_toScrypt c) (_toScrypt var) (_toScrypt body) nil
   _toScrypt e = error $ "_toScrypt for `" ++ headWord (show e) ++ "` not implemented in scrypt"

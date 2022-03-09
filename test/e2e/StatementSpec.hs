@@ -29,6 +29,9 @@ spec = testSpec "Transpile Statement" $ do
         code `shouldBe` ""
         logs `shouldBe` map (\(e, colRange) -> Log ErrorLevel e $ firstLineSR colRange) errs
 
+  let itMultiStmts title sol scrypt = it ("should transpile Solidity `" ++ title ++ "` correctly") $ do
+        tr :: TranspileResult (Sol.Statement SourceRange) [IStatement'] [Maybe (Scr.Statement Ann)] <- transpile sol ""
+        (scryptCode tr, transpileLogs tr) `shouldBe` (scrypt, [])
 
   describe "#SimpleStatementExpression" $ do
     describe "#NumberLiteral" $ do
@@ -372,5 +375,197 @@ else
     itReportError "a[i] = 3;" [("unsupported assign Statement, subscript cannot be a variable", (1, 10))]
     itReportError "assembly { let size := extcodesize(_addr) }" [("unsupported statement `InlineAssemblyStatement`", (1, 44))]
 
+  describe "#ForStatement" $ do
 
+    itMultiStmts "simple ForStatement"
+      [r|for(uint i=0; i<2; i++){
+        if (i>1) {
+          a = b;
+        }
+      }
+|]
+      [r|
+bool loopBreakFlag0 = false;
+int i = 0;
+loop (__LoopCount__0) {
+  if (!loopBreakFlag0 && i < 2) {
+    if (i > 1) {
+      a = b;
+    }
+    i++;
+  }
+}|]
 
+    itMultiStmts "simple ForStatement with break"
+      [r|for(uint i=0; i<2; i++){
+        if (i>1) {
+          break;
+        }
+      }
+|]
+      [r|
+bool loopBreakFlag0 = false;
+int i = 0;
+loop (__LoopCount__0) {
+  if (!loopBreakFlag0 && i < 2) {
+    if (i > 1) {
+      loopBreakFlag0 = true;
+    }
+    i++;
+  }
+}|]
+
+    itMultiStmts "embeded ForStatement"
+      [r|for(uint i=0; i<2; i++){
+        if (i>1) {
+          for(uint j=0; j<2; j++){
+            if (i > j) break;
+          }
+          break;
+        }
+      }
+|]
+      [r|
+bool loopBreakFlag0 = false;
+int i = 0;
+loop (__LoopCount__0) {
+  if (!loopBreakFlag0 && i < 2) {
+    if (i > 1) {
+      bool loopBreakFlag1 = false;
+      int j = 0;
+      loop (__LoopCount__1) {
+        if (!loopBreakFlag1 && j < 2) {
+          if (i > j)
+            loopBreakFlag1 = true;
+          j++;
+        }
+      }
+      loopBreakFlag0 = true;
+    }
+    i++;
+  }
+}|]
+
+  describe "#WhileStatement" $ do
+
+    itMultiStmts "simple WhileStatement"
+      [r|while(i<2){
+        if (i>1) {
+          a = b;
+        }
+      }
+|]
+      [r|
+bool loopBreakFlag0 = false;
+loop (__LoopCount__0) {
+  if (!loopBreakFlag0 && i < 2) {
+    if (i > 1) {
+      a = b;
+    }
+  }
+}|]
+
+    itMultiStmts "simple WhileStatement with break"
+      [r|while(i<2){
+        if (i>1) {
+          a = b;
+          break;
+        }
+      }
+|]
+      [r|
+bool loopBreakFlag0 = false;
+loop (__LoopCount__0) {
+  if (!loopBreakFlag0 && i < 2) {
+    if (i > 1) {
+      a = b;
+      loopBreakFlag0 = true;
+    }
+  }
+}|]
+
+  describe "#DoWhileStatement" $ do
+
+    itMultiStmts "simple DoWhileStatement"
+      [r|do {
+        if (i>1) {
+          a = b;
+        }
+      } while(i<2);
+|]
+      [r|
+{
+  if (i > 1) {
+    a = b;
+  }
+}
+bool loopBreakFlag0 = false;
+loop (__LoopCount__0) {
+  if (!loopBreakFlag0 && i < 2) {
+    if (i > 1) {
+      a = b;
+    }
+  }
+}|]
+
+    itMultiStmts "simple DoWhileStatement with break"
+      [r|do {
+        if (i>1) {
+          a = b;
+          break;
+        }
+      } while(i<2);
+|]
+      [r|
+{
+  if (i > 1) {
+    a = b;
+  }
+}
+bool loopBreakFlag0 = false;
+loop (__LoopCount__0) {
+  if (!loopBreakFlag0 && i < 2) {
+    if (i > 1) {
+      a = b;
+      loopBreakFlag0 = true;
+    }
+  }
+}|]
+
+    itMultiStmts "embeded DoWhileStatement"
+      [r|for(uint i=0; i<10; i++){
+  do {
+    uint t = 2;
+    if (i>1) {
+      a = b;
+      break;
+    }
+  } while(i<2);
+  c = d + i;
+}
+|]
+      [r|
+bool loopBreakFlag0 = false;
+int i = 0;
+loop (__LoopCount__0) {
+  if (!loopBreakFlag0 && i < 10) {
+    {
+      int t = 2;
+      if (i > 1) {
+        a = b;
+      }
+    }
+    bool loopBreakFlag1 = false;
+    loop (__LoopCount__1) {
+      if (!loopBreakFlag1 && i < 2) {
+        int t = 2;
+        if (i > 1) {
+          a = b;
+          loopBreakFlag1 = true;
+        }
+      }
+    }
+    c = d + i;
+    i++;
+  }
+}|]

@@ -2,6 +2,7 @@ module IR.Specs.Statement where
 
 import IR.Specs.Expression
 import IR.Specs.Variable
+import IR.Specs.Lexicals.Identifier
 
 data IStatement 
   = IfStmt {cond :: IExpression, trueBranch :: IStatement, falseBranch :: Maybe IStatement}
@@ -12,6 +13,7 @@ data IStatement
   | ReturnStmt {retExpr :: IExpression}
   | BlockStmt IBlock
   | ExitStmt IExpression
+  | LoopStmt {loopCount :: IExpression, loopVar :: Maybe IIdentifier, loopBody :: IStatement}
   deriving (Show, Eq, Ord)
 
 newtype IBlock = Block [IStatement] deriving (Show, Eq, Ord)

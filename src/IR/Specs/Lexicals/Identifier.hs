@@ -66,7 +66,9 @@ reservedNames =
     varSig,
     varPubKey,
     varReturned,
-    varRetVal
+    varRetVal,
+    varLoopBreakFlag,
+    varLoopCount
   ]
 
 libTx :: String
@@ -113,3 +115,9 @@ varReturned = "returned"
 
 varRetVal :: String
 varRetVal = "ret"
+
+varLoopBreakFlag :: String
+varLoopBreakFlag = "loopBreakFlag"
+
+varLoopCount :: String
+varLoopCount = "__LoopCount__"

@@ -13,15 +13,5 @@
         "src": "test/golden/fail/vote.sol:38:9:46:10",
         "type": "Error",
         "message": "unsupported statement `ForStatement`"
-    },
-    {
-        "src": "test/golden/fail/vote.sol:90:9:95:10",
-        "type": "Error",
-        "message": "unsupported statement `WhileStatement`"
-    },
-    {
-        "src": "test/golden/fail/vote.sol:137:9:142:10",
-        "type": "Error",
-        "message": "unsupported statement `ForStatement`"
     }
 ]

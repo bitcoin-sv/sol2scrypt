@@ -13,6 +13,11 @@ import Scrypt.Spec as Scr
 instance Generable (Maybe (Scr.Statement a)) where
   genCode = maybe (return "") genCode
 
+instance Generable [Maybe (Scr.Statement a)] where
+  genCode ss = do
+    ss' <- mapM genCode ss
+    return $ intercalate "" ss'
+
 instance Generable (Scr.Statement a) where
   genCode (ExprStmt expr _) = do
     expr' <- genCode expr
@@ -61,6 +66,19 @@ instance Generable (Scr.Statement a) where
   genCode (Exit e _) = do
     e' <- genCode e
     withIndent $ "exit(" ++ e' ++ ");"
+  genCode (Loop c var body _) = do
+    c' <- genCode c
+    var' <- case var of
+              Just v -> do
+                v' <- genCode v
+                return $ " : " ++ v'
+              _ -> return ""
+    loopStartLine <- withIndent $ "loop (" ++ c' ++ ")" ++ var' ++ " {"
+    incIndent
+    body' <- genCode body
+    decIndent
+    loopEndLine <- withIndent "}"
+    return $ loopStartLine ++ body' ++ loopEndLine
   genCode _ = error "unimplemented show scrypt expr"
 
 genBranch :: Bool -> Maybe (Statement a) -> CodeGenerator String

@@ -90,14 +90,9 @@
         "message": "unsupported SimpleStatementVariableDeclarationList"
     },
     {
-        "src": "test/golden/fail/fail1.sol:98:9:100:10",
+        "src": "test/golden/fail/fail1.sol:105:17:105:26",
         "type": "Error",
-        "message": "unsupported statement `WhileStatement`"
-    },
-    {
-        "src": "test/golden/fail/fail1.sol:102:9:111:10",
-        "type": "Error",
-        "message": "unsupported statement `ForStatement`"
+        "message": "unsupported statement `Continue`"
     },
     {
         "src": "test/golden/fail/fail1.sol:118:24:118:26",
