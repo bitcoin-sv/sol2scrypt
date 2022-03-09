@@ -31,6 +31,8 @@ contract Todos {
     STW stw;
 
     TodoW tw;
+
+    //test declare
     function create(string memory _text) public returns (Todo memory) {
         // 3 ways to initialize a struct
         // 1. calling it like a function
@@ -53,15 +55,7 @@ contract Todos {
     }
 
 
-    function return1(string memory _text) public returns (Todo memory) {
-
-        if(true) {
-            return Todo(_text, false);
-        }
-        return todos[0];
-    }
-
-    function return2(string memory _text) public returns (Todo[3] memory) {
+    function testReturnStructArray(string memory _text) public pure returns (Todo[3] memory) {
 
         if(true) {
             return todos;
@@ -70,15 +64,8 @@ contract Todos {
         return todos;
     }
 
-    function return3(string memory _text) public returns (STW memory) {
 
-        if(true) {
-            return stw;
-        }
-        return STW([ST(_text, false, [1,3,3])], _text);
-    }
-
-    function return4(string memory _text) public returns (TodoW memory) {
+    function testReturnNestStruct(string memory _text) public view returns (TodoW memory) {
 
         if(true) {
             return tw;
@@ -87,7 +74,7 @@ contract Todos {
     }
 
 
-    function param(TodoW memory tw) public  {
+    function testStructAsParam(TodoW memory tw) public pure {
 
         TodoW memory a = tw;
 

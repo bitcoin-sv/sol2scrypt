@@ -1,12 +1,7 @@
-struct TodoW {
+struct ST {
   bytes text;
   bool completed;
-  STW stw;
-}
-
-struct Todo {
-  bytes text;
-  bool completed;
+  int[3] cl;
 }
 
 struct STW {
@@ -14,10 +9,15 @@ struct STW {
   bytes text;
 }
 
-struct ST {
+struct Todo {
   bytes text;
   bool completed;
-  int[3] cl;
+}
+
+struct TodoW {
+  bytes text;
+  bool completed;
+  STW stw;
 }
 
 contract Todos {
@@ -40,19 +40,7 @@ contract Todos {
     return {"", false};
   }
 
-  function return1(bytes _text) : Todo {
-    Todo ret = {"", false};
-    bool returned = false;
-    if (true) {
-      {
-        ret = {_text, false};
-        returned = true;
-      }
-    }
-    return returned ? ret : this.todos[0];
-  }
-
-  function return2(bytes _text) : Todo[3] {
+  function testReturnStructArray(bytes _text) : Todo[3] {
     Todo[3] ret = [{"", false}, {"", false}, {"", false}];
     bool returned = false;
     if (true) {
@@ -64,19 +52,7 @@ contract Todos {
     return returned ? ret : this.todos;
   }
 
-  function return3(bytes _text) : STW {
-    STW ret = {[{"", false, [0, 0, 0]}], ""};
-    bool returned = false;
-    if (true) {
-      {
-        ret = this.stw;
-        returned = true;
-      }
-    }
-    return returned ? ret : {[{_text, false, [1, 3, 3]}], _text};
-  }
-
-  function return4(bytes _text) : TodoW {
+  function testReturnNestStruct(bytes _text) : TodoW {
     TodoW ret = {"", false, {[{"", false, [0, 0, 0]}], ""}};
     bool returned = false;
     if (true) {
@@ -88,7 +64,7 @@ contract Todos {
     return returned ? ret : this.tw;
   }
 
-  function param(TodoW tw) : bool {
+  function testStructAsParam(TodoW tw) : bool {
     TodoW a = tw;
     return true;
   }

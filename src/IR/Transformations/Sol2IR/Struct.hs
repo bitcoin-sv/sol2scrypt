@@ -31,8 +31,7 @@ instance ToIRTransformable (StructDefinition SourceRange) IStruct' where
             fields' :: [IParam'] <- mapM _toIR fields
             modify $ \s ->
               s
-                { stateStructs =
-                    IR.Struct n (catMaybes fields') : ss
+                { stateStructs = ss ++ [IR.Struct n (catMaybes fields')]
                 }
             return Nothing
           (Just fa) -> reportError "unsupported struct with mapping field" fa >> return Nothing
