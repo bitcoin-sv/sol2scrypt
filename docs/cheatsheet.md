@@ -1,13 +1,7 @@
 
 # All supported features
-<table border="1" style="width: 100%">
+<table border="1" >
 
-<colgroup>
-    <col span="1" style="width: 10%;">
-    <col span="1" style="width: 40%;">
-    <col span="1" style="width: 40%;">
-    <col span="1" style="width: 10%; word-break:break-all;">
-</colgroup>
 <thead>
 
 <tr>
@@ -323,6 +317,19 @@ HashedMap<MapKeyST0, int> nestedMap</code></pre></td>
     <td><pre><code>revert Unauthorized();</code></pre></td>
     <td><pre><code>require(false);</code></pre></td>
     <td></td>
+</tr>
+
+<tr>
+    <td ><b>Struct</b></td>
+    <td><pre><code>struct Todo {
+    string text;
+    bool completed; 
+}</code></pre></td>
+    <td><pre><code>struct Todo {
+    bytes text;
+    bool completed; 
+}</code></pre></td>
+    <td>Structures with the same name cannot be supported</td>
 </tr>
 
 <tr>
