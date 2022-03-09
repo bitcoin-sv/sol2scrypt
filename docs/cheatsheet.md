@@ -1,3 +1,11 @@
+<style>
+
+code {
+  display: block;
+  white-space: pre-wrap   
+}
+
+</style>
 # All supported features
 <table border="1" style="width: 100%">
 
@@ -371,8 +379,23 @@
 
 <tr>
     <td ><b>Block and transaction properties</b></td>
-    <td><code>blockhash(blockNumber) <br>block.coinbase <br>block.difficulty<br>block.gaslimit <br>block.number<br>block.timestamp<br>gasleft() <br>msg.data <br>msg.gas <br>msg.sig <br>tx.gasprice <br>tx.origin <br></code></td>
+    <td><code>
+blockhash(blockNumber) 
+block.coinbase 
+block.difficulty
+block.gaslimit
+block.number
+block.timestamp
+gasleft()
+msg.data
+msg.gas
+msg.sig
+tx.gasprice
+tx.origin
+</code></td>
 </tr>
+
+
 
 </tbody>
 </table>
