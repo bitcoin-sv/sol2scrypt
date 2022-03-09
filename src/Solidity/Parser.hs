@@ -270,7 +270,7 @@ instance Parseable (ErrorDefinition SourceRange)  where
 
 
 -------------------------------------------------------------------------------
--- StructDefinition = 'error' Identifier ParameterList ';'
+-- StructDefinition = 'struct' Identifier ParameterList ';'
 
 instance Parseable (StructDefinition SourceRange)  where
   parser =
@@ -328,11 +328,6 @@ instance Parseable (ContractPart SourceRange) where
               ContractPartUsingForDeclaration i tn . SourceRange start <$> getPosition,
             do
               start <- getPosition
-              i <- keyword "struct" *> whitespace *> parser <* whitespace <* char '{' <* whitespace
-              vs <- many (parser <* whitespace <* char ';' <* whitespace) <* char '}'
-              ContractPartStructDefinition i vs . SourceRange start <$> getPosition,
-            do
-              start <- getPosition
               i <- keyword "modifier" *> whitespace *> parser <* whitespace
               pl <- (Just <$> parser <|> return Nothing) <* whitespace
               b <- parser
@@ -366,18 +361,19 @@ instance Parseable (ContractPart SourceRange) where
                  )
           ]
       )
-      <|> ( do
+      <|> try ( do
               start <- getPosition
               d <- parser
               ContractPartStateVariableDeclaration d . SourceRange start <$> getPosition
           )
-
+      <|> try ( do
+              ContractPartStructDefinition <$> parser
+          )
   display (ContractPartUsingForDeclaration v t _) =
     "using " ++ display v ++ " for " ++ maybe "*" display t ++ ";"
   display (ContractPartEnumDefinition i vs _) =
     "enum " ++ display i ++ " {" ++ intercalate ", " (map display vs) ++ "}"
-  display (ContractPartStructDefinition i vs _) =
-    "struct " ++ display i ++ " {\n" ++ indent (intercalate ";\n" (map display vs) ++ ";") ++ "}"
+  display (ContractPartStructDefinition st) = display st
   display (ContractPartModifierDefinition i pl b _) =
     "modifier " ++ display i ++ maybe "" _display pl ++ _display b
   display (ContractPartFunctionDefinition mi pl ts mpl' mb _) =

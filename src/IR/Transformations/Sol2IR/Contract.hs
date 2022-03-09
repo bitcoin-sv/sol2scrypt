@@ -55,8 +55,8 @@ instance ToIRTransformable (Sol.ContractPart SourceRange) IContractBodyElement' 
   _toIR ctor@Sol.ContractPartConstructorDefinition {} = do
       ctor' <- _toIR ctor
       return $ IR.ConstructorDefinition <$> ctor'
-  _toIR (Sol.ContractPartStructDefinition sn  fields a) = do
-    _ :: IStruct'  <- _toIR $ Sol.StructDefinition sn fields a
+  _toIR (Sol.ContractPartStructDefinition st) = do
+    _ :: IStruct'  <- _toIR st
     return Nothing
   _toIR c = reportError ("unsupported contract part `" ++ headWord (show c) ++ "`") (ann c) >> return Nothing
 

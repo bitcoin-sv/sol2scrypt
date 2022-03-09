@@ -205,7 +205,7 @@ instance Annotated ContractDefinition a where
 
 data ContractPart a
   = ContractPartUsingForDeclaration (Identifier a) (Maybe (TypeName a)) a
-  | ContractPartStructDefinition (Identifier a) [VariableDeclaration a] a
+  | ContractPartStructDefinition (StructDefinition a)
   | ContractPartModifierDefinition (Identifier a) (Maybe (ParameterList a)) (Block a) a
   | ContractPartConstructorDefinition (ParameterList a) [FunctionDefinitionTag a] (Maybe (Block a)) a
   | ContractPartFunctionDefinition (Maybe (Identifier a)) (ParameterList a) [FunctionDefinitionTag a] (Maybe (ParameterList a)) (Maybe (Block a)) a
@@ -216,7 +216,7 @@ data ContractPart a
 
 instance Annotated ContractPart a where
   ann (ContractPartUsingForDeclaration _ _ a) = a
-  ann (ContractPartStructDefinition _ _ a) = a
+  ann (ContractPartStructDefinition st) = ann st
   ann (ContractPartModifierDefinition _ _ _ a) = a
   ann (ContractPartConstructorDefinition _ _ _ a) = a
   ann (ContractPartFunctionDefinition _ _ _ _ _ a) = a
