@@ -4,6 +4,7 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 {-# HLINT ignore "Use lambda-case" #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module IR.Transformations.Sol2IR.Function where
 
@@ -20,6 +21,7 @@ import IR.Transformations.Sol2IR.Type ()
 import IR.Transformations.Sol2IR.Variable ()
 import Solidity.Spec as Sol
 import Utils
+import Data.Foldable
 
 data FuncRetTransResult = FuncRetTransResult
   { targetType :: IType',
@@ -37,7 +39,8 @@ instance ToIRTransformable (ContractPart SourceRange) IFunction' where
     body <- toIRFuncBody block vis blkTfromParam retTransResult
 
     mCounter <- gets stateInFuncMappingCounter
-    let paramsForMap = fst $ transForMappingAccess mCounter
+    inserted <- transForMappingAccess mCounter
+    let paramsForMap = fst inserted
     let ps' = case ps of
           Just (ParamList pps) -> Just (ParamList $ pps ++ paramsForMap)
           _ -> Just $ ParamList paramsForMap
@@ -105,11 +108,12 @@ toIRFuncParams (ParameterList pl) tags (FuncRetTransResult rt ort rn) vis funcBl
         where
           rn' = Just $ if isJust rn then mirror rn else IR.Identifier "retVal"
 
+  defaultReturnValue <- defaultValueExpr ort
   let blkT0 = TFStmtWrapper prepends []
         where
           prepends = case rn of
             -- add initialize statement for named return param
-            Just _ -> declareLocalVarStmt $ IR.Param <$> ort <*> rn
+            Just _ -> declareLocalVarStmt (IR.Param <$> ort <*> rn) defaultReturnValue
             _ -> []
 
   -- for function that uses `msg.sender`
@@ -165,7 +169,8 @@ toIRFuncBody blk@(Sol.Block _ _) vis wrapperFromParam (FuncRetTransResult _ ort 
         _ -> False
 
   mCounter <- gets stateInFuncMappingCounter
-  let (TFStmtWrapper prepends appends) = wrapTFStmtWrapper wrapperFromParam $ snd $ transForMappingAccess mCounter
+  inserted <- transForMappingAccess mCounter
+  let (TFStmtWrapper prepends appends) = wrapTFStmtWrapper wrapperFromParam $ snd inserted
 
   let hasRetStmt =
         not (null stmts)
@@ -173,7 +178,7 @@ toIRFuncBody blk@(Sol.Block _ _) vis wrapperFromParam (FuncRetTransResult _ ort 
             Just (ReturnStmt _) -> True
             _ -> False
 
-  returnExpr <- defaultValueExpr' ort
+  returnExpr <- defaultValueExpr ort
 
   let stmts' = case (vis == Public, hasRetStmt) of
         (True, True) -> case last stmts of
@@ -250,9 +255,9 @@ requireEqualStmt e i = RequireStmt $ BinaryExpr IR.Equal e $ IdentifierExpr i
 trueExpr :: IExpression
 trueExpr = LiteralExpr $ BoolLiteral True
 
-declareLocalVarStmt :: IParam' -> [IStatement]
-declareLocalVarStmt Nothing = []
-declareLocalVarStmt (Just p@(IR.Param t _)) = [IR.DeclareStmt [Just p] [defaultValueExpr t]]
+declareLocalVarStmt :: IParam' -> IExpression -> [IStatement]
+declareLocalVarStmt Nothing _ = []
+declareLocalVarStmt (Just p) e = [IR.DeclareStmt [Just p] [e]]
 
 -- transformations for functions that need access preimage
 transForPreimageFunc :: ([IParam], TFStmtWrapper)
@@ -351,109 +356,118 @@ transForConstructorWithMsgValue =
       [] -- appends
   )
 
-transForMappingAccess :: MappingExprCounter -> ([IR.IParam], TFStmtWrapper)
-transForMappingAccess mCounter =
-  ( -- injected params
-    concatMap
-      ( \(MECEntry t me ke _ _) ->
+
+ -- -- <mapExpr>.canGet(<keyExpr>, <valExpr>, <idxExpr>)
+mapCanGetExpr :: IExpression -> IExpression -> String -> IExpression
+mapCanGetExpr mapExpr keyExpr postfix =
+  let e = Just $ BinaryExpr Index mapExpr keyExpr
+  in FunctionCallExpr
+        { funcExpr =
+            MemberAccessExpr
+              { instanceExpr = mapExpr,
+                member = IR.Identifier "canGet"
+              },
+          funcParamExprs =
+            [ keyExpr,
+              fromJust $ valueExprOfMapping e postfix,
+              fromJust $ indexExprOfMapping e postfix
+            ]
+        }
+
+-- <mapExpr>.set(<keyExpr>, <valExpr>, <idxExpr>)
+mapSetExpr :: IExpression -> IExpression -> String -> IExpression
+mapSetExpr mapExpr keyExpr postfix =
+  let e = Just $ BinaryExpr Index mapExpr keyExpr
+  in FunctionCallExpr
+        { funcExpr =
+            MemberAccessExpr
+              { instanceExpr = mapExpr,
+                member = IR.Identifier "set"
+              },
+          funcParamExprs =
+            [ keyExpr,
+              fromJust $ valueExprOfMapping e postfix,
+              fromJust $ indexExprOfMapping e postfix
+            ]
+        }
+
+-- -- require((!<mapExpr>.has(<keyExpr>, <idxExpr>)) || <mapExpr>.canGet(<keyExpr>, <valExpr>, <idxExpr>));
+preCheckStmt :: IType' -> IExpression -> IExpression -> String -> Transformation IStatement
+preCheckStmt t mapExpr keyExpr postfix = do
+  defaultValue <- defaultValueExpr t
+  return $ IR.RequireStmt $
+          BinaryExpr
+            { binaryOp = BoolOr,
+              lExpr =
+                ParensExpr
+                  { enclosedExpr =
+                      BinaryExpr {
+                        
+                        binaryOp = BoolAnd ,
+                        lExpr = UnaryExpr
+                        { unaryOp = Not,
+                          uExpr =
+                            FunctionCallExpr
+                              { funcExpr =
+                                  MemberAccessExpr
+                                    { instanceExpr = mapExpr,
+                                      member = IR.Identifier "has"
+                                    },
+                                funcParamExprs =
+                                  [ keyExpr,
+                                    fromJust $ indexExprOfMapping e postfix
+                                  ]
+                              }
+                        },
+                        rExpr = BinaryExpr {
+                          binaryOp = IR.Equal,
+                          lExpr = fromJust $ valueExprOfMapping e postfix,
+                          rExpr = defaultValue
+                        }
+                      }
+
+                  },
+              rExpr = mapCanGetExpr mapExpr keyExpr postfix
+            }
+            where
+                e = Just $ BinaryExpr Index mapExpr keyExpr
+    
+-- -- require(<mapExpr>.set(keyExpr, valExpr, idxExpr))
+afterCheckStmt :: IExpression -> IExpression -> String -> IStatement
+afterCheckStmt mapExpr keyExpr postfix =
+  IR.RequireStmt $ mapSetExpr mapExpr keyExpr postfix
+
+
+transForMappingAccess :: MappingExprCounter -> Transformation ([IR.IParam], TFStmtWrapper)
+transForMappingAccess mCounter = do
+  let initTag = ""
+  -- injected params
+  let injectedParams = concatMap ( \(MECEntry t me ke _ _) ->
           let e = Just $ BinaryExpr Index me ke
            in [ IR.Param t $ IR.Identifier $ fromJust $ valueNameOfMapping e initTag, -- init value
                 IR.Param (ElementaryType Int) $ IR.Identifier $ fromJust $ indexNameOfMapping e initTag -- init value index
               ]
-      )
-      $ Map.elems mCounter,
-    -- injected statements
-    Map.foldl'
-      ( \mc (MECEntry t me ke _ updated) ->
-          mergeTFStmtWrapper mc $
-            TFStmtWrapper
-              [preCheckStmt t me ke initTag]
-              [afterCheckStmt me ke initTag | updated]
-      )
-      (TFStmtWrapper [] [])
-      $ mCounter
-  )
-  where
-    initTag = ""
+        ) $ Map.elems mCounter
 
-    -- <mapExpr>.canGet(<keyExpr>, <valExpr>, <idxExpr>)
-    mapCanGetExpr mapExpr keyExpr postfix =
-      let e = Just $ BinaryExpr Index mapExpr keyExpr
-       in FunctionCallExpr
-            { funcExpr =
-                MemberAccessExpr
-                  { instanceExpr = mapExpr,
-                    member = IR.Identifier "canGet"
-                  },
-              funcParamExprs =
-                [ keyExpr,
-                  fromJust $ valueExprOfMapping e postfix,
-                  fromJust $ indexExprOfMapping e postfix
-                ]
-            }
+  -- injected statements
+  injectedStatements <- foldlM ( \mc (MECEntry t me ke _ updated) -> do
+          preCheckStmt' <- preCheckStmt (Just t) me ke initTag
+          return $ mergeTFStmtWrapper' mc (Just (TFStmtWrapper [preCheckStmt'] [afterCheckStmt me ke initTag | updated]))
+        )
+        (Just (TFStmtWrapper [] []))
+        mCounter
+  
+  case injectedStatements of
+    Just ss -> return (injectedParams,  ss)
+    Nothing -> error "injectedStatements failed"
 
-    -- <mapExpr>.set(<keyExpr>, <valExpr>, <idxExpr>)
-    mapSetExpr mapExpr keyExpr postfix =
-      let e = Just $ BinaryExpr Index mapExpr keyExpr
-       in FunctionCallExpr
-            { funcExpr =
-                MemberAccessExpr
-                  { instanceExpr = mapExpr,
-                    member = IR.Identifier "set"
-                  },
-              funcParamExprs =
-                [ keyExpr,
-                  fromJust $ valueExprOfMapping e postfix,
-                  fromJust $ indexExprOfMapping e postfix
-                ]
-            }
 
-    -- require((!<mapExpr>.has(<keyExpr>, <idxExpr>)) || <mapExpr>.canGet(<keyExpr>, <valExpr>, <idxExpr>));
-    preCheckStmt t mapExpr keyExpr postfix =
-      let e = Just $ BinaryExpr Index mapExpr keyExpr
-       in IR.RequireStmt $
-            BinaryExpr
-              { binaryOp = BoolOr,
-                lExpr =
-                  ParensExpr
-                    { enclosedExpr =
-                        BinaryExpr {
-                          
-                          binaryOp = BoolAnd ,
-                          lExpr = UnaryExpr
-                          { unaryOp = Not,
-                            uExpr =
-                              FunctionCallExpr
-                                { funcExpr =
-                                    MemberAccessExpr
-                                      { instanceExpr = mapExpr,
-                                        member = IR.Identifier "has"
-                                      },
-                                  funcParamExprs =
-                                    [ keyExpr,
-                                      fromJust $ indexExprOfMapping e postfix
-                                    ]
-                                }
-                          },
-                          rExpr = BinaryExpr {
-                            binaryOp = IR.Equal,
-                            lExpr = fromJust $ valueExprOfMapping e postfix,
-                            rExpr = defaultValueExpr t
-                          }
-                        }
-
-                    },
-                rExpr = mapCanGetExpr mapExpr keyExpr postfix
-              }
-
-    -- require(<mapExpr>.set(keyExpr, valExpr, idxExpr))
-    afterCheckStmt mapExpr keyExpr postfix =
-      IR.RequireStmt $ mapSetExpr mapExpr keyExpr postfix
+     
 
 -- prepends some init statements for functions that have returned in middle.
 prependsForReturnedInit :: IType' -> Transformation [IStatement]
 prependsForReturnedInit t = do
-  e <- defaultValueExpr' t
+  e <- defaultValueExpr t
   let t' = case t of
           Nothing -> ElementaryType Bool
           Just a -> a
@@ -468,28 +482,25 @@ prependsForReturnedInit t = do
     ]
 
 -- get default value expression for type `tp`
-defaultValueExpr :: IType -> IExpression
-defaultValueExpr (ElementaryType IR.Int) = LiteralExpr $ IntLiteral False 0
-defaultValueExpr (ElementaryType IR.Bool) = LiteralExpr $ BoolLiteral False
-defaultValueExpr (ElementaryType IR.Bytes) = LiteralExpr $ BytesLiteral []
-defaultValueExpr (ElementaryType IR.Address) = FunctionCallExpr (IdentifierExpr (IR.ReservedId "Ripemd160")) [LiteralExpr $ BytesLiteral []]
-defaultValueExpr (ElementaryType IR.String) =  LiteralExpr $ IR.StringLiteral ""
-defaultValueExpr tp = error $ "unsupported default value for type `" ++ show tp ++ "`"
 
-
-defaultValueExpr' :: IType'  -> Transformation IExpression
-defaultValueExpr' Nothing  = return $ LiteralExpr $ BoolLiteral False
-defaultValueExpr' (Just (UserDefinedType n)) = do
+defaultValueExpr :: IType' -> Transformation IExpression
+defaultValueExpr Nothing = return $ LiteralExpr $ BoolLiteral False
+defaultValueExpr (Just (ElementaryType IR.Int)) = return $ LiteralExpr $ IntLiteral False 0
+defaultValueExpr (Just (ElementaryType IR.Bool)) = return $ LiteralExpr $ BoolLiteral False
+defaultValueExpr (Just (ElementaryType IR.Bytes)) = return $ LiteralExpr $ BytesLiteral []
+defaultValueExpr (Just (ElementaryType IR.Address)) = return $ FunctionCallExpr (IdentifierExpr (IR.ReservedId "Ripemd160")) [LiteralExpr $ BytesLiteral []]
+defaultValueExpr (Just (ElementaryType IR.String)) = return $ LiteralExpr $ IR.StringLiteral ""
+defaultValueExpr (Just (UserDefinedType n)) = do
   st' <- lookupStruct n
   case st' of
     Nothing -> error $ "unsupported default value for type `" ++ n ++ "`"
     Just st -> do
-      fields <- mapM (\(Param t _) -> defaultValueExpr' (Just t)) (structFields st)
+      fields <- mapM (\(Param t _) -> defaultValueExpr (Just t)) (structFields st)
       return $ StructLiteralExpr fields
-defaultValueExpr' (Just (Array arr n)) = do
-  e <- defaultValueExpr' (Just arr)
+defaultValueExpr (Just (Array arr n)) = do
+  e <- defaultValueExpr (Just arr)
   return $ ArrayLiteralExpr $  replicate n e
-defaultValueExpr' (Just t) = return $ defaultValueExpr t
+defaultValueExpr t = error $ "unsupported default value for type `" ++ show t ++ "`"
 
 -- build `propagateState` function, in this way we can call `require(this.propagateState(txPreimage));` in other public functions
 buildPropagateState :: IR.IContractBodyElement

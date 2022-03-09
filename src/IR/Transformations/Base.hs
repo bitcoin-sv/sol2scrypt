@@ -172,6 +172,11 @@ mergeTFStmtWrapper :: TFStmtWrapper -> TFStmtWrapper -> TFStmtWrapper
 mergeTFStmtWrapper (TFStmtWrapper preA appA) (TFStmtWrapper preB appB) =
   TFStmtWrapper (preA ++ preB) (appA ++ appB)
 
+mergeTFStmtWrapper' :: Maybe TFStmtWrapper -> Maybe TFStmtWrapper -> Maybe TFStmtWrapper
+mergeTFStmtWrapper' (Just (TFStmtWrapper preA appA)) (Just (TFStmtWrapper preB appB)) =
+   Just $ TFStmtWrapper (preA ++ preB) (appA ++ appB)
+mergeTFStmtWrapper' _ _ = Nothing 
+
 wrapTFStmtWrapper :: TFStmtWrapper -> TFStmtWrapper -> TFStmtWrapper
 wrapTFStmtWrapper (TFStmtWrapper preOuter appOuter) (TFStmtWrapper preInner appInner) =
   TFStmtWrapper (preOuter ++ preInner) (appInner ++ appOuter)
