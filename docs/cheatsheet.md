@@ -350,7 +350,7 @@ require(checkSig(sig, pubKey));</code></pre></td>
 </tbody>
 </table>
 
-# All unsupported features 
+# Currently unsupported features 
 
 
 <table border="1" style="width: 100%">
@@ -383,6 +383,11 @@ require(checkSig(sig, pubKey));</code></pre></td>
 <tr>
     <td ><b>Parallel Assignment</b></td>
     <td><pre><code>(x, y) = (0, 1); </code></pre></td>
+</tr>
+
+<tr>
+    <td ><b>payable</b></td>
+    <td><pre>function deposit() public payable {} </code></pre></td>
 </tr>
 
 <tr>
