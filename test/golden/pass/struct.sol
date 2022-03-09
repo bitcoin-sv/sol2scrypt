@@ -32,6 +32,10 @@ contract Todos {
 
     TodoW tw;
 
+
+
+    mapping(address => Todo) public mapTodos;
+
     //test declare
     function create(string memory _text) public returns (Todo memory) {
         // 3 ways to initialize a struct
@@ -54,8 +58,12 @@ contract Todos {
         //return Todo(_text, true);
     }
 
+    function update(string memory _text, address owner) public  {
+        mapTodos[owner] = Todo(_text, true);
+    }
 
-    function testReturnStructArray(string memory _text) public pure returns (Todo[3] memory) {
+
+    function testReturnStructArray(string memory _text) public view returns (Todo[3] memory) {
 
         if(true) {
             return todos;

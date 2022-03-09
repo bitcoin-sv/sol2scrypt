@@ -30,6 +30,9 @@ contract Todos {
   @state
   TodoW tw;
 
+  @state
+  public HashedMap<PubKeyHash, Todo> mapTodos;
+
   function create(bytes _text) : Todo {
     this.todos[0] = {_text, false};
     this.todos[0] = {_text, false};
@@ -38,6 +41,13 @@ contract Todos {
     t1.completed = false;
     this.todos[0].completed = false;
     return {"", false};
+  }
+
+  function update(bytes _text, PubKeyHash owner, Todo this_mapTodos_owner, int this_mapTodos_owner_index) : bool {
+    require((!this.mapTodos.has(owner, this_mapTodos_owner_index) && this_mapTodos_owner == {"", false}) || this.mapTodos.canGet(owner, this_mapTodos_owner, this_mapTodos_owner_index));
+    this_mapTodos_owner = {_text, true};
+    require(this.mapTodos.set(owner, this_mapTodos_owner, this_mapTodos_owner_index));
+    return true;
   }
 
   function testReturnStructArray(bytes _text) : Todo[3] {
