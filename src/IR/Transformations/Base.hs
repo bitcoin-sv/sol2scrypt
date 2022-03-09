@@ -135,13 +135,16 @@ addSymbol s (scope : scopes)
   | isJust (Map.lookup (symbolName s) scope) = Left $ SymbolTableUpdateError $ "duplicated symbol `" ++ show (symbolName s) ++ "` in current scope"
   | otherwise = Right $ Map.insert (symbolName s) s scope : scopes
 
-addSym :: Maybe Symbol -> Transformation ()
-addSym Nothing = return ()
+addSym :: Maybe Symbol -> Transformation (Either SymbolTableUpdateError Env)
+addSym Nothing = return $ Left $ SymbolTableUpdateError "addSym Nothing"
 addSym (Just sym) = do
   env <- gets stateEnv
-  case addSymbol sym env of
-    Left e -> error $ show e
-    Right env' -> modify $ \s -> s {stateEnv = env'}
+  let  r = addSymbol sym env
+  case r of
+      Right env' -> modify $ \s -> s {stateEnv = env'}
+      Left _ ->  return ()
+  return r
+
 
 lookupSymbol :: SymbolName -> Env -> Maybe Symbol
 lookupSymbol _ [] = Nothing
