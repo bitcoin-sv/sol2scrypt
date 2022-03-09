@@ -1,0 +1,147 @@
+struct MapKeyST0 {
+  PubKeyHash key0;
+  PubKeyHash key1;
+}
+
+contract ERC721 {
+  @state
+  private HashedMap<int, PubKeyHash> _owners;
+
+  @state
+  private HashedMap<PubKeyHash, int> _balances;
+
+  @state
+  private HashedMap<int, PubKeyHash> _tokenApprovals;
+
+  @state
+  private HashedMap<MapKeyST0, bool> _operatorApprovals;
+
+  public function balanceOf(PubKeyHash owner, SigHashPreimage txPreimage, int retVal, int this__balances_owner, int this__balances_owner_index) {
+    require((!this._balances.has(owner, this__balances_owner_index) && this__balances_owner == 0) || this._balances.canGet(owner, this__balances_owner, this__balances_owner_index));
+    require(owner != Ripemd160(b''));
+    require(this__balances_owner == retVal);
+    require(this.propagateState(txPreimage));
+  }
+
+  function ownerOf(int tokenId, PubKeyHash this__owners_tokenId, int this__owners_tokenId_index) : PubKeyHash {
+    PubKeyHash owner = Ripemd160(b'');
+    require((!this._owners.has(tokenId, this__owners_tokenId_index) && this__owners_tokenId == Ripemd160(b'')) || this._owners.canGet(tokenId, this__owners_tokenId, this__owners_tokenId_index));
+    owner = this__owners_tokenId;
+    require(owner != Ripemd160(b''));
+    return owner;
+  }
+
+  public function isApprovedForAll(PubKeyHash owner, PubKeyHash operator, SigHashPreimage txPreimage, bool retVal, bool this__operatorApprovals_owner_operator, int this__operatorApprovals_owner_operator_index) {
+    require((!this._operatorApprovals.has({owner, operator}, this__operatorApprovals_owner_operator_index) && this__operatorApprovals_owner_operator == false) || this._operatorApprovals.canGet({owner, operator}, this__operatorApprovals_owner_operator, this__operatorApprovals_owner_operator_index));
+    require(this__operatorApprovals_owner_operator == retVal);
+    require(this.propagateState(txPreimage));
+  }
+
+  public function setApprovalForAll(PubKeyHash operator, bool approved, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, bool this__operatorApprovals_msgSender_operator, int this__operatorApprovals_msgSender_operator_index) {
+    PubKeyHash msgSender = hash160(pubKey);
+    require(checkSig(sig, pubKey));
+    require((!this._operatorApprovals.has({msgSender, operator}, this__operatorApprovals_msgSender_operator_index) && this__operatorApprovals_msgSender_operator == false) || this._operatorApprovals.canGet({msgSender, operator}, this__operatorApprovals_msgSender_operator, this__operatorApprovals_msgSender_operator_index));
+    this__operatorApprovals_msgSender_operator = approved;
+    require(this._operatorApprovals.set({msgSender, operator}, this__operatorApprovals_msgSender_operator, this__operatorApprovals_msgSender_operator_index));
+    require(this.propagateState(txPreimage));
+  }
+
+  public function getApproved(int tokenId, SigHashPreimage txPreimage, PubKeyHash retVal, PubKeyHash this__owners_tokenId, int this__owners_tokenId_index, PubKeyHash this__tokenApprovals_tokenId, int this__tokenApprovals_tokenId_index) {
+    require((!this._owners.has(tokenId, this__owners_tokenId_index) && this__owners_tokenId == Ripemd160(b'')) || this._owners.canGet(tokenId, this__owners_tokenId, this__owners_tokenId_index));
+    require((!this._tokenApprovals.has(tokenId, this__tokenApprovals_tokenId_index) && this__tokenApprovals_tokenId == Ripemd160(b'')) || this._tokenApprovals.canGet(tokenId, this__tokenApprovals_tokenId, this__tokenApprovals_tokenId_index));
+    require(this__owners_tokenId != Ripemd160(b''));
+    require(this__tokenApprovals_tokenId == retVal);
+    require(this.propagateState(txPreimage));
+  }
+
+  private function _approve(PubKeyHash owner, PubKeyHash to, int tokenId, PubKeyHash this__tokenApprovals_tokenId, int this__tokenApprovals_tokenId_index) : bool {
+    require((!this._tokenApprovals.has(tokenId, this__tokenApprovals_tokenId_index) && this__tokenApprovals_tokenId == Ripemd160(b'')) || this._tokenApprovals.canGet(tokenId, this__tokenApprovals_tokenId, this__tokenApprovals_tokenId_index));
+    this__tokenApprovals_tokenId = to;
+    require(this._tokenApprovals.set(tokenId, this__tokenApprovals_tokenId, this__tokenApprovals_tokenId_index));
+    return true;
+  }
+
+  public function approve(PubKeyHash to, int tokenId, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, bool this__operatorApprovals_owner_msgSender, int this__operatorApprovals_owner_msgSender_index, PubKeyHash this__owners_tokenId, int this__owners_tokenId_index) {
+    PubKeyHash msgSender = hash160(pubKey);
+    require(checkSig(sig, pubKey));
+    require((!this._operatorApprovals.has({owner, msgSender}, this__operatorApprovals_owner_msgSender_index) && this__operatorApprovals_owner_msgSender == false) || this._operatorApprovals.canGet({owner, msgSender}, this__operatorApprovals_owner_msgSender, this__operatorApprovals_owner_msgSender_index));
+    require((!this._owners.has(tokenId, this__owners_tokenId_index) && this__owners_tokenId == Ripemd160(b'')) || this._owners.canGet(tokenId, this__owners_tokenId, this__owners_tokenId_index));
+    PubKeyHash owner = this__owners_tokenId;
+    require(msgSender == owner || this__operatorApprovals_owner_msgSender);
+    this._approve(owner, to, tokenId);
+    require(this.propagateState(txPreimage));
+  }
+
+  private function _isApprovedOrOwner(PubKeyHash owner, PubKeyHash spender, int tokenId, bool this__operatorApprovals_owner_spender, int this__operatorApprovals_owner_spender_index, PubKeyHash this__tokenApprovals_tokenId, int this__tokenApprovals_tokenId_index) : bool {
+    require((!this._operatorApprovals.has({owner, spender}, this__operatorApprovals_owner_spender_index) && this__operatorApprovals_owner_spender == false) || this._operatorApprovals.canGet({owner, spender}, this__operatorApprovals_owner_spender, this__operatorApprovals_owner_spender_index));
+    require((!this._tokenApprovals.has(tokenId, this__tokenApprovals_tokenId_index) && this__tokenApprovals_tokenId == Ripemd160(b'')) || this._tokenApprovals.canGet(tokenId, this__tokenApprovals_tokenId, this__tokenApprovals_tokenId_index));
+    return (spender == owner || this__tokenApprovals_tokenId == spender || this__operatorApprovals_owner_spender);
+  }
+
+  private function _transfer(PubKeyHash owner, PubKeyHash from, PubKeyHash to, int tokenId, int this__balances_from, int this__balances_from_index, int this__balances_to, int this__balances_to_index, PubKeyHash this__owners_tokenId, int this__owners_tokenId_index) : bool {
+    require((!this._balances.has(from, this__balances_from_index) && this__balances_from == 0) || this._balances.canGet(from, this__balances_from, this__balances_from_index));
+    require((!this._balances.has(to, this__balances_to_index) && this__balances_to == 0) || this._balances.canGet(to, this__balances_to, this__balances_to_index));
+    require((!this._owners.has(tokenId, this__owners_tokenId_index) && this__owners_tokenId == Ripemd160(b'')) || this._owners.canGet(tokenId, this__owners_tokenId, this__owners_tokenId_index));
+    require(from == owner);
+    require(to != Ripemd160(b''));
+    this._approve(owner, Ripemd160(b''), tokenId);
+    this__balances_from -= 1;
+    this__balances_to += 1;
+    this__owners_tokenId = to;
+    require(this._balances.set(from, this__balances_from, this__balances_from_index));
+    require(this._balances.set(to, this__balances_to, this__balances_to_index));
+    require(this._owners.set(tokenId, this__owners_tokenId, this__owners_tokenId_index));
+    return true;
+  }
+
+  public function transferFrom(PubKeyHash from, PubKeyHash to, int tokenId, SigHashPreimage txPreimage, Sig sig, PubKey pubKey) {
+    PubKeyHash msgSender = hash160(pubKey);
+    require(checkSig(sig, pubKey));
+    PubKeyHash owner = this.ownerOf(tokenId);
+    require(this._isApprovedOrOwner(owner, msgSender, tokenId));
+    this._transfer(owner, from, to, tokenId);
+    require(this.propagateState(txPreimage));
+  }
+
+  private function _safeTransfer(PubKeyHash owner, PubKeyHash from, PubKeyHash to, int tokenId, bytes _data) : bool {
+    this._transfer(owner, from, to, tokenId);
+    return true;
+  }
+
+  public function safeTransferFrom(PubKeyHash from, PubKeyHash to, int tokenId, bytes _data, SigHashPreimage txPreimage, Sig sig, PubKey pubKey) {
+    PubKeyHash msgSender = hash160(pubKey);
+    require(checkSig(sig, pubKey));
+    PubKeyHash owner = this.ownerOf(tokenId);
+    require(this._isApprovedOrOwner(owner, msgSender, tokenId));
+    this._safeTransfer(owner, from, to, tokenId, _data);
+    require(this.propagateState(txPreimage));
+  }
+
+  public function mint(PubKeyHash to, int tokenId, SigHashPreimage txPreimage, int this__balances_to, int this__balances_to_index, PubKeyHash this__owners_tokenId, int this__owners_tokenId_index) {
+    require((!this._balances.has(to, this__balances_to_index) && this__balances_to == 0) || this._balances.canGet(to, this__balances_to, this__balances_to_index));
+    require((!this._owners.has(tokenId, this__owners_tokenId_index) && this__owners_tokenId == Ripemd160(b'')) || this._owners.canGet(tokenId, this__owners_tokenId, this__owners_tokenId_index));
+    require(to != Ripemd160(b''));
+    require(this__owners_tokenId == Ripemd160(b''));
+    this__balances_to += 1;
+    this__owners_tokenId = to;
+    require(this._balances.set(to, this__balances_to, this__balances_to_index));
+    require(this._owners.set(tokenId, this__owners_tokenId, this__owners_tokenId_index));
+    require(this.propagateState(txPreimage));
+  }
+
+  public function burn(int tokenId, SigHashPreimage txPreimage, int this__balances_owner, int this__balances_owner_index) {
+    require((!this._balances.has(owner, this__balances_owner_index) && this__balances_owner == 0) || this._balances.canGet(owner, this__balances_owner, this__balances_owner_index));
+    PubKeyHash owner = this.ownerOf(tokenId);
+    this._approve(owner, Ripemd160(b''), tokenId);
+    this__balances_owner -= 1;
+    require(this._balances.set(owner, this__balances_owner, this__balances_owner_index));
+    require(this.propagateState(txPreimage));
+  }
+
+  function propagateState(SigHashPreimage txPreimage) : bool {
+    require(Tx.checkPreimage(txPreimage));
+    bytes outputScript = this.getStateScript();
+    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    return hash256(output) == SigHash.hashOutputs(txPreimage);
+  }
+}

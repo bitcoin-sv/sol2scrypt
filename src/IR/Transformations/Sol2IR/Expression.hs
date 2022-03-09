@@ -11,7 +11,7 @@ import qualified Data.Map.Lazy as Map
 import Data.Maybe
 import IR.Spec as IR
 import IR.Transformations.Base
-import IR.Transformations.Sol2IR.Identifier (maybeStateVarId)
+import IR.Transformations.Sol2IR.Identifier
 import Numeric
 import Solidity.Spec as Sol
 import Utils
@@ -108,19 +108,22 @@ instance ToIRTransformable (Sol.Expression SourceRange) IExpression' where
         return $ IR.MemberAccessExpr <$> e' <*> i'
   _toIR (FunctionCallExpressionList fe pl fa) = do
     case fe of
-      (Literal (PrimaryExpressionIdentifier (Sol.Identifier fn _))) -> do
+      (Literal (PrimaryExpressionIdentifier i@(Sol.Identifier fn _))) -> do
         if isBuiltInFnSupported fn
           then do
             if shouldIgnoreBuiltInTypes fn
               then case pl of
                 Just (ExpressionList [p]) -> _toIR p
                 _ -> reportError ("unsupported function call : `" ++ fn ++ "`") fa >> return Nothing
+              -- transpile sol `address(0)` to sCrypt `Ripemd160(b'')`
+              else if isAddress0 fe pl then return $ Just $ FunctionCallExpr (IdentifierExpr (IR.ReservedId "Ripemd160")) [LiteralExpr $ BytesLiteral []] 
               else do
-                fe' <- _toIR fe
+                i' <- _toIR i
+                i'' <- maybeMemberFunctionCall i'
                 ps' <- case pl of
                   Nothing -> return []
                   Just (ExpressionList ps) -> mapM _toIR ps
-                return $ FunctionCallExpr <$> fe' <*> sequence ps'
+                return $ FunctionCallExpr <$> (IdentifierExpr <$>  i'') <*> sequence ps'
           else reportError ("unsupported function call : `" ++ fn ++ "`") fa >> return Nothing
       (New (TypeNameElementaryTypeName (ElementaryTypeName (BytesType Nothing) a) _) _) -> do
         -- eg. transpile Solidity `new bytes(3)` to `num2bin(0, 3)`
@@ -380,3 +383,7 @@ shouldIgnoreBuiltInTypes fn =
              "bytes31",
              "bytes32"
            ]
+
+isAddress0 :: Expression SourceRange -> Maybe (ExpressionList a) -> Bool 
+isAddress0 (Literal (PrimaryExpressionIdentifier (Sol.Identifier "address" _))) (Just (ExpressionList [Literal (PrimaryExpressionNumberLiteral (NumberLiteral (NumberLiteralDec "0" Nothing) _))])) = True 
+isAddress0  _ _ = False 

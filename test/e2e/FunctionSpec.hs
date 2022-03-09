@@ -553,6 +553,21 @@ function test6(int x) : bool {
       "function privateFunc() private pure returns (bool memory) { return true; }"
       "\nprivate function privateFunc() : bool {\n  return true;\n}"
 
+    itTranspile
+      "private function without returns"
+      [r|function _approve(
+    address owner,
+    address to,
+    uint tokenId
+) private {
+    _tokenApprovals[tokenId] = to;
+    emit Approval(owner, to, tokenId);
+}|]
+      [r|
+private function _approve(PubKeyHash owner, PubKeyHash to, int tokenId) : bool {
+  return true;
+}|]
+
   describe "#internal " $ do
 
     itTranspile
