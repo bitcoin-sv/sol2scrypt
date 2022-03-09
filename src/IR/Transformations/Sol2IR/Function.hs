@@ -478,11 +478,7 @@ defaultValueExpr tp = error $ "unsupported default value for type `" ++ show tp 
 
 
 defaultValueExpr' :: IType'  -> Transformation IExpression
-defaultValueExpr' Nothing = return $ LiteralExpr (BoolLiteral False)
-defaultValueExpr' (Just (ElementaryType IR.Int)) = return $  LiteralExpr $ IntLiteral False 0
-defaultValueExpr' (Just (ElementaryType IR.Bool)) = return $  LiteralExpr $ BoolLiteral False
-defaultValueExpr' (Just (ElementaryType IR.Bytes)) = return $  LiteralExpr $ BytesLiteral []
-defaultValueExpr' (Just (ElementaryType IR.String)) = return $  LiteralExpr $ IR.StringLiteral ""
+defaultValueExpr' Nothing  = return $ LiteralExpr $ BoolLiteral False
 defaultValueExpr' (Just (UserDefinedType n)) = do
   st' <- lookupStruct n
   case st' of
@@ -493,7 +489,7 @@ defaultValueExpr' (Just (UserDefinedType n)) = do
 defaultValueExpr' (Just (Array arr n)) = do
   e <- defaultValueExpr' (Just arr)
   return $ ArrayLiteralExpr $  replicate n e
-defaultValueExpr' tp = error $ "unsupported default value for type `" ++ show tp ++ "`"
+defaultValueExpr' (Just t) = return $ defaultValueExpr t
 
 -- build `propagateState` function, in this way we can call `require(this.propagateState(txPreimage));` in other public functions
 buildPropagateState :: IR.IContractBodyElement

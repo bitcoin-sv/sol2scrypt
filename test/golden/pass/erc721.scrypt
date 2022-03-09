@@ -18,7 +18,7 @@ contract ERC721 {
 
   public function balanceOf(PubKeyHash owner, SigHashPreimage txPreimage, int retVal, int this__balances_owner, int this__balances_owner_index) {
     require((!this._balances.has(owner, this__balances_owner_index) && this__balances_owner == 0) || this._balances.canGet(owner, this__balances_owner, this__balances_owner_index));
-    require(owner != Ripemd160(b''));
+    require(owner != Ripemd160(b'0000000000000000000000000000000000000000'));
     require(this__balances_owner == retVal);
     require(this.propagateState(txPreimage));
   }
@@ -27,7 +27,7 @@ contract ERC721 {
     PubKeyHash owner = Ripemd160(b'');
     require((!this._owners.has(tokenId, this__owners_tokenId_index) && this__owners_tokenId == Ripemd160(b'')) || this._owners.canGet(tokenId, this__owners_tokenId, this__owners_tokenId_index));
     owner = this__owners_tokenId;
-    require(owner != Ripemd160(b''));
+    require(owner != Ripemd160(b'0000000000000000000000000000000000000000'));
     return owner;
   }
 
@@ -49,7 +49,7 @@ contract ERC721 {
   public function getApproved(int tokenId, SigHashPreimage txPreimage, PubKeyHash retVal, PubKeyHash this__owners_tokenId, int this__owners_tokenId_index, PubKeyHash this__tokenApprovals_tokenId, int this__tokenApprovals_tokenId_index) {
     require((!this._owners.has(tokenId, this__owners_tokenId_index) && this__owners_tokenId == Ripemd160(b'')) || this._owners.canGet(tokenId, this__owners_tokenId, this__owners_tokenId_index));
     require((!this._tokenApprovals.has(tokenId, this__tokenApprovals_tokenId_index) && this__tokenApprovals_tokenId == Ripemd160(b'')) || this._tokenApprovals.canGet(tokenId, this__tokenApprovals_tokenId, this__tokenApprovals_tokenId_index));
-    require(this__owners_tokenId != Ripemd160(b''));
+    require(this__owners_tokenId != Ripemd160(b'0000000000000000000000000000000000000000'));
     require(this__tokenApprovals_tokenId == retVal);
     require(this.propagateState(txPreimage));
   }
@@ -83,8 +83,8 @@ contract ERC721 {
     require((!this._balances.has(to, this__balances_to_index) && this__balances_to == 0) || this._balances.canGet(to, this__balances_to, this__balances_to_index));
     require((!this._owners.has(tokenId, this__owners_tokenId_index) && this__owners_tokenId == Ripemd160(b'')) || this._owners.canGet(tokenId, this__owners_tokenId, this__owners_tokenId_index));
     require(from == owner);
-    require(to != Ripemd160(b''));
-    this._approve(owner, Ripemd160(b''), tokenId);
+    require(to != Ripemd160(b'0000000000000000000000000000000000000000'));
+    this._approve(owner, Ripemd160(b'0000000000000000000000000000000000000000'), tokenId);
     this__balances_from -= 1;
     this__balances_to += 1;
     this__owners_tokenId = to;
@@ -120,8 +120,8 @@ contract ERC721 {
   public function mint(PubKeyHash to, int tokenId, SigHashPreimage txPreimage, int this__balances_to, int this__balances_to_index, PubKeyHash this__owners_tokenId, int this__owners_tokenId_index) {
     require((!this._balances.has(to, this__balances_to_index) && this__balances_to == 0) || this._balances.canGet(to, this__balances_to, this__balances_to_index));
     require((!this._owners.has(tokenId, this__owners_tokenId_index) && this__owners_tokenId == Ripemd160(b'')) || this._owners.canGet(tokenId, this__owners_tokenId, this__owners_tokenId_index));
-    require(to != Ripemd160(b''));
-    require(this__owners_tokenId == Ripemd160(b''));
+    require(to != Ripemd160(b'0000000000000000000000000000000000000000'));
+    require(this__owners_tokenId == Ripemd160(b'0000000000000000000000000000000000000000'));
     this__balances_to += 1;
     this__owners_tokenId = to;
     require(this._balances.set(to, this__balances_to, this__balances_to_index));
@@ -132,7 +132,7 @@ contract ERC721 {
   public function burn(int tokenId, SigHashPreimage txPreimage, int this__balances_owner, int this__balances_owner_index) {
     require((!this._balances.has(owner, this__balances_owner_index) && this__balances_owner == 0) || this._balances.canGet(owner, this__balances_owner, this__balances_owner_index));
     PubKeyHash owner = this.ownerOf(tokenId);
-    this._approve(owner, Ripemd160(b''), tokenId);
+    this._approve(owner, Ripemd160(b'0000000000000000000000000000000000000000'), tokenId);
     this__balances_owner -= 1;
     require(this._balances.set(owner, this__balances_owner, this__balances_owner_index));
     require(this.propagateState(txPreimage));
