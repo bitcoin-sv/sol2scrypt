@@ -86,8 +86,10 @@ pragma experimental ABIEncoderV2;</code></pre></td>
 
 <tr>
     <td><b>Type Array</b></td>
-    <td><pre><code>uint[]</br>uint[3]</code></pre></td>
-    <td><pre><code> unsupported <br> uint[3]</code></pre></td>
+    <td><pre><code>uint[]
+uint[3]</code></pre></td>
+    <td><pre><code>unsupported
+uint[3]</code></pre></td>
     <td></td>
 </tr>
 
@@ -100,138 +102,198 @@ pragma experimental ABIEncoderV2;</code></pre></td>
 
 <tr>
     <td><b>Number Literal</b></td>
-    <td><pre><code> 1 <br> 0x1</code></pre></td>
-    <td><pre><code> 1 <br> 0x1</code></pre></td>
+    <td><pre><code>1
+0x1</code></pre></td>
+    <td><pre><code>1
+0x1</code></pre></td>
     <td></td>
 </tr>
 
 <tr>
     <td><b>Hex Literal</b></td>
-    <td><pre><code> hex"0101" <br> hex"ff00_0000_0000_0004" </code></pre></td>
-    <td><pre><code> `b'0101'` <br> unsupported</code></pre></td>
+    <td><pre><code>hex"0101"
+hex"ff00_0000_0000_0004"</code></pre></td>
+    <td><pre><code>b'0101'
+unsupported</code></pre></td>
     <td></td>
 </tr>
 
 <tr>
     <td><b>String Literal</b></td>
-    <td><pre><code> "hello world" </code></pre></td>
-    <td><pre><code> "hello world" </code></pre></td>
+    <td><pre><code>"hello world"</code></pre></td>
+    <td><pre><code>"hello world"</code></pre></td>
     <td></td>
 </tr>
 
 
 <tr >
     <td rowspan="5"><b>Array</b></td>
-    <td><pre><code>// 1. literal <br> [1, 2, 3] </code></pre> </td>
-    <td><pre><code>[1, 2, 3] </code></pre> </td>
+    <td><pre><code>// literal
+[1, 2, 3]</code></pre> </td>
+    <td><pre><code>[1, 2, 3]</code></pre> </td>
     <td></td>
 </tr>
 
 <tr>
-    <td><pre><code>// 2. length <br> s.length </code></pre> </td>
+    <td><pre><code>// length
+s.length </code></pre> </td>
     <td><pre><code>unsupported </code></pre> </td>
     <td></td>
 </tr>
 <tr >
-    <td><pre><code>// 3. Index by number <br> a[1] </code></pre> </td>
-    <td><pre><code>a[1] </code></pre> </td>
+    <td><pre><code>// Index by number
+a[1] </code></pre> </td>
+    <td><pre><code>a[1]</code></pre> </td>
     <td></td>
 </tr>
 <tr >
-    <td><pre><code>// 4. Index by expression <br> a[1 + i] </code></pre> </td>
-    <td><pre><code>a[1 + i] </code></pre> </td>
+    <td><pre><code>// Index by expression 
+a[1 + i]</code></pre> </td>
+    <td><pre><code>a[1 + i]</code></pre> </td>
     <td>only a <a href="https://scryptdoc.readthedocs.io/en/latest/ctc.html">compile-time constant</a> (CTC) can be used as an index when writing array in sCrypt</td>
 </tr>
 <tr >
-    <td><pre><code>// 5. push/pop element <br> a.push(3)/a.pop() </code></pre> </td>
+    <td><pre><code>// push/pop element 
+a.push(3);
+a.pop(); </code></pre> </td>
     <td><pre><code>unsupported </code></pre> </td>
     <td></td>
 </tr>
 <tr>
     <td><b>Immutable variables</b></td>
-    <td><pre><code> uint immutable x; </code></pre></td>
-    <td><pre><code> const int x;</code></pre></td>
+    <td><pre><code>uint immutable x; </code></pre></td>
+    <td><pre><code>const int x;</code></pre></td>
     <td></td>
 </tr>
 
 <tr>
     <td><b>Contract Define</b></td>
-    <td><pre><code> contract Coin { ...} </code></pre></td>
-    <td><pre><code> contract Coin { ...} </code></pre></td>
+    <td><pre><code>contract Coin {
+    ...
+} </code></pre></td>
+    <td><pre><code>contract Coin {
+    ...
+} </code></pre></td>
     <td></td>
 </tr>
 
 <tr>
     <td><b>Contract Property</b></td>
-    <td><pre><code> contract Coin { <br > &nbsp; address public minter; <br> &nbsp; ... <br> } </code></pre></td>
-    <td><pre><code> contract Coin { <br > &nbsp; @state public PubKeyHash minter; <br> &nbsp; ... <br> } </code></pre></td>
+    <td><pre><code>contract Coin {
+    address public minter; 
+    ...
+}</code></pre></td>
+    <td><pre><code>contract Coin {
+    @state public PubKeyHash minter;
+    ...
+} </code></pre></td>
     <td>cannot support property with initialization: <pre><code>uint amount = 1000;</code></pre></td>
 </tr>
 
 <tr>
     <td><b>Public function</b></td>
-    <td><pre><code> function get() public view returns (uint) { <br> &nbsp; return storedData; <br> } </code></pre></td>
-    <td><pre><code> function get() : int { <br> &nbsp; return this.storedData; <br> }</code></pre></td>
+    <td><pre><code> function get() public view returns (uint) {
+    return storedData;
+} </code></pre></td>
+    <td><pre><code> function get() : int {
+    return this.storedData;
+}</code></pre></td>
     <td></td>
 </tr>
 
 <tr>
     <td><b>External function</b></td>
-    <td><pre><code> function set(uint x) external { <br> &nbsp; storedData = x; <br> } </code></pre></td>
-    <td><pre><code> public function set(int x, SigHashPreimage txPreimage) { <br>  &nbsp; this.storedData = x; <br> &nbsp; require(this.propagateState(txPreimage)); <br>  }</code></pre></td>
-    <td  >automatically add require statement <pre><code>require(this.propagateState(txPreimage));</code></pre> and function paremeter <pre><code>SigHashPreimage txPreimage</code></pre> when transpiling external function</td>
+    <td><pre><code>function set(uint x) external {
+    storedData = x;
+}</code></pre></td>
+    <td><pre><code>public function set(int x, SigHashPreimage txPreimage) {
+    this.storedData = x;
+    require(this.propagateState(txPreimage));
+}</code></pre></td>
+    <td >automatically add require statement <pre><code>require(this.propagateState(txPreimage));</code></pre> and function paremeter <pre><code>SigHashPreimage txPreimage</code></pre> when transpiling external function</td>
 </tr>
 
 <tr>
     <td><b>Event</b></td>
     <td><pre><code>event Event(); </code></pre></td>
-    <td><pre><code> empty</code></pre></td>
+    <td><pre>empty</pre></td>
     <td></td>
 </tr>
 
 <tr>
     <td><b>Emit Event</b></td>
     <td><pre><code>emit Log(msg.sender, "Hello EVM!");</code></pre></td>
-    <td><pre><code> empty</code></pre></td>
+    <td><pre>empty</pre></td>
     <td></td>
 </tr>
 
 <tr>
     <td rowspan="2"><b>Mapping</b></td>
     <td><pre><code>mapping (address => uint)</code></pre></td>
-    <td><pre><code> HashedMap<PubKeyHash, int></code></pre></td>
-    <td><a href="https://scryptdoc.readthedocs.io/en/latest/contracts.html#library-hashedmap">HashedMap </a></td>
+    <td><pre><code>HashedMap<PubKeyHash, int></code></pre></td>
+    <td><a href="https://scryptdoc.readthedocs.io/en/latest/contracts.html#library-hashedmap">HashedMap</a></td>
 </tr>
 
 <tr>
     <td><pre><code>mapping (address => mapping (address => uint)) nestedMap</code></pre></td>
-    <td><pre><code>struct MapKeyST0 { <br>  &nbsp; PubKeyHash key0; <br> &nbsp; PubKeyHash key1; <br> } <br> ... <br> HashedMap<MapKeyST0, int> nestedMap</code></pre></td>
+    <td><pre><code>struct MapKeyST0 {
+    PubKeyHash key0;
+    PubKeyHash key1;
+} 
+...
+HashedMap<MapKeyST0, int> nestedMap</code></pre></td>
     <td>nestedMap[addr1] does not work, only nestedMap[addr1][addr2] works</td>
 </tr>
 
 <tr>
     <td><b>If statement</b></td>
-    <td><pre><code>if (a > 2) { <br> &nbsp; ... <br> else if (a == 0) { <br> &nbsp; ... <br> } else { <br> &nbsp; ... <br> }</code></pre></td>
-    <td><pre><code>if (a > 2) { <br> &nbsp; ... <br> else if (a == 0) { <br> &nbsp; ... <br> } else { <br> &nbsp; ... <br> }</code></pre></td>
+    <td><pre><code>if (a > 2) {
+    ...
+} else if (a == 0) {
+    ...
+} else {
+    ...
+}</code></pre></td>
+    <td><pre><code>if (a > 2) {
+    ...
+} else if (a == 0) {
+    ...
+} else {
+    ...
+}</code></pre></td>
     <td></td>
 </tr>
 
 <tr>
     <td rowspan="3"><b>Return</b></td>
-    <td> at the last statement without value <br> <pre><code>return ;</code></pre></td>
-    <td><pre><code>return true;</code></pre> <br> or <br> empty</td>
+    <td>at the last statement without value: <br><pre><code>return ;</code></pre></td>
+    <td><pre><code>return true;</code></pre></td>
     <td></td>
 </tr>
 
 <tr>
-    <td> at the last statement with value <br> <pre><code>return a;</code></pre></td>
-    <td><pre><code>require(this.storedData == retVal);</code></pre> <br> or <br> <pre><code> return a; </code></pre></td>
+    <td>at the last statement with value: <br><pre><code>return a;</code></pre></td>
+    <td><pre><code>require(this.storedData == retVal);</code></pre> or <pre><code> return a; </code></pre></td>
     <td></td>
 </tr>
 
 <tr>
-    <td> at the middle statement <br> <pre><code>function get(uint amount) public view returns (uint) { <br> &nbsp; if (amount > 0) <br> &nbsp; &nbsp; return amount; <br> &nbsp; return 0; <br> }</code></pre></td>
-    <td><pre><code>function get(int amount) : int { <br>  &nbsp; int ret = 0; <br> &nbsp; bool returned = false; <br> &nbsp; if (amount > 0) { <br> &nbsp; &nbsp; { <br> &nbsp; &nbsp; &nbsp; ret = amount; <br> &nbsp;&nbsp;&nbsp;&nbsp; returned = true; <br> &nbsp;&nbsp; } <br> &nbsp; } <br> &nbsp; return returned ? ret : 0; <br> } </code></pre></td>
+    <td>at the middle statement: <br> <pre><code>function get(uint amount) public view returns (uint) {
+    if (amount > 0)
+        return amount;
+    return 0;
+}</code></pre></td>
+    <td><pre><code>function get(int amount) : int {
+    int ret = 0;
+    bool returned = false;
+    if (amount > 0) {
+        {
+            ret = amount;
+            returned = true;
+        }
+    }
+    return returned ? ret : 0;
+}</code></pre></td>
     <td>return in sCrypt can only appear as the last statement of a function</td>
 </tr>
 
@@ -266,7 +328,8 @@ pragma experimental ABIEncoderV2;</code></pre></td>
 <tr>
     <td ><b>msg.sender</b></td>
     <td><pre><code>msg.sender;</code></pre></td>
-    <td><pre><code>PubKeyHash msgSender = hash160(pubKey); <br> require(checkSig(sig, pubKey)); </code></pre></td>
+    <td><pre><code>PubKeyHash msgSender = hash160(pubKey);
+require(checkSig(sig, pubKey));</code></pre></td>
     <td>will automatically add two parameters to the function signature： <pre><code>Sig sig, PubKey pubKey</code></pre></td>
 </tr>
 
@@ -321,35 +384,49 @@ pragma experimental ABIEncoderV2;</code></pre></td>
 </tr>
 <tr>
     <td ><b>Interfaces</b></td>
-    <td><pre><code>interface HelloWorld { <br> &nbsp; ... <br> }</code></pre></td>
+    <td><pre><code>interface HelloWorld {
+    ...
+}</code></pre></td>
 </tr>
 <tr>
     <td ><b>Library</b></td>
-    <td><pre><code>library HelloWorld { <br> &nbsp; ... <br> }</code></pre></td>
+    <td><pre><code>library HelloWorld {
+    ...
+}</code></pre></td>
 </tr>
 <tr>
     <td ><b>Inheritance</b></td>
-    <td><pre><code>contract ERC20 is IERC20 { <br> &nbsp; ... <br> }</code></pre></td>
+    <td><pre><code>contract ERC20 is IERC20 {
+    ...
+}</code></pre></td>
 </tr>
 
 <tr>
     <td ><b>For loop </b></td>
-    <td><pre><code>for (uint i = 0; i < 3; i++) { <br>  &nbsp; ... <br> }</code></pre></td>
+    <td><pre><code>for (uint i = 0; i < 3; i++) {
+    ...
+}</code></pre></td>
 </tr>
 
 <tr>
     <td ><b>While loop </b></td>
-    <td><pre><code>while (a > 0) { <br>  &nbsp; ... <br> }</code></pre></td>
+    <td><pre><code>while (a > 0) {
+    ...
+}</code></pre></td>
 </tr>
 
 <tr>
     <td ><b>Do-While loop </b></td>
-    <td><pre><code>do { <br> &nbsp; ... <br> } while (a > 0);</code></pre></td>
+    <td><pre><code>do {
+    ...
+} while (a > 0);</code></pre></td>
 </tr>
 
 <tr>
     <td ><b>Assembly </b></td>
-    <td><pre><code>assembly { <br> &nbsp; ... <br> }</code></pre></td>
+    <td><pre><code>assembly {
+    ...
+}</code></pre></td>
 </tr>
 
 <tr>
@@ -364,17 +441,34 @@ pragma experimental ABIEncoderV2;</code></pre></td>
 
 <tr>
     <td ><b>Try Catch </b></td>
-    <td><pre><code>try ... {} <br> catch Error(...) <br> { ... } </code></pre></td>
+    <td><pre><code>try ... {
+    ...
+} catch Error(...) {
+    ...
+} </code></pre></td>
 </tr>
 
 <tr>
     <td ><b>Units, global constants and type ranges</b></td>
-    <td><pre><code>1 ether<br>1 wei<br>1 gwei <br>1 seconds<br>1 minutes<br>1 hours<br>1 days<br>1 weeks<br>type(uint).min<br>type(uint).max<br>type(int8).min<br>type(uint8).max<br>...<br></code></pre></td>
+    <td><pre><code>1 ether
+1 wei
+1 gwei
+1 seconds
+1 minutes
+1 hours
+1 days
+1 weeks
+type(uint).min
+type(uint).max
+type(int8).min
+type(uint8).max
+...
+</code></pre></td>
 </tr>
 
 <tr>
     <td ><b>Block and transaction properties</b></td>
-    <td><pre><pre><code>blockhash(blockNumber) 
+    <td><pre><code>blockhash(blockNumber) 
 block.coinbase 
 block.difficulty
 block.gaslimit
@@ -386,7 +480,7 @@ msg.gas
 msg.sig
 tx.gasprice
 tx.origin
-</code></pre></pre></td>
+</code></pre></td>
 </tr>
 
 
