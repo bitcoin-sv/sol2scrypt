@@ -11,6 +11,8 @@ import IR.Spec as IR
 import Solidity.Parser
 import Solidity.Spec
 import Text.Parsec hiding (try, (<|>))
+import Data.List
+import Data.Either
 
 parseIO :: Parseable a => String -> SourceName -> IO a
 parseIO solidityCode file = either (fail . (parseError ++) . show) return $ parse parser file solidityCode
@@ -27,7 +29,8 @@ data TransformState = TransformState
     -- have returned previously in current block
     stateReturnedInBlock :: [Bool],
     -- structs used as key type for nested maps
-    stateMapKeyStructs :: Map.Map [IType] IStruct
+    stateMapKeyStructs :: Map.Map [IType] IStruct,
+    stateStructs :: [IStruct]
   }
   deriving (Show, Eq, Ord)
 
@@ -133,13 +136,15 @@ addSymbol s (scope : scopes)
   | isJust (Map.lookup (symbolName s) scope) = Left $ SymbolTableUpdateError $ "duplicated symbol `" ++ show (symbolName s) ++ "` in current scope"
   | otherwise = Right $ Map.insert (symbolName s) s scope : scopes
 
-addSym :: Maybe Symbol -> Transformation ()
-addSym Nothing = return ()
+addSym :: Maybe Symbol -> Transformation (Either SymbolTableUpdateError Env)
+addSym Nothing = return $ Left $ SymbolTableUpdateError "addSym Nothing"
 addSym (Just sym) = do
   env <- gets stateEnv
-  case addSymbol sym env of
-    Left e -> error $ show e
-    Right env' -> modify $ \s -> s {stateEnv = env'}
+  let  r = addSymbol sym env
+  when (isRight r) $ do
+    modify $ \s -> s {stateEnv = fromRight env r}
+  return r
+
 
 lookupSymbol :: SymbolName -> Env -> Maybe Symbol
 lookupSymbol _ [] = Nothing
@@ -167,6 +172,11 @@ mergeTFStmtWrapper :: TFStmtWrapper -> TFStmtWrapper -> TFStmtWrapper
 mergeTFStmtWrapper (TFStmtWrapper preA appA) (TFStmtWrapper preB appB) =
   TFStmtWrapper (preA ++ preB) (appA ++ appB)
 
+mergeTFStmtWrapper' :: Maybe TFStmtWrapper -> Maybe TFStmtWrapper -> Maybe TFStmtWrapper
+mergeTFStmtWrapper' (Just (TFStmtWrapper preA appA)) (Just (TFStmtWrapper preB appB)) =
+   Just $ TFStmtWrapper (preA ++ preB) (appA ++ appB)
+mergeTFStmtWrapper' _ _ = Nothing 
+
 wrapTFStmtWrapper :: TFStmtWrapper -> TFStmtWrapper -> TFStmtWrapper
 wrapTFStmtWrapper (TFStmtWrapper preOuter appOuter) (TFStmtWrapper preInner appInner) =
   TFStmtWrapper (preOuter ++ preInner) (appInner ++ appOuter)
@@ -178,6 +188,12 @@ serializeSourceRange :: SourceRange -> String
 serializeSourceRange (SourceRange start end) = sourceName start ++ ":" ++ showPos start ++ ":" ++ showPos end
   where
     showPos p = show (sourceLine p) ++ ":" ++ show (sourceColumn p)
+
+lookupStruct :: String -> Transformation (Maybe IStruct)
+lookupStruct sn = do
+  ss <- gets stateStructs
+  return $ find (\s -> structName s == sn) ss
+
 
 -----------------  IR to sCrypt  -----------------
 

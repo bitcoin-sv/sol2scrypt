@@ -38,7 +38,7 @@ module Solidity.Spec (
         NumberLiteral_ (..), NumberLiteral (..), NumberUnit (..), HexLiteral (..), StringLiteral (..), BooleanLiteral (..),
         InlineAssemblyBlock (..), AssemblyItem (..), FunctionalAssemblyExpression (..),
         Block (..),
-    ErrorDefinition (..),
+    ErrorDefinition (..), StructDefinition (..),
   IdentifierList (..), Identifier (..), Operator (..),
   IndexedParameterList (..), IndexedParameter (..),
   UntypedParameterList (..), ParameterList (..), Parameter (..),
@@ -87,13 +87,15 @@ data SourceUnit1 a
   | SourceUnit1_ImportDirective (ImportDirective a)
   | SourceUnit1_ContractDefinition (ContractDefinition a)
   | SourceUnit1_ErrorDefinition (ErrorDefinition a)
+  | SourceUnit1_StructDefinition (StructDefinition a)
   deriving (Show, Eq, Ord)
 
 instance Annotated SourceUnit1 a where
   ann (SourceUnit1_PragmaDirective p) = ann p
   ann (SourceUnit1_ImportDirective i) = ann i
   ann (SourceUnit1_ContractDefinition c) = ann c
-
+  ann (SourceUnit1_StructDefinition s) = ann s
+  ann (SourceUnit1_ErrorDefinition e) = ann e
 -------------------------------------------------------------------------------
 -- VersionComparator = '^' | '>' | '<' | '<=' | '>='
 
@@ -159,6 +161,17 @@ data ErrorDefinition a =
     annot :: a
   } deriving (Show, Eq, Ord)
 
+instance Annotated ErrorDefinition a where
+  ann (ErrorDefinition _ _ a) = a
+
+-------------------------------------------------------------------------------
+-- StructDefinition = ( 'struct' ) Identifier [VariableDeclaration]
+        
+data StructDefinition a = StructDefinition (Identifier a) [VariableDeclaration a] a deriving (Show, Eq, Ord)
+
+instance Annotated StructDefinition a where
+  ann (StructDefinition _ _ a) = a
+
 -------------------------------------------------------------------------------
 -- ContractDefinition = ( 'contract' | 'library' | 'interface' ) Identifier
 --                      ( 'is' InheritanceSpecifier (',' InheritanceSpecifier )* )?
@@ -192,7 +205,7 @@ instance Annotated ContractDefinition a where
 
 data ContractPart a
   = ContractPartUsingForDeclaration (Identifier a) (Maybe (TypeName a)) a
-  | ContractPartStructDefinition (Identifier a) [VariableDeclaration a] a
+  | ContractPartStructDefinition (StructDefinition a)
   | ContractPartModifierDefinition (Identifier a) (Maybe (ParameterList a)) (Block a) a
   | ContractPartConstructorDefinition (ParameterList a) [FunctionDefinitionTag a] (Maybe (Block a)) a
   | ContractPartFunctionDefinition (Maybe (Identifier a)) (ParameterList a) [FunctionDefinitionTag a] (Maybe (ParameterList a)) (Maybe (Block a)) a
@@ -203,7 +216,7 @@ data ContractPart a
 
 instance Annotated ContractPart a where
   ann (ContractPartUsingForDeclaration _ _ a) = a
-  ann (ContractPartStructDefinition _ _ a) = a
+  ann (ContractPartStructDefinition st) = ann st
   ann (ContractPartModifierDefinition _ _ _ a) = a
   ann (ContractPartConstructorDefinition _ _ _ a) = a
   ann (ContractPartFunctionDefinition _ _ _ _ _ a) = a

@@ -106,12 +106,13 @@ instance Parseable (SourceUnit1 SourceRange) where
     try (SourceUnit1_PragmaDirective <$> parser) <|>
     try (SourceUnit1_ImportDirective <$> parser) <|>
     try (SourceUnit1_ErrorDefinition <$> parser) <|>
+    try (SourceUnit1_StructDefinition <$> parser) <|>
     (SourceUnit1_ContractDefinition <$> parser)
   display (SourceUnit1_ContractDefinition contract_definition) = display contract_definition
   display (SourceUnit1_ErrorDefinition error_definition) = display error_definition
   display (SourceUnit1_ImportDirective import_directive) = display import_directive
   display (SourceUnit1_PragmaDirective pragma_directive) = display pragma_directive
-
+  display (SourceUnit1_StructDefinition s) = display s
 -------------------------------------------------------------------------------
 -- data VersionComparator = Less | More | Equal | LessOrEqual | MoreOrEqual deriving (Show, Eq, Ord)
 
@@ -264,9 +265,23 @@ instance Parseable (ErrorDefinition SourceRange)  where
       start <- getPosition
       i <- keyword "error" *> whitespace *> parser <* whitespace
       pl <- parser <* whitespace <* char ';'
-      end <- getPosition
-      return $ ErrorDefinition i pl (SourceRange start end) 
+      ErrorDefinition i pl . SourceRange start <$> getPosition
   display err = "error " ++ _display (errorName err) ++ _display (parameters err) ++ ";"
+
+
+-------------------------------------------------------------------------------
+-- StructDefinition = 'struct' Identifier ParameterList ';'
+
+instance Parseable (StructDefinition SourceRange)  where
+  parser =
+    do
+      start <- getPosition
+      i <- keyword "struct" *> whitespace *> parser <* whitespace <* char '{' <* whitespace
+      vs <- many (parser <* whitespace <* char ';' <* whitespace) <* char '}'
+      StructDefinition i vs . SourceRange start <$> getPosition
+  display (StructDefinition i vs _) = "struct " ++ display i ++ " {\n" ++ indent (intercalate ";\n" (map display vs) ++ ";") ++ "}"
+
+
 
 -------------------------------------------------------------------------------
 -- ContractDefinition = ( 'contract' | 'library' | 'interface' ) Identifier
@@ -313,11 +328,6 @@ instance Parseable (ContractPart SourceRange) where
               ContractPartUsingForDeclaration i tn . SourceRange start <$> getPosition,
             do
               start <- getPosition
-              i <- keyword "struct" *> whitespace *> parser <* whitespace <* char '{' <* whitespace
-              vs <- many (parser <* whitespace <* char ';' <* whitespace) <* char '}'
-              ContractPartStructDefinition i vs . SourceRange start <$> getPosition,
-            do
-              start <- getPosition
               i <- keyword "modifier" *> whitespace *> parser <* whitespace
               pl <- (Just <$> parser <|> return Nothing) <* whitespace
               b <- parser
@@ -351,18 +361,19 @@ instance Parseable (ContractPart SourceRange) where
                  )
           ]
       )
-      <|> ( do
+      <|> try ( do
               start <- getPosition
               d <- parser
               ContractPartStateVariableDeclaration d . SourceRange start <$> getPosition
           )
-
+      <|> try ( do
+              ContractPartStructDefinition <$> parser
+          )
   display (ContractPartUsingForDeclaration v t _) =
     "using " ++ display v ++ " for " ++ maybe "*" display t ++ ";"
   display (ContractPartEnumDefinition i vs _) =
     "enum " ++ display i ++ " {" ++ intercalate ", " (map display vs) ++ "}"
-  display (ContractPartStructDefinition i vs _) =
-    "struct " ++ display i ++ " {\n" ++ indent (intercalate ";\n" (map display vs) ++ ";") ++ "}"
+  display (ContractPartStructDefinition st) = display st
   display (ContractPartModifierDefinition i pl b _) =
     "modifier " ++ display i ++ maybe "" _display pl ++ _display b
   display (ContractPartFunctionDefinition mi pl ts mpl' mb _) =
@@ -732,7 +743,7 @@ instance Parseable (Statement SourceRange) where
               start <- getPosition
               _ <- keyword "throw" <* whitespace <* char ';'
               Throw . SourceRange start <$> getPosition,
-            try (do 
+            try (do
               start <- getPosition
               e <- keyword "emit" *> whitespace *> parser <* whitespace <* char ';'
               EmitStatement e . SourceRange start <$> getPosition),

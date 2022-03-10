@@ -111,12 +111,18 @@ instance ToIRTransformable (Sol.Expression SourceRange) IExpression' where
       (Literal (PrimaryExpressionIdentifier i@(Sol.Identifier fn _))) -> do
         if isBuiltInFnSupported fn
           then do
+            st' <- lookupStruct fn
             if shouldIgnoreBuiltInTypes fn
               then case pl of
                 Just (ExpressionList [p]) -> _toIR p
                 _ -> reportError ("unsupported function call : `" ++ fn ++ "`") fa >> return Nothing
               -- transpile sol `address(0)` to sCrypt `Ripemd160(b'')`
-              else if isAddress0 fe pl then return $ Just $ FunctionCallExpr (IdentifierExpr (IR.ReservedId "Ripemd160")) [LiteralExpr $ BytesLiteral []] 
+              else if isAddress0 fe pl then return $ Just $ FunctionCallExpr (IdentifierExpr (IR.ReservedId "Ripemd160")) [LiteralExpr $ BytesLiteral [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]] 
+              else if isJust st' then do
+                ps' <- case pl of
+                  Nothing -> return []
+                  Just (ExpressionList ps) -> mapM _toIR ps
+                return $ StructLiteralExpr <$> sequence ps'
               else do
                 i' <- _toIR i
                 i'' <- maybeMemberFunctionCall i'
@@ -136,6 +142,34 @@ instance ToIRTransformable (Sol.Expression SourceRange) IExpression' where
         ps' <- case pl of
           Nothing -> return []
           Just (ExpressionList ps) -> mapM _toIR ps
+        return $ FunctionCallExpr <$> fe' <*> sequence ps'
+  _toIR (FunctionCallNameValueList fe pl fa) = do
+    case fe of
+      (Literal (PrimaryExpressionIdentifier (Sol.Identifier fn _))) -> do
+        if isBuiltInFnSupported fn
+          then do
+            st' <- lookupStruct fn
+            if shouldIgnoreBuiltInTypes fn
+              then case pl of
+                Just (NameValueList [nv]) -> _toIR (snd nv)
+                _ -> reportError ("unsupported function call : `" ++ fn ++ "`") fa >> return Nothing
+              else if isJust st' then do
+                ps' <- case pl of
+                  Nothing -> return []
+                  Just (NameValueList ps) -> mapM (_toIR . snd) ps
+                return $ StructLiteralExpr <$> sequence ps'
+              else do
+                fe' <- _toIR fe
+                ps' <- case pl of
+                  Nothing -> return []
+                  Just (NameValueList ps) -> mapM (_toIR . snd) ps
+                return $ FunctionCallExpr <$> fe' <*> sequence ps'
+          else reportError ("unsupported function call : `" ++ fn ++ "`") fa >> return Nothing
+      _ -> do
+        fe' <- _toIR fe
+        ps' <- case pl of
+          Nothing -> return []
+          Just (NameValueList ps) -> mapM (_toIR . snd) ps
         return $ FunctionCallExpr <$> fe' <*> sequence ps'
   _toIR (Literal (PrimaryExpressionTupleExpression (SquareBrackets array _))) = do
     array' <- mapM _toIR array
@@ -192,6 +226,7 @@ toExprName (IdentifierExpr (IR.Identifier n)) = replaceDotWithUnderscore n
 toExprName (IdentifierExpr (IR.ReservedId n)) = replaceDotWithUnderscore n
 toExprName (BinaryExpr _ le re) = toExprName le ++ "_" ++ toExprName re
 toExprName (StructLiteralExpr es) = intercalate "_" $ map toExprName es
+toExprName (MemberAccessExpr e (IR.Identifier n)) = toExprName e ++ "_" ++ replaceDotWithUnderscore n
 toExprName e = error $ "the expr is not supported in #toExprName: " ++ show e
 
 incExprCounter :: MappingExprCounter -> IExpression' -> IExpression' -> IType -> MappingExprCounter

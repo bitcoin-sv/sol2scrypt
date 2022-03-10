@@ -51,9 +51,13 @@ contract Foo {
         _;
     }
 
-    function myFunc(uint x) public pure returns (string memory) {
+    function myFunc(uint x, uint y) public pure returns (string memory) {
         require(x != 0, "require failed");
         return "my func was called";
+    }
+
+    function myFunc(uint x) public pure returns (string memory) {
+        myFunc(1,1);
     }
 
     function create(string memory _text) public {

@@ -59,6 +59,7 @@ library
       IR.Transformations.Sol2IR.Identifier
       IR.Transformations.Sol2IR.Program
       IR.Transformations.Sol2IR.Statement
+      IR.Transformations.Sol2IR.Struct
       IR.Transformations.Sol2IR.Type
       IR.Transformations.Sol2IR.Variable
       IR.Transformer

@@ -8,10 +8,12 @@
 module IR.Transformations.Sol2IR.Contract where
 
 import IR.Spec as IR
+import Control.Monad.State
 import IR.Transformations.Base
 import IR.Transformations.Sol2IR.Identifier ()
 import IR.Transformations.Sol2IR.Expression ()
 import IR.Transformations.Sol2IR.Variable ()
+import IR.Transformations.Sol2IR.Struct ()
 import IR.Transformations.Sol2IR.Function (buildPropagateState)
 import Solidity.Spec as Sol
 import Data.Maybe
@@ -43,16 +45,22 @@ instance ToIRTransformable (Sol.ContractPart SourceRange) IContractBodyElement' 
     addSym $ Symbol <$> (stateVarName <$> e') <*> (stateVarType <$> e') <*> Just True
     return $ IR.StateVariableDeclaration <$> e'
   _toIR Sol.ContractPartEventDefinition {} = return Nothing
-  _toIR func@(Sol.ContractPartFunctionDefinition (Just fn) _ _ _ _ _) = do
+  _toIR func@(Sol.ContractPartFunctionDefinition (Just fn@(Sol.Identifier i _)) _ _ _ _ a) = do
     fn' <- _toIR fn
-    addSym $ Symbol <$> fn' <*> Just functionSymType <*> Just False
-    enterScope
-    func' <- _toIR func
-    leaveScope
-    return $ IR.FunctionDefinition <$> func'
+    err <- addSym $ Symbol <$> fn' <*> Just functionSymType <*> Just False
+    case err of
+      Left _ -> reportError ("duplicate function name `" ++ i ++ "` in contract") a >> return Nothing
+      Right _ -> do
+          enterScope
+          func' <- _toIR func
+          leaveScope
+          return $ IR.FunctionDefinition <$> func'
   _toIR ctor@Sol.ContractPartConstructorDefinition {} = do
       ctor' <- _toIR ctor
       return $ IR.ConstructorDefinition <$> ctor'
+  _toIR (Sol.ContractPartStructDefinition st) = do
+    _ :: IStruct'  <- _toIR st
+    return Nothing
   _toIR c = reportError ("unsupported contract part `" ++ headWord (show c) ++ "`") (ann c) >> return Nothing
 
 
