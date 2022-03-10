@@ -2,12 +2,15 @@
 module IR.Transformations.Sol2IR.Helper where
 import Text.Parsec.Pos
 
-import Solidity
+import Solidity.Spec as Sol
 
+import IR.Spec as IR
+import IR.Transformations.Base
+import Data.Maybe (catMaybes)
 
 
 eqIdentifier :: Identifier SourceRange -> Identifier SourceRange -> (Bool, SourceRange)
-eqIdentifier (Identifier iid _) (Identifier iid' a) = (iid == iid', a)
+eqIdentifier (Sol.Identifier iid _) (Sol.Identifier iid' a) = (iid == iid', a)
 
 eqStateMutability :: StateMutability SourceRange -> StateMutability SourceRange -> (Bool, SourceRange)
 eqStateMutability (StateMutability ability _) (StateMutability ability' a) = (ability == ability', a)
@@ -23,12 +26,12 @@ eqPrimaryExpression :: PrimaryExpression SourceRange -> PrimaryExpression Source
 eqPrimaryExpression (PrimaryExpressionBooleanLiteral (BooleanLiteral v _)) (PrimaryExpressionBooleanLiteral (BooleanLiteral v' a)) = (v == v', a)
 eqPrimaryExpression (PrimaryExpressionNumberLiteral (NumberLiteral v _)) (PrimaryExpressionNumberLiteral (NumberLiteral v' a)) = (v == v', a)
 eqPrimaryExpression (PrimaryExpressionHexLiteral (HexLiteral v _)) (PrimaryExpressionHexLiteral (HexLiteral v' a)) = (v == v', a)
-eqPrimaryExpression (PrimaryExpressionStringLiteral (StringLiteral v _)) (PrimaryExpressionStringLiteral (StringLiteral v' a)) = (v == v', a)
+eqPrimaryExpression (PrimaryExpressionStringLiteral (Sol.StringLiteral v _)) (PrimaryExpressionStringLiteral (Sol.StringLiteral v' a)) = (v == v', a)
 eqPrimaryExpression (PrimaryExpressionTupleExpression (RoundBrackets v _)) (PrimaryExpressionTupleExpression (RoundBrackets v' a))
   = (compareList v v' exprEq, a)
 eqPrimaryExpression (PrimaryExpressionTupleExpression (SquareBrackets v _)) (PrimaryExpressionTupleExpression (SquareBrackets v' a))
   = (compareList v v' exprEq, a)
-eqPrimaryExpression (PrimaryExpressionIdentifier (Identifier v _)) (PrimaryExpressionIdentifier (Identifier v' a))
+eqPrimaryExpression (PrimaryExpressionIdentifier (Sol.Identifier v _)) (PrimaryExpressionIdentifier (Sol.Identifier v' a))
   = (v == v', a)
 eqPrimaryExpression (PrimaryExpressionElementaryTypeNameExpression et) (PrimaryExpressionElementaryTypeNameExpression et')
   = eqElementaryTypeName et et'
@@ -101,7 +104,7 @@ maybeExprEq (Just _) Nothing = False
 maybeExprEq (Just a) (Just b) = fst $ exprEq a b
 
 exprExistsInStmt :: Expression SourceRange -> Statement SourceRange -> (Bool, SourceRange)
-exprExistsInStmt e (BlockStatement (Block stmts a)) = foldr (\ (exists, src) s -> if fst s then s else (exists, src)) (False, a) ts
+exprExistsInStmt e (BlockStatement (Sol.Block stmts a)) = foldr (\ (exists, src) s -> if fst s then s else (exists, src)) (False, a) ts
                                                         where
                                                           ts = map (exprExistsInStmt e) stmts
 
@@ -212,3 +215,26 @@ exprExistsInExprEx decExpr ancExpr = if fst r1 then r1 else r2
 
 defaultSourceRange :: SourceRange
 defaultSourceRange = SourceRange (newPos "" 0 0) (newPos "" 0 0)
+
+-- get default value expression for type `tp`
+
+defaultValueExpr :: IType' -> Transformation IExpression'
+defaultValueExpr Nothing = return Nothing 
+defaultValueExpr (Just (ElementaryType IR.Int)) = return $ Just $ LiteralExpr $ IntLiteral False 0
+defaultValueExpr (Just (ElementaryType IR.Bool)) = return $ Just $ LiteralExpr $ BoolLiteral False
+defaultValueExpr (Just (ElementaryType IR.Bytes)) = return $ Just $ LiteralExpr $ BytesLiteral []
+defaultValueExpr (Just (ElementaryType IR.Address)) = return $ Just $ FunctionCallExpr (IdentifierExpr (IR.ReservedId "Ripemd160")) [LiteralExpr $ BytesLiteral [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]
+defaultValueExpr (Just (ElementaryType IR.String)) = return $ Just $ LiteralExpr $ IR.StringLiteral ""
+defaultValueExpr (Just (UserDefinedType n)) = do
+  st' <- lookupStruct n
+  case st' of
+    Nothing -> return Nothing
+    Just st -> do
+      fields <- mapM (\(Param t _) -> defaultValueExpr (Just t)) (structFields st)
+      return $ Just $ StructLiteralExpr $ catMaybes fields
+defaultValueExpr (Just (Array arr n)) = do
+  e <- defaultValueExpr (Just arr)
+  case e of
+    Just e' -> return $ Just $ ArrayLiteralExpr $  replicate n e'
+    _ -> return Nothing 
+defaultValueExpr _ = return Nothing
