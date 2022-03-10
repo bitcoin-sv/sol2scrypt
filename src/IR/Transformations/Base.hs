@@ -30,7 +30,11 @@ data TransformState = TransformState
     stateReturnedInBlock :: [Bool],
     -- structs used as key type for nested maps
     stateMapKeyStructs :: Map.Map [IType] IStruct,
-    stateStructs :: [IStruct]
+    stateStructs :: [IStruct],
+    -- loop count in function
+    stateInFuncLoopCount :: Integer,
+    -- stacked/embedded loop id, the first element indicates which loop is the current
+    stateCurrentLoopId :: [Integer]
   }
   deriving (Show, Eq, Ord)
 

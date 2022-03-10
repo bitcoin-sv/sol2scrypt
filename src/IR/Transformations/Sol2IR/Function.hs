@@ -20,7 +20,7 @@ import IR.Transformations.Sol2IR.Statement ()
 import IR.Transformations.Sol2IR.Type ()
 import IR.Transformations.Sol2IR.Variable ()
 import Solidity.Spec as Sol
-import Utils
+import Protolude.Monad (concatMapM)
 import Data.Foldable
 
 data FuncRetTransResult = FuncRetTransResult
@@ -32,7 +32,7 @@ data FuncRetTransResult = FuncRetTransResult
 
 instance ToIRTransformable (ContractPart SourceRange) IFunction' where
   _toIR (ContractPartFunctionDefinition (Just (Sol.Identifier fn _)) pl tags maybeRets (Just block) _) = do
-    modify $ \s -> s {stateInFuncMappingCounter = Map.empty}
+    modify $ \s -> s {stateInFuncMappingCounter = Map.empty, stateInFuncLoopCount = 0}
     vis <- toIRFuncVis tags
     retTransResult <- toIRFuncRet vis maybeRets
     (ps, blkTfromParam) <- toIRFuncParams pl tags retTransResult vis block
@@ -334,7 +334,7 @@ toIRConstructorParams (ParameterList pl) _ funcBlk = do
 
 toIRConstructorBody :: Block SourceRange -> TFStmtWrapper -> Transformation IBlock'
 toIRConstructorBody (Sol.Block ss _) (TFStmtWrapper prepends appends) = do
-  stmts' <- mapM _toIR ss
+  stmts' <- concatMapM _toIR ss
   let stmts'' = map Just prepends ++ stmts' ++ map Just appends
   return $ Just $ IR.Block $ catMaybes stmts''
 

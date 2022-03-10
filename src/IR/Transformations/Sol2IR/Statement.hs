@@ -14,9 +14,13 @@ import IR.Transformations.Sol2IR.Identifier
 import IR.Transformations.Sol2IR.Type ()
 import IR.Transformations.Sol2IR.Variable ()
 import Protolude.Functor
+import Protolude.Monad (concatMapM)
 import Solidity.Spec as Sol
 import Utils
 
+instance ToIRTransformable (Maybe (Sol.Statement SourceRange)) IStatement' where
+  _toIR (Just s) = _toIR s
+  _toIR _ = return Nothing
 
 instance ToIRTransformable (Sol.Statement SourceRange) IStatement' where
   _toIR (SimpleStatementExpression (Binary (Operator "=" _) le re _) a) = do
@@ -26,10 +30,10 @@ instance ToIRTransformable (Sol.Statement SourceRange) IStatement' where
     case le' of
       Just (BinaryExpr Index _ (IdentifierExpr _)) -> reportError "unsupported assign Statement, subscript cannot be a variable" a >> return Nothing
       _ -> return $ AssignStmt <$> sequence [le'] <*> sequence [re']
-  _toIR (SimpleStatementExpression (FunctionCallExpressionList (Literal (PrimaryExpressionIdentifier (Sol.Identifier "require" _))) (Just (ExpressionList (e:_))) _) _) = do
+  _toIR (SimpleStatementExpression (FunctionCallExpressionList (Literal (PrimaryExpressionIdentifier (Sol.Identifier "require" _))) (Just (ExpressionList (e : _))) _) _) = do
     e' <- _toIR e
     return $ Just $ IR.RequireStmt $ fromJust e'
-  _toIR (SimpleStatementExpression (FunctionCallExpressionList (Literal (PrimaryExpressionIdentifier (Sol.Identifier "assert" _))) (Just (ExpressionList (e:_))) _) _) = do
+  _toIR (SimpleStatementExpression (FunctionCallExpressionList (Literal (PrimaryExpressionIdentifier (Sol.Identifier "assert" _))) (Just (ExpressionList (e : _))) _) _) = do
     e' <- _toIR e
     return $ Just $ IR.RequireStmt $ fromJust e'
   _toIR (SimpleStatementExpression e _) = ExprStmt <<$>> _toIR e
@@ -44,9 +48,9 @@ instance ToIRTransformable (Sol.Statement SourceRange) IStatement' where
     e' <- _toIR e
     localVar' <- _toIR localVar
     addSym $ Symbol <$> (paramName <$> localVar') <*> (paramType <$> localVar') <*> Just False
-    case localVar' of 
+    case localVar' of
       Nothing -> reportError "unsupported SimpleStatementVariableDeclarationList" a >> return Nothing
-      Just _ -> return $ DeclareStmt [localVar'] <$>  sequence [e']
+      Just _ -> return $ DeclareStmt [localVar'] <$> sequence [e']
   _toIR (SimpleStatementVariableDeclarationList _ _ a) = reportError "unsupported SimpleStatementVariableDeclarationList" a >> return Nothing
   _toIR (Return e _) = do
     returned <- gets stateReturnedInBlock
@@ -55,12 +59,13 @@ instance ToIRTransformable (Sol.Statement SourceRange) IStatement' where
     case returned of
       -- for the outermost return, transpile to `return returned ? retVal : e;`
       [True] -> do
-        return $ ReturnStmt
-          <$> ( TernaryExpr
-                  <$> Just (IdentifierExpr (IR.ReservedId varReturned))
-                  <*> Just (IdentifierExpr (IR.ReservedId varRetVal))
-                  <*> e''
-              )
+        return $
+          ReturnStmt
+            <$> ( TernaryExpr
+                    <$> Just (IdentifierExpr (IR.ReservedId varReturned))
+                    <*> Just (IdentifierExpr (IR.ReservedId varRetVal))
+                    <*> e''
+                )
       -- for the non-outermost return (at least two flags in `stateReturnedInBlock`), transplie to `{ returned = true; retVal = e; }`
       _ : _ : _ -> do
         -- set current block's returned flag
@@ -74,7 +79,6 @@ instance ToIRTransformable (Sol.Statement SourceRange) IStatement' where
                       ]
                 )
       _ -> return $ ReturnStmt <$> e''
-
   _toIR (Sol.BlockStatement blk) = do
     blk' <- _toIR blk
     return $ IR.BlockStmt <$> blk'
@@ -94,6 +98,16 @@ instance ToIRTransformable (Sol.Statement SourceRange) IStatement' where
         elsestmt' <- _toIR $ wrapSingleRet elsestmt
         return $ ret <*> (Just <$> elsestmt')
       Nothing -> return $ ret <*> Just Nothing
+  _toIR Sol.ForStatement {} = error "unexpected call `_toIR` for `ForStatement`, use the implemented in `instance ToIRTransformable (Sol.Statement SourceRange) [IStatement']`"
+  _toIR Sol.WhileStatement {} = error "unexpected call `_toIR` for `WhileStatement`, use the implemented in `instance ToIRTransformable (Sol.Statement SourceRange) [IStatement']`"
+  _toIR Sol.DoWhileStatement {} = error "unexpected call `_toIR` for `DoWhileStatement`, use the implemented in `instance ToIRTransformable (Sol.Statement SourceRange) [IStatement']`"
+  _toIR (Sol.Break _) = do
+    loopIds <- gets stateCurrentLoopId
+    if null loopIds
+      then return Nothing
+      else do
+        let breakFlag = IR.Identifier $ varLoopBreakFlag ++ show (head loopIds)
+        return $ Just $ AssignStmt [IdentifierExpr breakFlag] [LiteralExpr $ BoolLiteral True]
   _toIR s = reportError ("unsupported statement `" ++ headWord (show s) ++ "`") (ann s) >> return Nothing
 
 instance ToIRTransformable (Sol.Block SourceRange) IBlock' where
@@ -102,6 +116,92 @@ instance ToIRTransformable (Sol.Block SourceRange) IBlock' where
     stmts' <- transBlockStmtsWithReturn stmts []
     leaveScope
     return $ Just $ IR.Block $ catMaybes stmts'
+
+instance ToIRTransformable (Sol.Statement SourceRange) [IStatement'] where
+  _toIR (Sol.ForStatement (maybeInitStmt, maybeCheckExpr, maybeIterExpr) body _) = do
+    lCount <- gets stateInFuncLoopCount
+    loopIds <- gets stateCurrentLoopId
+    modify $ \s -> s {stateInFuncLoopCount = lCount + 1, stateCurrentLoopId = lCount : loopIds}
+
+    let breakFlag = IR.Identifier $ varLoopBreakFlag ++ show lCount
+    let initBreakFlagStmt = IR.DeclareStmt [Just $ IR.Param (ElementaryType IR.Bool) breakFlag] [LiteralExpr $ BoolLiteral False]
+    let hasBreakStmt = hasOwnLoopBreakStmt body
+    initStmt <- _toIR maybeInitStmt
+    -- only generate break-flag-init-stmt if got its own `break` stmt inside. NOTE: nested loop's break does not count.
+    let initStmts = [Just initBreakFlagStmt | hasBreakStmt] ++ [initStmt | isJust initStmt]
+
+    checkExpr <- _toIR maybeCheckExpr
+    iterExpr <- _toIR maybeIterExpr
+    let condExpr = case maybeCheckExpr of
+          -- `checkExpr` or `!loopBreakFlag && checkExpr`
+          Just _ -> if hasBreakStmt then BinaryExpr IR.BoolAnd <$> Just notBreakExpr <*> checkExpr else checkExpr
+          -- !loopBreakFlag
+          _ -> Just $ UnaryExpr IR.Not notBreakExpr
+          where
+            notBreakExpr = UnaryExpr IR.Not $ IdentifierExpr breakFlag
+
+    enterScope
+    bodyStmts <- case body of
+      Sol.BlockStatement (Sol.Block ss _) -> concatMapM _toIR ss
+      _ -> _toIR body
+    leaveScope
+
+    let loopBodyStmt =
+          IfStmt
+            <$> condExpr
+            <*> Just
+              ( IR.BlockStmt
+                  ( IR.Block $
+                      catMaybes $ bodyStmts ++ [ExprStmt <$> iterExpr]
+                  )
+              )
+            <*> Just Nothing
+
+    -- restore stacked loop ids
+    modify $ \s -> s {stateCurrentLoopId = loopIds}
+
+    return $
+      initStmts
+        ++ [ LoopStmt
+               <$> Just (IdentifierExpr $ IR.Identifier $ varLoopCount ++ show lCount)
+               <*> Just Nothing
+               <*> loopBodyStmt
+           ]
+    where
+      hasOwnLoopBreakStmt :: Sol.Statement SourceRange -> Bool
+      hasOwnLoopBreakStmt (Sol.Break _) = True
+      hasOwnLoopBreakStmt (Sol.BlockStatement (Sol.Block ss _)) = foldl (\r s -> r || hasOwnLoopBreakStmt s) False ss
+      hasOwnLoopBreakStmt (Sol.IfStatement _ tBranch maybeFalseBranch _) = hasOwnLoopBreakStmt tBranch || maybe False hasOwnLoopBreakStmt maybeFalseBranch
+      hasOwnLoopBreakStmt _ = False
+  _toIR (Sol.WhileStatement expr stmt a) = _toIR $ Sol.ForStatement (Nothing, Just expr, Nothing) stmt a
+  _toIR (Sol.DoWhileStatement stmt expr a) = do
+    -- bcoz `stmt` may contain plain `break` statement (which should only work for the while loop), it must be removed before transpile the `stmt` to outer scope.
+    stmt' <- concatMapM _toIR $ discardOwnLoopBreakStmt stmt
+    enterScope
+    loopStmts <- _toIR $ Sol.ForStatement (Nothing, Just expr, Nothing) stmt a
+    leaveScope
+    return $ stmt' ++ loopStmts
+    where
+      -- discard the statement's own `break` statement, Note: nested loop's `break` does not count.
+      discardOwnLoopBreakStmt :: Statement SourceRange -> [Statement SourceRange]
+      discardOwnLoopBreakStmt (Sol.Break _) = []
+      discardOwnLoopBreakStmt (Sol.BlockStatement (Sol.Block ss ba)) = [Sol.BlockStatement (Sol.Block (concatMap discardOwnLoopBreakStmt ss) ba)]
+      discardOwnLoopBreakStmt (Sol.IfStatement e tBranch maybeFalseBranch sa) =
+        [Sol.IfStatement e tBranch' fBranch' sa]
+        where
+          tBranch' = case discardOwnLoopBreakStmt tBranch of
+                        x : _ -> x
+                        -- use empty block to replace the only `break` stmt in true branch.
+                        [] -> Sol.BlockStatement (Sol.Block [] (ann tBranch))
+          fBranch' = case maybeFalseBranch of
+            Just fb -> case discardOwnLoopBreakStmt fb of
+              x : _ -> Just x
+              [] -> Nothing
+            _ -> Nothing
+      discardOwnLoopBreakStmt s = [s]
+  _toIR s = do
+    s' <- _toIR s
+    return [s']
 
 -- transplie block statments that may have returned in middle
 transBlockStmtsWithReturn :: [Statement SourceRange] -> [IStatement'] -> Transformation [IStatement']
@@ -131,7 +231,7 @@ transBlockStmtsWithReturn ss@(stmt : rss) results = do
         return ([], results ++ ifstmt)
       _ -> do
         stmt' <- _toIR stmt
-        return (rss, results ++ [stmt'])
+        return (rss, results ++ stmt')
   transBlockStmtsWithReturn ss' results'
   where
     -- wrap `stmts` to `if (!returned) { <stmts> }`

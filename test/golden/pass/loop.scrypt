@@ -1,0 +1,96 @@
+contract LoopTest {
+  @state
+  int x;
+
+  constructor() {
+    int i = 0;
+    loop (__LoopCount__0) {
+      if (i < 2) {
+        this.x += i;
+        i++;
+      }
+    }
+  }
+
+  public function f1(SigHashPreimage txPreimage) {
+    int i = 0;
+    loop (__LoopCount__0) {
+      if (i < 10) {
+        int j = 1;
+        loop (__LoopCount__1) {
+          if (j < i) {
+            if (i == 4) {
+              this.x += i * j;
+            }
+            j += 1;
+          }
+        }
+        i++;
+      }
+    }
+    require(this.propagateState(txPreimage));
+  }
+
+  public function f2(SigHashPreimage txPreimage) {
+    int k = 0;
+    int i = 0;
+    loop (__LoopCount__0) {
+      if (i < 10) {
+        int j = 0;
+        {
+          int k = 1;
+          if (k < 0) {
+          }
+          else {
+            k += 3;
+          }
+          this.x += k * 2;
+        }
+        bool loopBreakFlag1 = false;
+        loop (__LoopCount__1) {
+          if (!loopBreakFlag1 && i > 4) {
+            int k = 1;
+            if (k < 0)
+              loopBreakFlag1 = true;
+            else {
+              k += 3;
+            }
+            this.x += k * 2;
+          }
+        }
+        i++;
+      }
+    }
+    require(this.propagateState(txPreimage));
+  }
+
+  public function f3(SigHashPreimage txPreimage) {
+    int i = 0;
+    int j = 0;
+    i = j;
+    loop (__LoopCount__0) {
+      if (i < 10) {
+        bool loopBreakFlag1 = false;
+        loop (__LoopCount__1) {
+          if (!loopBreakFlag1 && i > 2) {
+            if (j > 5) {
+              this.x++;
+              loopBreakFlag1 = true;
+            }
+            j += 1;
+            this.x += j;
+          }
+        }
+        i++;
+      }
+    }
+    require(this.propagateState(txPreimage));
+  }
+
+  function propagateState(SigHashPreimage txPreimage) : bool {
+    require(Tx.checkPreimage(txPreimage));
+    bytes outputScript = this.getStateScript();
+    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    return hash256(output) == SigHash.hashOutputs(txPreimage);
+  }
+}
