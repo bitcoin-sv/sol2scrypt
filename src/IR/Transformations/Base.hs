@@ -12,6 +12,7 @@ import Solidity.Parser
 import Solidity.Spec
 import Text.Parsec hiding (try, (<|>))
 import Data.List
+import Data.Either
 
 parseIO :: Parseable a => String -> SourceName -> IO a
 parseIO solidityCode file = either (fail . (parseError ++) . show) return $ parse parser file solidityCode
@@ -140,9 +141,8 @@ addSym Nothing = return $ Left $ SymbolTableUpdateError "addSym Nothing"
 addSym (Just sym) = do
   env <- gets stateEnv
   let  r = addSymbol sym env
-  case r of
-      Right env' -> modify $ \s -> s {stateEnv = env'}
-      Left _ ->  return ()
+  when (isRight r) $ do
+    modify $ \s -> s {stateEnv = fromRight env r}
   return r
 
 
