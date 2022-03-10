@@ -33,7 +33,7 @@ data TransformState = TransformState
     stateStructs :: [IStruct],
     -- loop count in function
     stateInFuncLoopCount :: Integer,
-    -- stacked/embeded loop id, the first element indicates which loop is the current
+    -- stacked/embedded loop id, the first element indicates which loop is the current
     stateCurrentLoopId :: [Integer]
   }
   deriving (Show, Eq, Ord)

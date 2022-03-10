@@ -122,23 +122,26 @@ instance ToIRTransformable (Sol.Statement SourceRange) [IStatement'] where
 
     let breakFlag = IR.Identifier $ varLoopBreakFlag ++ show lCount
     let initBreakFlagStmt = IR.DeclareStmt [Just $ IR.Param (ElementaryType IR.Bool) breakFlag] [LiteralExpr $ BoolLiteral False]
+    let hasBreakStmt = hasOwnLoopBreakStmt body
     initStmt <- _toIR maybeInitStmt
-    let initStmts = Just initBreakFlagStmt : [initStmt | isJust initStmt]
+    -- only generate break-flag-init-stmt if got its own `break` stmt inside. NOTE: nested loop's break does not count.
+    let initStmts = [Just initBreakFlagStmt | hasBreakStmt] ++ [initStmt | isJust initStmt]
 
     checkExpr <- _toIR maybeCheckExpr
+    iterExpr <- _toIR maybeIterExpr
     let condExpr = case maybeCheckExpr of
-          -- !loopBreakFlag && checkExpr
-          Just _ -> BinaryExpr IR.BoolAnd <$> Just notBreakExpr <*> checkExpr
+          -- `checkExpr` or `!loopBreakFlag && checkExpr`
+          Just _ -> if hasBreakStmt then BinaryExpr IR.BoolAnd <$> Just notBreakExpr <*> checkExpr else checkExpr
           -- !loopBreakFlag
           _ -> Just $ UnaryExpr IR.Not notBreakExpr
           where
             notBreakExpr = UnaryExpr IR.Not $ IdentifierExpr breakFlag
 
+    enterScope
     bodyStmts <- case body of
       Sol.BlockStatement (Sol.Block ss _) -> concatMapM _toIR ss
       _ -> _toIR body
-
-    iterExpr <- _toIR maybeIterExpr
+    leaveScope
 
     let loopBodyStmt =
           IfStmt
@@ -161,29 +164,38 @@ instance ToIRTransformable (Sol.Statement SourceRange) [IStatement'] where
                <*> Just Nothing
                <*> loopBodyStmt
            ]
+    where
+      hasOwnLoopBreakStmt :: Sol.Statement SourceRange -> Bool
+      hasOwnLoopBreakStmt (Sol.Break _) = True
+      hasOwnLoopBreakStmt (Sol.BlockStatement (Sol.Block ss _)) = foldl (\r s -> r || hasOwnLoopBreakStmt s) False ss
+      hasOwnLoopBreakStmt (Sol.IfStatement _ tBranch maybeFalseBranch _) = hasOwnLoopBreakStmt tBranch || maybe False hasOwnLoopBreakStmt maybeFalseBranch
+      hasOwnLoopBreakStmt _ = False
   _toIR (Sol.WhileStatement expr stmt a) = _toIR $ Sol.ForStatement (Nothing, Just expr, Nothing) stmt a
   _toIR (Sol.DoWhileStatement stmt expr a) = do
     -- bcoz `stmt` may contain plain `break` statement (which should only work for the while loop), it must be removed before transpile the `stmt` to outer scope.
-    stmt' <- concatMapM _toIR $ filterNonInLoopBreakStmt stmt
+    stmt' <- concatMapM _toIR $ discardOwnLoopBreakStmt stmt
+    enterScope
     loopStmts <- _toIR $ Sol.ForStatement (Nothing, Just expr, Nothing) stmt a
+    leaveScope
     return $ stmt' ++ loopStmts
     where
-      filterNonInLoopBreakStmt :: Statement SourceRange -> [Statement SourceRange]
-      filterNonInLoopBreakStmt (Sol.Break _) = []
-      filterNonInLoopBreakStmt (Sol.BlockStatement (Sol.Block ss ba)) = [Sol.BlockStatement (Sol.Block (concatMap filterNonInLoopBreakStmt ss) ba)]
-      filterNonInLoopBreakStmt (Sol.IfStatement e tBranch maybeFalseBranch sa) =
+      -- discard the statement's own `break` statement, Note: nested loop's `break` does not count.
+      discardOwnLoopBreakStmt :: Statement SourceRange -> [Statement SourceRange]
+      discardOwnLoopBreakStmt (Sol.Break _) = []
+      discardOwnLoopBreakStmt (Sol.BlockStatement (Sol.Block ss ba)) = [Sol.BlockStatement (Sol.Block (concatMap discardOwnLoopBreakStmt ss) ba)]
+      discardOwnLoopBreakStmt (Sol.IfStatement e tBranch maybeFalseBranch sa) =
         [Sol.IfStatement e tBranch' fBranch' sa]
         where
-          tBranch' = case filterNonInLoopBreakStmt tBranch of
+          tBranch' = case discardOwnLoopBreakStmt tBranch of
                         x : _ -> x
                         -- use empty block to replace the only `break` stmt in true branch.
                         [] -> Sol.BlockStatement (Sol.Block [] (ann tBranch))
           fBranch' = case maybeFalseBranch of
-            Just fb -> case filterNonInLoopBreakStmt fb of
+            Just fb -> case discardOwnLoopBreakStmt fb of
               x : _ -> Just x
               [] -> Nothing
             _ -> Nothing
-      filterNonInLoopBreakStmt s = [s]
+      discardOwnLoopBreakStmt s = [s]
   _toIR s = do
     s' <- _toIR s
     return [s']

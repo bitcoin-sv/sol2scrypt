@@ -32,7 +32,7 @@ data FuncRetTransResult = FuncRetTransResult
 
 instance ToIRTransformable (ContractPart SourceRange) IFunction' where
   _toIR (ContractPartFunctionDefinition (Just (Sol.Identifier fn _)) pl tags maybeRets (Just block) _) = do
-    modify $ \s -> s {stateInFuncMappingCounter = Map.empty}
+    modify $ \s -> s {stateInFuncMappingCounter = Map.empty, stateInFuncLoopCount = 0}
     vis <- toIRFuncVis tags
     retTransResult <- toIRFuncRet vis maybeRets
     (ps, blkTfromParam) <- toIRFuncParams pl tags retTransResult vis block

@@ -145,7 +145,7 @@ spec = testSpec "Transpile Expression" $ do
 
   describe "#MemberAccess" $ do
     itexpr "plain MemberAccess" "a.b" "a.b"
-    itexpr "embeded MemberAccess" "a.b.c" "a.b.c"
+    itexpr "embedded MemberAccess" "a.b.c" "a.b.c"
     itexpr "msg.sender" "msg.sender" "msgSender"
     itexpr "msg.value" "msg.value" "msgValue"
 

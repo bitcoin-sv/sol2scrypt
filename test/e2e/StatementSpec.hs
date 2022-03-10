@@ -143,7 +143,7 @@ spec = testSpec "Transpile Statement" $ do
   return returned ? ret : z;
 }|]
 
-    itstmt "BlockStatement with embeded if & return"
+    itstmt "BlockStatement with embedded if & return"
       [r|{
   uint x = 3;
   if(x > 0) {
@@ -385,10 +385,9 @@ else
       }
 |]
       [r|
-bool loopBreakFlag0 = false;
 int i = 0;
 loop (__LoopCount__0) {
-  if (!loopBreakFlag0 && i < 2) {
+  if (i < 2) {
     if (i > 1) {
       a = b;
     }
@@ -397,7 +396,7 @@ loop (__LoopCount__0) {
 }|]
 
     itMultiStmts "simple ForStatement with break"
-      [r|for(uint i=0; i<2; i++){
+      [r|for (j = _i; j != 0; j /= 10) {
         if (i>1) {
           break;
         }
@@ -405,17 +404,17 @@ loop (__LoopCount__0) {
 |]
       [r|
 bool loopBreakFlag0 = false;
-int i = 0;
+j = _i;
 loop (__LoopCount__0) {
-  if (!loopBreakFlag0 && i < 2) {
+  if (!loopBreakFlag0 && j != 0) {
     if (i > 1) {
       loopBreakFlag0 = true;
     }
-    i++;
+    j /= 10;
   }
 }|]
 
-    itMultiStmts "embeded ForStatement"
+    itMultiStmts "embedded ForStatement"
       [r|for(uint i=0; i<2; i++){
         if (i>1) {
           for(uint j=0; j<2; j++){
@@ -452,15 +451,16 @@ loop (__LoopCount__0) {
       [r|while(i<2){
         if (i>1) {
           a = b;
+          i++;
         }
       }
 |]
       [r|
-bool loopBreakFlag0 = false;
 loop (__LoopCount__0) {
-  if (!loopBreakFlag0 && i < 2) {
+  if (i < 2) {
     if (i > 1) {
       a = b;
+      i++;
     }
   }
 }|]
@@ -499,9 +499,8 @@ loop (__LoopCount__0) {
     a = b;
   }
 }
-bool loopBreakFlag0 = false;
 loop (__LoopCount__0) {
-  if (!loopBreakFlag0 && i < 2) {
+  if (i < 2) {
     if (i > 1) {
       a = b;
     }
@@ -532,7 +531,7 @@ loop (__LoopCount__0) {
   }
 }|]
 
-    itMultiStmts "embeded DoWhileStatement"
+    itMultiStmts "mixed DoWhileStatement & ForStatement"
       [r|for(uint i=0; i<10; i++){
   do {
     uint t = 2;
@@ -545,10 +544,9 @@ loop (__LoopCount__0) {
 }
 |]
       [r|
-bool loopBreakFlag0 = false;
 int i = 0;
 loop (__LoopCount__0) {
-  if (!loopBreakFlag0 && i < 10) {
+  if (i < 10) {
     {
       int t = 2;
       if (i > 1) {
