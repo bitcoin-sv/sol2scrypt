@@ -1,0 +1,57 @@
+contract SolidityTest {
+  function arithmetic() : bool {
+    int a = 20;
+    int b = 10;
+    int sum = a + b;
+    sum += a;
+    int diff = a - b;
+    sum -= a;
+    int mul = a * b;
+    sum *= a;
+    int div = a / b;
+    sum /= a;
+    int mod = a % b;
+    sum %= a;
+    int dec = --b;
+    b--;
+    int inc = ++a;
+    a++;
+    bool eq = a == b;
+    bool noteq = a != b;
+    bool gtr = a > b;
+    bool les = a < b;
+    bool gtreq = a >= b;
+    bool leseq = a <= b;
+    return true;
+  }
+
+  function ternary(int a, int b) : bool {
+    int result = (a > b ? a : b);
+    return true;
+  }
+
+  function logical(bool a, bool b) : bool {
+    bool and = a && b;
+    bool or = a || b;
+    bool not = !a;
+    return true;
+  }
+
+  function bitwise(bytes a, bytes b) : bool {
+    bytes and = a & b;
+    and &= a;
+    and & b'01';
+    bytes or = a | b;
+    or |= a;
+    or | b'01';
+    bytes xor = a ^ b;
+    xor ^= a;
+    xor ^ b'01';
+    bytes leftshift = a << 1;
+    bytes rightshift = a >> 1;
+    rightshift >>= 1;
+    leftshift <<= 1;
+    bytes not = ~a;
+    return true;
+  }
+}

@@ -106,14 +106,6 @@ spec = testSpec "Transpile Expression" $ do
 
       itBinary ">="
 
-      itexpr "|=" "b |= a" "b |= a"
-      itexpr "&=" "b &= a" "b &= a"
-      itexpr ">>" "b >> a" "b >> a"
-      itexpr "<<" "b << a" "b << a"
-      itexpr ">>=" "b >>= a" "b >>= a"
-      itexpr "<<=" "b <<= a" "b <<= a"
-      itexpr "^=" "b ^= a" "b ^= a"
-
       describe "operator `[]`" $ do
         let squareBracketExpr = \leftExpr rightExpr -> leftExpr ++ "[" ++ rightExpr ++ "]"
 
@@ -183,10 +175,10 @@ spec = testSpec "Transpile Expression" $ do
     itexpr "new bytes" "new bytes(7)" "num2bin(0, 7)"
   describe "#ReportError" $ do
     -- operator
-    itReportError "1 & 1 " "unsupported binary operator `&`" (3, 4)
-    itReportError "1 | 1 " "unsupported binary operator `|`" (3, 4)
-    itReportError "1 ^ 1 " "unsupported binary operator `^`" (3, 4)
-    itReportError "~a " "unsupported unary operator `~`" (1, 2)
+    itReportError "1 & 1 " "unsupported `&` on non-bytes expression" (3, 4)
+    itReportError "1 | 1 " "unsupported `|` on non-bytes expression" (3, 4)
+    itReportError "1 ^ 1 " "unsupported `^` on non-bytes expression" (3, 4)
+    itReportError "~a " "unsupported `~` on non-bytes expression" (1, 2)
     -- -- buildin function
     itReportError "new uint[](3) " "unsupported expression : `New`" (1, 11)
     itReportError "assert(true) " "unsupported function call : `assert`" (1, 13)

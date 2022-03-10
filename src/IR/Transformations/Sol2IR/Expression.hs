@@ -72,7 +72,7 @@ instance ToIRTransformable (Sol.Expression SourceRange) IExpression' where
           _ -> arrayIndexAccess e1 e2
       -- other exprs whose type is `Mapping` will not be correctly transpiled below due to the same above.
       _ -> arrayIndexAccess e1 e2
-  _toIR (Binary (Operator opStr a) e1 e2 _) = do
+  _toIR (Binary operator@(Operator opStr a) e1 e2 _) = do
     e1' <- _toIR e1
     e2' <- _toIR e2
     -- TODO: check e1's type, it should be `bytes` for bytesOnlyAssignOps
@@ -80,8 +80,7 @@ instance ToIRTransformable (Sol.Expression SourceRange) IExpression' where
         assignOps = ["+=", "-=", "*=", "/="] ++ bytesOnlyAssignOps
     when (opStr `elem` assignOps) $
       checkLHSmapExpr e1'
-    op <- str2BinaryOp opStr a
-    return $ BinaryExpr <$> op <*> e1' <*> e2'
+    transformBinraryExpr operator e1' e2'
   _toIR (Ternary _ e1 e2 e3 _) = do
     e1' <- _toIR e1
     e2' <- _toIR e2
@@ -117,7 +116,7 @@ instance ToIRTransformable (Sol.Expression SourceRange) IExpression' where
                 Just (ExpressionList [p]) -> _toIR p
                 _ -> reportError ("unsupported function call : `" ++ fn ++ "`") fa >> return Nothing
               -- transpile sol `address(0)` to sCrypt `Ripemd160(b'')`
-              else if isAddress0 fe pl then return $ Just $ FunctionCallExpr (IdentifierExpr (IR.ReservedId "Ripemd160")) [LiteralExpr $ BytesLiteral [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]] 
+              else if isAddress0 fe pl then return $ Just $ FunctionCallExpr (IdentifierExpr (IR.ReservedId "Ripemd160")) [LiteralExpr $ BytesLiteral [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]
               else if isJust st' then do
                 ps' <- case pl of
                   Nothing -> return []
@@ -176,6 +175,10 @@ instance ToIRTransformable (Sol.Expression SourceRange) IExpression' where
     return $ Just $ ArrayLiteralExpr $ catMaybes array'
   _toIR e = reportError ("unsupported expression : `" ++ headWord (show e) ++ "`") (ann e) >> return Nothing
 
+isBytes :: IType -> Bool
+isBytes (ElementaryType Bytes) = True
+isBytes _ = False
+
 transformUnaryExpr :: Operator SourceRange -> IExpression' -> Transformation IExpression'
 transformUnaryExpr (Operator opStr a) e' =
   case opStr of
@@ -186,7 +189,42 @@ transformUnaryExpr (Operator opStr a) e' =
     "()--" -> return $ UnaryExpr PostDecrement <$> e'
     "--" -> return $ UnaryExpr PreDecrement <$> e'
     "!" -> return $ UnaryExpr Not <$> e'
+    "~" -> do
+      case e' of
+        Just (IdentifierExpr i) -> do
+          s <- lookupSym i
+          if maybe False (isBytes . symbolType) s then
+            return $ UnaryExpr Invert <$> e'
+          else
+            reportError "unsupported `~` on non-bytes expression" a >> return Nothing
+        _ -> reportError "unsupported `~` on non-bytes expression" a >> return Nothing
     s -> reportError ("unsupported unary operator `" ++ s ++ "`") a >> return Nothing
+
+
+
+transformBinraryExpr :: Operator SourceRange -> IExpression' -> IExpression' -> Transformation IExpression'
+transformBinraryExpr (Operator opStr a) e1' e2' = do
+    if onlyWorkWithBytes opStr then
+      case e1' of
+        Just (IdentifierExpr i) -> do
+          s <- lookupSym i
+          if maybe False (isBytes . symbolType) s then
+            succeed
+          else
+            failAndReportError
+        _ -> failAndReportError
+    else
+        succeed
+      where
+          succeed = do
+            op <- str2BinaryOp opStr a
+            return $ BinaryExpr <$> op <*> e1' <*> e2'
+          failAndReportError = do
+            reportError ("unsupported `" ++ opStr ++ "` on non-bytes expression") a >> return Nothing
+
+
+onlyWorkWithBytes :: [Char] -> Bool
+onlyWorkWithBytes opStr = opStr `elem` ["&", "|", "^", "&=", "|=", "^=", "<<=", ">>=", "<<", ">>"]
 
 str2BinaryOp :: String -> SourceRange -> Transformation (Maybe IBinaryOp)
 str2BinaryOp "+" _ = return $ Just Add
@@ -199,11 +237,6 @@ str2BinaryOp "-=" _ = return $ Just SubAssign
 str2BinaryOp "*=" _ = return $ Just MulAssign
 str2BinaryOp "/=" _ = return $ Just DivAssign
 str2BinaryOp "%=" _ = return $ Just ModAssign
-str2BinaryOp "&=" _ = return $ Just AndAssign -- only works on bytes in scrypt
-str2BinaryOp "|=" _ = return $ Just OrAssign -- only works on bytes in scrypt
-str2BinaryOp "^=" _ = return $ Just XorAssign -- only works on bytes in scrypt
-str2BinaryOp "<<=" _ = return $ Just LShiftAssign -- only works on bytes in scrypt
-str2BinaryOp ">>=" _ = return $ Just RShiftAssign -- only works on bytes in scrypt
 str2BinaryOp "==" _ = return $ Just IR.Equal
 str2BinaryOp "!=" _ = return $ Just Neq
 str2BinaryOp "<" _ = return $ Just LessThan
@@ -213,8 +246,16 @@ str2BinaryOp ">=" _ = return $ Just GreaterThanOrEqual
 str2BinaryOp "&&" _ = return $ Just BoolAnd
 str2BinaryOp "||" _ = return $ Just BoolOr
 str2BinaryOp "[]" _ = return $ Just Index
-str2BinaryOp "<<" _ = return $ Just LShift
-str2BinaryOp ">>" _ = return $ Just RShift
+str2BinaryOp "&" _ = return $ Just And -- only works on bytes in scrypt
+str2BinaryOp "|" _ = return $ Just Or -- only works on bytes in scrypt
+str2BinaryOp "^" _ = return $ Just Xor -- only works on bytes in scrypt
+str2BinaryOp "&=" _ = return $ Just AndAssign -- only works on bytes in scrypt
+str2BinaryOp "|=" _ = return $ Just OrAssign -- only works on bytes in scrypt
+str2BinaryOp "^=" _ = return $ Just XorAssign -- only works on bytes in scrypt
+str2BinaryOp "<<=" _ = return $ Just LShiftAssign -- only works on bytes in scrypt
+str2BinaryOp ">>=" _ = return $ Just RShiftAssign -- only works on bytes in scrypt
+str2BinaryOp "<<" _ = return $ Just LShift -- only works on bytes in scrypt
+str2BinaryOp ">>" _ = return $ Just RShift -- only works on bytes in scrypt
 str2BinaryOp s a = reportError ("unsupported binary operator `" ++ s ++ "`") a >> return Nothing
 
 -- give an expression a var name which can be used in transformation, for example, declare a var for the expression.
@@ -419,6 +460,6 @@ shouldIgnoreBuiltInTypes fn =
              "bytes32"
            ]
 
-isAddress0 :: Expression SourceRange -> Maybe (ExpressionList a) -> Bool 
-isAddress0 (Literal (PrimaryExpressionIdentifier (Sol.Identifier "address" _))) (Just (ExpressionList [Literal (PrimaryExpressionNumberLiteral (NumberLiteral (NumberLiteralDec "0" Nothing) _))])) = True 
-isAddress0  _ _ = False 
+isAddress0 :: Expression SourceRange -> Maybe (ExpressionList a) -> Bool
+isAddress0 (Literal (PrimaryExpressionIdentifier (Sol.Identifier "address" _))) (Just (ExpressionList [Literal (PrimaryExpressionNumberLiteral (NumberLiteral (NumberLiteralDec "0" Nothing) _))])) = True
+isAddress0  _ _ = False
