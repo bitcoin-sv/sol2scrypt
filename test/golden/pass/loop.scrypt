@@ -2,6 +2,16 @@ contract LoopTest {
   @state
   int x;
 
+  constructor() {
+    int i = 0;
+    loop (__LoopCount__0) {
+      if (i < 2) {
+        this.x += i;
+        i++;
+      }
+    }
+  }
+
   public function f1(SigHashPreimage txPreimage) {
     int i = 0;
     loop (__LoopCount__0) {

@@ -1,6 +1,12 @@
 contract LoopTest {
   uint x;
 
+  constructor() {
+    for(uint i=0; i<2; i++) {
+      x += i;
+    }
+  }
+
   function f1() external {
     for(uint i=0; i<10; i++) {
       for(uint j=1; j < i; j+=1) {

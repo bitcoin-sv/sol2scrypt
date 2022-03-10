@@ -367,11 +367,9 @@ else
       itstmt "PlaceholderStatement" "_;" ""
 
   describe "#ReportError" $ do
-    itReportError  "while (j != 0) {  len++;  j /= 10; }"  [( "unsupported statement `WhileStatement`", (1, 37))]
     itReportError "D newD = new D(1);" [("unsupported expression : `New`", (10, 15)), 
       ("unsupported type `TypeNameUserDefinedTypeName`", (1, 2)),
       ("unsupported SimpleStatementVariableDeclarationList", (1, 19))]
-    itReportError "for (uint p = 0; p < proposals.length; p++) { p++; }" [("unsupported statement `ForStatement`", (1, 53))]
     itReportError "a[i] = 3;" [("unsupported assign Statement, subscript cannot be a variable", (1, 10))]
     itReportError "assembly { let size := extcodesize(_addr) }" [("unsupported statement `InlineAssemblyStatement`", (1, 44))]
 

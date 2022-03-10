@@ -98,6 +98,9 @@ instance ToIRTransformable (Sol.Statement SourceRange) IStatement' where
         elsestmt' <- _toIR $ wrapSingleRet elsestmt
         return $ ret <*> (Just <$> elsestmt')
       Nothing -> return $ ret <*> Just Nothing
+  _toIR Sol.ForStatement {} = error "unexpected call `_toIR` for `ForStatement`, use the implemented in `instance ToIRTransformable (Sol.Statement SourceRange) [IStatement']`"
+  _toIR Sol.WhileStatement {} = error "unexpected call `_toIR` for `WhileStatement`, use the implemented in `instance ToIRTransformable (Sol.Statement SourceRange) [IStatement']`"
+  _toIR Sol.DoWhileStatement {} = error "unexpected call `_toIR` for `DoWhileStatement`, use the implemented in `instance ToIRTransformable (Sol.Statement SourceRange) [IStatement']`"
   _toIR (Sol.Break _) = do
     loopIds <- gets stateCurrentLoopId
     if null loopIds
