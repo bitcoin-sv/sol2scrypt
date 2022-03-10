@@ -153,6 +153,26 @@ a.pop(); </code></pre> </td>
     <td><pre><code>unsupported </code></pre> </td>
     <td></td>
 </tr>
+
+<tr>
+    <td rowspan="3"><b>Operator</b></td>
+    <td>Unary <pre><code>-, (), ++, --, ! </code></pre></td>
+    <td><pre><code>-, (), ++, --, !, ~ </code></pre></td>
+    <td><code>~</code> only works on fixed bytes</td>
+</tr>
+
+<tr>
+    <td>Binary <pre><code>+, -, *, /, %, +=, -=, *=, /=, %=, ==, !=, <, <=, >, >=, &&, ||</code></pre></td>
+    <td><pre><code>+, -, *, /, %, +=, -=, *=, /=, %=, ==, !=, <, <=, >, >=, &&, ||, &, |, ^, &=, |=, ^=, <<=, >>=, <<, >></code></pre></td>
+    <td><code>&, |, ^, &=, |=, ^=, <<=, >>=, <<, >></code> only works on fixed bytes</td>
+</tr>
+
+<tr>
+    <td>Ternary <pre><code>a > b ? a : b</code></pre></td>
+    <td><pre><code>a > b ? a : b</code></pre></td>
+    <td></td>
+</tr>
+
 <tr>
     <td><b>Immutable variables</b></td>
     <td><pre><code>uint immutable x; </code></pre></td>
