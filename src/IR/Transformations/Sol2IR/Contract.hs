@@ -49,7 +49,7 @@ instance ToIRTransformable (Sol.ContractPart SourceRange) IContractBodyElement' 
     fn' <- _toIR fn
     err <- addSym $ Symbol <$> fn' <*> Just functionSymType <*> Just False
     case err of
-      Left _ -> reportError ("duplicated function name `" ++ i ++ "` in contract") a >> return Nothing
+      Left _ -> reportError ("duplicate function name `" ++ i ++ "` in contract") a >> return Nothing
       Right _ -> do
           enterScope
           func' <- _toIR func
