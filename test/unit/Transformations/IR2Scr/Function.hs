@@ -16,8 +16,8 @@ spec = testSpec "instance ToScryptTransformable IFunction (Scr.Function Ann)" $ 
         r :: Maybe (Scr.Function Ann) <- transform2Scrypt f1
         r `shouldBe` f2
 
-  let nonPubFunc1 vis = Just (IR.Function {IR.funcName = IR.Identifier "add", IR.funcParams = IR.ParamList [IR.Param {IR.paramType = IR.ElementaryType IR.Int, IR.paramName = IR.Identifier "x"}, IR.Param {IR.paramType = IR.ElementaryType IR.Int, IR.paramName = IR.Identifier "y"}], IR.funcBody = IR.Block [IR.ReturnStmt {IR.retExpr = IR.LiteralExpr (IR.BoolLiteral True)}], IR.funcReturn = IR.ElementaryType IR.Bool, IR.funcVisibility = vis})
-      pubFunc1 vis = Just (IR.Function {IR.funcName = IR.Identifier "add", IR.funcParams = IR.ParamList [IR.Param {IR.paramType = IR.ElementaryType IR.Int, IR.paramName = IR.Identifier "x"}, IR.Param {IR.paramType = IR.ElementaryType IR.Int, IR.paramName = IR.Identifier "y"}], IR.funcBody = IR.Block [IR.RequireStmt {IR.verifyExpr = IR.LiteralExpr (IR.BoolLiteral True)}], IR.funcReturn = IR.ElementaryType IR.Bool, IR.funcVisibility = vis})
+  let nonPubFunc1 vis = Just (IR.Function {IR.funcName = IR.Identifier "add", IR.funcParams = IR.ParamList [IR.Param {IR.paramType = IR.ElementaryType IR.Int, IR.paramName = IR.Identifier "x"}, IR.Param {IR.paramType = IR.ElementaryType IR.Int, IR.paramName = IR.Identifier "y"}], IR.funcBody = IR.Block [IR.ReturnStmt {IR.retExpr = IR.LiteralExpr (IR.BoolLiteral True)}], IR.funcReturn = IR.ElementaryType IR.Bool, IR.funcVisibility = vis, IR.funcStatic = False})
+      pubFunc1 vis = Just (IR.Function {IR.funcName = IR.Identifier "add", IR.funcParams = IR.ParamList [IR.Param {IR.paramType = IR.ElementaryType IR.Int, IR.paramName = IR.Identifier "x"}, IR.Param {IR.paramType = IR.ElementaryType IR.Int, IR.paramName = IR.Identifier "y"}], IR.funcBody = IR.Block [IR.RequireStmt {IR.verifyExpr = IR.LiteralExpr (IR.BoolLiteral True)}], IR.funcReturn = IR.ElementaryType IR.Bool, IR.funcVisibility = vis, IR.funcStatic = False})
 
   describe "to non-public function" $ do
     itTransformFunc (nonPubFunc1 IR.Private) $ expNonPubFunc1 Scr.Private
