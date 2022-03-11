@@ -17,10 +17,12 @@ import Protolude.Functor
 import Protolude.Monad (concatMapM)
 import Solidity.Spec as Sol
 import Utils
+import IR.Transformations.Sol2IR.Helper
 
 instance ToIRTransformable (Maybe (Sol.Statement SourceRange)) IStatement' where
   _toIR (Just s) = _toIR s
   _toIR _ = return Nothing
+
 
 instance ToIRTransformable (Sol.Statement SourceRange) IStatement' where
   _toIR (SimpleStatementExpression (Binary (Operator "=" _) le re _) a) = do
@@ -47,10 +49,17 @@ instance ToIRTransformable (Sol.Statement SourceRange) IStatement' where
   _toIR (SimpleStatementVariableDeclarationList [Just localVar] [e] a) = do
     e' <- _toIR e
     localVar' <- _toIR localVar
-    addSym $ Symbol <$> (paramName <$> localVar') <*> (paramType <$> localVar') <*> Just False
-    case localVar' of
+    _ <- addSym $ Symbol <$> (paramName <$> localVar') <*> (paramType <$> localVar') <*> Just False
+    case localVar' of 
       Nothing -> reportError "unsupported SimpleStatementVariableDeclarationList" a >> return Nothing
-      Just _ -> return $ DeclareStmt [localVar'] <$> sequence [e']
+      Just _ -> return $ DeclareStmt [localVar'] <$>  sequence [e']
+  _toIR (SimpleStatementVariableDeclarationList [Just localVar@(VariableDeclaration t _ n _)] [] a) = do
+    localVar' <- _toIR localVar
+    t' <- _toIR t
+    e' <- defaultValueExpr t'
+    case e' of 
+      Nothing -> reportError ("unsupported declare `" ++ show t ++ "` without initializing it") a >> return Nothing
+      _ -> return $ DeclareStmt [localVar'] <$>  sequence [e']
   _toIR (SimpleStatementVariableDeclarationList _ _ a) = reportError "unsupported SimpleStatementVariableDeclarationList" a >> return Nothing
   _toIR (Return e _) = do
     returned <- gets stateReturnedInBlock

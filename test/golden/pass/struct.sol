@@ -52,8 +52,8 @@ contract Todos {
 
         todos[0].completed = false;
         // 3. initialize an empty struct and then update it
-        // Todo memory todo;
-        // todo.text = _text;
+        Todo memory todo;
+        todo.text = _text;
 
         //return Todo(_text, true);
     }

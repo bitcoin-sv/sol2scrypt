@@ -40,6 +40,8 @@ contract Todos {
     Todo t1 = this.todos[0];
     t1.completed = false;
     this.todos[0].completed = false;
+    Todo todo = {"", false};
+    todo.text = _text;
     return {"", false};
   }
 

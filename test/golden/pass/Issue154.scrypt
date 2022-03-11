@@ -1,0 +1,29 @@
+struct Todo {
+  bytes text;
+  bool completed;
+}
+
+contract SimpleStorage {
+  @state
+  int storedData;
+
+  function get() : int {
+    int a = 0;
+    int b = 0;
+    int c = 0;
+    int d = 0;
+    int e = 0;
+    int[3] aa = [0, 0, 0];
+    bytes b1 = b'';
+    bytes b2 = b'';
+    bytes b3 = b'';
+    bytes[3] b3a = [b'', b'', b''];
+    PubKeyHash a1 = Ripemd160(b'0000000000000000000000000000000000000000');
+    PubKeyHash[3] a1a = [Ripemd160(b'0000000000000000000000000000000000000000'), Ripemd160(b'0000000000000000000000000000000000000000'), Ripemd160(b'0000000000000000000000000000000000000000')];
+    bool bb = false;
+    bool[3] bba = [false, false, false];
+    Todo todo = {"", false};
+    Todo[3] todos = [{"", false}, {"", false}, {"", false}];
+    return this.storedData;
+  }
+}
