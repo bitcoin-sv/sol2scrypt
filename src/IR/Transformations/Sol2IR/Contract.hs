@@ -24,6 +24,7 @@ instance ToIRTransformable (ContractDefinition SourceRange) IContract' where
     cn' <- _toIR cn
     addSym $ Symbol <$> cn' <*> Just contractSymType <*> Just False
     enterScope
+    enterLibrary False 
     cps' <- mapM _toIR cps
     leaveScope
     let appendPropagateState = findPreimageFunction cps'
@@ -34,6 +35,17 @@ instance ToIRTransformable (ContractDefinition SourceRange) IContract' where
     reportError "unsupported abstract contract definition" a >> return Nothing
   _toIR c = reportError ("unsupported contract definition `" ++ headWord (show c) ++ "`") (ann c) >> return Nothing
 
+
+instance ToIRTransformable (ContractDefinition SourceRange) ILibrary' where
+  _toIR (Sol.ContractDefinition False "library" cn [] cps _) = do
+    cn' <- _toIR cn
+    addSym $ Symbol <$> cn' <*> Just contractSymType <*> Just False
+    enterScope
+    enterLibrary True 
+    cps' <- mapM _toIR cps
+    leaveScope
+    return $ Just $ IR.Library (fromJust cn')  (catMaybes cps')
+  _toIR c = reportError ("unsupported library definition `" ++ headWord (show c) ++ "`") (ann c) >> return Nothing
 
 
 instance ToIRTransformable (Sol.PragmaDirective SourceRange) IR.IEmpty where
@@ -77,6 +89,6 @@ findPreimageFunction [] = False
 findPreimageFunction (x:xs) = case x of
   Nothing -> findPreimageFunction xs
   Just icbe -> let finded = case icbe of
-                          IR.FunctionDefinition (IR.Function _ pl _ _ _) -> findPreimageParam pl
+                          IR.FunctionDefinition (IR.Function _ pl _ _ _ _) -> findPreimageParam pl
                           _ -> False
                     in  if finded then finded else  findPreimageFunction xs

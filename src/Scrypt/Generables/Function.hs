@@ -24,7 +24,7 @@ instance Generable (Scr.Function Ann) where
     firstLine <-
       withIndent $
         trim $
-          vis' ++ (if unStatic stc then " static " else "")
+          vis' ++ (if unStatic stc then " static" else "")
             ++ " function "
             ++ fn'
             ++ "("

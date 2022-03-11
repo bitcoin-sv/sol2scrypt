@@ -33,11 +33,22 @@ instance ToIRTransformable (Sol.SolidityCode SourceRange) IProgram' where
     let contracts =
           filter
             ( \case
-                SourceUnit1_ContractDefinition _ -> True
+                SourceUnit1_ContractDefinition (ContractDefinition _ "contract" _ _ _ _) -> True
+                SourceUnit1_ContractDefinition (ContractDefinition _ "interface" _ _ _ _) -> True -- handle interface to report error
                 _ -> False
             )
             sourceUnits
     contracts' <- mapM _toIR contracts
+
+    let librarys =
+          filter
+            ( \case
+                SourceUnit1_ContractDefinition (ContractDefinition _ "library" _ _ _ _) -> True
+                _ -> False
+            )
+            sourceUnits
+
+    librarys' <- mapM _toIR librarys
 
     let imports_ =
           filter
@@ -51,10 +62,13 @@ instance ToIRTransformable (Sol.SolidityCode SourceRange) IProgram' where
 
     structs <- gets stateMapKeyStructs
     structs' <- gets stateStructs
-    return $ Just $ IR.Program (catMaybes imports') (catMaybes contracts') [] $ reverse (Map.elems structs) ++ structs'
+    return $ Just $ IR.Program (catMaybes imports') (catMaybes contracts') (catMaybes librarys') $ reverse (Map.elems structs) ++ structs'
 
 instance ToIRTransformable (Sol.SourceUnit1 SourceRange) IContract' where
   _toIR (Sol.SourceUnit1_ContractDefinition contractDef) = _toIR contractDef
+
+instance ToIRTransformable (Sol.SourceUnit1 SourceRange) ILibrary' where
+  _toIR (Sol.SourceUnit1_ContractDefinition libdef) = _toIR libdef
 
 instance ToIRTransformable (Sol.SourceUnit1 SourceRange) IImportDirective' where
   _toIR (Sol.SourceUnit1_ImportDirective ip) = _toIR ip

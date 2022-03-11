@@ -16,7 +16,13 @@ instance ToScryptTransformable IProgram' (Maybe (Scr.Program Ann)) where
   _toScrypt = (<$>) _toScrypt
 
 instance ToScryptTransformable IProgram (Scr.Program Ann) where
-  _toScrypt (IR.Program imports contracts _ structs) = Scr.Program (map _toScrypt imports) [] (map _toScrypt structs) (map _toScrypt contracts) nil
+  _toScrypt (IR.Program imports contracts librarys structs) = Scr.Program imports' [] structs'  (librarys' ++ contracts') nil
+    where
+      imports' = map _toScrypt imports
+      structs' = map _toScrypt structs
+      contracts' = map _toScrypt contracts
+      librarys' = map _toScrypt librarys
+
 
 instance ToScryptTransformable IImportDirective' (Maybe (Scr.ImportPath Ann)) where
   _toScrypt = (<$>) _toScrypt

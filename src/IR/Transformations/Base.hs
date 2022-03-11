@@ -34,7 +34,8 @@ data TransformState = TransformState
     -- loop count in function
     stateInFuncLoopCount :: Integer,
     -- stacked/embedded loop id, the first element indicates which loop is the current
-    stateCurrentLoopId :: [Integer]
+    stateCurrentLoopId :: [Integer],
+    stateInLibrary :: Bool
   }
   deriving (Show, Eq, Ord)
 
@@ -179,7 +180,7 @@ mergeTFStmtWrapper (TFStmtWrapper preA appA) (TFStmtWrapper preB appB) =
 mergeTFStmtWrapper' :: Maybe TFStmtWrapper -> Maybe TFStmtWrapper -> Maybe TFStmtWrapper
 mergeTFStmtWrapper' (Just (TFStmtWrapper preA appA)) (Just (TFStmtWrapper preB appB)) =
    Just $ TFStmtWrapper (preA ++ preB) (appA ++ appB)
-mergeTFStmtWrapper' _ _ = Nothing 
+mergeTFStmtWrapper' _ _ = Nothing
 
 wrapTFStmtWrapper :: TFStmtWrapper -> TFStmtWrapper -> TFStmtWrapper
 wrapTFStmtWrapper (TFStmtWrapper preOuter appOuter) (TFStmtWrapper preInner appInner) =
@@ -198,6 +199,18 @@ lookupStruct sn = do
   ss <- gets stateStructs
   return $ find (\s -> structName s == sn) ss
 
+
+enterLibrary :: Bool -> Transformation ()
+enterLibrary isLibrary = do
+  modify $ \s ->
+    s
+      {
+        stateInLibrary = isLibrary
+      }
+
+isInLibrary ::  Transformation Bool
+isInLibrary = do
+  gets stateInLibrary
 
 -----------------  IR to sCrypt  -----------------
 

@@ -1,0 +1,49 @@
+library SafeMath {
+  private static function add(int x, int y) : int {
+    int z = x + y;
+    require(z >= x);
+    return z;
+  }
+}
+
+library Math {
+  static const int MAX_UINT = 2 * 256 - 1;
+
+  private static function sqrt(int y) : int {
+    int z = 0;
+    if (y > 3) {
+      z = y;
+      int x = y / 2 + 1;
+    }
+    else if (y != 0) {
+      z = 1;
+    }
+    return z;
+  }
+}
+
+library Array {
+  static function remove(int[9] arr, int index) : bool {
+    return true;
+  }
+}
+
+contract TestSafeMath {
+  function testAdd(int x, int y) : int {
+    return SafeMath.add(x, y);
+  }
+
+  function testSquareRoot(int x) : int {
+    return Math.sqrt(x);
+  }
+}
+
+contract TestArray {
+  @state
+  public int[9] arr;
+
+  function testArrayRemove() : bool {
+    Array.remove(this.arr, 1);
+    return true;
+  }
+}

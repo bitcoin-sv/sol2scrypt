@@ -25,7 +25,17 @@ instance Generable (Scr.Contract Ann) where
     decIndent
     let lastLine = "\n}"
     return $ firstLine ++ intercalate "\n" (props' ++ stateProps' ++ ([ctor' | ctor' /= ""]) ++ fs') ++ lastLine
-  genCode _ = error "unimplemented `genCode` for contract"
+  genCode (Scr.Contract cn _ props stateProps maybector fs True _) = do
+    cn' <- genCode cn
+    let firstLine = "library " ++ cn' ++ " {"
+    incIndent
+    ctor' <- genCode maybector
+    props' <- mapM genCode props
+    stateProps' <- mapM genCode stateProps
+    fs' <- mapM genCode fs
+    decIndent
+    let lastLine = "\n}"
+    return $ firstLine ++ intercalate "\n" (props' ++ stateProps' ++ ([ctor' | ctor' /= ""]) ++ fs') ++ lastLine
 
 
 instance Generable (Maybe (Scr.Constructor Ann)) where

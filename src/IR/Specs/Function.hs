@@ -10,7 +10,8 @@ data IFunction = Function
     funcParams :: IParamList,
     funcBody :: IBlock,
     funcReturn :: IType,
-    funcVisibility :: IVisibility
+    funcVisibility :: IVisibility,
+    funcStatic :: Bool
   }
   deriving (Show, Eq, Ord)
 
