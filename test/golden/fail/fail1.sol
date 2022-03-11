@@ -115,7 +115,6 @@ contract SimpleStorage {
     }
 
     function get() public view returns (uint) {
-        int128 ff = -2 ** 127 ;
         keccak256(abi.encodePacked("aaa"));
         return storedData;
     }
