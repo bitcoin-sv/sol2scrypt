@@ -216,14 +216,13 @@ exprExistsInExprEx decExpr ancExpr = if fst r1 then r1 else r2
 defaultSourceRange :: SourceRange
 defaultSourceRange = SourceRange (newPos "" 0 0) (newPos "" 0 0)
 
--- get default value expression for type `tp`
-
+-- get default value for a type
 defaultValueExpr :: IType' -> Transformation IExpression'
 defaultValueExpr Nothing = return Nothing 
 defaultValueExpr (Just (ElementaryType IR.Int)) = return $ Just $ LiteralExpr $ IntLiteral False 0
 defaultValueExpr (Just (ElementaryType IR.Bool)) = return $ Just $ LiteralExpr $ BoolLiteral False
 defaultValueExpr (Just (ElementaryType IR.Bytes)) = return $ Just $ LiteralExpr $ BytesLiteral []
-defaultValueExpr (Just (ElementaryType IR.Address)) = return $ Just $ FunctionCallExpr (IdentifierExpr (IR.ReservedId "Ripemd160")) [LiteralExpr $ BytesLiteral [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]
+defaultValueExpr (Just (ElementaryType IR.Address)) = return $ Just $ FunctionCallExpr (IdentifierExpr (IR.ReservedId "Ripemd160")) [LiteralExpr $ BytesLiteral $ replicate 20 0]
 defaultValueExpr (Just (ElementaryType IR.String)) = return $ Just $ LiteralExpr $ IR.StringLiteral ""
 defaultValueExpr (Just (UserDefinedType n)) = do
   st' <- lookupStruct n
