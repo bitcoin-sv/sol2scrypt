@@ -22,6 +22,7 @@ import IR.Transformations.Sol2IR.Variable ()
 import Solidity.Spec as Sol
 import Protolude.Monad (concatMapM)
 import Data.Foldable
+import qualified Data.Set as Set
 
 data FuncRetTransResult = FuncRetTransResult
   { targetType :: IType',
@@ -32,7 +33,7 @@ data FuncRetTransResult = FuncRetTransResult
 
 instance ToIRTransformable (ContractPart SourceRange) IFunction' where
   _toIR (ContractPartFunctionDefinition (Just (Sol.Identifier fn _)) pl tags maybeRets (Just block) _) = do
-    modify $ \s -> s {stateInFuncMappingCounter = Map.empty, stateInFuncLoopCount = 0}
+    modify $ \s -> s {stateInFuncMappingCounter = Map.empty, stateInFuncLoopCount = 0, stateInFuncContinuedLoops = Set.empty}
     vis <- toIRFuncVis tags
     retTransResult <- toIRFuncRet vis maybeRets
     (ps, blkTfromParam) <- toIRFuncParams pl tags retTransResult vis block

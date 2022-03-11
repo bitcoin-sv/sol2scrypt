@@ -13,6 +13,9 @@ import IR.Spec as IR
 import Solidity.Parser
 import Solidity.Spec
 import Text.Parsec hiding (try, (<|>))
+import Data.List
+import Data.Either
+import Data.Set
 
 parseIO :: Parseable a => String -> SourceName -> IO a
 parseIO solidityCode file = either (fail . (parseError ++) . show) return $ parse parser file solidityCode
@@ -26,16 +29,20 @@ data TransformState = TransformState
     stateWrapperForStmt :: Maybe TFStmtWrapper,
     -- counter for mapping-access exprs in a function, key is the expression name, value is its occurrences count
     stateInFuncMappingCounter :: MappingExprCounter,
-    -- have returned previously in current block
+    -- have returned previously in current block, the first element represents the innermost for nested loops
     stateReturnedInBlock :: [Bool],
     -- structs used as key type for nested maps
     stateMapKeyStructs :: Map.Map [IType] IStruct,
     stateStructs :: [IStruct],
-    -- loop count in function
+    -- loop count in function, also used for loop id
     stateInFuncLoopCount :: Integer,
     -- stacked/embedded loop id, the first element indicates which loop is the current
     stateCurrentLoopId :: [Integer],
-    stateInLibrary :: Bool
+    stateInLibrary :: Bool,
+    -- loop ids which have `continue` statement(s) inside in a function
+    stateInFuncContinuedLoops :: Set Integer,
+    -- have `continue` statement previously in current block, the first element represents the innermost for nested loops
+    stateContinuedInBlock :: [IR.IIdentifier'] -- `IR.IIdentifier` is the continue flag name
   }
   deriving (Show, Eq, Ord)
 

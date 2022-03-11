@@ -7,6 +7,7 @@ module IR.Transformations.Sol2IR.Statement where
 
 import Control.Monad.State
 import Data.Maybe
+import qualified Data.Set as Set
 import IR.Spec as IR
 import IR.Transformations.Base
 import IR.Transformations.Sol2IR.Expression
@@ -111,12 +112,22 @@ instance ToIRTransformable (Sol.Statement SourceRange) IStatement' where
   _toIR Sol.WhileStatement {} = error "unexpected call `_toIR` for `WhileStatement`, use the implemented in `instance ToIRTransformable (Sol.Statement SourceRange) [IStatement']`"
   _toIR Sol.DoWhileStatement {} = error "unexpected call `_toIR` for `DoWhileStatement`, use the implemented in `instance ToIRTransformable (Sol.Statement SourceRange) [IStatement']`"
   _toIR (Sol.Break _) = do
-    loopIds <- gets stateCurrentLoopId
-    if null loopIds
+    currentLoop <- getCurrentLoopId
+    if isNothing currentLoop
       then return Nothing
       else do
-        let breakFlag = IR.Identifier $ varLoopBreakFlag ++ show (head loopIds)
+        let breakFlag = IR.Identifier $ varLoopBreakFlag ++ show (fromJust currentLoop)
         return $ Just $ AssignStmt [IdentifierExpr breakFlag] [LiteralExpr $ BoolLiteral True]
+  _toIR (Sol.Continue _) = do
+    continuedLoops <- gets stateInFuncContinuedLoops
+    currentLoop <- getCurrentLoopId
+    if isNothing currentLoop
+      then return Nothing
+      else do
+        -- mark the current loop has a `continue` statement
+        modify $ \s -> s {stateInFuncContinuedLoops = Set.insert (fromJust currentLoop) continuedLoops}
+        -- `IR.ContinueStmt` just exists during `Sol2IR` stage and must be transpile to an assignment statement, which is `loopContinueFlag<X> = true;`, before `IR2Scr` stage.
+        return $ Just $ IR.ContinueStmt $ continueFlag $ fromJust currentLoop
   _toIR s = reportError ("unsupported statement `" ++ headWord (show s) ++ "`") (ann s) >> return Nothing
 
 instance ToIRTransformable (Sol.Block SourceRange) IBlock' where
@@ -131,6 +142,7 @@ instance ToIRTransformable (Sol.Statement SourceRange) [IStatement'] where
     lCount <- gets stateInFuncLoopCount
     loopIds <- gets stateCurrentLoopId
     modify $ \s -> s {stateInFuncLoopCount = lCount + 1, stateCurrentLoopId = lCount : loopIds}
+    let currentLoop = lCount
 
     let breakFlag = IR.Identifier $ varLoopBreakFlag ++ show lCount
     let initBreakFlagStmt = IR.DeclareStmt [Just $ IR.Param (ElementaryType IR.Bool) breakFlag] [LiteralExpr $ BoolLiteral False]
@@ -153,6 +165,16 @@ instance ToIRTransformable (Sol.Statement SourceRange) [IStatement'] where
     bodyStmts <- case body of
       Sol.BlockStatement (Sol.Block ss _) -> concatMapM _toIR ss
       _ -> _toIR body
+    continuedLoops <- gets stateInFuncContinuedLoops
+    bodyStmts' <-
+      if currentLoop `Set.member` continuedLoops
+        then do
+          let initContinueFlag = Just $ IR.DeclareStmt [Just $ IR.Param (IR.ElementaryType IR.Bool) $ continueFlag currentLoop] [IR.LiteralExpr $ IR.BoolLiteral False]
+          modify $ \s -> s {stateContinuedInBlock = []}
+          stmts <- transBlockStmtsWithContinue bodyStmts []
+          return $ initContinueFlag : stmts
+        else do
+          return bodyStmts
     leaveScope
 
     let loopBodyStmt =
@@ -161,7 +183,7 @@ instance ToIRTransformable (Sol.Statement SourceRange) [IStatement'] where
             <*> Just
               ( IR.BlockStmt
                   ( IR.Block $
-                      catMaybes $ bodyStmts ++ [ExprStmt <$> iterExpr]
+                      catMaybes $ bodyStmts' ++ [ExprStmt <$> iterExpr]
                   )
               )
             <*> Just Nothing
@@ -199,9 +221,9 @@ instance ToIRTransformable (Sol.Statement SourceRange) [IStatement'] where
         [Sol.IfStatement e tBranch' fBranch' sa]
         where
           tBranch' = case discardOwnLoopBreakStmt tBranch of
-                        x : _ -> x
-                        -- use empty block to replace the only `break` stmt in true branch.
-                        [] -> Sol.BlockStatement (Sol.Block [] (ann tBranch))
+            x : _ -> x
+            -- use empty block to replace the only `break` stmt in true branch.
+            [] -> Sol.BlockStatement (Sol.Block [] (ann tBranch))
           fBranch' = case maybeFalseBranch of
             Just fb -> case discardOwnLoopBreakStmt fb of
               x : _ -> Just x
@@ -259,3 +281,93 @@ transBlockStmtsWithReturn ss@(stmt : rss) results = do
                       Nothing
                 ]
             _ -> return []
+
+getCurrentLoopId :: Transformation (Maybe Integer)
+getCurrentLoopId = do
+  loops <- gets stateCurrentLoopId
+  if null loops
+    then return Nothing
+    else return $ Just $ head loops
+
+continueFlag :: Integer -> IIdentifier
+continueFlag loopId = IR.Identifier $ varLoopContinueFlag ++ show loopId
+
+transBlockStmtsWithContinue :: [IStatement'] -> [IStatement'] -> Transformation [IStatement']
+transBlockStmtsWithContinue [] results = return results
+transBlockStmtsWithContinue (stmt : rss) results = do
+  continuedInBlock <- gets stateContinuedInBlock
+  let previouslyContinued =
+        if null continuedInBlock
+          then Nothing
+          else head continuedInBlock
+  if isJust previouslyContinued
+    then do
+      let r = Just $
+                 IR.IfStmt
+                   (IR.UnaryExpr IR.Not (IR.IdentifierExpr $ fromJust previouslyContinued))
+                   (IR.BlockStmt (IR.Block $ catMaybes $ stmt : rss))
+                   Nothing
+      r' <- transBlockStmtsWithContinue' r
+      return $ results ++ [r']
+    else do
+      stmt' <- transBlockStmtsWithContinue' stmt
+      transBlockStmtsWithContinue rss $ results ++ [stmt']
+
+transBlockStmtsWithContinue' :: IStatement' -> Transformation IStatement'
+transBlockStmtsWithContinue' (Just (IR.ContinueStmt cFlag)) = do
+  continuedInBlock <- gets stateContinuedInBlock
+  -- update current loop's continue flag
+  modify $ \s -> s {stateContinuedInBlock = if null continuedInBlock then [Just cFlag] else Just cFlag : drop 1 continuedInBlock}
+  return $ Just $ IR.AssignStmt [IR.IdentifierExpr cFlag] [IR.LiteralExpr $ IR.BoolLiteral True]
+transBlockStmtsWithContinue' (Just (IR.IfStmt e tBranch maybeFalseBranch)) = do
+  tBranch' <- do
+    enterBlockWithContinue
+    tStmts <- transBlockStmtsWithContinue (getBlockStmts tBranch) []
+    leaveBlockWithContinue
+    return $ IR.BlockStmt $ IR.Block $ catMaybes tStmts
+  fBranch' <- case maybeFalseBranch of
+    Just fBranch -> do
+      enterBlockWithContinue
+      fStmts <- transBlockStmtsWithContinue (getBlockStmts fBranch) []
+      leaveBlockWithContinue
+      return $ Just $ IR.BlockStmt $ IR.Block $ catMaybes fStmts
+    _ -> return Nothing
+  return $ Just $ IR.IfStmt e tBranch' fBranch'
+  where
+    getBlockStmts :: IStatement -> [IStatement']
+    getBlockStmts (IR.BlockStmt (IR.Block ss)) = map Just ss
+    getBlockStmts s = [Just $ IR.BlockStmt $ IR.Block [s]]
+transBlockStmtsWithContinue' (Just (IR.BlockStmt (IR.Block ss))) = do
+  enterBlockWithContinue
+  ss' <- transBlockStmtsWithContinue (map Just ss) []
+  let blockStmt = Just $ IR.BlockStmt $ IR.Block $ catMaybes ss'
+  leaveBlockWithContinue
+  return blockStmt
+transBlockStmtsWithContinue' (Just (IR.LoopStmt e var body)) = do
+  enterBlockWithContinue
+  body' <- transBlockStmtsWithContinue' $ Just body
+  leaveBlockWithContinue
+  return $ IR.LoopStmt <$> Just e <*> Just var <*> body'
+transBlockStmtsWithContinue' s = return s
+
+enterBlockWithContinue :: Transformation ()
+enterBlockWithContinue = do
+  -- enter a new block, set `continueFlag` to Nothing
+  continuedInBlock <- gets stateContinuedInBlock
+  modify $ \s -> s {stateContinuedInBlock = Nothing : continuedInBlock}
+
+leaveBlockWithContinue :: Transformation ()
+leaveBlockWithContinue = do
+  -- leave the block
+  continuedInBlock' <- gets stateContinuedInBlock
+  modify $ \s ->
+    s
+      { stateContinuedInBlock =
+          case continuedInBlock' of
+            -- keep outer scope's `continueFlag` if it exists
+            _ : Just o : fs -> Just o : fs
+            -- set outer scope's `continueFlag` with current if the outer does not exist
+            flag : Nothing : fs -> flag : fs
+            -- keep flags if has no outer scope
+            flags -> flags
+      }

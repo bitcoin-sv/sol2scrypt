@@ -8,7 +8,7 @@ module Transformations.Helper where
 import qualified Data.Map.Lazy as Map
 import IR
 import Solidity.Spec as Sol
-
+import qualified Data.Set as Set
 
 sol2Stmt :: String -> IO (Sol.Statement SourceRange)
 sol2Stmt solidityCode = do
@@ -56,7 +56,7 @@ sol2Program solidityCode = do
     return e
 
 sol2Ir :: ToIRTransformable sol b => (String -> IO sol) -> String -> IO b
-sol2Ir = sol2Ir' (TransformState [] Nothing Map.empty [] Map.empty [] 0 [] False)
+sol2Ir = sol2Ir' (TransformState [] Nothing Map.empty [] Map.empty [] 0 [] False Set.empty [])
 
 sol2Ir' :: ToIRTransformable sol b => TransformState -> (String -> IO sol) -> String -> IO b
 sol2Ir' initState f solidityCode = do

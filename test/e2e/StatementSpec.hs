@@ -412,6 +412,121 @@ loop (__LoopCount__0) {
   }
 }|]
 
+    itMultiStmts "simple ForStatement with continue"
+      [r|for (j = _i; j != 0; j /= 10) {
+        if (j>1) {
+          continue;
+        }
+        j += _i;
+      }
+|]
+      [r|
+j = _i;
+loop (__LoopCount__0) {
+  if (j != 0) {
+    bool loopContinueFlag0 = false;
+    if (j > 1) {
+      loopContinueFlag0 = true;
+    }
+    if (!loopContinueFlag0) {
+      j += _i;
+    }
+    j /= 10;
+  }
+}|]
+
+    itMultiStmts "simple ForStatement with multiple continue"
+      [r|for (j = _i; j != 0; j /= 10) {
+        if (j>1) {
+          if (j > 2) {
+            continue;
+          }
+          j+=3;
+        }
+
+        if (j<10) {
+          j = 10;
+          continue;
+        }
+        
+        j += _i;
+        j -= 10;
+        j *= 2;
+      }
+|]
+      [r|
+j = _i;
+loop (__LoopCount__0) {
+  if (j != 0) {
+    bool loopContinueFlag0 = false;
+    if (j > 1) {
+      if (j > 2) {
+        loopContinueFlag0 = true;
+      }
+      if (!loopContinueFlag0) {
+        j += 3;
+      }
+    }
+    if (!loopContinueFlag0) {
+      if (j < 10) {
+        j = 10;
+        loopContinueFlag0 = true;
+      }
+      if (!loopContinueFlag0) {
+        j += _i;
+        j -= 10;
+        j *= 2;
+      }
+    }
+    j /= 10;
+  }
+}|]
+    itMultiStmts "mixed ForStatement1 with multiple continue"
+      [r|for (j = _i; j != 0; j /= 10) {
+        if (j>1) {
+          continue;
+        }
+
+        for(uint i=0; i < j; i++) {
+          if (i>4) {
+            continue;
+          }
+          _i += 2;
+        }
+        
+        j += _i;
+        j -= 10;
+      }
+|]
+      [r|
+j = _i;
+loop (__LoopCount__0) {
+  if (j != 0) {
+    bool loopContinueFlag0 = false;
+    if (j > 1) {
+      loopContinueFlag0 = true;
+    }
+    if (!loopContinueFlag0) {
+      int i = 0;
+      loop (__LoopCount__1) {
+        if (i < j) {
+          bool loopContinueFlag1 = false;
+          if (i > 4) {
+            loopContinueFlag1 = true;
+          }
+          if (!loopContinueFlag1) {
+            _i += 2;
+          }
+          i++;
+        }
+      }
+      j += _i;
+      j -= 10;
+    }
+    j /= 10;
+  }
+}|]
+
     itMultiStmts "embedded ForStatement"
       [r|for(uint i=0; i<2; i++){
         if (i>1) {
