@@ -90,23 +90,12 @@
         "message": "unsupported SimpleStatementVariableDeclarationList"
     },
     {
-        "src": "test/golden/fail/fail1.sol:105:17:105:26",
-        "type": "Error",
-        "message": "unsupported statement `Continue`"
-    },
-    {
-        "src": "test/golden/fail/fail1.sol:118:9:118:43",
-        "src": "test/golden/fail/fail1.sol:118:24:118:26",
-        "type": "Error",
-        "message": "unsupported binary operator `**`"
-    },
-    {
-        "src": "test/golden/fail/fail1.sol:119:9:119:43",
+        "src": "test/golden/fail/fail1.sol:102:9:102:43",
         "type": "Error",
         "message": "unsupported function call : `keccak256`"
     },
     {
-        "src": "test/golden/fail/fail1.sol:122:26:122:41",
+        "src": "test/golden/fail/fail1.sol:106:26:106:41",
         "type": "Error",
         "message": "unsupported type `TypeNameElementaryTypeName`"
     }
