@@ -31,7 +31,7 @@ instance ToIRTransformable (TypeName SourceRange) IType' where
                sub' <- _toIR e'
                return $ Just sub'
              _ -> reportError "array length should be explicitly specified" a >> return Nothing
-    return $ createArray <$> t' <*> sub
+    return $ reverseArrayDim <$> t' <*> sub
 
   _toIR (TypeNameMapping kt vt _) = toIRMappingType (TypeNameElementaryTypeName kt $ ann kt) vt []
   _toIR t@(TypeNameUserDefinedTypeName (UserDefinedTypeName [Sol.Identifier i _]) _) = do
@@ -78,7 +78,7 @@ toIRMappingType kt vt flattendKeyTypes = do
           _ -> return Nothing
   return $ Mapping <$> kt'' <*> vt'
 
-
-createArray :: IType -> Int  -> IType
-createArray (Array t n') n = Array (createArray t n) n'
-createArray t n = Array t n
+-- reverse multi-dimension array: Solidity T[M][N][P] -> sCrypt T[P][N][M]
+reverseArrayDim :: IType -> Int  -> IType
+reverseArrayDim (Array t n') n = Array (reverseArrayDim t n) n'
+reverseArrayDim t n = Array t n
