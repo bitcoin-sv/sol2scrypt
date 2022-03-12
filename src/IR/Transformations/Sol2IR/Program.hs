@@ -22,19 +22,28 @@ import System.FilePath (replaceExtensions)
 
 instance ToIRTransformable (Sol.SolidityCode SourceRange) IProgram' where
   _toIR (Sol.SolidityCode (SourceUnit sourceUnits)) = do
+    _ :: [IStruct'] <-
+      mapM _toIR $
+        filter
+          ( \case
+              SourceUnit1_StructDefinition _ -> True
+              _ -> False
+          )
+          sourceUnits
 
-    _ :: [IStruct'] <- mapM _toIR $ filter
+    let interfaces =
+          filter
             ( \case
-                SourceUnit1_StructDefinition _ -> True
+                SourceUnit1_ContractDefinition (ContractDefinition _ "interface" _ _ _ _) -> True
                 _ -> False
             )
             sourceUnits
+    mapM_ (\(SourceUnit1_ContractDefinition (ContractDefinition _ "interface" _ _ _ a)) -> reportError "unsupported interface definition" a >> return Nothing) interfaces
 
     let contracts =
           filter
             ( \case
                 SourceUnit1_ContractDefinition (ContractDefinition _ "contract" _ _ _ _) -> True
-                SourceUnit1_ContractDefinition (ContractDefinition _ "interface" _ _ _ _) -> True -- handle interface to report error
                 _ -> False
             )
             sourceUnits
@@ -72,7 +81,6 @@ instance ToIRTransformable (Sol.SourceUnit1 SourceRange) ILibrary' where
 
 instance ToIRTransformable (Sol.SourceUnit1 SourceRange) IImportDirective' where
   _toIR (Sol.SourceUnit1_ImportDirective ip) = _toIR ip
-
 
 instance ToIRTransformable (Sol.SourceUnit1 SourceRange) IStruct' where
   _toIR (Sol.SourceUnit1_StructDefinition st) = _toIR st

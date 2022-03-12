@@ -31,7 +31,7 @@ instance ToIRTransformable (ContractDefinition SourceRange) IContract' where
     let propagateState = [buildPropagateState | appendPropagateState]
     let cps'' = catMaybes  cps' ++ propagateState
     return $ Just $ IR.Contract (fromJust cn') cps''
-  _toIR (Sol.ContractDefinition True _ _ _ _ a) = do
+  _toIR (Sol.ContractDefinition True "contract" _ _ _ a) = do
     reportError "unsupported abstract contract definition" a >> return Nothing
   _toIR c = reportError ("unsupported contract definition `" ++ headWord (show c) ++ "`") (ann c) >> return Nothing
 
