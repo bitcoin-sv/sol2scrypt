@@ -391,16 +391,6 @@ require(checkSig(sig, pubKey));</code></pre></td>
 <tbody>
 
 <tr>
-    <td ><b>Type Fixed</b></td>
-    <td><pre><code>fixed4x4</code></pre></td>
-</tr>
-
-<tr>
-    <td ><b>Type Ufixed</b></td>
-    <td><pre><code>ufixed4x4</code></pre></td>
-</tr>
-
-<tr>
     <td ><b>Power Operator</b></td>
     <td><pre><code>x ** n </code></pre></td>
 </tr>
