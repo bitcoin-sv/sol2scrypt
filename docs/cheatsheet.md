@@ -401,6 +401,11 @@ require(checkSig(sig, pubKey));</code></pre></td>
 </tr>
 
 <tr>
+    <td ><b>Power Operator</b></td>
+    <td><pre><code>x ** n </code></pre></td>
+</tr>
+
+<tr>
     <td ><b>Parallel Assignment</b></td>
     <td><pre><code>(x, y) = (0, 1); </code></pre></td>
 </tr>
