@@ -43,4 +43,21 @@ contract LoopTest {
       }
     }
   }
+
+  function f4() public returns(uint) {
+    uint r = 0;
+    for(uint i =0; i<10; i++) {
+      do {
+        r += i;
+        if (r>10) {
+          return r * 10;
+        }
+      } while (i < 5);
+      if (i>6) {
+        continue;
+      }
+      r += i;
+    }
+    return r;
+  }
 }

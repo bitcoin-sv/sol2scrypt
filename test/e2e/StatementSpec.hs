@@ -412,40 +412,6 @@ loop (__LoopCount__0) {
   }
 }|]
 
-    itMultiStmts "simple ForStatement1 with return & continue"
-      [r|for (j = _i; j != 0; j /= 10) {
-        if (j>1) {
-          return j;
-        }
-        if (j<3) {
-          continue;
-        }
-        j += _i;
-      }
-|]
-      [r|
-j = _i;
-loop (__LoopCount__0) {
-  if (!returned && j != 0) {
-    bool loopContinueFlag0 = false;
-    if (j > 1) {
-      {
-        ret = j;
-        returned = true;
-      }
-    }
-    if (!returned) {
-      if (j < 3) {
-        loopContinueFlag0 = true;
-      }
-      if (!loopContinueFlag0) {
-        j += _i;
-      }
-    }
-    j /= 10;
-  }
-}|]
-
     itMultiStmts "simple ForStatement with continue"
       [r|for (j = _i; j != 0; j /= 10) {
         if (j>1) {
@@ -515,7 +481,42 @@ loop (__LoopCount__0) {
     j /= 10;
   }
 }|]
-    itMultiStmts "mixed ForStatement with multiple continue"
+
+    itMultiStmts "simple ForStatement with return & continue"
+      [r|for (j = _i; j != 0; j /= 10) {
+        if (j>1) {
+          return j;
+        }
+        if (j<3) {
+          continue;
+        }
+        j += _i;
+      }
+|]
+      [r|
+j = _i;
+loop (__LoopCount__0) {
+  if (!returned && j != 0) {
+    bool loopContinueFlag0 = false;
+    if (j > 1) {
+      {
+        ret = j;
+        returned = true;
+      }
+    }
+    if (!returned) {
+      if (j < 3) {
+        loopContinueFlag0 = true;
+      }
+      if (!loopContinueFlag0) {
+        j += _i;
+      }
+    }
+    j /= 10;
+  }
+}|]
+
+    itMultiStmts "embedded ForStatement with multiple continue"
       [r|for (j = _i; j != 0; j /= 10) {
         if (j>1) {
           continue;
@@ -631,6 +632,27 @@ loop (__LoopCount__0) {
   }
 }|]
 
+    itMultiStmts "simple WhileStatement with continue"
+      [r|while(i<2){
+        if (i>1) {
+          continue;
+        }
+        a = b;
+      }
+|]
+      [r|
+loop (__LoopCount__0) {
+  if (i < 2) {
+    bool loopContinueFlag0 = false;
+    if (i > 1) {
+      loopContinueFlag0 = true;
+    }
+    if (!loopContinueFlag0) {
+      a = b;
+    }
+  }
+}|]
+
   describe "#DoWhileStatement" $ do
 
     itMultiStmts "simple DoWhileStatement"
@@ -678,7 +700,33 @@ loop (__LoopCount__0) {
   }
 }|]
 
-    itMultiStmts "mixed DoWhileStatement & ForStatement"
+    itMultiStmts "simple DoWhileStatement with continue"
+      [r|do {
+        if (i>1) {
+          continue;
+        }
+        a = b;
+      } while(i<2);
+|]
+      [r|
+{
+  if (i > 1) {
+  }
+  a = b;
+}
+loop (__LoopCount__0) {
+  if (i < 2) {
+    bool loopContinueFlag0 = false;
+    if (i > 1) {
+      loopContinueFlag0 = true;
+    }
+    if (!loopContinueFlag0) {
+      a = b;
+    }
+  }
+}|]
+
+    itMultiStmts "nested DoWhileStatement & ForStatement"
       [r|for(uint i=0; i<10; i++){
   do {
     uint t = 2;

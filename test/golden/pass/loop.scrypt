@@ -87,6 +87,48 @@ contract LoopTest {
     require(this.propagateState(txPreimage));
   }
 
+  function f4() : int {
+    int ret = 0;
+    bool returned = false;
+    int r = 0;
+    int i = 0;
+    loop (__LoopCount__0) {
+      if (!returned && i < 10) {
+        bool loopContinueFlag0 = false;
+        {
+          r += i;
+          if (r > 10) {
+            {
+              ret = r * 10;
+              returned = true;
+            }
+          }
+        }
+        loop (__LoopCount__1) {
+          if (!returned && i < 5) {
+            r += i;
+            if (r > 10) {
+              {
+                ret = r * 10;
+                returned = true;
+              }
+            }
+          }
+        }
+        if (!returned) {
+          if (i > 6) {
+            loopContinueFlag0 = true;
+          }
+          if (!loopContinueFlag0) {
+            r += i;
+          }
+        }
+        i++;
+      }
+    }
+    return returned ? ret : r;
+  }
+
   function propagateState(SigHashPreimage txPreimage) : bool {
     require(Tx.checkPreimage(txPreimage));
     bytes outputScript = this.getStateScript();
