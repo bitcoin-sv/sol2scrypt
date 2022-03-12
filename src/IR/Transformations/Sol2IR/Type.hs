@@ -31,8 +31,8 @@ instance ToIRTransformable (TypeName SourceRange) IType' where
                sub' <- _toIR e'
                return $ Just sub'
              _ -> reportError "array length should be explicitly specified" a >> return Nothing
-    let arr = flip Array <$> sub
-    return $ arr <*> t'
+    return $ createArray <$> t' <*> sub
+
   _toIR (TypeNameMapping kt vt _) = toIRMappingType (TypeNameElementaryTypeName kt $ ann kt) vt []
   _toIR t@(TypeNameUserDefinedTypeName (UserDefinedTypeName [Sol.Identifier i _]) _) = do
     st' <- lookupStruct i
@@ -77,3 +77,8 @@ toIRMappingType kt vt flattendKeyTypes = do
                 return $ Just $ UserDefinedType sn
           _ -> return Nothing
   return $ Mapping <$> kt'' <*> vt'
+
+
+createArray :: IType -> Int  -> IType
+createArray (Array t n') n = Array (createArray t n) n'
+createArray t n = Array t n

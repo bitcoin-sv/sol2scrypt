@@ -26,6 +26,7 @@ module IR.Spec
     IConstructor',
     IProgram',
     IImportDirective',
+    ILibrary',
   )
 where
 
@@ -67,6 +68,8 @@ type IStateVariable' = Maybe IStateVariable
 type IContractBodyElement' = Maybe IContractBodyElement
 
 type IContract' = Maybe IContract
+
+type ILibrary' = Maybe ILibrary
 
 type IProgram' = Maybe IProgram
 

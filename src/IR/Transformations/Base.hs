@@ -5,14 +5,14 @@ module IR.Transformations.Base where
 import Control.Applicative hiding (Const)
 import Control.Monad.State
 import Control.Monad.Writer hiding (Any)
+import Data.Either
+import Data.List
 import qualified Data.Map.Lazy as Map
 import Data.Maybe
 import IR.Spec as IR
 import Solidity.Parser
 import Solidity.Spec
 import Text.Parsec hiding (try, (<|>))
-import Data.List
-import Data.Either
 
 parseIO :: Parseable a => String -> SourceName -> IO a
 parseIO solidityCode file = either (fail . (parseError ++) . show) return $ parse parser file solidityCode
@@ -34,7 +34,8 @@ data TransformState = TransformState
     -- loop count in function
     stateInFuncLoopCount :: Integer,
     -- stacked/embedded loop id, the first element indicates which loop is the current
-    stateCurrentLoopId :: [Integer]
+    stateCurrentLoopId :: [Integer],
+    stateInLibrary :: Bool
   }
   deriving (Show, Eq, Ord)
 
@@ -144,11 +145,10 @@ addSym :: Maybe Symbol -> Transformation (Either SymbolTableUpdateError Env)
 addSym Nothing = return $ Left $ SymbolTableUpdateError "addSym Nothing"
 addSym (Just sym) = do
   env <- gets stateEnv
-  let  r = addSymbol sym env
+  let r = addSymbol sym env
   when (isRight r) $ do
     modify $ \s -> s {stateEnv = fromRight env r}
   return r
-
 
 lookupSymbol :: SymbolName -> Env -> Maybe Symbol
 lookupSymbol _ [] = Nothing
@@ -178,8 +178,8 @@ mergeTFStmtWrapper (TFStmtWrapper preA appA) (TFStmtWrapper preB appB) =
 
 mergeTFStmtWrapper' :: Maybe TFStmtWrapper -> Maybe TFStmtWrapper -> Maybe TFStmtWrapper
 mergeTFStmtWrapper' (Just (TFStmtWrapper preA appA)) (Just (TFStmtWrapper preB appB)) =
-   Just $ TFStmtWrapper (preA ++ preB) (appA ++ appB)
-mergeTFStmtWrapper' _ _ = Nothing 
+  Just $ TFStmtWrapper (preA ++ preB) (appA ++ appB)
+mergeTFStmtWrapper' _ _ = Nothing
 
 wrapTFStmtWrapper :: TFStmtWrapper -> TFStmtWrapper -> TFStmtWrapper
 wrapTFStmtWrapper (TFStmtWrapper preOuter appOuter) (TFStmtWrapper preInner appInner) =
@@ -198,6 +198,14 @@ lookupStruct sn = do
   ss <- gets stateStructs
   return $ find (\s -> structName s == sn) ss
 
+enterLibrary :: Bool -> Transformation ()
+enterLibrary isLibrary = modify $ \s ->
+  s
+    { stateInLibrary = isLibrary
+    }
+
+isInLibrary :: Transformation Bool
+isInLibrary = gets stateInLibrary
 
 -----------------  IR to sCrypt  -----------------
 

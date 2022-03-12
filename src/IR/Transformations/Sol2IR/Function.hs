@@ -44,8 +44,8 @@ instance ToIRTransformable (ContractPart SourceRange) IFunction' where
     let ps' = case ps of
           Just (ParamList pps) -> Just (ParamList $ pps ++ paramsForMap)
           _ -> Just $ ParamList paramsForMap
-
-    return $ Function (IR.Identifier fn) <$> ps' <*> body <*> targetType retTransResult <*> Just vis
+    inL <- isInLibrary 
+    return $ Function (IR.Identifier fn) <$> ps' <*> body <*> targetType retTransResult <*> Just vis <*> Just inL
   _toIR _ = return Nothing
 
 instance ToIRTransformable (ContractPart SourceRange) IConstructor' where
@@ -492,6 +492,7 @@ buildPropagateState =
       (IR.Block body)
       (ElementaryType Bool)
       Default
+      False
   where
     body =
       [ -- add `require(Tx.checkPreimage(txPreimage));`
