@@ -412,7 +412,7 @@ contract Coin {
     [r|contract EIP20 {
   mapping (address => mapping (address => uint256)) public allowed;
 
-  function allowance(address _owner, address _spender) public view returns (uint256) {
+  function allowance(address _owner, address _spender) external view returns (uint256) {
     return allowed[_owner][_spender];
   }
 
@@ -431,9 +431,10 @@ contract EIP20 {
   @state
   public HashedMap<MapKeyST0, int> allowed;
 
-  function allowance(PubKeyHash _owner, PubKeyHash _spender, int this_allowed__owner__spender, int this_allowed__owner__spender_index) : int {
+  public function allowance(PubKeyHash _owner, PubKeyHash _spender, SigHashPreimage txPreimage, int retVal, int this_allowed__owner__spender, int this_allowed__owner__spender_index) {
     require((!this.allowed.has({_owner, _spender}, this_allowed__owner__spender_index) && this_allowed__owner__spender == 0) || this.allowed.canGet({_owner, _spender}, this_allowed__owner__spender, this_allowed__owner__spender_index));
-    return this_allowed__owner__spender;
+    require(this_allowed__owner__spender == retVal);
+    require(this.propagateState(txPreimage));
   }
 
   public function approve(PubKeyHash _spender, int _value, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, bool retVal, int this_allowed_msgSender__spender, int this_allowed_msgSender__spender_index) {

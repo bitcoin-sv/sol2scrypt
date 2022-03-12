@@ -77,6 +77,7 @@ contract Foo {
 contract SimpleStorage {
     uint storedData;
     uint public i = 0;
+    mapping(uint => address) private _owners;
     function set(uint x) external {
         bytes memory a = msg.data;
 
@@ -124,5 +125,11 @@ contract SimpleStorage {
         // (bool success, bytes memory data) = _addr.call{value: msg.value, gas: 5000}(
         //     abi.encodeWithSignature("foo(string,uint256)", "call foo", 123)
         // );
+    }
+
+
+    function ownerOf(uint tokenId) public view  returns (address owner) {
+        owner = _owners[tokenId];
+        require(owner != address(0), "token doesn't exist");
     }
 }

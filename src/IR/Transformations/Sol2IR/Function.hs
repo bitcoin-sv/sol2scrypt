@@ -22,6 +22,7 @@ import IR.Transformations.Sol2IR.Variable ()
 import Solidity.Spec as Sol
 import Protolude.Monad (concatMapM)
 import Data.Foldable
+import Data.Either
 
 data FuncRetTransResult = FuncRetTransResult
   { targetType :: IType',
@@ -31,21 +32,21 @@ data FuncRetTransResult = FuncRetTransResult
   deriving (Show, Eq, Ord)
 
 instance ToIRTransformable (ContractPart SourceRange) IFunction' where
-  _toIR (ContractPartFunctionDefinition (Just (Sol.Identifier fn _)) pl tags maybeRets (Just block) _) = do
+  _toIR (ContractPartFunctionDefinition (Just (Sol.Identifier fn a)) pl tags maybeRets (Just block) _) = do
     modify $ \s -> s {stateInFuncMappingCounter = Map.empty, stateInFuncLoopCount = 0}
     vis <- toIRFuncVis tags
     retTransResult <- toIRFuncRet vis maybeRets
     (ps, blkTfromParam) <- toIRFuncParams pl tags retTransResult vis block
-    body <- toIRFuncBody block vis blkTfromParam retTransResult
+    functionBody <- toIRFuncBody block vis blkTfromParam retTransResult
+    case functionBody of
+      Left msg -> reportError msg a >> return Nothing
+      Right (ParamList paramsForMap, body) -> do
+        let ps' = case ps of
+                Just (ParamList pps) -> Just (ParamList $ pps ++ paramsForMap)
+                _ -> Just $ ParamList paramsForMap
+        inL <- isInLibrary
+        return $ Function (IR.Identifier fn) <$> ps' <*> Just body <*> targetType retTransResult <*> Just vis <*> Just inL
 
-    mCounter <- gets stateInFuncMappingCounter
-    inserted <- transForMappingAccess mCounter
-    let paramsForMap = fst inserted
-    let ps' = case ps of
-          Just (ParamList pps) -> Just (ParamList $ pps ++ paramsForMap)
-          _ -> Just $ ParamList paramsForMap
-    inL <- isInLibrary 
-    return $ Function (IR.Identifier fn) <$> ps' <*> body <*> targetType retTransResult <*> Just vis <*> Just inL
   _toIR _ = return Nothing
 
 instance ToIRTransformable (ContractPart SourceRange) IConstructor' where
@@ -156,7 +157,7 @@ toIRFuncParams (ParameterList pl) tags (FuncRetTransResult rt ort rn) vis funcBl
 
   return (IR.ParamList <$> params', blkT3)
 
-toIRFuncBody :: Block SourceRange -> IVisibility -> TFStmtWrapper -> FuncRetTransResult -> Transformation IBlock'
+toIRFuncBody :: Block SourceRange -> IVisibility -> TFStmtWrapper -> FuncRetTransResult -> Transformation (Either String (IParamList, IBlock))
 toIRFuncBody blk@(Sol.Block _ _) vis wrapperFromParam (FuncRetTransResult _ ort rn) = do
   modify $ \s -> s {stateReturnedInBlock = []}
   blk' <- _toIR blk
@@ -169,81 +170,84 @@ toIRFuncBody blk@(Sol.Block _ _) vis wrapperFromParam (FuncRetTransResult _ ort 
         _ -> False
 
   mCounter <- gets stateInFuncMappingCounter
-  inserted <- transForMappingAccess mCounter
-  let (TFStmtWrapper prepends appends) = wrapTFStmtWrapper wrapperFromParam $ snd inserted
+  transformforMap <- transForMappingAccess mCounter vis
 
-  let hasRetStmt =
-        not (null stmts)
-          && case last stmts of
-            Just (ReturnStmt _) -> True
-            _ -> False
+  case transformforMap of
+    Left msg -> return (Left msg)
+    Right (pl, wrapTFSforMap) -> do
+      let (TFStmtWrapper prepends appends) = wrapTFStmtWrapper wrapperFromParam wrapTFSforMap
+      let hasRetStmt =
+            not (null stmts)
+              && case last stmts of
+                Just (ReturnStmt _) -> True
+                _ -> False
 
-  returnExpr <- defaultValueExpr ort
+      returnExpr <- defaultValueExpr ort
 
-  let stmts' = case (vis == Public, hasRetStmt) of
-        (True, True) -> case last stmts of
-          Just (ReturnStmt r) -> case ort of
-            -- drop `return ;`
-            Nothing  -> init stmts
-            -- use `require(nonBoolExpr == injectedParamName);` to replace `return nonBoolExpr;`
-            Just _ ->
-              let e = fromMaybe (IR.Identifier "retVal") rn
-                  r' = case r of
-                        te@TernaryExpr {} -> ParensExpr te
-                        _ -> r
-                in init stmts ++ [Just $ requireEqualStmt r' e]
+      let stmts' = case (vis == Public, hasRetStmt) of
+            (True, True) -> case last stmts of
+              Just (ReturnStmt r) -> case ort of
+                -- drop `return ;`
+                Nothing  -> init stmts
+                -- use `require(nonBoolExpr == injectedParamName);` to replace `return nonBoolExpr;`
+                Just _ ->
+                  let e = fromMaybe (IR.Identifier "retVal") rn
+                      r' = case r of
+                            te@TernaryExpr {} -> ParensExpr te
+                            _ -> r
+                    in init stmts ++ [Just $ requireEqualStmt r' e]
 
-          _ -> error "last statement is not return statement"
-        (True, False) ->
-          stmts ++ case rn of
-            Just r -> [Just $ requireEqualStmt (IdentifierExpr r) $ mirror rn]
-            _ -> []
-        (False, False) -> case rn of
-          Just n ->
-            stmts
-              ++ [ Just $
-                     ReturnStmt $
-                       if returnedInMiddle
-                         then -- append `return returned ? ret : returnName;`
+              _ -> error "last statement is not return statement"
+            (True, False) ->
+              stmts ++ case rn of
+                Just r -> [Just $ requireEqualStmt (IdentifierExpr r) $ mirror rn]
+                _ -> []
+            (False, False) -> case rn of
+              Just n ->
+                stmts
+                  ++ [ Just $
+                        ReturnStmt $
+                          if returnedInMiddle
+                            then -- append `return returned ? ret : returnName;`
 
-                           TernaryExpr
-                             (IdentifierExpr (IR.ReservedId varReturned))
-                             (IdentifierExpr (IR.ReservedId varRetVal))
-                             (IdentifierExpr n)
-                         else -- append `return returnName;`
-                           IdentifierExpr n
-                 ]
-          _ ->
-            stmts
-              ++ if returnedInMiddle
-                then -- append `return ret;`
-                  [Just $ ReturnStmt $ IdentifierExpr $ IR.ReservedId varRetVal]
-                else -- append `return <defaultValue>;` / `return true;`
-                  [Just $ ReturnStmt (fromMaybe (LiteralExpr $ BoolLiteral True) returnExpr)]
-        _ -> stmts
+                              TernaryExpr
+                                (IdentifierExpr (IR.ReservedId varReturned))
+                                (IdentifierExpr (IR.ReservedId varRetVal))
+                                (IdentifierExpr n)
+                            else -- append `return returnName;`
+                              IdentifierExpr n
+                    ]
+              _ ->
+                stmts
+                  ++ if returnedInMiddle
+                    then -- append `return ret;`
+                      [Just $ ReturnStmt $ IdentifierExpr $ IR.ReservedId varRetVal]
+                    else -- append `return <defaultValue>;` / `return true;`
+                      [Just $ ReturnStmt (fromMaybe (LiteralExpr $ BoolLiteral True) returnExpr)]
+            _ -> stmts
 
-  let stmts'' = if vis == Public then map Just prepends ++ stmts' ++ map Just appends
-                else case laststmts of
-                      ss@(Just (IR.ReturnStmt _)) -> map Just prepends ++ init stmts' ++ map Just appends ++ [ss]
-                      _ -> map Just prepends ++ stmts' ++ map Just appends
-                      where
-                        laststmts = last stmts'
+      let stmts'' = if vis == Public then map Just prepends ++ stmts' ++ map Just appends
+                    else case laststmts of
+                          ss@(Just (IR.ReturnStmt _)) -> map Just prepends ++ init stmts' ++ map Just appends ++ [ss]
+                          _ -> map Just prepends ++ stmts' ++ map Just appends
+                          where
+                            laststmts = last stmts'
 
-  let stmts''' = if vis == Public then
-             case reverse stmts'' of
-              -- ignore the last `require(true)` if the penultimate is already a `require` stmt
-              (Just (RequireStmt (LiteralExpr (BoolLiteral True)))) : (Just (RequireStmt _)) : _ -> init stmts''
-              _ -> stmts''
-            else stmts''
+      let stmts''' = if vis == Public then
+                case reverse stmts'' of
+                  -- ignore the last `require(true)` if the penultimate is already a `require` stmt
+                  (Just (RequireStmt (LiteralExpr (BoolLiteral True)))) : (Just (RequireStmt _)) : _ -> init stmts''
+                  _ -> stmts''
+                else stmts''
 
 
-  preStmts <- prependsForReturnedInit ort
-  let stmts4 =
-        if returnedInMiddle
-          then map Just preStmts ++ stmts'''
-          else stmts'''
+      preStmts <- prependsForReturnedInit ort
+      let stmts4 =
+            if returnedInMiddle
+              then map Just preStmts ++ stmts'''
+              else stmts'''
 
-  return $ Just $ IR.Block $ catMaybes stmts4
+      return $ Right (ParamList pl, IR.Block $ catMaybes stmts4)
 
 mirror :: IIdentifier' -> IIdentifier
 mirror (Just (IR.Identifier i)) = IR.Identifier ("_" ++ i)
@@ -438,8 +442,8 @@ afterCheckStmt mapExpr keyExpr postfix =
   IR.RequireStmt $ mapSetExpr mapExpr keyExpr postfix
 
 
-transForMappingAccess :: MappingExprCounter -> Transformation ([IR.IParam], TFStmtWrapper)
-transForMappingAccess mCounter = do
+transForMappingAccess :: MappingExprCounter -> IVisibility -> Transformation (Either String ([IR.IParam], TFStmtWrapper))
+transForMappingAccess mCounter vis = do
   let initTag = ""
   -- injected params
   let injectedParams = concatMap ( \(MECEntry t me ke _ _) ->
@@ -458,8 +462,12 @@ transForMappingAccess mCounter = do
         mCounter
 
   case injectedStatements of
-    Just ss -> return (injectedParams,  ss)
-    Nothing -> error "injectedStatements failed"
+    Just ss -> if (vis == Private || vis == Default) && not (null injectedParams)
+      then
+        return $ Left "accessing map expression in non-external function is not allowed"
+      else
+        return $ Right (injectedParams,  ss)
+    Nothing -> return $ Left "injected statements failed when transpiling map"
 
 
 

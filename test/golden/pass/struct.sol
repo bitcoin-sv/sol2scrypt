@@ -58,7 +58,7 @@ contract Todos {
         //return Todo(_text, true);
     }
 
-    function update(string memory _text, address owner) public  {
+    function update(string memory _text, address owner) external  {
         mapTodos[owner] = Todo(_text, true);
     }
 
