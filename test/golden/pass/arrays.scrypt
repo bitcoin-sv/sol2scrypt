@@ -5,17 +5,14 @@ struct Todo {
 
 contract Arrays {
   @state
-  int storedData;
-
-  @state
   int[3][2] c;
 
   @state
-  Todo[1][3][2][1] todos;
+  Todo[5][4][3][2] todos;
 
-  function get() : Todo[1][3][2][1] {
-    int[1][3][2][1] aa = [[[[12], [34]], [[12], [34]], [[12], [34]]]];
-    Todo[1][3][2][1] todos = [[[[{"", false}], [{"", false}], [{"", false}]], [[{"", false}], [{"", false}], [{"", false}]]]];
+  function get() : Todo[5][4][3][2] {
+    int[5][4][3][2] aa = [[[[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]]], [[[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]]], [[[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]]], [[[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]]], [[[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]]]];
+    Todo[5][4][3][2] todos = [[[[{"", false}, {"", false}, {"", false}, {"", false}, {"", false}], [{"", false}, {"", false}, {"", false}, {"", false}, {"", false}], [{"", false}, {"", false}, {"", false}, {"", false}, {"", false}], [{"", false}, {"", false}, {"", false}, {"", false}, {"", false}]], [[{"", false}, {"", false}, {"", false}, {"", false}, {"", false}], [{"", false}, {"", false}, {"", false}, {"", false}, {"", false}], [{"", false}, {"", false}, {"", false}, {"", false}, {"", false}], [{"", false}, {"", false}, {"", false}, {"", false}, {"", false}]], [[{"", false}, {"", false}, {"", false}, {"", false}, {"", false}], [{"", false}, {"", false}, {"", false}, {"", false}, {"", false}], [{"", false}, {"", false}, {"", false}, {"", false}, {"", false}], [{"", false}, {"", false}, {"", false}, {"", false}, {"", false}]]], [[[{"", false}, {"", false}, {"", false}, {"", false}, {"", false}], [{"", false}, {"", false}, {"", false}, {"", false}, {"", false}], [{"", false}, {"", false}, {"", false}, {"", false}, {"", false}], [{"", false}, {"", false}, {"", false}, {"", false}, {"", false}]], [[{"", false}, {"", false}, {"", false}, {"", false}, {"", false}], [{"", false}, {"", false}, {"", false}, {"", false}, {"", false}], [{"", false}, {"", false}, {"", false}, {"", false}, {"", false}], [{"", false}, {"", false}, {"", false}, {"", false}, {"", false}]], [[{"", false}, {"", false}, {"", false}, {"", false}, {"", false}], [{"", false}, {"", false}, {"", false}, {"", false}, {"", false}], [{"", false}, {"", false}, {"", false}, {"", false}, {"", false}], [{"", false}, {"", false}, {"", false}, {"", false}, {"", false}]]]];
     bytes[3][2][1] bb = [[[b'', b'', b''], [b'', b'', b'']]];
     bool[4][3] bools = [[false, false, false], [false, false, false], [false, false, false], [false, false, false]];
     int[3][2] cc = [[0, 0, 0], [0, 0, 0]];
