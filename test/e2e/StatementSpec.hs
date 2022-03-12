@@ -412,6 +412,40 @@ loop (__LoopCount__0) {
   }
 }|]
 
+    itMultiStmts "simple ForStatement1 with return & continue"
+      [r|for (j = _i; j != 0; j /= 10) {
+        if (j>1) {
+          return j;
+        }
+        if (j<3) {
+          continue;
+        }
+        j += _i;
+      }
+|]
+      [r|
+j = _i;
+loop (__LoopCount__0) {
+  if (!returned && j != 0) {
+    bool loopContinueFlag0 = false;
+    if (j > 1) {
+      {
+        ret = j;
+        returned = true;
+      }
+    }
+    if (!returned) {
+      if (j < 3) {
+        loopContinueFlag0 = true;
+      }
+      if (!loopContinueFlag0) {
+        j += _i;
+      }
+    }
+    j /= 10;
+  }
+}|]
+
     itMultiStmts "simple ForStatement with continue"
       [r|for (j = _i; j != 0; j /= 10) {
         if (j>1) {
@@ -481,7 +515,7 @@ loop (__LoopCount__0) {
     j /= 10;
   }
 }|]
-    itMultiStmts "mixed ForStatement1 with multiple continue"
+    itMultiStmts "mixed ForStatement with multiple continue"
       [r|for (j = _i; j != 0; j /= 10) {
         if (j>1) {
           continue;

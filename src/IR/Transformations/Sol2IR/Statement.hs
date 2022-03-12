@@ -163,7 +163,11 @@ instance ToIRTransformable (Sol.Statement SourceRange) [IStatement'] where
 
     enterScope
     bodyStmts <- case body of
-      Sol.BlockStatement (Sol.Block ss _) -> concatMapM _toIR ss
+      Sol.BlockStatement blk -> do
+        blk' :: IBlock' <- _toIR blk
+        case blk' of
+          Just (IR.Block ss) -> return $ map Just ss
+          _ -> return []
       _ -> _toIR body
     continuedLoops <- gets stateInFuncContinuedLoops
     bodyStmts' <-
@@ -177,9 +181,17 @@ instance ToIRTransformable (Sol.Statement SourceRange) [IStatement'] where
           return bodyStmts
     leaveScope
 
+    returned <- gets stateReturnedInBlock
+    let condExpr' = if not (null returned) && head returned
+                      then BinaryExpr 
+                        <$> Just IR.BoolAnd <*> Just notReturnExpr <*> condExpr
+                      else condExpr
+                      where
+                        notReturnExpr = UnaryExpr IR.Not $ IdentifierExpr $ IR.ReservedId varReturned
+
     let loopBodyStmt =
           IfStmt
-            <$> condExpr
+            <$> condExpr'
             <*> Just
               ( IR.BlockStmt
                   ( IR.Block $
