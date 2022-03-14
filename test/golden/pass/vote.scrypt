@@ -1,0 +1,115 @@
+struct Voter {
+  int weight;
+  bool voted;
+  PubKeyHash delegate;
+  int vote;
+}
+
+struct Proposal {
+  bytes name;
+  int voteCount;
+}
+
+contract Ballot {
+  @state
+  public PubKeyHash chairperson;
+
+  @state
+  public HashedMap<PubKeyHash, Voter> voters;
+
+  @state
+  public Proposal[10] proposals;
+
+  constructor(bytes[10] proposalNames, PubKeyHash msgSender) {
+    this.chairperson = msgSender;
+    this_voters_this_chairperson.weight = 1;
+    int i = 0;
+    loop (__LoopCount__0) {
+      if (i < proposalNames.length) {
+        this.proposals.push({proposalNames[i], 0});
+        i++;
+      }
+    }
+  }
+
+  public function giveRightToVote(PubKeyHash voter, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, Voter this_voters_voter, int this_voters_voter_index) {
+    PubKeyHash msgSender = hash160(pubKey);
+    require(checkSig(sig, pubKey));
+    require((!this.voters.has(voter, this_voters_voter_index) && this_voters_voter == {0, false, Ripemd160(b'0000000000000000000000000000000000000000'), 0}) || this.voters.canGet(voter, this_voters_voter, this_voters_voter_index));
+    require(msgSender == this.chairperson);
+    require(!this_voters_voter.voted);
+    require(this_voters_voter.weight == 0);
+    this_voters_voter.weight = 1;
+    require(this.propagateState(txPreimage));
+  }
+
+  public function delegate(PubKeyHash to, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, Voter this_voters_msgSender, int this_voters_msgSender_index, Voter this_voters_to, int this_voters_to_index) {
+    PubKeyHash msgSender = hash160(pubKey);
+    require(checkSig(sig, pubKey));
+    require((!this.voters.has(msgSender, this_voters_msgSender_index) && this_voters_msgSender == {0, false, Ripemd160(b'0000000000000000000000000000000000000000'), 0}) || this.voters.canGet(msgSender, this_voters_msgSender, this_voters_msgSender_index));
+    require((!this.voters.has(to, this_voters_to_index) && this_voters_to == {0, false, Ripemd160(b'0000000000000000000000000000000000000000'), 0}) || this.voters.canGet(to, this_voters_to, this_voters_to_index));
+    Voter sender = this_voters_msgSender;
+    require(!sender.voted);
+    require(to != msgSender);
+    loop (__LoopCount__0) {
+      if (this_voters_to.delegate != Ripemd160(b'0000000000000000000000000000000000000000')) {
+        to = this_voters_to.delegate;
+        require(to != msgSender);
+      }
+    }
+    Voter delegate_ = this_voters_to;
+    require(delegate_.weight >= 1);
+    sender.voted = true;
+    sender.delegate = to;
+    if (delegate_.voted) {
+      this.proposals[delegate_.vote].voteCount += sender.weight;
+    }
+    else {
+      delegate_.weight += sender.weight;
+    }
+    require(this.propagateState(txPreimage));
+  }
+
+  public function vote(int proposal, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, Voter this_voters_msgSender, int this_voters_msgSender_index) {
+    PubKeyHash msgSender = hash160(pubKey);
+    require(checkSig(sig, pubKey));
+    require((!this.voters.has(msgSender, this_voters_msgSender_index) && this_voters_msgSender == {0, false, Ripemd160(b'0000000000000000000000000000000000000000'), 0}) || this.voters.canGet(msgSender, this_voters_msgSender, this_voters_msgSender_index));
+    Voter sender = this_voters_msgSender;
+    require(sender.weight != 0);
+    require(!sender.voted);
+    sender.voted = true;
+    sender.vote = proposal;
+    this.proposals[proposal].voteCount += sender.weight;
+    require(this.propagateState(txPreimage));
+  }
+
+  function winningProposal() : int {
+    int winningProposal_ = 0;
+    int winningVoteCount = 0;
+    int p = 0;
+    loop (__LoopCount__0) {
+      if (p < this.proposals.length) {
+        if (this.proposals[p].voteCount > winningVoteCount) {
+          winningVoteCount = this.proposals[p].voteCount;
+          winningProposal_ = p;
+        }
+        p++;
+      }
+    }
+    return winningProposal_;
+  }
+
+  public function winnerName(SigHashPreimage txPreimage, bytes _winnerName_) {
+    bytes winnerName_ = b'';
+    winnerName_ = this.proposals[this.winningProposal()].name;
+    require(winnerName_ == _winnerName_);
+    require(this.propagateState(txPreimage));
+  }
+
+  function propagateState(SigHashPreimage txPreimage) : bool {
+    require(Tx.checkPreimage(txPreimage));
+    bytes outputScript = this.getStateScript();
+    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    return hash256(output) == SigHash.hashOutputs(txPreimage);
+  }
+}

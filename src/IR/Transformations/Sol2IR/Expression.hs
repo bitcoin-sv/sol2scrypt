@@ -95,7 +95,8 @@ instance ToIRTransformable (Sol.Expression SourceRange) IExpression' where
           ("msg", "value") ->
             return $ Just $ IR.IdentifierExpr (IR.ReservedId varMsgValue)
           _ -> do
-            if isMemberAccessSupported (ne, ni)
+            supported <- isMemberAccessSupported (ne, ni)
+            if supported
               then do
                 e' <- _toIR e
                 i' <- _toIR i
@@ -345,15 +346,23 @@ isBuiltInFnSupported :: String -> Bool
 isBuiltInFnSupported fn = fn `notElem` ["assert", "keccak256", "ecrecover", "addmod", "blockhash", "mulmod", "revert", "selfdestruct", "type", "gasleft"]
 
 -- some solidity buildin member access are not supported
-isMemberAccessSupported :: (String, String) -> Bool
+isMemberAccessSupported :: (String, String) -> Transformation Bool
 isMemberAccessSupported (e, i) = case (e, i) of
-  ("msg", "sig") -> False
-  ("msg", "data") -> False
-  ("msg", "gas") -> False
-  ("block", _) -> False
-  ("tx", _) -> False
-  ("abi", _) -> False
-  _ -> True
+  ("msg", "sig") -> return False
+  ("msg", "data") -> return False
+  ("msg", "gas") -> return False
+  ("block", _) -> return False
+  ("tx", _) -> return False
+  ("abi", _) -> return False
+  (v, "balance") -> do
+    sym <- lookupSym $ IR.Identifier v
+    return (case sym of
+      Nothing -> False
+      Just sym' -> (case symbolType sym' of
+          ElementaryType Address -> False
+          _ -> True
+        ))
+  _ -> return True
 
 -- cast functions in solidity need to be ignored
 shouldIgnoreBuiltInTypes :: String -> Bool

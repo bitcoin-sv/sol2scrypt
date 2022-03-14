@@ -1,0 +1,12 @@
+[
+    {
+        "src": "test/golden/fail/address.sol:7:22:7:40",
+        "type": "Error",
+        "message": "unsupported expression: `_reference.balance`"
+    },
+    {
+        "src": "test/golden/fail/address.sol:11:16:11:30",
+        "type": "Error",
+        "message": "unsupported expression: `_other.balance`"
+    }
+]
