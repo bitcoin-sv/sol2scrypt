@@ -393,11 +393,28 @@ loop (__LoopCount__0) {
   }
 }|]
 
+    itMultiStmts "simple ForStatement with empty exprs"
+      [r|for(;;){
+        if (i>1) {
+          a = b;
+        }
+      }
+|]
+      [r|
+loop (__LoopCount__0) {
+  if (true) {
+    if (i > 1) {
+      a = b;
+    }
+  }
+}|]
+
     itMultiStmts "simple ForStatement with break"
       [r|for (j = _i; j != 0; j /= 10) {
         if (i>1) {
           break;
         }
+        i++;
       }
 |]
       [r|
@@ -408,7 +425,12 @@ loop (__LoopCount__0) {
     if (i > 1) {
       loopBreakFlag0 = true;
     }
-    j /= 10;
+    if (!loopBreakFlag0) {
+      i++;
+    }
+    if (!loopBreakFlag0) {
+      j /= 10;
+    }
   }
 }|]
 
@@ -516,6 +538,46 @@ loop (__LoopCount__0) {
   }
 }|]
 
+    itMultiStmts "simple ForStatement with break & continue"
+      [r|for (j = _i; j != 0; j /= 10) {
+        if (j>1) {
+          if (j < 3) {
+            break;
+          }
+          _i += 1;
+          if (j<5) {
+            continue;
+          }
+        }
+        j += _i;
+      }
+|]
+      [r|
+bool loopBreakFlag0 = false;
+j = _i;
+loop (__LoopCount__0) {
+  if (!loopBreakFlag0 && j != 0) {
+    bool loopContinueFlag0 = false;
+    if (j > 1) {
+      if (j < 3) {
+        loopBreakFlag0 = true;
+      }
+      if (!loopBreakFlag0) {
+        _i += 1;
+        if (j < 5) {
+          loopContinueFlag0 = true;
+        }
+      }
+    }
+    if (!loopBreakFlag0 && !loopContinueFlag0) {
+      j += _i;
+    }
+    if (!loopBreakFlag0) {
+      j /= 10;
+    }
+  }
+}|]
+
     itMultiStmts "embedded ForStatement with multiple continue"
       [r|for (j = _i; j != 0; j /= 10) {
         if (j>1) {
@@ -582,14 +644,19 @@ loop (__LoopCount__0) {
       int j = 0;
       loop (__LoopCount__1) {
         if (!loopBreakFlag1 && j < 2) {
-          if (i > j)
+          if (i > j) {
             loopBreakFlag1 = true;
-          j++;
+          }
+          if (!loopBreakFlag1) {
+            j++;
+          }
         }
       }
       loopBreakFlag0 = true;
     }
-    i++;
+    if (!loopBreakFlag0) {
+      i++;
+    }
   }
 }|]
 

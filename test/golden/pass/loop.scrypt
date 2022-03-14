@@ -50,12 +50,15 @@ contract LoopTest {
         loop (__LoopCount__1) {
           if (!loopBreakFlag1 && i > 4) {
             int k = 1;
-            if (k < 0)
+            if (k < 0) {
               loopBreakFlag1 = true;
+            }
             else {
               k += 3;
             }
-            this.x += k * 2;
+            if (!loopBreakFlag1) {
+              this.x += k * 2;
+            }
           }
         }
         i++;
@@ -77,8 +80,10 @@ contract LoopTest {
               this.x++;
               loopBreakFlag1 = true;
             }
-            j += 1;
-            this.x += j;
+            if (!loopBreakFlag1) {
+              j += 1;
+              this.x += j;
+            }
           }
         }
         i++;
@@ -150,9 +155,13 @@ contract LoopTest {
           if (i == 5) {
             loopBreakFlag0 = true;
           }
-          r++;
+          if (!loopBreakFlag0) {
+            r++;
+          }
         }
-        i++;
+        if (!loopBreakFlag0) {
+          i++;
+        }
       }
     }
     return r;
@@ -169,9 +178,7 @@ contract LoopTest {
         if (i == 3) {
           r++;
           if (r > 10) {
-            {
-              loopContinueFlag0 = true;
-            }
+            loopContinueFlag0 = true;
           }
           if (!loopContinueFlag0) {
             r++;
@@ -216,15 +223,15 @@ contract LoopTest {
               }
               else {
                 if (r > 10) {
-                  {
-                    loopBreakFlag1 = true;
-                  }
+                  loopBreakFlag1 = true;
                 }
               }
-              if (!loopContinueFlag1) {
+              if (!loopBreakFlag1 && !loopContinueFlag1) {
                 r++;
               }
-              i++;
+              if (!loopBreakFlag1) {
+                i++;
+              }
             }
           }
           r++;
