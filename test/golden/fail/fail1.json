@@ -35,73 +35,78 @@
         "message": "unsupported state variable with init value"
     },
     {
-        "src": "test/golden/fail/fail1.sol:81:26:81:34",
+        "src": "test/golden/fail/fail1.sol:82:26:82:34",
         "type": "Error",
         "message": "unsupported expression: `msg.data`"
     },
     {
-        "src": "test/golden/fail/fail1.sol:83:19:83:28",
+        "src": "test/golden/fail/fail1.sol:84:19:84:28",
         "type": "Error",
         "message": "unsupported expression : `Literal`"
     },
     {
-        "src": "test/golden/fail/fail1.sol:84:19:84:28",
+        "src": "test/golden/fail/fail1.sol:85:19:85:28",
         "type": "Error",
         "message": "unsupported function call : `type`"
     },
     {
-        "src": "test/golden/fail/fail1.sol:85:18:85:30",
+        "src": "test/golden/fail/fail1.sol:86:18:86:30",
         "type": "Error",
         "message": "unsupported expression: `block.number`"
     },
     {
-        "src": "test/golden/fail/fail1.sol:87:21:87:30",
+        "src": "test/golden/fail/fail1.sol:88:21:88:30",
         "type": "Error",
         "message": "unsupported expression: `tx.origin`"
     },
     {
-        "src": "test/golden/fail/fail1.sol:89:9:89:24",
+        "src": "test/golden/fail/fail1.sol:90:9:90:24",
         "type": "Error",
         "message": "unsupported function call : `addmod`"
     },
     {
-        "src": "test/golden/fail/fail1.sol:91:9:91:24",
+        "src": "test/golden/fail/fail1.sol:92:9:92:24",
         "type": "Error",
         "message": "unsupported function call : `mulmod`"
     },
     {
-        "src": "test/golden/fail/fail1.sol:93:9:93:25",
+        "src": "test/golden/fail/fail1.sol:94:9:94:25",
         "type": "Error",
         "message": "unsupported SimpleStatementVariableAssignmentList"
     },
     {
-        "src": "test/golden/fail/fail1.sol:95:19:95:26",
+        "src": "test/golden/fail/fail1.sol:96:19:96:26",
         "type": "Error",
         "message": "unsupported expression : `New`"
     },
     {
-        "src": "test/golden/fail/fail1.sol:95:9:95:12",
+        "src": "test/golden/fail/fail1.sol:96:9:96:12",
         "type": "Error",
         "message": "unsupported type `TypeNameUserDefinedTypeName`"
     },
     {
-        "src": "test/golden/fail/fail1.sol:95:9:95:39",
+        "src": "test/golden/fail/fail1.sol:96:9:96:39",
         "type": "Error",
         "message": "unsupported SimpleStatementVariableDeclarationList"
     },
     {
-        "src": "test/golden/fail/fail1.sol:105:17:105:26",
+        "src": "test/golden/fail/fail1.sol:106:17:106:26",
         "type": "Error",
         "message": "unsupported statement `Continue`"
     },
     {
-        "src": "test/golden/fail/fail1.sol:118:9:118:43",
+        "src": "test/golden/fail/fail1.sol:119:9:119:43",
         "type": "Error",
         "message": "unsupported function call : `keccak256`"
     },
     {
-        "src": "test/golden/fail/fail1.sol:122:26:122:41",
+        "src": "test/golden/fail/fail1.sol:123:26:123:41",
         "type": "Error",
         "message": "unsupported type `TypeNameElementaryTypeName`"
+    },
+    {
+        "src": "test/golden/fail/fail1.sol:131:14:131:21",
+        "type": "Error",
+        "message": "accessing mapping expression in non-external function is not supported"
     }
 ]
