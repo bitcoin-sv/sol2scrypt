@@ -8,7 +8,6 @@
 module IR.Transformations.Sol2IR.Contract where
 
 import IR.Spec as IR
-import Control.Monad.State
 import IR.Transformations.Base
 import IR.Transformations.Sol2IR.Identifier ()
 import IR.Transformations.Sol2IR.Expression ()

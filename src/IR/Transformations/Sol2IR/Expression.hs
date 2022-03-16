@@ -72,7 +72,7 @@ instance ToIRTransformable (Sol.Expression SourceRange) IExpression' where
           _ -> arrayIndexAccess e1 e2
       -- other exprs whose type is `Mapping` will not be correctly transpiled below due to the same above.
       _ -> arrayIndexAccess e1 e2
-  _toIR (Binary operator@(Operator opStr a) e1 e2 _) = do
+  _toIR (Binary operator@(Operator opStr _) e1 e2 _) = do
     e1' <- _toIR e1
     e2' <- _toIR e2
     -- TODO: check e1's type, it should be `bytes` for bytesOnlyAssignOps

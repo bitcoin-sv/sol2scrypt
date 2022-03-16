@@ -1,6 +1,8 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# OPTIONS_GHC -Wno-unused-imports #-}
+{-# OPTIONS_GHC -Wno-dodgy-exports #-}
 
 module IR.Transformer
   ( module IR.Transformations.Base,
@@ -29,7 +31,6 @@ import IR.Spec
 import IR.Transformations.Base
 import IR.Transformations.IR2Scr.Empty
 import IR.Transformations.IR2Scr.Expression
-import IR.Transformations.IR2Scr.Struct
 import IR.Transformations.IR2Scr.Function
 import IR.Transformations.IR2Scr.Identifier
 import IR.Transformations.IR2Scr.Statement
@@ -45,15 +46,5 @@ import IR.Transformations.Sol2IR.Type
 import IR.Transformations.Sol2IR.Variable
 import IR.Transformations.Sol2IR.Program
 import IR.Transformations.IR2Scr.Program
-import IR.Transformations.Sol2IR.Struct
+import IR.Transformations.Sol2IR.Struct 
 import IR.Transformations.IR2Scr.Struct
-
-
-class Node a where
-  nodeType :: Show a => a -> String
-  nodeType t = show t
-
-  current :: a -> a
-  current a = a
-
-instance Node IType
