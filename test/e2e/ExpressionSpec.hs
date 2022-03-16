@@ -12,6 +12,7 @@ import Test.Tasty.Hspec
 import Transpiler
 import Utils
 import Helper
+import qualified Data.Set as Set
 
 transpileSol :: String -> IO (String, Logs)
 transpileSol sol = do
@@ -116,7 +117,7 @@ spec = testSpec "Transpile Expression" $ do
                       initEnv =  [Map.insert (IR.Identifier leftExpr) mapSym Map.empty]
                       sol = leftExpr ++ "[" ++ rightExpr ++ "]" 
                   tr :: TranspileResult (Expression SourceRange) IExpression' (Maybe (Expr Ann)) <- 
-                          transpile' (TransformState initEnv Nothing Map.empty [] Map.empty [] 0 [] False) sol ""
+                          transpile' (TransformState initEnv Nothing Map.empty [] Map.empty [] 0 [] False Set.empty Set.empty []) sol ""
                   scryptCode tr `shouldBe` scrypt
 
           itSBExpr "a" "0" "a_0"

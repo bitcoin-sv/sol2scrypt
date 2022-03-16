@@ -9,6 +9,7 @@ import Data.Either
 import Data.List
 import qualified Data.Map.Lazy as Map
 import Data.Maybe
+import Data.Set
 import IR.Spec as IR
 import Solidity.Parser
 import Solidity.Spec
@@ -26,18 +27,31 @@ data TransformState = TransformState
     stateWrapperForStmt :: Maybe TFStmtWrapper,
     -- counter for mapping-access exprs in a function, key is the expression name, value is its occurrences count
     stateInFuncMappingCounter :: MappingExprCounter,
-    -- have returned previously in current block
+    -- have returned previously in current block, the first element represents the innermost for nested loops
     stateReturnedInBlock :: [Bool],
     -- structs used as key type for nested maps
     stateMapKeyStructs :: Map.Map [IType] IStruct,
     stateStructs :: [IStruct],
-    -- loop count in function
+    -- loop count in function, also used for loop id
     stateInFuncLoopCount :: Integer,
-    -- stacked/embedded loop id, the first element indicates which loop is the current
-    stateCurrentLoopId :: [Integer],
-    stateInLibrary :: Bool
+    -- nested loop ids, the first element is the innermost loop id
+    stateNestedLoops :: [Integer],
+    stateInLibrary :: Bool,
+    -- loop ids which have `break` statement(s) inside in a function
+    stateInFuncBrokeLoops :: Set Integer,
+    -- loop ids which have `continue` statement(s) inside in a function
+    stateInFuncContinuedLoops :: Set Integer,
+    -- have `break` /`continue` statement in loop's nested blocks, the first element represents the innermost block's flag
+    stateBCInBlock :: [BreakContinueInBlock]
   }
   deriving (Show, Eq, Ord)
+
+type BreakFlag = IR.IIdentifier'
+
+type ContinueFlag = IR.IIdentifier'
+
+-- the `break` & `continue` flags in a block
+type BreakContinueInBlock = (BreakFlag, ContinueFlag)
 
 data LogLevel = ErrorLevel | WarnningLevel deriving (Eq, Ord)
 

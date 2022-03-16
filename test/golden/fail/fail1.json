@@ -90,22 +90,17 @@
         "message": "unsupported SimpleStatementVariableDeclarationList"
     },
     {
-        "src": "test/golden/fail/fail1.sol:106:17:106:26",
-        "type": "Error",
-        "message": "unsupported statement `Continue`"
-    },
-    {
-        "src": "test/golden/fail/fail1.sol:119:9:119:43",
+        "src": "test/golden/fail/fail1.sol:103:9:103:43",
         "type": "Error",
         "message": "unsupported function call : `keccak256`"
     },
     {
-        "src": "test/golden/fail/fail1.sol:123:26:123:41",
+        "src": "test/golden/fail/fail1.sol:107:26:107:41",
         "type": "Error",
         "message": "unsupported type `TypeNameElementaryTypeName`"
     },
     {
-        "src": "test/golden/fail/fail1.sol:131:14:131:21",
+        "src": "test/golden/fail/fail1.sol:115:14:115:21",
         "type": "Error",
         "message": "accessing mapping expression in non-external function is not supported"
     }

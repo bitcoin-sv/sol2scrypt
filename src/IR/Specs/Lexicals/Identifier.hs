@@ -121,3 +121,6 @@ varLoopBreakFlag = "loopBreakFlag"
 
 varLoopCount :: String
 varLoopCount = "__LoopCount__"
+
+varLoopContinueFlag :: String
+varLoopContinueFlag = "loopContinueFlag"

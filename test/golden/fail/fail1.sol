@@ -95,22 +95,6 @@ contract SimpleStorage {
 
         Foo foo = new Foo(msg.sender);
 
-
-        while (true) {
-            i += 1;
-        }
-
-        for (uint i = 0; i < 10; i++) {
-            if (i == 3) {
-                // Skip to next iteration with continue
-                continue;
-            }
-            if (i == 5) {
-                // Exit loop with break
-                break;
-            }
-        }
-
         
         storedData = x;
     }

@@ -50,12 +50,15 @@ contract LoopTest {
         loop (__LoopCount__1) {
           if (!loopBreakFlag1 && i > 4) {
             int k = 1;
-            if (k < 0)
+            if (k < 0) {
               loopBreakFlag1 = true;
+            }
             else {
               k += 3;
             }
-            this.x += k * 2;
+            if (!loopBreakFlag1) {
+              this.x += k * 2;
+            }
           }
         }
         i++;
@@ -77,14 +80,166 @@ contract LoopTest {
               this.x++;
               loopBreakFlag1 = true;
             }
-            j += 1;
-            this.x += j;
+            if (!loopBreakFlag1) {
+              j += 1;
+              this.x += j;
+            }
           }
         }
         i++;
       }
     }
     require(this.propagateState(txPreimage));
+  }
+
+  function f4() : int {
+    int ret = 0;
+    bool returned = false;
+    int r = 0;
+    int i = 0;
+    loop (__LoopCount__0) {
+      if (!returned && i < 10) {
+        bool loopContinueFlag0 = false;
+        {
+          r += i;
+          if (r > 10) {
+            {
+              ret = r * 10;
+              returned = true;
+            }
+          }
+        }
+        loop (__LoopCount__1) {
+          if (!returned && i < 5) {
+            r += i;
+            if (r > 10) {
+              {
+                ret = r * 10;
+                returned = true;
+              }
+            }
+          }
+        }
+        if (!returned) {
+          if (i > 6) {
+            loopContinueFlag0 = true;
+          }
+          if (!loopContinueFlag0) {
+            r += i;
+          }
+        }
+        i++;
+      }
+    }
+    return returned ? ret : r;
+  }
+
+  function f5() : int {
+    int r = 0;
+    bool loopBreakFlag0 = false;
+    int i = 0;
+    loop (__LoopCount__0) {
+      if (!loopBreakFlag0 && i < 10) {
+        bool loopContinueFlag0 = false;
+        loop (__LoopCount__1) {
+          if (true) {
+            i += 1;
+            r++;
+          }
+        }
+        if (i == 3) {
+          r++;
+          loopContinueFlag0 = true;
+        }
+        if (!loopContinueFlag0) {
+          if (i == 5) {
+            loopBreakFlag0 = true;
+          }
+          if (!loopBreakFlag0) {
+            r++;
+          }
+        }
+        if (!loopBreakFlag0) {
+          i++;
+        }
+      }
+    }
+    return r;
+  }
+
+  function f6() : int {
+    int ret = 0;
+    bool returned = false;
+    int r = 0;
+    int i = 0;
+    loop (__LoopCount__0) {
+      if (!returned && i < 10) {
+        bool loopContinueFlag0 = false;
+        if (i == 3) {
+          r++;
+          if (r > 10) {
+            loopContinueFlag0 = true;
+          }
+          if (!loopContinueFlag0) {
+            r++;
+          }
+        }
+        else {
+          {
+            ret = r;
+            returned = true;
+          }
+        }
+        if (!loopContinueFlag0) {
+          if (!returned) {
+            r++;
+          }
+        }
+        i++;
+      }
+    }
+    return returned ? ret : r;
+  }
+
+  function f7() : int {
+    int r = 0;
+    int i = 0;
+    loop (__LoopCount__0) {
+      if (i < 10) {
+        bool loopContinueFlag0 = false;
+        r++;
+        if (r > 3) {
+          loopContinueFlag0 = true;
+        }
+        if (!loopContinueFlag0) {
+          bool loopBreakFlag1 = false;
+          int i = 0;
+          loop (__LoopCount__1) {
+            if (!loopBreakFlag1 && i < 10) {
+              bool loopContinueFlag1 = false;
+              r++;
+              if (r > 3) {
+                loopContinueFlag1 = true;
+              }
+              else {
+                if (r > 10) {
+                  loopBreakFlag1 = true;
+                }
+              }
+              if (!loopBreakFlag1 && !loopContinueFlag1) {
+                r++;
+              }
+              if (!loopBreakFlag1) {
+                i++;
+              }
+            }
+          }
+          r++;
+        }
+        i++;
+      }
+    }
+    return r;
   }
 
   function propagateState(SigHashPreimage txPreimage) : bool {

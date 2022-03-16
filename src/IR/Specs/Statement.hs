@@ -14,6 +14,8 @@ data IStatement
   | BlockStmt IBlock
   | ExitStmt IExpression
   | LoopStmt {loopCount :: IExpression, loopVar :: Maybe IIdentifier, loopBody :: IStatement}
+  | BreakStmt IIdentifier  -- use an identifier to mark a `break` statement for the benefit of later transpiling.
+  | ContinueStmt IIdentifier -- use an identifier to mark a `continue` statement for the benefit of later transpiling.
   deriving (Show, Eq, Ord)
 
 newtype IBlock = Block [IStatement] deriving (Show, Eq, Ord)

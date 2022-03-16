@@ -393,11 +393,28 @@ loop (__LoopCount__0) {
   }
 }|]
 
+    itMultiStmts "simple ForStatement with empty exprs"
+      [r|for(;;){
+        if (i>1) {
+          a = b;
+        }
+      }
+|]
+      [r|
+loop (__LoopCount__0) {
+  if (true) {
+    if (i > 1) {
+      a = b;
+    }
+  }
+}|]
+
     itMultiStmts "simple ForStatement with break"
       [r|for (j = _i; j != 0; j /= 10) {
         if (i>1) {
           break;
         }
+        i++;
       }
 |]
       [r|
@@ -407,6 +424,241 @@ loop (__LoopCount__0) {
   if (!loopBreakFlag0 && j != 0) {
     if (i > 1) {
       loopBreakFlag0 = true;
+    }
+    if (!loopBreakFlag0) {
+      i++;
+    }
+    if (!loopBreakFlag0) {
+      j /= 10;
+    }
+  }
+}|]
+
+    itMultiStmts "simple ForStatement with continue"
+      [r|for (j = _i; j != 0; j /= 10) {
+        if (j>1) {
+          continue;
+        }
+        j += _i;
+      }
+|]
+      [r|
+j = _i;
+loop (__LoopCount__0) {
+  if (j != 0) {
+    bool loopContinueFlag0 = false;
+    if (j > 1) {
+      loopContinueFlag0 = true;
+    }
+    if (!loopContinueFlag0) {
+      j += _i;
+    }
+    j /= 10;
+  }
+}|]
+
+    itMultiStmts "simple ForStatement with multiple continue"
+      [r|for (j = _i; j != 0; j /= 10) {
+        if (j>1) {
+          if (j > 2) {
+            continue;
+          }
+          j+=3;
+        }
+
+        if (j<10) {
+          j = 10;
+          continue;
+        }
+        
+        j += _i;
+        j -= 10;
+        j *= 2;
+      }
+|]
+      [r|
+j = _i;
+loop (__LoopCount__0) {
+  if (j != 0) {
+    bool loopContinueFlag0 = false;
+    if (j > 1) {
+      if (j > 2) {
+        loopContinueFlag0 = true;
+      }
+      if (!loopContinueFlag0) {
+        j += 3;
+      }
+    }
+    if (!loopContinueFlag0) {
+      if (j < 10) {
+        j = 10;
+        loopContinueFlag0 = true;
+      }
+      if (!loopContinueFlag0) {
+        j += _i;
+        j -= 10;
+        j *= 2;
+      }
+    }
+    j /= 10;
+  }
+}|]
+
+    itMultiStmts "simple ForStatement with return & continue"
+      [r|for (j = _i; j != 0; j /= 10) {
+        if (j>1) {
+          return j;
+        }
+        if (j<3) {
+          continue;
+        }
+        j += _i;
+      }
+|]
+      [r|
+j = _i;
+loop (__LoopCount__0) {
+  if (!returned && j != 0) {
+    bool loopContinueFlag0 = false;
+    if (j > 1) {
+      {
+        ret = j;
+        returned = true;
+      }
+    }
+    if (!returned) {
+      if (j < 3) {
+        loopContinueFlag0 = true;
+      }
+      if (!loopContinueFlag0) {
+        j += _i;
+      }
+    }
+    j /= 10;
+  }
+}|]
+
+    itMultiStmts "simple ForStatement with break & continue"
+      [r|for (j = _i; j != 0; j /= 10) {
+        if (j>1) {
+          if (j < 3) {
+            break;
+          }
+          _i += 1;
+          if (j<5) {
+            continue;
+          }
+        }
+        j += _i;
+      }
+|]
+      [r|
+bool loopBreakFlag0 = false;
+j = _i;
+loop (__LoopCount__0) {
+  if (!loopBreakFlag0 && j != 0) {
+    bool loopContinueFlag0 = false;
+    if (j > 1) {
+      if (j < 3) {
+        loopBreakFlag0 = true;
+      }
+      if (!loopBreakFlag0) {
+        _i += 1;
+        if (j < 5) {
+          loopContinueFlag0 = true;
+        }
+      }
+    }
+    if (!loopBreakFlag0 && !loopContinueFlag0) {
+      j += _i;
+    }
+    if (!loopBreakFlag0) {
+      j /= 10;
+    }
+  }
+}|]
+
+    itMultiStmts "simple ForStatement with break & continue 2"
+      [r|for (j = _i; j != 0; j /= 10) {
+        if (j>1) {
+          if (j < 3) {
+            continue;
+          }
+          _i += 1;
+          if (j<5) {
+            break;
+          }
+        }
+        j += _i;
+      }
+|]
+      [r|
+bool loopBreakFlag0 = false;
+j = _i;
+loop (__LoopCount__0) {
+  if (!loopBreakFlag0 && j != 0) {
+    bool loopContinueFlag0 = false;
+    if (j > 1) {
+      if (j < 3) {
+        loopContinueFlag0 = true;
+      }
+      if (!loopContinueFlag0) {
+        _i += 1;
+        if (j < 5) {
+          loopBreakFlag0 = true;
+        }
+      }
+    }
+    if (!loopBreakFlag0 && !loopContinueFlag0) {
+      j += _i;
+    }
+    if (!loopBreakFlag0) {
+      j /= 10;
+    }
+  }
+}|]
+
+    itMultiStmts "embedded ForStatement with multiple continue"
+      [r|for (j = _i; j != 0; j /= 10) {
+        if (j>1) {
+          continue;
+        }
+
+        for(uint i=0; i < j; i++) {
+          if (i>4) {
+            continue;
+          }
+          _i += 2;
+        }
+        
+        j += _i;
+        j -= 10;
+      }
+|]
+      [r|
+j = _i;
+loop (__LoopCount__0) {
+  if (j != 0) {
+    bool loopContinueFlag0 = false;
+    if (j > 1) {
+      loopContinueFlag0 = true;
+    }
+    if (!loopContinueFlag0) {
+      int i = 0;
+      loop (__LoopCount__1) {
+        if (i < j) {
+          bool loopContinueFlag1 = false;
+          if (i > 4) {
+            loopContinueFlag1 = true;
+          }
+          if (!loopContinueFlag1) {
+            _i += 2;
+          }
+          i++;
+        }
+      }
+      j += _i;
+      j -= 10;
     }
     j /= 10;
   }
@@ -432,14 +684,19 @@ loop (__LoopCount__0) {
       int j = 0;
       loop (__LoopCount__1) {
         if (!loopBreakFlag1 && j < 2) {
-          if (i > j)
+          if (i > j) {
             loopBreakFlag1 = true;
-          j++;
+          }
+          if (!loopBreakFlag1) {
+            j++;
+          }
         }
       }
       loopBreakFlag0 = true;
     }
-    i++;
+    if (!loopBreakFlag0) {
+      i++;
+    }
   }
 }|]
 
@@ -478,6 +735,27 @@ loop (__LoopCount__0) {
     if (i > 1) {
       a = b;
       loopBreakFlag0 = true;
+    }
+  }
+}|]
+
+    itMultiStmts "simple WhileStatement with continue"
+      [r|while(i<2){
+        if (i>1) {
+          continue;
+        }
+        a = b;
+      }
+|]
+      [r|
+loop (__LoopCount__0) {
+  if (i < 2) {
+    bool loopContinueFlag0 = false;
+    if (i > 1) {
+      loopContinueFlag0 = true;
+    }
+    if (!loopContinueFlag0) {
+      a = b;
     }
   }
 }|]
@@ -529,7 +807,33 @@ loop (__LoopCount__0) {
   }
 }|]
 
-    itMultiStmts "mixed DoWhileStatement & ForStatement"
+    itMultiStmts "simple DoWhileStatement with continue"
+      [r|do {
+        if (i>1) {
+          continue;
+        }
+        a = b;
+      } while(i<2);
+|]
+      [r|
+{
+  if (i > 1) {
+  }
+  a = b;
+}
+loop (__LoopCount__0) {
+  if (i < 2) {
+    bool loopContinueFlag0 = false;
+    if (i > 1) {
+      loopContinueFlag0 = true;
+    }
+    if (!loopContinueFlag0) {
+      a = b;
+    }
+  }
+}|]
+
+    itMultiStmts "nested DoWhileStatement & ForStatement"
       [r|for(uint i=0; i<10; i++){
   do {
     uint t = 2;
