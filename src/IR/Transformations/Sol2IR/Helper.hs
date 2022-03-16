@@ -7,7 +7,7 @@ import Solidity.Spec as Sol
 import IR.Spec as IR
 import IR.Transformations.Base
 import Data.Maybe (catMaybes)
-
+import Data.List
 
 eqIdentifier :: Identifier SourceRange -> Identifier SourceRange -> (Bool, SourceRange)
 eqIdentifier (Sol.Identifier iid _) (Sol.Identifier iid' a) = (iid == iid', a)
@@ -181,7 +181,7 @@ exprExistsInExpr e e'@(FunctionCallExpressionList f pl a)
                                                           ts = map (exprExistsInExpr e) ns
 
 
-exprExistsInExpr e e'@(MemberAccess me _ _) 
+exprExistsInExpr e e'@(MemberAccess me _ _)
   | fst r1 = r1
   | otherwise = r2
   where
@@ -218,7 +218,7 @@ defaultSourceRange = SourceRange (newPos "" 0 0) (newPos "" 0 0)
 
 -- get default value for a type
 defaultValueExpr :: IType' -> Transformation IExpression'
-defaultValueExpr Nothing = return Nothing 
+defaultValueExpr Nothing = return Nothing
 defaultValueExpr (Just (ElementaryType IR.Int)) = return $ Just $ LiteralExpr $ IntLiteral False 0
 defaultValueExpr (Just (ElementaryType IR.Bool)) = return $ Just $ LiteralExpr $ BoolLiteral False
 defaultValueExpr (Just (ElementaryType IR.Bytes)) = return $ Just $ LiteralExpr $ BytesLiteral []
@@ -231,9 +231,15 @@ defaultValueExpr (Just (UserDefinedType n)) = do
     Just st -> do
       fields <- mapM (\(Param t _) -> defaultValueExpr (Just t)) (structFields st)
       return $ Just $ StructLiteralExpr $ catMaybes fields
-defaultValueExpr (Just (Array arr n)) = do
-  e <- defaultValueExpr (Just arr)
-  case e of
-    Just e' -> return $ Just $ ArrayLiteralExpr $  replicate n e'
-    _ -> return Nothing 
+defaultValueExpr (Just arr@Array {}) = do
+  let (t, ls) = flattenArray arr
+  t' <- defaultValueExpr $ Just t
+  case t' of
+    Just at -> do
+      return $ Just $ foldl' (\ie l-> ArrayLiteralExpr (replicate l ie)) at ls
+    _ -> return Nothing
+  where
+    flattenArray :: IType -> (IType, [Int])
+    flattenArray (Array t l) = let (t', ls) = flattenArray t in (t', l : ls)
+    flattenArray t = (t, [])
 defaultValueExpr _ = return Nothing
