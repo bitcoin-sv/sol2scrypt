@@ -1,5 +1,4 @@
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE QuasiQuotes #-}
 
 module VariableSpec where
 
@@ -10,7 +9,6 @@ import Test.Tasty
 import Test.Tasty.Hspec
 import Transpiler
 import Utils
-import Control.Exception
 import Helper
 
 transpileProperty :: String -> IO (String, Logs)

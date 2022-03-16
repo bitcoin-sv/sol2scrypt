@@ -5,21 +5,14 @@
 module Transformations.Sol2IR.Contract where
 
 import IR.Spec as IR
-import IR.Transformer
-import Solidity.Spec as Sol
 import Test.Tasty
 import Test.Tasty.Hspec
 import Transformations.Helper
-import Text.RawString.QQ
 
 spec :: IO TestTree
 spec = testSpec "instance ToIRTransformable Contractpart IContractBodyElement'" $ do
   let itContractPart solidityCode target = it "should transfrom Solidity `ContractPartStateVariableDeclaration` to IR Function correctly" $ do
         ir :: IContractBodyElement' <- sol2Ir sol2ContractPart solidityCode
-        ir `shouldBe` target
-
-  let itContract solidityCode target = it "should transfrom Solidity `Contract` to IR Function correctly" $ do
-        ir :: IContract' <- sol2Ir sol2Contract solidityCode
         ir `shouldBe` target
 
 
