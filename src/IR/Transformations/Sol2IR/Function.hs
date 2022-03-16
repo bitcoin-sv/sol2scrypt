@@ -464,10 +464,10 @@ transForMappingAccess mCounter vis = do
   case injectedStatements of
     Just ss -> if (vis == Private || vis == Default) && not (null injectedParams)
       then
-        return $ Left "accessing map expression in non-external function is not allowed"
+        return $ Left "accessing mapping expression in non-external function is not supported"
       else
         return $ Right (injectedParams,  ss)
-    Nothing -> return $ Left "injected statements failed when transpiling map"
+    Nothing -> return $ Left "injected statements failed when transpiling mapping"
 
 
 

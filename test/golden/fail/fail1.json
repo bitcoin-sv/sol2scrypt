@@ -107,6 +107,6 @@
     {
         "src": "test/golden/fail/fail1.sol:131:14:131:21",
         "type": "Error",
-        "message": "accessing map expression in non-external function is not allowed"
+        "message": "accessing mapping expression in non-external function is not supported"
     }
 ]
