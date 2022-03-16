@@ -32,7 +32,7 @@ pragma experimental ABIEncoderV2;</code></pre></td>
     <td><b>Type address</b></td>
     <td><pre><code> address</code></pre></td>
     <td><pre><code> PubKeyHash</code></pre></td>
-    <td><code>address.balance</code> cannot be supported</td>
+    <td><code>address.balance</code> is not currently supported</td>
 </tr>
 
 <tr>
@@ -348,7 +348,7 @@ HashedMap<MapKeyST0, int> nestedMap</code></pre></td>
 <tr>
     <td rowspan="3"><b>Loop</b></td>
     <td><pre><code>for(uint i=0; i<2; i++) {
-    i++;
+    sum += i;
     if(i > 10)
         break;
 }</code></pre></td>
@@ -356,7 +356,7 @@ HashedMap<MapKeyST0, int> nestedMap</code></pre></td>
 int i = 0;
 loop (__LoopCount__0) {
     if (!loopBreakFlag0 && i < 2) {
-        i++;
+        sum += i;
         if (i > 10)
             loopBreakFlag0 = true;
         i++;
@@ -367,19 +367,24 @@ loop (__LoopCount__0) {
 
 <tr>
     <td><pre><code>uint i = 0;
+uint sum = 0;
 do {
-    if (i < 0)
+    sum += i;
+    if (sum < 20)
         continue; 
     i++;
-} while (i > 4);</code></pre></td>
+} while (i < 100);</code></pre></td>
     <td><pre><code>int i = 0;
+int sum = 0;
 {
+    sum += i;
     i++;
 }
 loop (__LoopCount__0) {
-    if (i > 4) {
+    if (i < 100) {
         bool loopContinueFlag0 = false;
-        if (i < 0) {
+        sum += i;
+        if (sum < 20) {
             {
                 loopContinueFlag0 = true;
             }
@@ -394,22 +399,24 @@ loop (__LoopCount__0) {
 
 <tr>
     <td><pre><code>uint i = 0;
+uint sum = 0;
 while(i <10) {
-    if (i > 5) {
-        return;
+    sum += i;
+    if (sum > 100) {
+        break;
     }
     i++;
 }</code></pre></td>
     <td><pre><code>int i = 0;
+int sum = 0;
+bool loopBreakFlag0 = false;
 loop (__LoopCount__0) {
-    if (!returned && i < 10) {
-        if (i > 5) {
-            {
-                ret = true;
-                returned = true;
-            }
+    if (!loopBreakFlag0 && i < 10) {
+        sum += i;
+        if (sum > 100) {
+            loopBreakFlag0 = true;
         }
-        if (!returned) {
+        if(!loopBreakFlag0) {
             i++;
         }
     }
@@ -428,7 +435,7 @@ loop (__LoopCount__0) {
     bytes text;
     bool completed; 
 }</code></pre></td>
-    <td>Structures with the same name cannot be supported</td>
+    <td>Structures with the same name is not currently supported</td>
 </tr>
 
 <tr>
