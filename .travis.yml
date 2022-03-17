@@ -11,6 +11,10 @@
 # Choose a build environment
 dist: xenial
 
+language: node_js
+node_js:
+  - 14
+
 # Caching so the next build will be fast too.
 cache:
     directories:
