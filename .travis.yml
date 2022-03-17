@@ -9,7 +9,11 @@
 # named .travis.yml
 
 # Choose a build environment
-dist: xenial
+dist: bionic
+
+language: node_js
+node_js:
+  - 14
 
 # Caching so the next build will be fast too.
 cache:
@@ -39,6 +43,9 @@ install:
 script:
     # Build the package, its tests, and run the tests
     - stack --no-terminal test
+    - cd test/golden
+    - npm i
+    - npm run compile
 
 notifications:
   slack:

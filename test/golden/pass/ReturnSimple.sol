@@ -11,4 +11,12 @@ contract Return {
         counter++; // <--- this would NOT run if -1 is returned
         return 1;
     }
+
+    function unlock(int ab) external returns (int){
+        if(ab > 0) {
+            return ab;
+        }
+        counter++;
+        return counter;
+    }
 }

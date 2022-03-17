@@ -352,6 +352,21 @@ contract Return {
     require(this.propagateState(txPreimage));
   }
 
+  public function unlock(int ab, SigHashPreimage txPreimage) {
+    bool ret = false;
+    bool returned = false;
+    if (ab > 0) {
+      {
+        ret = true;
+        returned = true;
+      }
+    }
+    if (!returned) {
+      require(this.storedData == ab);
+    }
+    require(this.propagateState(txPreimage));
+  }
+
   function propagateState(SigHashPreimage txPreimage) : bool {
     require(Tx.checkPreimage(txPreimage));
     bytes outputScript = this.getStateScript();

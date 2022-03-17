@@ -1,4 +1,7 @@
 contract LoopTest {
+  uint constant __LoopCount__0 = 1;
+  uint constant __LoopCount__1 = 1;
+  
   uint x;
 
   constructor() {

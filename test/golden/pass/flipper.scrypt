@@ -6,12 +6,19 @@ contract flipper {
     this.value = initvalue;
   }
 
-  function flip() : bool {
+  public function flip(SigHashPreimage txPreimage) {
     this.value = !this.value;
-    return true;
+    require(this.propagateState(txPreimage));
   }
 
   function get() : bool {
     return this.value;
+  }
+
+  function propagateState(SigHashPreimage txPreimage) : bool {
+    require(Tx.checkPreimage(txPreimage));
+    bytes outputScript = this.getStateScript();
+    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    return hash256(output) == SigHash.hashOutputs(txPreimage);
   }
 }

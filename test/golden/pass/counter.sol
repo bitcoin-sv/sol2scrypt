@@ -12,7 +12,7 @@ contract Counter {
     }
 
     // Function to increment count by 1
-    function inc() public {
+    function inc() external {
         count += 1;
     }
 

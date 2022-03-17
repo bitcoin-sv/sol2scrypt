@@ -153,7 +153,7 @@ toIRFuncParams (ParameterList pl) _ (FuncRetTransResult _ ort rn) vis funcBlk = 
 
   let params' = sequence $ params ++ extraParams3
 
-  forM_ params' $ mapM_ (\p -> addSym $ Just $ Symbol (paramName p) (paramType p) False)
+  forM_ params' $ mapM_ (\p -> addSym $ Just $ Symbol (paramName p) (paramType p) False False)
 
   return (IR.ParamList <$> params', blkT3)
 

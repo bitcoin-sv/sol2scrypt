@@ -8,7 +8,7 @@ struct Todo {
 contract Arrays {
     uint8[2][3] c;
     Todo[2][3][4][5] todos;
-    function get() public view returns (Todo[2][3][4][5] memory) {
+    function get() external view returns (Todo[2][3][4][5] memory) {
 
         uint8[2][3][4][5] memory aa = 
             [

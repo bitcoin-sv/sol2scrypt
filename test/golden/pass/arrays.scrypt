@@ -10,12 +10,20 @@ contract Arrays {
   @state
   Todo[5][4][3][2] todos;
 
-  function get() : Todo[5][4][3][2] {
+  public function get(SigHashPreimage txPreimage, Todo[5][4][3][2] retVal) {
     int[5][4][3][2] aa = [[[[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]]], [[[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]]], [[[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]]], [[[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]]], [[[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]]]];
     Todo[5][4][3][2] todos = [[[[{"", false}, {"", false}], [{"", false}, {"", false}], [{"", false}, {"", false}]], [[{"", false}, {"", false}], [{"", false}, {"", false}], [{"", false}, {"", false}]], [[{"", false}, {"", false}], [{"", false}, {"", false}], [{"", false}, {"", false}]], [[{"", false}, {"", false}], [{"", false}, {"", false}], [{"", false}, {"", false}]]], [[[{"", false}, {"", false}], [{"", false}, {"", false}], [{"", false}, {"", false}]], [[{"", false}, {"", false}], [{"", false}, {"", false}], [{"", false}, {"", false}]], [[{"", false}, {"", false}], [{"", false}, {"", false}], [{"", false}, {"", false}]], [[{"", false}, {"", false}], [{"", false}, {"", false}], [{"", false}, {"", false}]]], [[[{"", false}, {"", false}], [{"", false}, {"", false}], [{"", false}, {"", false}]], [[{"", false}, {"", false}], [{"", false}, {"", false}], [{"", false}, {"", false}]], [[{"", false}, {"", false}], [{"", false}, {"", false}], [{"", false}, {"", false}]], [[{"", false}, {"", false}], [{"", false}, {"", false}], [{"", false}, {"", false}]]], [[[{"", false}, {"", false}], [{"", false}, {"", false}], [{"", false}, {"", false}]], [[{"", false}, {"", false}], [{"", false}, {"", false}], [{"", false}, {"", false}]], [[{"", false}, {"", false}], [{"", false}, {"", false}], [{"", false}, {"", false}]], [[{"", false}, {"", false}], [{"", false}, {"", false}], [{"", false}, {"", false}]]], [[[{"", false}, {"", false}], [{"", false}, {"", false}], [{"", false}, {"", false}]], [[{"", false}, {"", false}], [{"", false}, {"", false}], [{"", false}, {"", false}]], [[{"", false}, {"", false}], [{"", false}, {"", false}], [{"", false}, {"", false}]], [[{"", false}, {"", false}], [{"", false}, {"", false}], [{"", false}, {"", false}]]]];
     bytes[3][2][1] bb = [[[b''], [b'']], [[b''], [b'']], [[b''], [b'']]];
     bool[4][3] bools = [[false, false, false], [false, false, false], [false, false, false], [false, false, false]];
     int[3][2] cc = [[0, 0], [0, 0], [0, 0]];
-    return this.todos;
+    require(this.todos == retVal);
+    require(this.propagateState(txPreimage));
+  }
+
+  function propagateState(SigHashPreimage txPreimage) : bool {
+    require(Tx.checkPreimage(txPreimage));
+    bytes outputScript = this.getStateScript();
+    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    return hash256(output) == SigHash.hashOutputs(txPreimage);
   }
 }

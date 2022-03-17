@@ -6,13 +6,20 @@ contract Counter {
     return this.count;
   }
 
-  function inc() : bool {
+  public function inc(SigHashPreimage txPreimage) {
     this.count += 1;
-    return true;
+    require(this.propagateState(txPreimage));
   }
 
   function set(int _count) : bool {
     this.count = _count;
     return true;
+  }
+
+  function propagateState(SigHashPreimage txPreimage) : bool {
+    require(Tx.checkPreimage(txPreimage));
+    bytes outputScript = this.getStateScript();
+    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    return hash256(output) == SigHash.hashOutputs(txPreimage);
   }
 }

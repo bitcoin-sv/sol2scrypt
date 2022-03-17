@@ -107,7 +107,8 @@ type SymbolName = IIdentifier
 data Symbol = Symbol
   { symbolName :: SymbolName,
     symbolType :: IType,
-    symbolStateVar :: Bool
+    symbolStateVar :: Bool,
+    symbolIsConstant :: Bool
   }
   deriving (Show, Eq, Ord)
 
