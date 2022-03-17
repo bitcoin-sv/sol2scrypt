@@ -39,6 +39,9 @@ install:
 script:
     # Build the package, its tests, and run the tests
     - stack --no-terminal test
+    - cd test/golden
+    - npm i
+    - npm run compile
 
 notifications:
   slack:

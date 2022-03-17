@@ -1,0 +1,17 @@
+{
+  "name": "sol2scrypt",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "npx scryptlib download",
+    "compile": "node ./compile.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "glob": "^7.2.0",
+    "scryptlib": "^0.13.2"
+  }
+}
