@@ -9,7 +9,7 @@
 # named .travis.yml
 
 # Choose a build environment
-dist: xenial
+dist: bionic
 
 language: node_js
 node_js:
