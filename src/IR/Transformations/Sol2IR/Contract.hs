@@ -21,7 +21,7 @@ import Utils
 instance ToIRTransformable (ContractDefinition SourceRange) IContract' where
   _toIR (Sol.ContractDefinition False "contract" cn [] cps _) = do
     cn' <- _toIR cn
-    addSym $ Symbol <$> cn' <*> Just contractSymType <*> Just False
+    addSym $ Symbol <$> cn' <*> Just contractSymType <*> Just False <*> Just False 
     enterScope
     enterLibrary False 
     cps' <- mapM _toIR cps
@@ -38,7 +38,7 @@ instance ToIRTransformable (ContractDefinition SourceRange) IContract' where
 instance ToIRTransformable (ContractDefinition SourceRange) ILibrary' where
   _toIR (Sol.ContractDefinition False "library" cn [] cps _) = do
     cn' <- _toIR cn
-    addSym $ Symbol <$> cn' <*> Just contractSymType <*> Just False
+    addSym $ Symbol <$> cn' <*> Just contractSymType <*> Just False <*> Just False
     enterScope
     enterLibrary True 
     cps' <- mapM _toIR cps
@@ -53,12 +53,12 @@ instance ToIRTransformable (Sol.PragmaDirective SourceRange) IR.IEmpty where
 instance ToIRTransformable (Sol.ContractPart SourceRange) IContractBodyElement' where
   _toIR (Sol.ContractPartStateVariableDeclaration e _) = do
     e' :: IStateVariable' <- _toIR e
-    addSym $ Symbol <$> (stateVarName <$> e') <*> (stateVarType <$> e') <*> Just True
+    addSym $ Symbol <$> (stateVarName <$> e') <*> (stateVarType <$> e') <*> Just True <*> (stateIsConstant <$> e')
     return $ IR.StateVariableDeclaration <$> e'
   _toIR Sol.ContractPartEventDefinition {} = return Nothing
   _toIR func@(Sol.ContractPartFunctionDefinition (Just fn@(Sol.Identifier i _)) _ _ _ _ a) = do
     fn' <- _toIR fn
-    err <- addSym $ Symbol <$> fn' <*> Just functionSymType <*> Just False
+    err <- addSym $ Symbol <$> fn' <*> Just functionSymType <*> Just False <*> Just False
     case err of
       Left _ -> reportError ("duplicate function name `" ++ i ++ "` in contract") a >> return Nothing
       Right _ -> do

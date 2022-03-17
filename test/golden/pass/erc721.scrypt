@@ -34,17 +34,17 @@ contract ERC721 {
   static const int totalTokens = 1000000;
 
   public function name(SigHashPreimage txPreimage, bytes retVal) {
-    require(this.tokenName == retVal);
+    require(tokenName == retVal);
     require(this.propagateState(txPreimage));
   }
 
   public function symbol(SigHashPreimage txPreimage, bytes retVal) {
-    require(this.tokenSymbol == retVal);
+    require(tokenSymbol == retVal);
     require(this.propagateState(txPreimage));
   }
 
   public function totalSupply(SigHashPreimage txPreimage, int retVal) {
-    require(this.totalTokens == retVal);
+    require(totalTokens == retVal);
     require(this.propagateState(txPreimage));
   }
 
