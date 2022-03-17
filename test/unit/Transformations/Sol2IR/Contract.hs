@@ -1,4 +1,4 @@
-{-# LANGUAGE QuasiQuotes #-}
+
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
