@@ -38,8 +38,8 @@ spec = testSpec "instance Generable (Stmt a)" $ do
 
     describe "#AssignStmt" $ do
       let itAssignStmt title e c = it ("should generate sCrypt code for AssignStmt: `" ++ title ++ "` correctly") $ do
-            r <- generateScrypt (CodeGenState 0) (Just $ Scr.Assign (Scr.Var "x" False nil) e nil) 
-            r `shouldBe` c
+            code <- generateScrypt (CodeGenState 0) (Just $ Scr.Assign (Scr.Var "x" False nil) e nil) 
+            code `shouldBe` c
 
       itAssignStmt "BoolLiteral" (Scr.BoolLiteral True nil) "\nx = true;"
 
