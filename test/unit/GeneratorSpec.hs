@@ -11,7 +11,6 @@ import qualified Generables.Statement
 import qualified Generables.Variable
 import qualified Generables.Function
 import qualified Generables.Program
-import Scrypt
 
 baseSpec :: IO TestTree
 baseSpec = testSpec "#generateScrypt" $ do

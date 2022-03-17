@@ -5,9 +5,6 @@ import Json
 import System.FilePath (replaceExtension, takeBaseName)
 import Test.Tasty (TestTree, defaultMain, testGroup)
 import Test.Tasty.Golden (findByExtension, goldenVsString)
-import Utils
-import Data.Bifunctor
-import Data.ByteString.Lazy.Char8 (singleton)
 
 main :: IO ()
 main = defaultMain =<< goldenTests

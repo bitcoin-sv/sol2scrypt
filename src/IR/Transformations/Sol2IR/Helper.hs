@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use bimap" #-}
 
 module IR.Transformations.Sol2IR.Helper where
 import Text.Parsec.Pos
@@ -108,13 +110,13 @@ exprExistsInStmt e (BlockStatement (Sol.Block stmts a)) = foldr (\ (exists, src)
                                                         where
                                                           ts = map (exprExistsInStmt e) stmts
 
-exprExistsInStmt e (IfStatement cond trueBranch maybeFalseBranch _)
+exprExistsInStmt e (IfStatement condition trueBranchStmt maybeFalseBranch _)
   | fst r1 = r1
   | fst r2 = r2
   | otherwise = r3
   where
-      r1 = exprExistsInExpr e cond
-      r2 = exprExistsInStmt e trueBranch
+      r1 = exprExistsInExpr e condition
+      r2 = exprExistsInStmt e trueBranchStmt
       r3 = case maybeFalseBranch of
                 Nothing -> (False, defaultSourceRange)
                 Just fb -> exprExistsInStmt e fb
@@ -144,14 +146,14 @@ exprExistsInExpr e e'@(Binary _ lhs rhs _)
       r1 = exprEq e e'
       r2 = exprExistsInExprEx e lhs
       r3 = exprExistsInExprEx e rhs
-exprExistsInExpr e e'@(Ternary _ cond lhs rhs _)
+exprExistsInExpr e e'@(Ternary _ condition lhs rhs _)
   | fst r1 = r1
   | fst r2 = r2
   | fst r3 = r3
   | otherwise = r4
   where
       r1 = exprEq e e'
-      r2 = exprExistsInExprEx e cond
+      r2 = exprExistsInExprEx e condition
       r3 = exprExistsInExprEx e lhs
       r4 = exprExistsInExprEx e rhs
 exprExistsInExpr e e'@(FunctionCallNameValueList f pl a)

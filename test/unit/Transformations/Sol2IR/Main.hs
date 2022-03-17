@@ -10,7 +10,6 @@ import qualified Transformations.Sol2IR.Contract
 import qualified Transformations.Sol2IR.Program
 import qualified Transformations.Sol2IR.Identifier
 import qualified Transformations.Sol2IR.Helper
-import qualified IR as Transformations.Sol2IR
 
 spec :: IO TestTree
 spec =

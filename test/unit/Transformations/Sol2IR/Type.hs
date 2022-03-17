@@ -3,8 +3,6 @@
 module Transformations.Sol2IR.Type where
 
 import IR.Spec as IR
-import IR.Transformer
-import Solidity.Spec
 import Test.Tasty
 import Test.Tasty.Hspec
 import Transformations.Helper

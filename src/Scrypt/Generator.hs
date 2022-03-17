@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wno-dodgy-exports #-}
 module Scrypt.Generator
   ( module Scrypt.Generables.Base,
     module Scrypt.Generables.Empty,
@@ -13,13 +14,13 @@ module Scrypt.Generator
 where
 
 import Scrypt.Generables.Base
-import Scrypt.Generables.Empty
-import Scrypt.Generables.Expression
-import Scrypt.Generables.Struct
-import Scrypt.Generables.Function
-import Scrypt.Generables.Statement
-import Scrypt.Generables.Type
-import Scrypt.Generables.Variable
-import Scrypt.Generables.Contract
-import Scrypt.Generables.Program
-import qualified Solidity.Spec as Scrypt.Generables
+import Scrypt.Generables.Empty()
+import Scrypt.Generables.Expression()
+import Scrypt.Generables.Struct()
+import Scrypt.Generables.Function()
+import Scrypt.Generables.Statement()
+import Scrypt.Generables.Type()
+import Scrypt.Generables.Variable()
+import Scrypt.Generables.Contract()
+import Scrypt.Generables.Program()
+

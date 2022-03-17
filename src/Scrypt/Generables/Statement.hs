@@ -5,8 +5,8 @@ module Scrypt.Generables.Statement where
 
 import Data.List (intercalate)
 import Scrypt.Generables.Base
-import Scrypt.Generables.Expression
-import Scrypt.Generables.Variable
+import Scrypt.Generables.Expression ()
+import Scrypt.Generables.Variable ()
 import Control.Monad
 import Scrypt.Spec as Scr
 

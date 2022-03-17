@@ -291,7 +291,7 @@ instance Parseable (StructDefinition SourceRange)  where
 instance Parseable (ContractDefinition SourceRange) where
   parser = do
     start <- getPosition
-    _abstract <- (try (keyword "abstract" *> return True) <|> return False) <* whitespace
+    _abstract <- (try (keyword "abstract" $> True) <|> return False) <* whitespace
     _definitionType' <- (keyword "contract" <|> keyword "library" <|> keyword "interface") <* whitespace
     _definitionName' <- parser <* whitespace
     _isClause' <- (try (keyword "is" *> whitespace *> commaSep1 parser) <|> return []) <* whitespace
@@ -701,7 +701,7 @@ instance Parseable (Statement SourceRange) where
   display (BlockStatement b) = display b
   display (DoWhileStatement s e _) = "do " ++ display s ++ " while (" ++ display e ++ ");"
   display (PlaceholderStatement _) = "_;"
-  display (RevertStatement exp _) = "revert "++(display exp)++";"
+  display (RevertStatement e _) = "revert "++display e++";"
   display (Continue _) = "continue;"
   display (Break _) = "break;"
   display (Return me _) = "return" ++ maybe "" (\e -> " " ++ display e) me ++ ";"

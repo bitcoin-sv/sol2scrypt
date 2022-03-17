@@ -4,8 +4,6 @@
 module Transformations.Sol2IR.Expression where
 
 import IR.Spec as IR
-import IR.Transformer
-import Solidity.Spec as Sol
 import Test.Tasty
 import Test.Tasty.Hspec
 import Transformations.Helper

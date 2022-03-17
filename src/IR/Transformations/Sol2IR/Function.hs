@@ -23,7 +23,6 @@ import Solidity.Spec as Sol
 import Protolude.Monad (concatMapM)
 import Data.Foldable
 import qualified Data.Set as Set
-import Data.Either
 
 data FuncRetTransResult = FuncRetTransResult
   { targetType :: IType',
@@ -102,7 +101,7 @@ toIRFuncRet _ (Just (ParameterList el)) = do
   return $ FuncRetTransResult Nothing Nothing Nothing
 
 toIRFuncParams :: ParameterList SourceRange -> [FunctionDefinitionTag SourceRange] -> FuncRetTransResult -> IVisibility -> Block SourceRange -> Transformation (IParamList', TFStmtWrapper)
-toIRFuncParams (ParameterList pl) tags (FuncRetTransResult rt ort rn) vis funcBlk = do
+toIRFuncParams (ParameterList pl) _ (FuncRetTransResult _ ort rn) vis funcBlk = do
   params <- mapM _toIR pl
 
   -- add parameter for public function whose original return type is not `Bool`

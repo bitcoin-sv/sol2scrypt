@@ -1,10 +1,10 @@
 module IR.Specs.Contract where
 
 import IR.Specs.Lexical
-import IR.Specs.Type
+import IR.Specs.Type ()
 import IR.Specs.Variable
 import IR.Specs.Function
-import IR.Specs.Expression
+import IR.Specs.Expression ()
 
 data IContract = Contract 
   {
