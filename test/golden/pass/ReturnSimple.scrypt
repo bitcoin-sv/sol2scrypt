@@ -16,4 +16,27 @@ contract Return {
     }
     return returned ? ret : 1;
   }
+
+  public function unlock(int ab, SigHashPreimage txPreimage, int retVal) {
+    int ret = 0;
+    bool returned = false;
+    if (ab > 0) {
+      {
+        ret = ab;
+        returned = true;
+      }
+    }
+    if (!returned) {
+      this.counter++;
+    }
+    require((returned ? ret : this.counter) == retVal);
+    require(this.propagateState(txPreimage));
+  }
+
+  function propagateState(SigHashPreimage txPreimage) : bool {
+    require(Tx.checkPreimage(txPreimage));
+    bytes outputScript = this.getStateScript();
+    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    return hash256(output) == SigHash.hashOutputs(txPreimage);
+  }
 }

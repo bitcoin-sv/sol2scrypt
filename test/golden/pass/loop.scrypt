@@ -2,6 +2,10 @@ contract LoopTest {
   @state
   int x;
 
+  static const int __LoopCount__0 = 1;
+
+  static const int __LoopCount__1 = 1;
+
   constructor() {
     int i = 0;
     loop (__LoopCount__0) {

@@ -212,4 +212,11 @@ contract Return {
     function get3() external view returns (uint) { {true; {true;} } return storedData; }
 
 
+    function unlock(uint ab) external {
+        if(ab > 0) {
+            return;
+        }
+        require(storedData == ab);
+    }
+
 }

@@ -7,23 +7,39 @@ contract SimpleStorage {
   @state
   int storedData;
 
-  function get() : int {
+  public function get(SigHashPreimage txPreimage, int retVal) {
     int a = 0;
     int b = 0;
     int c = 0;
     int d = 0;
     int e = 0;
     int[3] aa = [0, 0, 0];
+    require(this.storedData == retVal);
+    require(this.propagateState(txPreimage));
+  }
+
+  function get1() : bytes[3] {
     bytes b1 = b'';
     bytes b2 = b'';
     bytes b3 = b'';
     bytes[3] b3a = [b'', b'', b''];
+    return b3a;
+  }
+
+  function get2() : Todo[3] {
     PubKeyHash a1 = Ripemd160(b'0000000000000000000000000000000000000000');
     PubKeyHash[3] a1a = [Ripemd160(b'0000000000000000000000000000000000000000'), Ripemd160(b'0000000000000000000000000000000000000000'), Ripemd160(b'0000000000000000000000000000000000000000')];
     bool bb = false;
     bool[3] bba = [false, false, false];
     Todo todo = {"", false};
     Todo[3] todos = [{"", false}, {"", false}, {"", false}];
-    return this.storedData;
+    return todos;
+  }
+
+  function propagateState(SigHashPreimage txPreimage) : bool {
+    require(Tx.checkPreimage(txPreimage));
+    bytes outputScript = this.getStateScript();
+    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    return hash256(output) == SigHash.hashOutputs(txPreimage);
   }
 }

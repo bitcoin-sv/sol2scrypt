@@ -1,6 +1,7 @@
 pragma solidity ^0.8.10;
 
 contract SolidityTest {
+    uint8 a;
     function arithmetic() public {
         uint16 a = 20;
 
@@ -75,6 +76,10 @@ contract SolidityTest {
 
         bytes1  not = ~a;
 
+    }
+
+    function unlock(uint ab) external {
+        require(a == ab);
     }
 
 }

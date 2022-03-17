@@ -1,5 +1,5 @@
 library SafeMath {
-  private static function add(int x, int y) : int {
+  static function add(int x, int y) : int {
     int z = x + y;
     require(z >= x);
     return z;
@@ -9,7 +9,7 @@ library SafeMath {
 library Math {
   static const int MAX_UINT = 2 * 256 - 1;
 
-  private static function sqrt(int y) : int {
+  static function sqrt(int y) : int {
     int z = 0;
     if (y > 3) {
       z = y;
@@ -28,7 +28,10 @@ library Array {
   }
 }
 
-contract TestSafeMath {
+contract TestArray {
+  @state
+  public int[9] arr;
+
   function testAdd(int x, int y) : int {
     return SafeMath.add(x, y);
   }
@@ -36,14 +39,16 @@ contract TestSafeMath {
   function testSquareRoot(int x) : int {
     return Math.sqrt(x);
   }
-}
 
-contract TestArray {
-  @state
-  public int[9] arr;
-
-  function testArrayRemove() : bool {
+  public function testArrayRemove(SigHashPreimage txPreimage) {
     Array.remove(this.arr, 1);
-    return true;
+    require(this.propagateState(txPreimage));
+  }
+
+  function propagateState(SigHashPreimage txPreimage) : bool {
+    require(Tx.checkPreimage(txPreimage));
+    bytes outputScript = this.getStateScript();
+    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    return hash256(output) == SigHash.hashOutputs(txPreimage);
   }
 }

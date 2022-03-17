@@ -1,10 +1,11 @@
 const glob = require('glob');
-const { join } = require('path');
+const { join, basename } = require('path');
+const { exit } = require('process');
 const { compileContract, findCompiler, compilerVersion } = require('scryptlib');
 
 function compileAllContracts() {
 
-
+    const exclude = ["erc721.scrypt", "vote.scrypt"]
     const scryptc = findCompiler();
     console.log('compiler binary: ', scryptc)
     console.log('compiler version: ', compilerVersion(scryptc))
@@ -12,6 +13,11 @@ function compileAllContracts() {
     let nFailed = 0;
     const contracts = glob.sync(join(join(__dirname, "pass"), './*.scrypt'));
     contracts.forEach(filePath => {
+
+        if(exclude.includes(basename(filePath))) {
+            console.log(`ignore Contract ${filePath}`);
+            return;
+        }
 
         const result = compileContract(filePath);
 
@@ -25,6 +31,10 @@ function compileAllContracts() {
     })
 
     console.log(`compiling finish. ${nSucceeded} succeeds and ${nFailed} fails`);
+
+    if(nFailed > 0) {
+        exit(-1);
+    }
 }
 
 
