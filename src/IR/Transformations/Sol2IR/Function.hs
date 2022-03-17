@@ -358,23 +358,6 @@ transForConstructorWithMsgValue =
       [] -- appends
   )
 
--- -- <mapExpr>.canGet(<keyExpr>, <valExpr>, <idxExpr>)
-mapCanGetExpr :: IExpression -> IExpression -> String -> IExpression
-mapCanGetExpr mapExpr keyExpr postfix =
-  let e = Just $ BinaryExpr Index mapExpr keyExpr
-   in FunctionCallExpr
-        { funcExpr =
-            MemberAccessExpr
-              { instanceExpr = mapExpr,
-                member = IR.Identifier "canGet"
-              },
-          funcParamExprs =
-            [ keyExpr,
-              fromJust $ valueExprOfMapping e postfix,
-              fromJust $ indexExprOfMapping e postfix
-            ]
-        }
-
 -- <mapExpr>.set(<keyExpr>, <valExpr>, <idxExpr>)
 mapSetExpr :: IExpression -> IExpression -> String -> IExpression
 mapSetExpr mapExpr keyExpr postfix =
@@ -391,48 +374,6 @@ mapSetExpr mapExpr keyExpr postfix =
               fromJust $ indexExprOfMapping e postfix
             ]
         }
-
--- -- require((!<mapExpr>.has(<keyExpr>, <idxExpr>)) || <mapExpr>.canGet(<keyExpr>, <valExpr>, <idxExpr>));
-preCheckStmt :: IType' -> IExpression -> IExpression -> String -> Transformation IStatement
-preCheckStmt t mapExpr keyExpr postfix = do
-  defaultValue <- defaultValueExpr t
-  return $
-    IR.RequireStmt $
-      BinaryExpr
-        { binaryOp = BoolOr,
-          lExpr =
-            ParensExpr
-              { enclosedExpr =
-                  BinaryExpr
-                    { binaryOp = BoolAnd,
-                      lExpr =
-                        UnaryExpr
-                          { unaryOp = Not,
-                            uExpr =
-                              FunctionCallExpr
-                                { funcExpr =
-                                    MemberAccessExpr
-                                      { instanceExpr = mapExpr,
-                                        member = IR.Identifier "has"
-                                      },
-                                  funcParamExprs =
-                                    [ keyExpr,
-                                      fromJust $ indexExprOfMapping e postfix
-                                    ]
-                                }
-                          },
-                      rExpr =
-                        BinaryExpr
-                          { binaryOp = IR.Equal,
-                            lExpr = fromJust $ valueExprOfMapping e postfix,
-                            rExpr = fromMaybe (LiteralExpr $ BoolLiteral False) defaultValue
-                          }
-                    }
-              },
-          rExpr = mapCanGetExpr mapExpr keyExpr postfix
-        }
-  where
-    e = Just $ BinaryExpr Index mapExpr keyExpr
 
 -- -- require(<mapExpr>.set(keyExpr, valExpr, idxExpr))
 afterCheckStmt :: IExpression -> IExpression -> String -> IStatement
@@ -456,9 +397,8 @@ transForMappingAccess mCounter vis = do
   -- injected statements
   injectedStatements <-
     foldlM
-      ( \mc (MECEntry t me ke _ updated) -> do
-          preCheckStmt' <- preCheckStmt (Just t) me ke initTag
-          return $ mergeTFStmtWrapper' mc (Just (TFStmtWrapper [preCheckStmt'] [afterCheckStmt me ke initTag | updated]))
+      ( \mc (MECEntry _ me ke _ updated) -> do
+          return $ mergeTFStmtWrapper' mc (Just (TFStmtWrapper [] [afterCheckStmt me ke initTag | updated]))
       )
       (Just (TFStmtWrapper [] []))
       mCounter
