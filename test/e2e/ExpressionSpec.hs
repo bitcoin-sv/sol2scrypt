@@ -113,7 +113,7 @@ spec = testSpec "Transpile Expression" $ do
         describe "when the left expr is a mapping-typed var" $ do
           let itSBExpr leftExpr rightExpr scrypt = 
                 it "should transpile correctly" $ do
-                  let mapSym = Symbol (IR.Identifier leftExpr) (Mapping (ElementaryType Address) (ElementaryType IR.Int)) False
+                  let mapSym = Symbol (IR.Identifier leftExpr) (Mapping (ElementaryType Address) (ElementaryType IR.Int)) False False
                       initEnv =  [Map.insert (IR.Identifier leftExpr) mapSym Map.empty]
                       sol = leftExpr ++ "[" ++ rightExpr ++ "]" 
                   tr :: TranspileResult (Expression SourceRange) IExpression' (Maybe (Expr Ann)) <- 
