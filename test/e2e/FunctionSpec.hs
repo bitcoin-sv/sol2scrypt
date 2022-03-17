@@ -752,7 +752,7 @@ public function get(SigHashPreimage txPreimage) {
   describe "#mapping" $ do
     let itTranspileWithMapping mapName sol scrypt = 
           it "should transpile function with mapping-typed var correctly" $ do
-            let mapSym = Symbol (IR.Identifier mapName) (Mapping (ElementaryType Address) (ElementaryType IR.Int)) False
+            let mapSym = Symbol (IR.Identifier mapName) (Mapping (ElementaryType Address) (ElementaryType IR.Int)) False False
                 initEnv =  [Map.insert (IR.Identifier mapName) mapSym Map.empty]
             tr :: TranspileResult (Sol.ContractPart SourceRange) IFunction' (Maybe (Scr.Function Ann)) <- 
                           transpile' (TransformState initEnv Nothing Map.empty [] Map.empty [] 0 [] False Set.empty Set.empty []) sol ""
