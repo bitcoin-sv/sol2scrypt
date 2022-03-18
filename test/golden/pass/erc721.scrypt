@@ -27,6 +27,8 @@ contract ERC721 {
   @state
   HashedMap<int, bytes> tokenLinks;
 
+  static const int __LoopCount__0 = 1;
+
   static const bytes tokenName = "My ERC721 Token";
 
   static const bytes tokenSymbol = "MET";
