@@ -6,6 +6,8 @@
 module IR.Transformations.Sol2IR.Statement where
 
 import Control.Monad.State
+import Data.Foldable (foldlM)
+import qualified Data.Map as Map
 import Data.Maybe
 import qualified Data.Set as Set
 import IR.Spec as IR
@@ -260,8 +262,18 @@ instance ToIRTransformable (Sol.Statement SourceRange) [IStatement'] where
             _ -> Nothing
       discardOwnLoopBreakStmt s = [s]
   _toIR s = do
+    mc <- gets stateInFuncMappingCounter
     s' <- _toIR s
-    return [s']
+    mc' <- gets stateInFuncMappingCounter
+    mapCheckStmts <-
+      foldlM
+        ( \ss (MECEntry t me ke _ _) -> do
+            preCheckStmt' <- preCheckStmt (Just t) me ke ""
+            return $ ss ++ [Just preCheckStmt']
+        )
+        []
+        $ Map.difference mc' mc
+    return $ mapCheckStmts ++ [s']
 
 -- transplie block statments that may have returned in middle
 transBlockStmtsWithReturn :: [Statement SourceRange] -> [IStatement'] -> Transformation [IStatement']
@@ -416,3 +428,62 @@ leaveBlockInLoop = do
     propagateFlags (flag : Nothing : fs) = flag : fs
     -- keep the flag if has no outer block
     propagateFlags flags = flags
+
+-- -- require((!<mapExpr>.has(<keyExpr>, <idxExpr>)) || <mapExpr>.canGet(<keyExpr>, <valExpr>, <idxExpr>));
+preCheckStmt :: IType' -> IExpression -> IExpression -> String -> Transformation IStatement
+preCheckStmt t mapExpr keyExpr postfix = do
+  defaultValue <- defaultValueExpr t
+  return $
+    IR.RequireStmt $
+      BinaryExpr
+        { binaryOp = BoolOr,
+          lExpr =
+            ParensExpr
+              { enclosedExpr =
+                  BinaryExpr
+                    { binaryOp = BoolAnd,
+                      lExpr =
+                        UnaryExpr
+                          { unaryOp = Not,
+                            uExpr =
+                              FunctionCallExpr
+                                { funcExpr =
+                                    MemberAccessExpr
+                                      { instanceExpr = mapExpr,
+                                        member = IR.Identifier "has"
+                                      },
+                                  funcParamExprs =
+                                    [ keyExpr,
+                                      fromJust $ indexExprOfMapping e postfix
+                                    ]
+                                }
+                          },
+                      rExpr =
+                        BinaryExpr
+                          { binaryOp = IR.Equal,
+                            lExpr = fromJust $ valueExprOfMapping e postfix,
+                            rExpr = fromMaybe (LiteralExpr $ BoolLiteral False) defaultValue
+                          }
+                    }
+              },
+          rExpr = mapCanGetExpr mapExpr keyExpr postfix
+        }
+  where
+    e = Just $ BinaryExpr Index mapExpr keyExpr
+
+-- -- <mapExpr>.canGet(<keyExpr>, <valExpr>, <idxExpr>)
+mapCanGetExpr :: IExpression -> IExpression -> String -> IExpression
+mapCanGetExpr mapExpr keyExpr postfix =
+  let e = Just $ BinaryExpr Index mapExpr keyExpr
+   in FunctionCallExpr
+        { funcExpr =
+            MemberAccessExpr
+              { instanceExpr = mapExpr,
+                member = IR.Identifier "canGet"
+              },
+          funcParamExprs =
+            [ keyExpr,
+              fromJust $ valueExprOfMapping e postfix,
+              fromJust $ indexExprOfMapping e postfix
+            ]
+        }

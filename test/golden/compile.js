@@ -5,7 +5,7 @@ const { compileContract, findCompiler, compilerVersion } = require('scryptlib');
 
 function compileAllContracts() {
 
-    const exclude = ["erc721.scrypt", "vote.scrypt"]
+    const exclude = ["vote.scrypt"]
     const scryptc = findCompiler();
     console.log('compiler binary: ', scryptc)
     console.log('compiler version: ', compilerVersion(scryptc))

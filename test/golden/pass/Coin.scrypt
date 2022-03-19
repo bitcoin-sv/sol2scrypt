@@ -20,9 +20,6 @@ contract Coin {
     bool returned = false;
     PubKeyHash msgSender = hash160(pubKey);
     require(checkSig(sig, pubKey));
-    require((!this.b1.has(receiver, this_b1_receiver_index) && this_b1_receiver == false) || this.b1.canGet(receiver, this_b1_receiver, this_b1_receiver_index));
-    require((!this.b2.has(receiver, this_b2_receiver_index) && this_b2_receiver == b'') || this.b2.canGet(receiver, this_b2_receiver, this_b2_receiver_index));
-    require((!this.balances.has(receiver, this_balances_receiver_index) && this_balances_receiver == 0) || this.balances.canGet(receiver, this_balances_receiver, this_balances_receiver_index));
     if (msgSender != this.minter) {
       {
         ret = true;
@@ -30,8 +27,11 @@ contract Coin {
       }
     }
     if (!returned) {
+      require((!this.balances.has(receiver, this_balances_receiver_index) && this_balances_receiver == 0) || this.balances.canGet(receiver, this_balances_receiver, this_balances_receiver_index));
       this_balances_receiver += amount;
+      require((!this.b1.has(receiver, this_b1_receiver_index) && this_b1_receiver == false) || this.b1.canGet(receiver, this_b1_receiver, this_b1_receiver_index));
       this_b1_receiver != true;
+      require((!this.b2.has(receiver, this_b2_receiver_index) && this_b2_receiver == b'') || this.b2.canGet(receiver, this_b2_receiver, this_b2_receiver_index));
       this_b2_receiver = b'0001';
     }
     require(this.b2.set(receiver, this_b2_receiver, this_b2_receiver_index));
@@ -44,10 +44,7 @@ contract Coin {
     bool returned = false;
     PubKeyHash msgSender = hash160(pubKey);
     require(checkSig(sig, pubKey));
-    require((!this.b1.has(receiver, this_b1_receiver_index) && this_b1_receiver == false) || this.b1.canGet(receiver, this_b1_receiver, this_b1_receiver_index));
-    require((!this.b2.has(receiver, this_b2_receiver_index) && this_b2_receiver == b'') || this.b2.canGet(receiver, this_b2_receiver, this_b2_receiver_index));
     require((!this.balances.has(msgSender, this_balances_msgSender_index) && this_balances_msgSender == 0) || this.balances.canGet(msgSender, this_balances_msgSender, this_balances_msgSender_index));
-    require((!this.balances.has(receiver, this_balances_receiver_index) && this_balances_receiver == 0) || this.balances.canGet(receiver, this_balances_receiver, this_balances_receiver_index));
     if (this_balances_msgSender < amount) {
       {
         ret = true;
@@ -56,8 +53,11 @@ contract Coin {
     }
     if (!returned) {
       this_balances_msgSender -= amount;
+      require((!this.balances.has(receiver, this_balances_receiver_index) && this_balances_receiver == 0) || this.balances.canGet(receiver, this_balances_receiver, this_balances_receiver_index));
       this_balances_receiver += amount;
+      require((!this.b1.has(receiver, this_b1_receiver_index) && this_b1_receiver == false) || this.b1.canGet(receiver, this_b1_receiver, this_b1_receiver_index));
       this_b1_receiver != a;
+      require((!this.b2.has(receiver, this_b2_receiver_index) && this_b2_receiver == b'') || this.b2.canGet(receiver, this_b2_receiver, this_b2_receiver_index));
       this_b2_receiver = b;
     }
     require(this.b2.set(receiver, this_b2_receiver, this_b2_receiver_index));

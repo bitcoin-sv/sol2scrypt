@@ -1,16 +1,17 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# OPTIONS_GHC -Wno-orphans #-}
-{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
-
 {-# HLINT ignore "Use lambda-case" #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 module IR.Transformations.Sol2IR.Function where
 
 import Control.Monad.State
+import Data.Foldable
 import qualified Data.Map.Lazy as Map
 import Data.Maybe
+import qualified Data.Set as Set
 import IR.Spec as IR
 import IR.Transformations.Base
 import IR.Transformations.Sol2IR.Expression
@@ -19,10 +20,8 @@ import IR.Transformations.Sol2IR.Identifier ()
 import IR.Transformations.Sol2IR.Statement ()
 import IR.Transformations.Sol2IR.Type ()
 import IR.Transformations.Sol2IR.Variable ()
-import Solidity.Spec as Sol
 import Protolude.Monad (concatMapM)
-import Data.Foldable
-import qualified Data.Set as Set
+import Solidity.Spec as Sol
 
 data FuncRetTransResult = FuncRetTransResult
   { targetType :: IType',
@@ -42,11 +41,10 @@ instance ToIRTransformable (ContractPart SourceRange) IFunction' where
       Left msg -> reportError msg a >> return Nothing
       Right (ParamList paramsForMap, body) -> do
         let ps' = case ps of
-                Just (ParamList pps) -> Just (ParamList $ pps ++ paramsForMap)
-                _ -> Just $ ParamList paramsForMap
+              Just (ParamList pps) -> Just (ParamList $ pps ++ paramsForMap)
+              _ -> Just $ ParamList paramsForMap
         inL <- isInLibrary
         return $ Function (IR.Identifier fn) <$> ps' <*> Just body <*> targetType retTransResult <*> Just vis <*> Just inL
-
   _toIR _ = return Nothing
 
 instance ToIRTransformable (ContractPart SourceRange) IConstructor' where
@@ -120,27 +118,26 @@ toIRFuncParams (ParameterList pl) _ (FuncRetTransResult _ ort rn) vis funcBlk = 
   -- for function that uses `msg.sender`
   let msgSenderExist = exprExistsInStmt msgSenderExpr (Sol.BlockStatement funcBlk)
   (extraParams1, blkT1) <-
-        if fst msgSenderExist
-          then do
-            if vis == Public
-              then
-                let (ps, blkT_) = transForFuncWithMsgSender in return (map Just ps ++ extraParams0, mergeTFStmtWrapper blkT0 blkT_)
-              else do
-                reportError "using `msg.sender` in non-external function is not supported yet" (snd msgSenderExist)
-                return (extraParams0, blkT0)
-          else return (extraParams0, blkT0)
+    if fst msgSenderExist
+      then do
+        if vis == Public
+          then let (ps, blkT_) = transForFuncWithMsgSender in return (map Just ps ++ extraParams0, mergeTFStmtWrapper blkT0 blkT_)
+          else do
+            reportError "using `msg.sender` in non-external function is not supported yet" (snd msgSenderExist)
+            return (extraParams0, blkT0)
+      else return (extraParams0, blkT0)
 
   -- for function that uses `msg.value`
   let msgValueExist = exprExistsInStmt msgValueExpr (Sol.BlockStatement funcBlk)
   (extraParams2, blkT2) <-
-        if fst msgValueExist
-          then
-            if vis == Public
-              then let (ps, blkT_) = transForFuncWithMsgValue in return (map Just ps ++ extraParams1, mergeTFStmtWrapper blkT1 blkT_)
-              else do
-                reportError "using `msg.value` in non-external function is not supported yet" (snd msgValueExist)
-                return (extraParams1, blkT1)
-          else return (extraParams1, blkT1)
+    if fst msgValueExist
+      then
+        if vis == Public
+          then let (ps, blkT_) = transForFuncWithMsgValue in return (map Just ps ++ extraParams1, mergeTFStmtWrapper blkT1 blkT_)
+          else do
+            reportError "using `msg.value` in non-external function is not supported yet" (snd msgValueExist)
+            return (extraParams1, blkT1)
+      else return (extraParams1, blkT1)
 
   let needPreimageParam
         | vis == IR.Public = True
@@ -188,15 +185,14 @@ toIRFuncBody blk@(Sol.Block _ _) vis wrapperFromParam (FuncRetTransResult _ ort 
             (True, True) -> case last stmts of
               Just (ReturnStmt r) -> case ort of
                 -- drop `return ;`
-                Nothing  -> init stmts
+                Nothing -> init stmts
                 -- use `require(nonBoolExpr == injectedParamName);` to replace `return nonBoolExpr;`
                 Just _ ->
                   let e = fromMaybe (IR.Identifier "retVal") rn
                       r' = case r of
-                            te@TernaryExpr {} -> ParensExpr te
-                            _ -> r
-                    in init stmts ++ [Just $ requireEqualStmt r' e]
-
+                        te@TernaryExpr {} -> ParensExpr te
+                        _ -> r
+                   in init stmts ++ [Just $ requireEqualStmt r' e]
               _ -> error "last statement is not return statement"
             (True, False) ->
               stmts ++ case rn of
@@ -206,17 +202,17 @@ toIRFuncBody blk@(Sol.Block _ _) vis wrapperFromParam (FuncRetTransResult _ ort 
               Just n ->
                 stmts
                   ++ [ Just $
-                        ReturnStmt $
-                          if returnedInMiddle
-                            then -- append `return returned ? ret : returnName;`
+                         ReturnStmt $
+                           if returnedInMiddle
+                             then -- append `return returned ? ret : returnName;`
 
-                              TernaryExpr
-                                (IdentifierExpr (IR.ReservedId varReturned))
-                                (IdentifierExpr (IR.ReservedId varRetVal))
-                                (IdentifierExpr n)
-                            else -- append `return returnName;`
-                              IdentifierExpr n
-                    ]
+                               TernaryExpr
+                                 (IdentifierExpr (IR.ReservedId varReturned))
+                                 (IdentifierExpr (IR.ReservedId varRetVal))
+                                 (IdentifierExpr n)
+                             else -- append `return returnName;`
+                               IdentifierExpr n
+                     ]
               _ ->
                 stmts
                   ++ if returnedInMiddle
@@ -226,20 +222,22 @@ toIRFuncBody blk@(Sol.Block _ _) vis wrapperFromParam (FuncRetTransResult _ ort 
                       [Just $ ReturnStmt (fromMaybe (LiteralExpr $ BoolLiteral True) returnExpr)]
             _ -> stmts
 
-      let stmts'' = if vis == Public then map Just prepends ++ stmts' ++ map Just appends
-                    else case laststmts of
-                          ss@(Just (IR.ReturnStmt _)) -> map Just prepends ++ init stmts' ++ map Just appends ++ [ss]
-                          _ -> map Just prepends ++ stmts' ++ map Just appends
-                          where
-                            laststmts = last stmts'
+      let stmts'' =
+            if vis == Public
+              then map Just prepends ++ stmts' ++ map Just appends
+              else case laststmts of
+                ss@(Just (IR.ReturnStmt _)) -> map Just prepends ++ init stmts' ++ map Just appends ++ [ss]
+                _ -> map Just prepends ++ stmts' ++ map Just appends
+            where
+              laststmts = last stmts'
 
-      let stmts''' = if vis == Public then
-                case reverse stmts'' of
-                  -- ignore the last `require(true)` if the penultimate is already a `require` stmt
-                  (Just (RequireStmt (LiteralExpr (BoolLiteral True)))) : (Just (RequireStmt _)) : _ -> init stmts''
-                  _ -> stmts''
-                else stmts''
-
+      let stmts''' =
+            if vis == Public
+              then case reverse stmts'' of
+                -- ignore the last `require(true)` if the penultimate is already a `require` stmt
+                (Just (RequireStmt (LiteralExpr (BoolLiteral True)))) : (Just (RequireStmt _)) : _ -> init stmts''
+                _ -> stmts''
+              else stmts''
 
       preStmts <- prependsForReturnedInit ort
       let stmts4 =
@@ -360,29 +358,11 @@ transForConstructorWithMsgValue =
       [] -- appends
   )
 
-
- -- -- <mapExpr>.canGet(<keyExpr>, <valExpr>, <idxExpr>)
-mapCanGetExpr :: IExpression -> IExpression -> String -> IExpression
-mapCanGetExpr mapExpr keyExpr postfix =
-  let e = Just $ BinaryExpr Index mapExpr keyExpr
-  in FunctionCallExpr
-        { funcExpr =
-            MemberAccessExpr
-              { instanceExpr = mapExpr,
-                member = IR.Identifier "canGet"
-              },
-          funcParamExprs =
-            [ keyExpr,
-              fromJust $ valueExprOfMapping e postfix,
-              fromJust $ indexExprOfMapping e postfix
-            ]
-        }
-
 -- <mapExpr>.set(<keyExpr>, <valExpr>, <idxExpr>)
 mapSetExpr :: IExpression -> IExpression -> String -> IExpression
 mapSetExpr mapExpr keyExpr postfix =
   let e = Just $ BinaryExpr Index mapExpr keyExpr
-  in FunctionCallExpr
+   in FunctionCallExpr
         { funcExpr =
             MemberAccessExpr
               { instanceExpr = mapExpr,
@@ -395,100 +375,58 @@ mapSetExpr mapExpr keyExpr postfix =
             ]
         }
 
--- -- require((!<mapExpr>.has(<keyExpr>, <idxExpr>)) || <mapExpr>.canGet(<keyExpr>, <valExpr>, <idxExpr>));
-preCheckStmt :: IType' -> IExpression -> IExpression -> String -> Transformation IStatement
-preCheckStmt t mapExpr keyExpr postfix = do
-  defaultValue <- defaultValueExpr t
-  return $ IR.RequireStmt $
-          BinaryExpr
-            { binaryOp = BoolOr,
-              lExpr =
-                ParensExpr
-                  { enclosedExpr =
-                      BinaryExpr {
-
-                        binaryOp = BoolAnd ,
-                        lExpr = UnaryExpr
-                        { unaryOp = Not,
-                          uExpr =
-                            FunctionCallExpr
-                              { funcExpr =
-                                  MemberAccessExpr
-                                    { instanceExpr = mapExpr,
-                                      member = IR.Identifier "has"
-                                    },
-                                funcParamExprs =
-                                  [ keyExpr,
-                                    fromJust $ indexExprOfMapping e postfix
-                                  ]
-                              }
-                        },
-                        rExpr = BinaryExpr {
-                          binaryOp = IR.Equal,
-                          lExpr = fromJust $ valueExprOfMapping e postfix,
-                          rExpr = fromMaybe (LiteralExpr $ BoolLiteral False) defaultValue
-                        }
-                      }
-
-                  },
-              rExpr = mapCanGetExpr mapExpr keyExpr postfix
-            }
-            where
-                e = Just $ BinaryExpr Index mapExpr keyExpr
-
 -- -- require(<mapExpr>.set(keyExpr, valExpr, idxExpr))
 afterCheckStmt :: IExpression -> IExpression -> String -> IStatement
 afterCheckStmt mapExpr keyExpr postfix =
   IR.RequireStmt $ mapSetExpr mapExpr keyExpr postfix
 
-
 transForMappingAccess :: MappingExprCounter -> IVisibility -> Transformation (Either String ([IR.IParam], TFStmtWrapper))
 transForMappingAccess mCounter vis = do
   let initTag = ""
   -- injected params
-  let injectedParams = concatMap ( \(MECEntry t me ke _ _) ->
-          let e = Just $ BinaryExpr Index me ke
-           in [ IR.Param t $ IR.Identifier $ fromJust $ valueNameOfMapping e initTag, -- init value
-                IR.Param (ElementaryType Int) $ IR.Identifier $ fromJust $ indexNameOfMapping e initTag -- init value index
-              ]
-        ) $ Map.elems mCounter
+  let injectedParams =
+        concatMap
+          ( \(MECEntry t me ke _ _) ->
+              let e = Just $ BinaryExpr Index me ke
+               in [ IR.Param t $ IR.Identifier $ fromJust $ valueNameOfMapping e initTag, -- init value
+                    IR.Param (ElementaryType Int) $ IR.Identifier $ fromJust $ indexNameOfMapping e initTag -- init value index
+                  ]
+          )
+          $ Map.elems mCounter
 
   -- injected statements
-  injectedStatements <- foldlM ( \mc (MECEntry t me ke _ updated) -> do
-          preCheckStmt' <- preCheckStmt (Just t) me ke initTag
-          return $ mergeTFStmtWrapper' mc (Just (TFStmtWrapper [preCheckStmt'] [afterCheckStmt me ke initTag | updated]))
-        )
-        (Just (TFStmtWrapper [] []))
-        mCounter
+  injectedStatements <-
+    foldlM
+      ( \mc (MECEntry _ me ke _ updated) -> do
+          return $ mergeTFStmtWrapper' mc (Just (TFStmtWrapper [] [afterCheckStmt me ke initTag | updated]))
+      )
+      (Just (TFStmtWrapper [] []))
+      mCounter
 
   case injectedStatements of
-    Just ss -> if (vis == Private || vis == Default) && not (null injectedParams)
-      then
-        return $ Left "accessing mapping expression in non-external function is not supported"
-      else
-        return $ Right (injectedParams,  ss)
+    Just ss ->
+      if (vis == Private || vis == Default) && not (null injectedParams)
+        then return $ Left "accessing mapping expression in non-external function is not supported"
+        else return $ Right (injectedParams, ss)
     Nothing -> return $ Left "injected statements failed when transpiling mapping"
-
-
-
 
 -- prepends some init statements for functions that have returned in middle.
 prependsForReturnedInit :: IType' -> Transformation [IStatement]
 prependsForReturnedInit t = do
   e <- defaultValueExpr t
   let t' = case t of
-          Nothing -> ElementaryType Bool
-          Just a -> a
-  return [ -- `<T> ret = <defaultValueExprueofT>;`
-    IR.DeclareStmt
-      [Just $ IR.Param t' (IR.ReservedId varRetVal)]
-      [fromMaybe (LiteralExpr $ BoolLiteral False) e],
-    -- `bool returned = false;`
-    IR.DeclareStmt
-      [Just $ IR.Param (ElementaryType IR.Bool) (IR.ReservedId varReturned)]
-      [LiteralExpr $ BoolLiteral False]
+        Nothing -> ElementaryType Bool
+        Just a -> a
+  return
+    [ -- `<T> ret = <defaultValueExprueofT>;`
+      IR.DeclareStmt
+        [Just $ IR.Param t' (IR.ReservedId varRetVal)]
+        [fromMaybe (LiteralExpr $ BoolLiteral False) e],
+      -- `bool returned = false;`
+      IR.DeclareStmt
+        [Just $ IR.Param (ElementaryType IR.Bool) (IR.ReservedId varReturned)]
+        [LiteralExpr $ BoolLiteral False]
     ]
-
 
 -- build `propagateState` function, in this way we can call `require(this.propagateState(txPreimage));` in other public functions
 buildPropagateState :: IR.IContractBodyElement

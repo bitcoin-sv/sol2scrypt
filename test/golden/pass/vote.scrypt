@@ -22,6 +22,7 @@ contract Ballot {
 
   constructor(bytes[10] proposalNames, PubKeyHash msgSender) {
     this.chairperson = msgSender;
+    require((!this.voters.has(this_chairperson, this_voters_this_chairperson_index) && this_voters_this_chairperson == {0, false, Ripemd160(b'0000000000000000000000000000000000000000'), 0}) || this.voters.canGet(this_chairperson, this_voters_this_chairperson, this_voters_this_chairperson_index));
     this_voters_this_chairperson.weight = 1;
     int i = 0;
     loop (__LoopCount__0) {
@@ -35,8 +36,8 @@ contract Ballot {
   public function giveRightToVote(PubKeyHash voter, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, Voter this_voters_voter, int this_voters_voter_index) {
     PubKeyHash msgSender = hash160(pubKey);
     require(checkSig(sig, pubKey));
-    require((!this.voters.has(voter, this_voters_voter_index) && this_voters_voter == {0, false, Ripemd160(b'0000000000000000000000000000000000000000'), 0}) || this.voters.canGet(voter, this_voters_voter, this_voters_voter_index));
     require(msgSender == this.chairperson);
+    require((!this.voters.has(voter, this_voters_voter_index) && this_voters_voter == {0, false, Ripemd160(b'0000000000000000000000000000000000000000'), 0}) || this.voters.canGet(voter, this_voters_voter, this_voters_voter_index));
     require(!this_voters_voter.voted);
     require(this_voters_voter.weight == 0);
     this_voters_voter.weight = 1;
@@ -47,7 +48,6 @@ contract Ballot {
     PubKeyHash msgSender = hash160(pubKey);
     require(checkSig(sig, pubKey));
     require((!this.voters.has(msgSender, this_voters_msgSender_index) && this_voters_msgSender == {0, false, Ripemd160(b'0000000000000000000000000000000000000000'), 0}) || this.voters.canGet(msgSender, this_voters_msgSender, this_voters_msgSender_index));
-    require((!this.voters.has(to, this_voters_to_index) && this_voters_to == {0, false, Ripemd160(b'0000000000000000000000000000000000000000'), 0}) || this.voters.canGet(to, this_voters_to, this_voters_to_index));
     Voter sender = this_voters_msgSender;
     require(!sender.voted);
     require(to != msgSender);

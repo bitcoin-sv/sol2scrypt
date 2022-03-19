@@ -2,6 +2,7 @@
 pragma solidity ^0.8.10;
 
 contract ERC721 {
+    uint256 private constant __LoopCount__0 = 1;
     string private constant tokenName = "My ERC721 Token";
     string private constant tokenSymbol = "MET";
     uint256 private constant totalTokens = 1000000;

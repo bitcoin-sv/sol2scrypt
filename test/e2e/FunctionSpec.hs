@@ -750,8 +750,8 @@ public function get(SigHashPreimage txPreimage) {
 }|]
 
   describe "#mapping" $ do
-    let itTranspileWithMapping mapName sol scrypt = 
-          it "should transpile function with mapping-typed var correctly" $ do
+    let itTranspileWithMapping title mapName sol scrypt = 
+          it ("should transpile function with mapping-typed var " ++ title ++ " correctly") $ do
             let mapSym = Symbol (IR.Identifier mapName) (Mapping (ElementaryType Address) (ElementaryType IR.Int)) False False
                 initEnv =  [Map.insert (IR.Identifier mapName) mapSym Map.empty]
             tr :: TranspileResult (Sol.ContractPart SourceRange) IFunction' (Maybe (Scr.Function Ann)) <- 
@@ -759,6 +759,7 @@ public function get(SigHashPreimage txPreimage) {
             scryptCode tr `shouldBe` scrypt
 
     itTranspileWithMapping
+      "whose keys are from parameters"
       "balances"
       [r|function send(address receiver, uint amount) external {
     balances[msg.sender] -= amount;
@@ -769,14 +770,33 @@ public function send(PubKeyHash receiver, int amount, SigHashPreimage txPreimage
   PubKeyHash msgSender = hash160(pubKey);
   require(checkSig(sig, pubKey));
   require((!balances.has(msgSender, balances_msgSender_index) && balances_msgSender == 0) || balances.canGet(msgSender, balances_msgSender, balances_msgSender_index));
-  require((!balances.has(receiver, balances_receiver_index) && balances_receiver == 0) || balances.canGet(receiver, balances_receiver, balances_receiver_index));
   balances_msgSender -= amount;
+  require((!balances.has(receiver, balances_receiver_index) && balances_receiver == 0) || balances.canGet(receiver, balances_receiver, balances_receiver_index));
   balances_receiver += amount;
   require(balances.set(msgSender, balances_msgSender, balances_msgSender_index));
   require(balances.set(receiver, balances_receiver, balances_receiver_index));
   require(this.propagateState(txPreimage));
 }|]
 
+    itTranspileWithMapping
+      "whose keys are from local variables"
+      "balances"
+      [r|function send(address receiver, uint amount) external {
+    address owner = getOwner();
+    balances[owner] -= amount;
+    balances[receiver] += amount;
+}|]
+      [r|
+public function send(PubKeyHash receiver, int amount, SigHashPreimage txPreimage, int balances_owner, int balances_owner_index, int balances_receiver, int balances_receiver_index) {
+  PubKeyHash owner = getOwner();
+  require((!balances.has(owner, balances_owner_index) && balances_owner == 0) || balances.canGet(owner, balances_owner, balances_owner_index));
+  balances_owner -= amount;
+  require((!balances.has(receiver, balances_receiver_index) && balances_receiver == 0) || balances.canGet(receiver, balances_receiver, balances_receiver_index));
+  balances_receiver += amount;
+  require(balances.set(owner, balances_owner, balances_owner_index));
+  require(balances.set(receiver, balances_receiver, balances_receiver_index));
+  require(this.propagateState(txPreimage));
+}|]
 
   describe "#ReportError" $ do
     itReportError "public function access msg.sender" 
