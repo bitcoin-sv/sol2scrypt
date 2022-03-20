@@ -18,7 +18,7 @@ maybeStateVarId (Just i) = do
   s <- lookupSym i
   i' <- case s of
     -- append prefix `this.` for state variables
-    Just (Symbol _ _ True False) -> return $ IR.Identifier $ "this." ++ IR.unIdentifier i
+    Just (Symbol _ _ True False _) -> return $ IR.Identifier $ "this." ++ IR.unIdentifier i
     _ -> return i
   return $ Just i'
 
@@ -27,7 +27,7 @@ maybeMemberFunctionCall Nothing = return Nothing
 maybeMemberFunctionCall (Just i) = do
   s <- lookupSym i
   i' <- case s of
-    -- append prefix `this.` for state variables
-    Just (Symbol _ (BuiltinType "function") _ _) -> return $ IR.Identifier $ "this." ++ IR.unIdentifier i
+    -- append prefix `this.` for non-static functions
+    Just (Symbol _ (BuiltinType "function") _ _ False) -> return $ IR.Identifier $ "this." ++ IR.unIdentifier i
     _ -> return i
   return $ Just i'

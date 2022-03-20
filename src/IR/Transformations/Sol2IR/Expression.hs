@@ -61,7 +61,7 @@ instance ToIRTransformable (Sol.Expression SourceRange) IExpression' where
           ReservedId n -> ReservedId $ stripThis n
         case i' of
           -- mapping-typed var access
-          Just (Symbol _ (Mapping _ vt) _ _) -> do
+          Just (Symbol _ (Mapping _ vt) _ _ _) -> do
             mc <- gets stateInFuncMappingCounter
             let mapExpr = Just $ IdentifierExpr i
             keyExpr <- keyExprOfMapping e []

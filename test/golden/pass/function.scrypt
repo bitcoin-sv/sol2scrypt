@@ -1,0 +1,30 @@
+library L {
+  static function f1(int a, int b) : int {
+    return f2(a, b);
+  }
+
+  static function f2(int a, int b) : int {
+    return a + b;
+  }
+}
+
+contract Test {
+  @state
+  int p;
+
+  public function f3(int a, SigHashPreimage txPreimage) {
+    require(this.f4(a) > this.p);
+    require(this.propagateState(txPreimage));
+  }
+
+  function f4(int a) : int {
+    return L.f1(a, a);
+  }
+
+  function propagateState(SigHashPreimage txPreimage) : bool {
+    require(Tx.checkPreimage(txPreimage));
+    bytes outputScript = this.getStateScript();
+    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    return hash256(output) == SigHash.hashOutputs(txPreimage);
+  }
+}

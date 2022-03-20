@@ -51,7 +51,7 @@ instance ToIRTransformable (Sol.Statement SourceRange) IStatement' where
   _toIR (SimpleStatementVariableDeclarationList [Just localVar] [e] a) = do
     e' <- _toIR e
     localVar' <- _toIR localVar
-    _ <- addSym $ Symbol <$> (paramName <$> localVar') <*> (paramType <$> localVar') <*> Just False <*> Just False
+    _ <- addSym $ Symbol <$> (paramName <$> localVar') <*> (paramType <$> localVar') <*> Just False <*> Just False <*> Just False
     case localVar' of
       Nothing -> reportError "unsupported SimpleStatementVariableDeclarationList" a >> return Nothing
       Just _ -> return $ DeclareStmt [localVar'] <$> sequence [e']
