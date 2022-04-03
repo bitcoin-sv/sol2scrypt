@@ -27,13 +27,11 @@ instance ToIRTransformable (Maybe (Sol.Statement SourceRange)) IStatement' where
   _toIR _ = return Nothing
 
 instance ToIRTransformable (Sol.Statement SourceRange) IStatement' where
-  _toIR (SimpleStatementExpression (Binary (Operator "=" _) le re _) a) = do
+  _toIR (SimpleStatementExpression (Binary (Operator "=" _) le re _) _) = do
     le' <- _toIR le
     checkLHSmapExpr le'
     re' <- _toIR re
-    case le' of
-      Just (BinaryExpr Index _ (IdentifierExpr _)) -> reportError "unsupported assign Statement, subscript cannot be a variable" a >> return Nothing
-      _ -> return $ AssignStmt <$> sequence [le'] <*> sequence [re']
+    return $ AssignStmt <$> sequence [le'] <*> sequence [re']
   _toIR (SimpleStatementExpression (FunctionCallExpressionList (Literal (PrimaryExpressionIdentifier (Sol.Identifier "require" _))) (Just (ExpressionList (e : _))) _) _) = do
     e' <- _toIR e
     return $ Just $ IR.RequireStmt $ fromJust e'

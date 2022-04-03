@@ -566,6 +566,7 @@ function test6(int x) : bool {
 }|]
       [r|
 private function _approve(PubKeyHash owner, PubKeyHash to, int tokenId) : bool {
+  _tokenApprovals[tokenId] = to;
   return true;
 }|]
 
