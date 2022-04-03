@@ -144,7 +144,7 @@ a[1] </code></pre> </td>
     <td><pre><code>// Index by expression 
 a[1 + i]</code></pre> </td>
     <td><pre><code>a[1 + i]</code></pre> </td>
-    <td>only a <a href="https://scryptdoc.readthedocs.io/en/latest/ctc.html">compile-time constant</a> (CTC) can be used as an index when writing array in sCrypt</td>
+    <td></td>
 </tr>
 <tr >
     <td><pre><code>// push/pop element 
