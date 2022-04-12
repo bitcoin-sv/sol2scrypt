@@ -164,7 +164,7 @@ a.pop(); </code></pre> </td>
 <tr>
     <td>Binary <pre><code>+, -, *, /, %, +=, -=, *=, /=, %=, ==, !=, <, <=, >, >=, &&, ||</code></pre></td>
     <td><pre><code>+, -, *, /, %, +=, -=, *=, /=, %=, ==, !=, <, <=, >, >=, &&, ||, &, |, ^, &=, |=, ^=, <<=, >>=, <<, >></code></pre></td>
-    <td><code>&, |, ^, &=, |=, ^=, <<=, >>=, <<, >></code> only works on fixed bytes</td>
+    <td><code>&, |, ^, &=, |=, ^=</code> only works on fixed bytes</td>
 </tr>
 
 <tr>
