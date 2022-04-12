@@ -15,21 +15,6 @@
         "message": "unsupported `^` on non-bytes expression"
     },
     {
-        "src": "test/golden/fail/operator.sol:12:31:12:33",
-        "type": "Error",
-        "message": "unsupported `<<` on non-bytes expression"
-    },
-    {
-        "src": "test/golden/fail/operator.sol:14:32:14:34",
-        "type": "Error",
-        "message": "unsupported `>>` on non-bytes expression"
-    },
-    {
-        "src": "test/golden/fail/operator.sol:16:11:16:14",
-        "type": "Error",
-        "message": "unsupported `>>=` on non-bytes expression"
-    },
-    {
         "src": "test/golden/fail/operator.sol:17:11:17:13",
         "type": "Error",
         "message": "unsupported `|=` on non-bytes expression"
@@ -43,21 +28,6 @@
         "src": "test/golden/fail/operator.sol:19:11:19:13",
         "type": "Error",
         "message": "unsupported `&=` on non-bytes expression"
-    },
-    {
-        "src": "test/golden/fail/operator.sol:20:11:20:14",
-        "type": "Error",
-        "message": "unsupported `<<=` on non-bytes expression"
-    },
-    {
-        "src": "test/golden/fail/operator.sol:22:11:22:13",
-        "type": "Error",
-        "message": "unsupported `>>` on non-bytes expression"
-    },
-    {
-        "src": "test/golden/fail/operator.sol:24:11:24:13",
-        "type": "Error",
-        "message": "unsupported `<<` on non-bytes expression"
     },
     {
         "src": "test/golden/fail/operator.sol:26:22:26:23",

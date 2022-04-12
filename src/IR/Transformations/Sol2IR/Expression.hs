@@ -76,8 +76,8 @@ instance ToIRTransformable (Sol.Expression SourceRange) IExpression' where
     e1' <- _toIR e1
     e2' <- _toIR e2
     -- TODO: check e1's type, it should be `bytes` for bytesOnlyAssignOps
-    let bytesOnlyAssignOps = ["%=", "&=", "|=", "^=", "<<=", ">>="]
-        assignOps = ["+=", "-=", "*=", "/="] ++ bytesOnlyAssignOps
+    let bytesOnlyAssignOps = ["%=", "&=", "|=", "^="]
+        assignOps = ["+=", "-=", "*=", "/=", "<<=", ">>="] ++ bytesOnlyAssignOps
     when (opStr `elem` assignOps) $
       checkLHSmapExpr e1'
     transformBinraryExpr operator e1' e2'
@@ -225,7 +225,7 @@ transformBinraryExpr (Operator opStr a) e1' e2' = do
 
 
 onlyWorkWithBytes :: [Char] -> Bool
-onlyWorkWithBytes opStr = opStr `elem` ["&", "|", "^", "&=", "|=", "^=", "<<=", ">>=", "<<", ">>"]
+onlyWorkWithBytes opStr = opStr `elem` ["&", "|", "^", "&=", "|=", "^="]
 
 str2BinaryOp :: String -> SourceRange -> Transformation (Maybe IBinaryOp)
 str2BinaryOp "+" _ = return $ Just Add
