@@ -3,21 +3,18 @@ module Cli where
 import Options.Applicative
 
 data Options
-  = Transpile {cDest :: FilePath, cSource :: Maybe FilePath, cLogToFile :: Bool, cForceOutput :: Bool}
+  = Transpile {cDest :: Maybe FilePath, cSource :: Maybe FilePath, cForceOutput :: Bool}
   | Version
   deriving (Show)
 
 sourceParser :: Parser (Maybe FilePath)
 sourceParser = optional $ argument str $ metavar "FILE" <> help "Source file path. Take source file content from stdin if none given"
 
-destParser :: Parser FilePath
-destParser = strOption $ long "output-dir" <> short 'o' <> metavar "OUTPUTDIR" <> value "." <> help "Output directory if given, default to current directory"
-
-logToFileParser :: Parser Bool
-logToFileParser = switch $ long "log" <> short 'L' <> help "Whether to output errors in json format"
+destParser :: Parser (Maybe FilePath)
+destParser = optional $ strOption $ long "output-dir" <> short 'o' <> metavar "OUTPUTDIR" <> help "Output directory, output to stdout if none given"
 
 forceOutputParser :: Parser Bool
-forceOutputParser = switch $ long "force" <> short 'F' <> help "Whether to output result file despite errors"
+forceOutputParser = switch $ long "force" <> short 'F' <> help "Whether to output scrypt code despite errors"
 
 commandsParser :: Parser Options
 commandsParser =
@@ -25,7 +22,7 @@ commandsParser =
     ( command
         "transpile"
         ( info
-            (Transpile <$> destParser <*> sourceParser <*> logToFileParser <*> forceOutputParser)
+            (Transpile <$> destParser <*> sourceParser <*> forceOutputParser)
             (progDesc "Transpile Solidity FILE to sCrypt")
         )
         <> command

@@ -6,22 +6,20 @@ Easies way to install is to download from [Releases](https://github.com/sCrypt-I
 # Usage
 ```sh
 > sol2scrypt transpile --help                
-Usage: sol2scrypt transpile [-o|--output-dir OUTPUTDIR] [FILE] [-L|--log] 
-                            [-F|--force]
+Usage: sol2scrypt transpile [-o|--output-dir OUTPUTDIR] [FILE] [-F|--force]
+                            
   Transpile Solidity FILE to sCrypt
 
 Available options:
   -o,--output-dir OUTPUTDIR
-                           Output directory if given, default to current
-                           directory
+                           Output directory if given, output to stdout if none given
   FILE                     Source file path. Take source file content from stdin
                            if none given
-  -L,--log                 Whether to output errors in json format
-  -F,--force               Whether to output result file despite errors
+  -F,--force               Whether to output scrypt code despite errors
   -h,--help                Show this help text
 
 
-> sol2scrypt transpile examples/Coin/Coin.sol -L -o ~/tmp
+> sol2scrypt transpile examples/Coin/Coin.sol -o ~/tmp
 transpile result written to `/Users/foo/tmp/Coin.scrypt`
 ```
 
