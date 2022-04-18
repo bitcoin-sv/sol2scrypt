@@ -23,6 +23,8 @@ struct Todo {
 contract Arrays {
     uint8[2][3] c;
     Todo[2][3][4][5] todos;
+    uint constant __LoopCount__0 = 1;
+    uint constant __LoopCount__1 = 1;
     function get() external view returns (Todo[2][3][4][5] memory) {
 
         uint8[2][3][4][5] memory aa = 
