@@ -1,41 +1,6 @@
 [
     {
-        "src": "test/golden/fail/operator.sol:6:25:6:26",
-        "type": "Error",
-        "message": "unsupported `&` on non-bytes expression"
-    },
-    {
-        "src": "test/golden/fail/operator.sol:8:24:8:25",
-        "type": "Error",
-        "message": "unsupported `|` on non-bytes expression"
-    },
-    {
-        "src": "test/golden/fail/operator.sol:10:25:10:26",
-        "type": "Error",
-        "message": "unsupported `^` on non-bytes expression"
-    },
-    {
-        "src": "test/golden/fail/operator.sol:17:11:17:13",
-        "type": "Error",
-        "message": "unsupported `|=` on non-bytes expression"
-    },
-    {
-        "src": "test/golden/fail/operator.sol:18:11:18:13",
-        "type": "Error",
-        "message": "unsupported `^=` on non-bytes expression"
-    },
-    {
-        "src": "test/golden/fail/operator.sol:19:11:19:13",
-        "type": "Error",
-        "message": "unsupported `&=` on non-bytes expression"
-    },
-    {
-        "src": "test/golden/fail/operator.sol:26:22:26:23",
-        "type": "Error",
-        "message": "unsupported `~` on non-bytes expression"
-    },
-    {
-        "src": "test/golden/fail/operator.sol:30:24:30:26",
+        "src": "test/golden/fail/operator.sol:6:24:6:26",
         "type": "Error",
         "message": "unsupported binary operator `**`"
     }

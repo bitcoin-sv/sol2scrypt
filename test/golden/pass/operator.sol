@@ -112,6 +112,22 @@ contract SolidityTest {
 
         bytes1  not = ~a;
 
+        uint8 x = 0; 
+
+        uint8 y = 0;
+
+        x &= x & y | x ^ x;
+
+        y ^= ~x & y & x ^ x;
+
+        y |= ~x & y & x | f2(x);
+
+        uint8[3] memory aa = [0,0,0];
+
+        aa[ ~x & y & x | f2(x)] = 3;
+
+        aa[ ~x ^ f2(x) & x | f2(x)] = 3;
+
     }
 
     function unlock(uint ab) external {
@@ -121,5 +137,10 @@ contract SolidityTest {
     function f1(uint x) public pure returns (uint) {
         return x + 1;
     }
+
+    function f2(uint8 x) public pure returns (uint8) {
+        return x + 1;
+    }
+
 
 }

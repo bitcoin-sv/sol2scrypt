@@ -76,6 +76,14 @@ contract SolidityTest {
     rightshift >>= 1;
     leftshift <<= 1;
     bytes not = ~a;
+    int x = 0;
+    int y = 0;
+    x &= x & y | x ^ x;
+    y ^= ~x & y & x ^ x;
+    y |= ~x & y & x | this.f2(x);
+    int[3] aa = [0, 0, 0];
+    aa[~x & y & x | this.f2(x)] = 3;
+    aa[~x ^ this.f2(x) & x | this.f2(x)] = 3;
     return true;
   }
 
@@ -85,6 +93,10 @@ contract SolidityTest {
   }
 
   function f1(int x) : int {
+    return x + 1;
+  }
+
+  function f2(int x) : int {
     return x + 1;
   }
 
