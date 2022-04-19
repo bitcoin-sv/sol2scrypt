@@ -163,6 +163,10 @@ spec = testSpec "Transpile Expression" $ do
     itComplex "uint(1)" "1"
     itComplex "bytes1(hex\"00\")" "b'00'"
     itComplex "a[i+1]" "a[i + 1]"
+    itComplex "a[i << 3]" "a[i << 3]"
+    itComplex "a[i | x & y ^ c]" "a[i | x & y ^ c]"
+    itComplex "a ^= 3 + 1" "a ^= 3 + 1"
+    itComplex "i | x & y ^ c | c" "i | x & y ^ c | c"
 
   describe "#PrimaryExpressionTupleExpression" $ do
     itexpr "number array" "[1,3,1,3]" "[1, 3, 1, 3]"
@@ -175,11 +179,6 @@ spec = testSpec "Transpile Expression" $ do
   describe "#New Expression" $ do
     itexpr "new bytes" "new bytes(7)" "num2bin(0, 7)"
   describe "#ReportError" $ do
-    -- operator
-    itReportError "1 & 1 " "unsupported `&` on non-bytes expression" (3, 4)
-    itReportError "1 | 1 " "unsupported `|` on non-bytes expression" (3, 4)
-    itReportError "1 ^ 1 " "unsupported `^` on non-bytes expression" (3, 4)
-    itReportError "~a " "unsupported `~` on non-bytes expression" (1, 2)
     -- -- buildin function
     itReportError "new uint[](3) " "unsupported expression : `New`" (1, 11)
     itReportError "assert(true) " "unsupported function call : `assert`" (1, 13)

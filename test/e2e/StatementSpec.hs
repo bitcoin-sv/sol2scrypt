@@ -370,7 +370,6 @@ else
     itReportError "D newD = new D(1);" [("unsupported expression : `New`", (10, 15)), 
       ("unsupported type `TypeNameUserDefinedTypeName`", (1, 2)),
       ("unsupported SimpleStatementVariableDeclarationList", (1, 19))]
-    itReportError "a[i] = 3;" [("unsupported assign Statement, subscript cannot be a variable", (1, 10))]
     itReportError "assembly { let size := extcodesize(_addr) }" [("unsupported statement `InlineAssemblyStatement`", (1, 44))]
 
   describe "#ForStatement" $ do

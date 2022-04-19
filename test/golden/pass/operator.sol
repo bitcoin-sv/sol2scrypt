@@ -29,12 +29,48 @@ contract SolidityTest {
         uint256 inc = ++a;
         a++;
 
+        f1(a) >> 3;
+
+        a << 3;
+        a << f1(1);
+
+        a >>= 3;
+
+        a <<= 3;
+
         bool eq = a == b;
         bool noteq = a != b;
         bool gtr = a > b;
         bool les = a < b;
         bool gtreq = a >= b;
         bool leseq = a <= b;
+
+
+    }
+
+    function shift() public {
+        uint256 a = 20;
+        uint256 b = 10;
+
+        a << b;
+
+        b >> b;
+
+        uint256 c = a <<= a <<= 1;
+
+        c = a * 1 >> b - 1 << c + 1;
+
+        a <<= a + 1;
+
+        uint256 d = a <<= (a + 1) * 1 + (b - 1);
+
+        uint8[3] memory aa = [0,0,0];
+
+        aa[a>>1] = aa[a<<= 1 + 1];
+
+        aa[a>>=1] = aa[a>> 1 + 1];
+
+        f1(a >> 3) * (a >>= 1) << 3 >> (a + 1);
 
 
     }
@@ -76,10 +112,35 @@ contract SolidityTest {
 
         bytes1  not = ~a;
 
+        uint8 x = 0; 
+
+        uint8 y = 0;
+
+        x &= x & y | x ^ x;
+
+        y ^= ~x & y & x ^ x;
+
+        y |= ~x & y & x | f2(x);
+
+        uint8[3] memory aa = [0,0,0];
+
+        aa[ ~x & y & x | f2(x)] = 3;
+
+        aa[ ~x ^ f2(x) & x | f2(x)] = 3;
+
     }
 
     function unlock(uint ab) external {
         require(a == ab);
     }
+
+    function f1(uint x) public pure returns (uint) {
+        return x + 1;
+    }
+
+    function f2(uint8 x) public pure returns (uint8) {
+        return x + 1;
+    }
+
 
 }

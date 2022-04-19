@@ -1,3 +1,18 @@
+struct A {
+  bytes text;
+}
+
+struct B {
+  bytes text;
+  A[1][3][2] a;
+}
+
+struct L {
+  B[2][2] b;
+  bytes text;
+  bool completed;
+}
+
 struct Todo {
   bytes text;
   bool completed;
@@ -10,6 +25,10 @@ contract Arrays {
   @state
   Todo[5][4][3][2] todos;
 
+  static const int __LoopCount__0 = 1;
+
+  static const int __LoopCount__1 = 1;
+
   public function get(SigHashPreimage txPreimage, Todo[5][4][3][2] retVal) {
     int[5][4][3][2] aa = [[[[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]]], [[[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]]], [[[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]]], [[[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]]], [[[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]], [[12, 22], [34, 3], [12, 22]]]];
     Todo[5][4][3][2] todos = [[[[{"", false}, {"", false}], [{"", false}, {"", false}], [{"", false}, {"", false}]], [[{"", false}, {"", false}], [{"", false}, {"", false}], [{"", false}, {"", false}]], [[{"", false}, {"", false}], [{"", false}, {"", false}], [{"", false}, {"", false}]], [[{"", false}, {"", false}], [{"", false}, {"", false}], [{"", false}, {"", false}]]], [[[{"", false}, {"", false}], [{"", false}, {"", false}], [{"", false}, {"", false}]], [[{"", false}, {"", false}], [{"", false}, {"", false}], [{"", false}, {"", false}]], [[{"", false}, {"", false}], [{"", false}, {"", false}], [{"", false}, {"", false}]], [[{"", false}, {"", false}], [{"", false}, {"", false}], [{"", false}, {"", false}]]], [[[{"", false}, {"", false}], [{"", false}, {"", false}], [{"", false}, {"", false}]], [[{"", false}, {"", false}], [{"", false}, {"", false}], [{"", false}, {"", false}]], [[{"", false}, {"", false}], [{"", false}, {"", false}], [{"", false}, {"", false}]], [[{"", false}, {"", false}], [{"", false}, {"", false}], [{"", false}, {"", false}]]], [[[{"", false}, {"", false}], [{"", false}, {"", false}], [{"", false}, {"", false}]], [[{"", false}, {"", false}], [{"", false}, {"", false}], [{"", false}, {"", false}]], [[{"", false}, {"", false}], [{"", false}, {"", false}], [{"", false}, {"", false}]], [[{"", false}, {"", false}], [{"", false}, {"", false}], [{"", false}, {"", false}]]], [[[{"", false}, {"", false}], [{"", false}, {"", false}], [{"", false}, {"", false}]], [[{"", false}, {"", false}], [{"", false}, {"", false}], [{"", false}, {"", false}]], [[{"", false}, {"", false}], [{"", false}, {"", false}], [{"", false}, {"", false}]], [[{"", false}, {"", false}], [{"", false}, {"", false}], [{"", false}, {"", false}]]]];
@@ -18,6 +37,32 @@ contract Arrays {
     int[3][2] cc = [[0, 0], [0, 0], [0, 0]];
     require(this.todos == retVal);
     require(this.propagateState(txPreimage));
+  }
+
+  function getByIndex(int k, int x, L l) : bool {
+    int[3][2] aa = [[1, 2], [1, 2], [1, 2]];
+    int i = 0;
+    loop (__LoopCount__0) {
+      if (i < 3) {
+        int j = 0;
+        loop (__LoopCount__1) {
+          if (j < 2) {
+            aa[i * 1 + k][j * 1 + k] = 33;
+            j++;
+          }
+        }
+        i++;
+      }
+    }
+    l.b[k][x].a[k][k][x] = {"aaa"};
+    l.b[k][x].a[k][k][x].text = "aaa";
+    l.b[k][x].a[k][0][x * k].text = "aaa";
+    l.b[this.f1(k)][this.f1(k)].a[aa[k][k]][0][x * k].text = "aaa";
+    return true;
+  }
+
+  function f1(int k) : int {
+    return k;
   }
 
   function propagateState(SigHashPreimage txPreimage) : bool {

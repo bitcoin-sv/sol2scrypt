@@ -76,8 +76,8 @@ instance ToIRTransformable (Sol.Expression SourceRange) IExpression' where
     e1' <- _toIR e1
     e2' <- _toIR e2
     -- TODO: check e1's type, it should be `bytes` for bytesOnlyAssignOps
-    let bytesOnlyAssignOps = ["%=", "&=", "|=", "^=", "<<=", ">>="]
-        assignOps = ["+=", "-=", "*=", "/="] ++ bytesOnlyAssignOps
+    let bytesOnlyAssignOps = ["%=", "&=", "|=", "^="]
+        assignOps = ["+=", "-=", "*=", "/=", "<<=", ">>="] ++ bytesOnlyAssignOps
     when (opStr `elem` assignOps) $
       checkLHSmapExpr e1'
     transformBinraryExpr operator e1' e2'
@@ -190,42 +190,16 @@ transformUnaryExpr (Operator opStr a) e' =
     "()--" -> return $ UnaryExpr PostDecrement <$> e'
     "--" -> return $ UnaryExpr PreDecrement <$> e'
     "!" -> return $ UnaryExpr Not <$> e'
-    "~" -> do
-      case e' of
-        Just (IdentifierExpr i) -> do
-          s <- lookupSym i
-          if maybe False (isBytes . symbolType) s then
-            return $ UnaryExpr Invert <$> e'
-          else
-            reportError "unsupported `~` on non-bytes expression" a >> return Nothing
-        _ -> reportError "unsupported `~` on non-bytes expression" a >> return Nothing
+    "~" -> return $ UnaryExpr Invert <$> e'
     s -> reportError ("unsupported unary operator `" ++ s ++ "`") a >> return Nothing
 
 
 
 transformBinraryExpr :: Operator SourceRange -> IExpression' -> IExpression' -> Transformation IExpression'
 transformBinraryExpr (Operator opStr a) e1' e2' = do
-    if onlyWorkWithBytes opStr then
-      case e1' of
-        Just (IdentifierExpr i) -> do
-          s <- lookupSym i
-          if maybe False (isBytes . symbolType) s then
-            succeed
-          else
-            failAndReportError
-        _ -> failAndReportError
-    else
-        succeed
-      where
-          succeed = do
-            op <- str2BinaryOp opStr a
-            return $ BinaryExpr <$> op <*> e1' <*> e2'
-          failAndReportError = do
-            reportError ("unsupported `" ++ opStr ++ "` on non-bytes expression") a >> return Nothing
+    op <- str2BinaryOp opStr a
+    return $ BinaryExpr <$> op <*> e1' <*> e2'
 
-
-onlyWorkWithBytes :: [Char] -> Bool
-onlyWorkWithBytes opStr = opStr `elem` ["&", "|", "^", "&=", "|=", "^=", "<<=", ">>=", "<<", ">>"]
 
 str2BinaryOp :: String -> SourceRange -> Transformation (Maybe IBinaryOp)
 str2BinaryOp "+" _ = return $ Just Add

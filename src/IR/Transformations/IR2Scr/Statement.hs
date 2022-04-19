@@ -28,7 +28,7 @@ instance ToScryptTransformable IStatement (Scr.Statement Ann) where
           e' = _toScrypt e
       in Scr.Assign lhs' e' nil
     -- a[1] = expr
-    (IR.BinaryExpr IR.Index _ (IR.LiteralExpr (IR.IntLiteral _ _))) -> 
+    (IR.BinaryExpr IR.Index _ _) -> 
       let lhs' = _toScrypt lhs
           e' = _toScrypt e
       in Scr.Assign lhs' e' nil
@@ -38,7 +38,7 @@ instance ToScryptTransformable IStatement (Scr.Statement Ann) where
           e' = _toScrypt e
       in Scr.Assign lhs' e' nil
     -- this.todos[0].x = expr
-    (IR.MemberAccessExpr ((IR.BinaryExpr IR.Index _ (IR.LiteralExpr (IR.IntLiteral _ _)))) (IR.Identifier _)) -> 
+    (IR.MemberAccessExpr ((IR.BinaryExpr IR.Index _ _)) (IR.Identifier _)) -> 
       let lhs' = _toScrypt lhs
           e' = _toScrypt e
       in Scr.Assign lhs' e' nil

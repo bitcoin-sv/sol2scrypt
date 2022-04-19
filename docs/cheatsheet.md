@@ -144,7 +144,7 @@ a[1] </code></pre> </td>
     <td><pre><code>// Index by expression 
 a[1 + i]</code></pre> </td>
     <td><pre><code>a[1 + i]</code></pre> </td>
-    <td>only a <a href="https://scryptdoc.readthedocs.io/en/latest/ctc.html">compile-time constant</a> (CTC) can be used as an index when writing array in sCrypt</td>
+    <td></td>
 </tr>
 <tr >
     <td><pre><code>// push/pop element 
@@ -158,13 +158,13 @@ a.pop(); </code></pre> </td>
     <td rowspan="3"><b>Operator</b></td>
     <td>Unary <pre><code>-, (), ++, --, ! </code></pre></td>
     <td><pre><code>-, (), ++, --, !, ~ </code></pre></td>
-    <td><code>~</code> only works on fixed bytes</td>
+    <td>since bitcoin is little endian, the result of bitwise <code>~</code> is different from solidity</td>
 </tr>
 
 <tr>
     <td>Binary <pre><code>+, -, *, /, %, +=, -=, *=, /=, %=, ==, !=, <, <=, >, >=, &&, ||</code></pre></td>
     <td><pre><code>+, -, *, /, %, +=, -=, *=, /=, %=, ==, !=, <, <=, >, >=, &&, ||, &, |, ^, &=, |=, ^=, <<=, >>=, <<, >></code></pre></td>
-    <td><code>&, |, ^, &=, |=, ^=, <<=, >>=, <<, >></code> only works on fixed bytes</td>
+    <td>for these <code>&, |, ^, &=, |=, ^=</code> operators, if it is a positive integer, the result of the operation is usually consistent with solidity. If it contains negative numbers, the operation result may not be consistent with solidity.</td>
 </tr>
 
 <tr>
