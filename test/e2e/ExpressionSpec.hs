@@ -163,6 +163,10 @@ spec = testSpec "Transpile Expression" $ do
     itComplex "uint(1)" "1"
     itComplex "bytes1(hex\"00\")" "b'00'"
     itComplex "a[i+1]" "a[i + 1]"
+    itComplex "a[i << 3]" "a[i << 3]"
+    itComplex "a[i | x & y ^ c]" "a[i | x & y ^ c]"
+    itComplex "a ^= 3 + 1" "a ^= 3 + 1"
+    itComplex "i | x & y ^ c | c" "i | x & y ^ c | c"
 
   describe "#PrimaryExpressionTupleExpression" $ do
     itexpr "number array" "[1,3,1,3]" "[1, 3, 1, 3]"
