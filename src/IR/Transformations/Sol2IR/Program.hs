@@ -31,15 +31,6 @@ instance ToIRTransformable (Sol.SolidityCode SourceRange) IProgram' where
           )
           sourceUnits
 
-    let interfaces =
-          filter
-            ( \case
-                SourceUnit1_ContractDefinition (ContractDefinition _ "interface" _ _ _ _) -> True
-                _ -> False
-            )
-            sourceUnits
-    mapM_ (\(SourceUnit1_ContractDefinition (ContractDefinition _ "interface" _ _ _ a)) -> reportError "unsupported interface definition" a >> return Nothing) interfaces
-
     let contracts =
           filter
             ( \case

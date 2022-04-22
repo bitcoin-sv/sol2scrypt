@@ -2,7 +2,7 @@
     {
         "src": "test/golden/fail/struct.sol:10:5:10:39",
         "type": "Error",
-        "message": "unsupported struct with mapping field"
+        "message": "unsupported struct definition with mapping field"
     },
     {
         "src": "test/golden/fail/struct.sol:15:5:17:6",

@@ -929,4 +929,4 @@ contract SimpleStorage {
       
   }
 |] [( "unsupported abstract contract definition", newSR (3, 3) (4, 4)), 
-       ( "unsupported contract definition `ContractDefinition`", newSR (6, 3) (8, 4) ) ]
+       ( "unsupported contract inheritance", newSR (6, 3) (8, 4) ) ]

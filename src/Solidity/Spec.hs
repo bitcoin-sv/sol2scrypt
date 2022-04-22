@@ -433,11 +433,11 @@ data Statement a
   | Continue a
   | Break a
   | Return (Maybe (Expression a)) a
-  | Throw a
+  | Throw a -- TODO: remove deprecated, https://github.com/ethereum/solidity/issues/1793
   | EmitStatement (Expression a) a
   | RevertStatement (Expression a) a
   | SimpleStatementExpression (Expression a) a
-  | SimpleStatementVariableList (IdentifierList a) (Maybe (Expression a)) a
+  | SimpleStatementVariableList (IdentifierList a) (Maybe (Expression a)) a  -- TODO: remove deprecated, https://github.com/ethereum/solidity/issues/3301
   | -- | SimpleStatementVariableDeclaration VariableDeclaration (Maybe Expression)
     SimpleStatementVariableDeclarationList [Maybe (VariableDeclaration a)] [Expression a] a
   | SimpleStatementVariableAssignmentList [Maybe (Identifier a)] [Expression a] a

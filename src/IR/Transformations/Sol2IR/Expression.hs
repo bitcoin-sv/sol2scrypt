@@ -15,12 +15,13 @@ import IR.Transformations.Sol2IR.Identifier
 import Numeric
 import Solidity.Spec as Sol
 import Utils
+import Solidity.Parser (display)
 
 -- only used by Transfer array sub. eg. int[20]
 instance ToIRTransformable (Sol.Expression SourceRange) Int where
   _toIR (Literal (PrimaryExpressionNumberLiteral (NumberLiteral (NumberLiteralDec n _) _))) = return (fst $ head $ readDec n)
   _toIR (Literal (PrimaryExpressionNumberLiteral (NumberLiteral (NumberLiteralHex n _) _))) = return (fst $ head $ readHex n)
-  _toIR e = reportError ("unsupported expression to Integer : `" ++ show e ++ "`") (ann e) >> return 0
+  _toIR e = reportError ("unsupported number literal expression: `" ++ display e ++ "`") (ann e) >> return 0
 
 instance ToIRTransformable (Maybe (Sol.Expression SourceRange)) IExpression' where
   _toIR (Just e) = _toIR e
@@ -29,10 +30,14 @@ instance ToIRTransformable (Maybe (Sol.Expression SourceRange)) IExpression' whe
 instance ToIRTransformable (Sol.Expression SourceRange) IExpression' where
   _toIR (Literal (PrimaryExpressionBooleanLiteral (Sol.BooleanLiteral b _))) =
     return $ Just $ LiteralExpr $ IR.BoolLiteral ("true" == toLower b)
-  _toIR (Literal (PrimaryExpressionNumberLiteral (NumberLiteral (NumberLiteralHex n Nothing) _))) =
-    return $ Just $ LiteralExpr $ IR.IntLiteral True (fst $ head $ readHex n)
-  _toIR (Literal (PrimaryExpressionNumberLiteral (NumberLiteral (NumberLiteralDec n Nothing) _))) =
-    return $ Just $ LiteralExpr $ IR.IntLiteral False (fst $ head $ readDec n)
+  _toIR (Literal (PrimaryExpressionNumberLiteral (NumberLiteral (NumberLiteralHex n unit) a))) =
+    if isJust unit
+      then reportError ("unsupported number unit: `" ++ display (fromJust unit) ++ "`") a >> return Nothing
+      else return $ Just $ LiteralExpr $ IR.IntLiteral True (fst $ head $ readHex n)
+  _toIR (Literal (PrimaryExpressionNumberLiteral (NumberLiteral (NumberLiteralDec n unit) a))) =
+    if isJust unit
+      then reportError ("unsupported number unit: `" ++ display (fromJust unit) ++ "`") a >> return Nothing
+      else return $ Just $ LiteralExpr $ IR.IntLiteral False (fst $ head $ readDec n)
   _toIR (Literal (PrimaryExpressionHexLiteral (HexLiteral h _))) =
     return $ Just $ LiteralExpr $ IR.BytesLiteral $ parseHex h
   _toIR (Literal (PrimaryExpressionStringLiteral (Sol.StringLiteral s _))) =
@@ -41,6 +46,11 @@ instance ToIRTransformable (Sol.Expression SourceRange) IExpression' where
     i' <- _toIR i
     i'' <- maybeStateVarId i'
     return $ IdentifierExpr <$> i''
+  _toIR (Literal (PrimaryExpressionTupleExpression (SquareBrackets array _))) = do
+    array' <- mapM _toIR array
+    return $ Just $ ArrayLiteralExpr $ catMaybes array'
+  _toIR ((Literal (PrimaryExpressionTupleExpression e))) = reportError ("unsupported tuple expression: `" ++ display e ++ "`") (ann e) >> return Nothing
+  _toIR (Literal (PrimaryExpressionElementaryTypeNameExpression e)) = reportError ("unsupported elementary type name expression: `" ++ display e ++ "`") (ann e) >> return Nothing
   _toIR (Unary op@(Operator opStr _) e _) = do
     e' <- _toIR e
     let allIncDecOps = ["++", "--", "()++", "()--"]
@@ -115,7 +125,7 @@ instance ToIRTransformable (Sol.Expression SourceRange) IExpression' where
             if shouldIgnoreBuiltInTypes fn
               then case pl of
                 Just (ExpressionList [p]) -> _toIR p
-                _ -> reportError ("unsupported function call : `" ++ fn ++ "`") fa >> return Nothing
+                _ -> reportError ("unsupported function call: `" ++ fn ++ "`") fa >> return Nothing
               -- transpile sol `address(0)` to sCrypt `Ripemd160(b'')`
               else if isAddress0 fe pl then return $ Just $ FunctionCallExpr (IdentifierExpr (IR.ReservedId "Ripemd160")) [LiteralExpr $ BytesLiteral [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]
               else if isJust st' then do
@@ -130,7 +140,7 @@ instance ToIRTransformable (Sol.Expression SourceRange) IExpression' where
                   Nothing -> return []
                   Just (ExpressionList ps) -> mapM _toIR ps
                 return $ FunctionCallExpr <$> (IdentifierExpr <$>  i'') <*> sequence ps'
-          else reportError ("unsupported function call : `" ++ fn ++ "`") fa >> return Nothing
+          else reportError ("unsupported function call: `" ++ fn ++ "`") fa >> return Nothing
       (New (TypeNameElementaryTypeName (ElementaryTypeName (BytesType Nothing) a) _) _) -> do
         -- eg. transpile Solidity `new bytes(3)` to `num2bin(0, 3)`
         ps' <- case pl of
@@ -152,7 +162,7 @@ instance ToIRTransformable (Sol.Expression SourceRange) IExpression' where
             if shouldIgnoreBuiltInTypes fn
               then case pl of
                 Just (NameValueList [nv]) -> _toIR (snd nv)
-                _ -> reportError ("unsupported function call : `" ++ fn ++ "`") fa >> return Nothing
+                _ -> reportError ("unsupported function call: `" ++ fn ++ "`") fa >> return Nothing
               else if isJust st' then do
                 ps' <- case pl of
                   Nothing -> return []
@@ -164,17 +174,14 @@ instance ToIRTransformable (Sol.Expression SourceRange) IExpression' where
                   Nothing -> return []
                   Just (NameValueList ps) -> mapM (_toIR . snd) ps
                 return $ FunctionCallExpr <$> fe' <*> sequence ps'
-          else reportError ("unsupported function call : `" ++ fn ++ "`") fa >> return Nothing
+          else reportError ("unsupported function call: `" ++ fn ++ "`") fa >> return Nothing
       _ -> do
         fe' <- _toIR fe
         ps' <- case pl of
           Nothing -> return []
           Just (NameValueList ps) -> mapM (_toIR . snd) ps
         return $ FunctionCallExpr <$> fe' <*> sequence ps'
-  _toIR (Literal (PrimaryExpressionTupleExpression (SquareBrackets array _))) = do
-    array' <- mapM _toIR array
-    return $ Just $ ArrayLiteralExpr $ catMaybes array'
-  _toIR e = reportError ("unsupported expression : `" ++ headWord (show e) ++ "`") (ann e) >> return Nothing
+  _toIR (New _ a) = reportError "unsupported new expression" a >> return Nothing
 
 isBytes :: IType -> Bool
 isBytes (ElementaryType Bytes) = True
@@ -191,7 +198,7 @@ transformUnaryExpr (Operator opStr a) e' =
     "--" -> return $ UnaryExpr PreDecrement <$> e'
     "!" -> return $ UnaryExpr Not <$> e'
     "~" -> return $ UnaryExpr Invert <$> e'
-    s -> reportError ("unsupported unary operator `" ++ s ++ "`") a >> return Nothing
+    s -> reportError ("unsupported unary operator: `" ++ s ++ "`") a >> return Nothing
 
 
 
@@ -221,17 +228,17 @@ str2BinaryOp ">=" _ = return $ Just GreaterThanOrEqual
 str2BinaryOp "&&" _ = return $ Just BoolAnd
 str2BinaryOp "||" _ = return $ Just BoolOr
 str2BinaryOp "[]" _ = return $ Just Index
-str2BinaryOp "&" _ = return $ Just And -- only works on bytes in scrypt
-str2BinaryOp "|" _ = return $ Just Or -- only works on bytes in scrypt
-str2BinaryOp "^" _ = return $ Just Xor -- only works on bytes in scrypt
-str2BinaryOp "&=" _ = return $ Just AndAssign -- only works on bytes in scrypt
-str2BinaryOp "|=" _ = return $ Just OrAssign -- only works on bytes in scrypt
-str2BinaryOp "^=" _ = return $ Just XorAssign -- only works on bytes in scrypt
-str2BinaryOp "<<=" _ = return $ Just LShiftAssign -- only works on bytes in scrypt
-str2BinaryOp ">>=" _ = return $ Just RShiftAssign -- only works on bytes in scrypt
-str2BinaryOp "<<" _ = return $ Just LShift -- only works on bytes in scrypt
-str2BinaryOp ">>" _ = return $ Just RShift -- only works on bytes in scrypt
-str2BinaryOp s a = reportError ("unsupported binary operator `" ++ s ++ "`") a >> return Nothing
+str2BinaryOp "&" _ = return $ Just And
+str2BinaryOp "|" _ = return $ Just Or
+str2BinaryOp "^" _ = return $ Just Xor
+str2BinaryOp "&=" _ = return $ Just AndAssign
+str2BinaryOp "|=" _ = return $ Just OrAssign
+str2BinaryOp "^=" _ = return $ Just XorAssign
+str2BinaryOp "<<=" _ = return $ Just LShiftAssign
+str2BinaryOp ">>=" _ = return $ Just RShiftAssign
+str2BinaryOp "<<" _ = return $ Just LShift
+str2BinaryOp ">>" _ = return $ Just RShift
+str2BinaryOp s a = reportError ("unsupported binary operator: `" ++ s ++ "`") a >> return Nothing
 
 -- give an expression a var name which can be used in transformation, for example, declare a var for the expression.
 toExprName :: IExpression -> ExprName

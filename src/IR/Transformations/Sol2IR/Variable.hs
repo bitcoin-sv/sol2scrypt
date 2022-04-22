@@ -11,13 +11,14 @@ import IR.Transformations.Sol2IR.Expression ()
 import IR.Transformations.Sol2IR.Identifier ()
 import IR.Transformations.Sol2IR.Type ()
 import Solidity.Spec as Sol
+import Solidity.Parser (display)
 
 instance ToIRTransformable (Parameter SourceRange) IParam' where
   _toIR (Parameter t _ (Just i) _) = do
     t' <- _toIR t
     i' <- _toIR i
     return $ IR.Param <$> t' <*> i'
-  _toIR p = reportError ("unsupported parameter `" ++ show p ++ "`") (ann p) >> return Nothing
+  _toIR p = reportError ("unsupported parameter: `" ++ display p ++ "`") (ann p) >> return Nothing
 
 
 instance ToIRTransformable (VariableDeclaration SourceRange) IParam' where
@@ -36,7 +37,7 @@ instance ToIRTransformable (Sol.StateVariableDeclaration SourceRange) IStateVari
     isConstant' <- isConstant vis
     isImmutable' <- isImmutable vis
     case (isConstant', expr') of 
-      (False, Just _)  -> reportError "unsupported state variable with init value" a >> return Nothing
+      (False, Just _)  -> reportError "unsupported state variable with initial value" a >> return Nothing
       (True , Nothing)  -> return Nothing
       _ -> return $ IR.StateVariable <$> i' <*> t' <*> Just vis' <*> Just expr' <*> Just isConstant' <*> Just isImmutable' 
 

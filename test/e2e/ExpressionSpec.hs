@@ -180,21 +180,21 @@ spec = testSpec "Transpile Expression" $ do
     itexpr "new bytes" "new bytes(7)" "num2bin(0, 7)"
   describe "#ReportError" $ do
     -- -- buildin function
-    itReportError "new uint[](3) " "unsupported expression : `New`" (1, 11)
-    itReportError "assert(true) " "unsupported function call : `assert`" (1, 13)
-    itReportError "keccak256(a) " "unsupported function call : `keccak256`" (1, 13)
-    itReportError "ecrecover(hash, v, r, s) " "unsupported function call : `ecrecover`" (1, 25)
-    itReportError "addmod(4, 5, 3) " "unsupported function call : `addmod`" (1, 16)
-    itReportError "mulmod(4, 5, 3) " "unsupported function call : `mulmod`" (1, 16)
-    itReportError "revert(4, 5, 3) " "unsupported function call : `revert`" (1, 16)
-    itReportError "selfdestruct(a) " "unsupported function call : `selfdestruct`" (1, 16)
-    itReportError "type(int) .min" "unsupported function call : `type`" (1, 10)
-    itReportError "gasleft() " "unsupported function call : `gasleft`" (1, 10)
-    itReportError "blockhash(1) " "unsupported function call : `blockhash`" (1, 13)
+    itReportError "new uint[](3) " "unsupported new expression" (1, 11)
+    itReportError "assert(true) " "unsupported function call: `assert`" (1, 13)
+    itReportError "keccak256(a) " "unsupported function call: `keccak256`" (1, 13)
+    itReportError "ecrecover(hash, v, r, s) " "unsupported function call: `ecrecover`" (1, 25)
+    itReportError "addmod(4, 5, 3) " "unsupported function call: `addmod`" (1, 16)
+    itReportError "mulmod(4, 5, 3) " "unsupported function call: `mulmod`" (1, 16)
+    itReportError "revert(4, 5, 3) " "unsupported function call: `revert`" (1, 16)
+    itReportError "selfdestruct(a) " "unsupported function call: `selfdestruct`" (1, 16)
+    itReportError "type(int) .min" "unsupported function call: `type`" (1, 10)
+    itReportError "gasleft() " "unsupported function call: `gasleft`" (1, 10)
+    itReportError "blockhash(1) " "unsupported function call: `blockhash`" (1, 13)
     -- -- Time Units
-    itReportError "1 seconds " "unsupported expression : `Literal`" (1, 10)
-    itReportError "1 days " "unsupported expression : `Literal`" (1, 7)
-    itReportError "1 wei " "unsupported expression : `Literal`" (1, 6)
+    itReportError "1 seconds " "unsupported number unit: `seconds`" (1, 10)
+    itReportError "1 days " "unsupported number unit: `days`" (1, 7)
+    itReportError "1 wei " "unsupported number unit: `wei`" (1, 6)
     -- -- block
     itReportError "block.number " "unsupported expression: `block.number`" (1, 13)
     itReportError "block.timestamp " "unsupported expression: `block.timestamp`" (1, 16)
@@ -207,7 +207,7 @@ spec = testSpec "Transpile Expression" $ do
     itReportError "tx.origin " "unsupported expression: `tx.origin`" (1, 10)
     itReportError "abi.encodePacked (arr, \"AAAA\", \"BBBB\")" "unsupported expression: `abi.encodePacked`" (1, 17)
     -- -- tuple
-    itReportError "(1, 2, 3, 4, 5) " "unsupported expression : `Literal`" (1, 16)
+    itReportError "(1, 2, 3, 4, 5) " "unsupported tuple expression: `(1, 2, 3, 4, 5)`" (1, 16)
 
     
       

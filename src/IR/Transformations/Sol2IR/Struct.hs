@@ -34,4 +34,4 @@ instance ToIRTransformable (StructDefinition SourceRange) IStruct' where
                 { stateStructs = ss ++ [IR.Struct n (catMaybes fields')]
                 }
             return Nothing
-          (Just fa) -> reportError "unsupported struct with mapping field" fa >> return Nothing
+          (Just fa) -> reportError "unsupported struct definition with mapping field" fa >> return Nothing

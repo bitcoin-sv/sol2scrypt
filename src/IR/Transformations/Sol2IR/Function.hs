@@ -52,7 +52,7 @@ instance ToIRTransformable (ContractPart SourceRange) IConstructor' where
     (ps, blkTfromParam) <- toIRConstructorParams pl tags block
     body <- toIRConstructorBody block blkTfromParam
     return $ IR.Constructor <$> ps <*> body
-  _toIR c = reportError "unsupported constructor definition: missing body" (ann c) >> return Nothing
+  _toIR c = reportError "unsupported constructor definition without body" (ann c) >> return Nothing
 
 toIRFuncVis :: [FunctionDefinitionTag SourceRange] -> Transformation IVisibility
 toIRFuncVis tags
@@ -95,7 +95,7 @@ toIRFuncRet vis (Just (ParameterList [x])) = do
         _ -> t
   return $ FuncRetTransResult t' t n
 toIRFuncRet _ (Just (ParameterList el)) = do
-  reportError "unsupported function definition: mutiple-returns" (mergeRange (ann $ head el) (ann $ last el))
+  reportError "unsupported function definition with multi-returns" (mergeRange (ann $ head el) (ann $ last el))
   return $ FuncRetTransResult Nothing Nothing Nothing
 
 toIRFuncParams :: ParameterList SourceRange -> [FunctionDefinitionTag SourceRange] -> FuncRetTransResult -> IVisibility -> Block SourceRange -> Transformation (IParamList', TFStmtWrapper)
@@ -123,7 +123,7 @@ toIRFuncParams (ParameterList pl) _ (FuncRetTransResult _ ort rn) vis funcBlk = 
         if vis == Public
           then let (ps, blkT_) = transForFuncWithMsgSender in return (map Just ps ++ extraParams0, mergeTFStmtWrapper blkT0 blkT_)
           else do
-            reportError "using `msg.sender` in non-external function is not supported yet" (snd msgSenderExist)
+            reportError "unsupported using `msg.sender` in non-external function" (snd msgSenderExist)
             return (extraParams0, blkT0)
       else return (extraParams0, blkT0)
 
@@ -135,7 +135,7 @@ toIRFuncParams (ParameterList pl) _ (FuncRetTransResult _ ort rn) vis funcBlk = 
         if vis == Public
           then let (ps, blkT_) = transForFuncWithMsgValue in return (map Just ps ++ extraParams1, mergeTFStmtWrapper blkT1 blkT_)
           else do
-            reportError "using `msg.value` in non-external function is not supported yet" (snd msgValueExist)
+            reportError "unsupported using `msg.value` in non-external function" (snd msgValueExist)
             return (extraParams1, blkT1)
       else return (extraParams1, blkT1)
 

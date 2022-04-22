@@ -805,7 +805,7 @@ public function send(PubKeyHash receiver, int amount, SigHashPreimage txPreimage
     balances[msg.sender] -= amount;
     balances[receiver] += amount;
 }|]
-      "using `msg.sender` in non-external function is not supported yet" (2, 14) (2, 24)
+      "unsupported using `msg.sender` in non-external function" (2, 14) (2, 24)
       [r|
 function send(PubKeyHash receiver, int amount) : bool {
   balances[msgSender] -= amount;

@@ -1,13 +1,8 @@
 [
     {
-        "src": "test/golden/fail/fail1.sol:3:1:7:2",
-        "type": "Error",
-        "message": "unsupported interface definition"
-    },
-    {
         "src": "test/golden/fail/fail1.sol:16:1:21:2",
         "type": "Error",
-        "message": "unsupported contract definition `ContractDefinition`"
+        "message": "unsupported contract inheritance"
     },
     {
         "src": "test/golden/fail/fail1.sol:59:5:61:6",
@@ -17,7 +12,7 @@
     {
         "src": "test/golden/fail/fail1.sol:27:6:33:6",
         "type": "Error",
-        "message": "unsupported contract part `ContractPartEnumDefinition`"
+        "message": "unsupported enum definition"
     },
     {
         "src": "test/golden/fail/fail1.sol:39:5:39:11",
@@ -27,12 +22,12 @@
     {
         "src": "test/golden/fail/fail1.sol:46:5:52:6",
         "type": "Error",
-        "message": "unsupported contract part `ContractPartModifierDefinition`"
+        "message": "unsupported modifier definition"
     },
     {
         "src": "test/golden/fail/fail1.sol:79:5:79:23",
         "type": "Error",
-        "message": "unsupported state variable with init value"
+        "message": "unsupported state variable with initial value"
     },
     {
         "src": "test/golden/fail/fail1.sol:82:26:82:34",
@@ -42,12 +37,12 @@
     {
         "src": "test/golden/fail/fail1.sol:84:19:84:28",
         "type": "Error",
-        "message": "unsupported expression : `Literal`"
+        "message": "unsupported number unit: `seconds`"
     },
     {
         "src": "test/golden/fail/fail1.sol:85:19:85:28",
         "type": "Error",
-        "message": "unsupported function call : `type`"
+        "message": "unsupported function call: `type`"
     },
     {
         "src": "test/golden/fail/fail1.sol:86:18:86:30",
@@ -62,40 +57,45 @@
     {
         "src": "test/golden/fail/fail1.sol:90:9:90:24",
         "type": "Error",
-        "message": "unsupported function call : `addmod`"
+        "message": "unsupported function call: `addmod`"
     },
     {
         "src": "test/golden/fail/fail1.sol:92:9:92:24",
         "type": "Error",
-        "message": "unsupported function call : `mulmod`"
+        "message": "unsupported function call: `mulmod`"
     },
     {
         "src": "test/golden/fail/fail1.sol:94:9:94:25",
         "type": "Error",
-        "message": "unsupported SimpleStatementVariableAssignmentList"
+        "message": "unsupported tuple expression assignment"
     },
     {
-        "src": "test/golden/fail/fail1.sol:96:19:96:26",
+        "src": "test/golden/fail/fail1.sol:96:9:96:39",
         "type": "Error",
-        "message": "unsupported expression : `New`"
+        "message": "unsupported tuple expression declaration"
     },
     {
-        "src": "test/golden/fail/fail1.sol:96:9:96:12",
+        "src": "test/golden/fail/fail1.sol:98:19:98:26",
         "type": "Error",
-        "message": "unsupported type `TypeNameUserDefinedTypeName`"
+        "message": "unsupported new expression"
     },
     {
-        "src": "test/golden/fail/fail1.sol:103:9:103:43",
+        "src": "test/golden/fail/fail1.sol:98:9:98:12",
         "type": "Error",
-        "message": "unsupported function call : `keccak256`"
+        "message": "unsupported type: `Foo`"
     },
     {
-        "src": "test/golden/fail/fail1.sol:107:26:107:41",
+        "src": "test/golden/fail/fail1.sol:104:9:104:43",
         "type": "Error",
-        "message": "unsupported type `TypeNameElementaryTypeName`"
+        "message": "unsupported function call: `keccak256`"
     },
     {
-        "src": "test/golden/fail/fail1.sol:115:14:115:21",
+        "src": "test/golden/fail/fail1.sol:108:26:108:41",
+        "type": "Error",
+        "message": "unsupported type: `address payable`"
+    },
+    {
+        "src": "test/golden/fail/fail1.sol:116:14:116:21",
         "type": "Error",
         "message": "accessing mapping expression in non-external function is not supported"
     }

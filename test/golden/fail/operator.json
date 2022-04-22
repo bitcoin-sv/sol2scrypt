@@ -2,6 +2,6 @@
     {
         "src": "test/golden/fail/operator.sol:6:24:6:26",
         "type": "Error",
-        "message": "unsupported binary operator `**`"
+        "message": "unsupported binary operator: `**`"
     }
 ]
