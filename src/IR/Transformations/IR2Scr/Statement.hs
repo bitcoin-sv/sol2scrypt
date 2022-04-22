@@ -44,7 +44,7 @@ instance ToScryptTransformable IStatement (Scr.Statement Ann) where
       in Scr.Assign lhs' e' nil
     _ -> error $ "_toScrypt for `" ++ show lhs ++ "` not implemented in scrypt"
   -- declare only allows one declared identifier and expr on the left & right, respectively
-  _toScrypt (IR.DeclareStmt [Just declare] [e]) =
+  _toScrypt (IR.DeclareStmt [declare] [e]) =
     let declare' :: Scr.Param Ann = _toScrypt declare
         e' = _toScrypt e
     in Scr.Declare declare' e' nil

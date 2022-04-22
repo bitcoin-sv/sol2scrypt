@@ -8,7 +8,7 @@ data IStatement
   = IfStmt {cond :: IExpression, trueBranch :: IStatement, falseBranch :: Maybe IStatement}
   | ExprStmt IExpression
   | AssignStmt [IExpression] [IExpression]
-  | DeclareStmt [Maybe IParam] [IExpression]
+  | DeclareStmt [IParam] [IExpression]
   | RequireStmt {verifyExpr :: IExpression}
   | ReturnStmt {retExpr :: IExpression}
   | BlockStmt IBlock

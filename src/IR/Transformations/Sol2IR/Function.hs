@@ -259,7 +259,7 @@ trueExpr = LiteralExpr $ BoolLiteral True
 
 declareLocalVarStmt :: IParam' -> IExpression -> [IStatement]
 declareLocalVarStmt Nothing _ = []
-declareLocalVarStmt (Just p) e = [IR.DeclareStmt [Just p] [e]]
+declareLocalVarStmt (Just p) e = [IR.DeclareStmt [p] [e]]
 
 -- transformations for functions that need access preimage
 transForPreimageFunc :: ([IParam], TFStmtWrapper)
@@ -285,7 +285,7 @@ transForFuncWithMsgSender =
     TFStmtWrapper
       [ -- PubKeyHash msgSender = hash160(pubKey);
         IR.DeclareStmt
-          [Just $ IR.Param (ElementaryType IR.Address) (IR.ReservedId varMsgSender)]
+          [IR.Param (ElementaryType IR.Address) (IR.ReservedId varMsgSender)]
           [IR.FunctionCallExpr (IdentifierExpr (IR.ReservedId funcHash160)) [IdentifierExpr (IR.ReservedId varPubKey)]],
         -- require(checkSig(sig, pubKey));
         IR.RequireStmt $
@@ -301,7 +301,7 @@ transForFuncWithMsgValue =
     -- int msgValue = SigHash.value(txPreimage);
     TFStmtWrapper
       [ IR.DeclareStmt
-          [Just $ IR.Param (ElementaryType IR.Int) (IR.ReservedId varMsgValue)]
+          [IR.Param (ElementaryType IR.Int) (IR.ReservedId varMsgValue)]
           [ IR.FunctionCallExpr
               (IR.MemberAccessExpr (IdentifierExpr (IR.ReservedId libSigHash)) (IR.Identifier "value"))
               [IdentifierExpr (IR.ReservedId varTxPreimage)]
@@ -420,11 +420,11 @@ prependsForReturnedInit t = do
   return
     [ -- `<T> ret = <defaultValueExprueofT>;`
       IR.DeclareStmt
-        [Just $ IR.Param t' (IR.ReservedId varRetVal)]
+        [IR.Param t' (IR.ReservedId varRetVal)]
         [fromMaybe (LiteralExpr $ BoolLiteral False) e],
       -- `bool returned = false;`
       IR.DeclareStmt
-        [Just $ IR.Param (ElementaryType IR.Bool) (IR.ReservedId varReturned)]
+        [IR.Param (ElementaryType IR.Bool) (IR.ReservedId varReturned)]
         [LiteralExpr $ BoolLiteral False]
     ]
 
@@ -448,14 +448,14 @@ buildPropagateState =
             [IdentifierExpr (IR.ReservedId varTxPreimage)],
         -- add `bytes outputScript = this.getStateScript();`
         IR.DeclareStmt
-          [Just $ IR.Param (ElementaryType IR.Bytes) (IR.ReservedId varOutputScript)]
+          [IR.Param (ElementaryType IR.Bytes) (IR.ReservedId varOutputScript)]
           [ IR.FunctionCallExpr
               (IR.MemberAccessExpr (IdentifierExpr (IR.Identifier "this")) (IR.Identifier "getStateScript"))
               []
           ],
         -- add `bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));`
         IR.DeclareStmt
-          [Just $ IR.Param (ElementaryType IR.Bytes) (IR.ReservedId varOutput)]
+          [IR.Param (ElementaryType IR.Bytes) (IR.ReservedId varOutput)]
           [ IR.FunctionCallExpr
               (IR.MemberAccessExpr (IdentifierExpr (IR.ReservedId libUtils)) (IR.Identifier "buildOutput"))
               [ IdentifierExpr (IR.ReservedId varOutputScript),

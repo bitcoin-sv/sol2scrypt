@@ -91,7 +91,7 @@ spec = testSpec "instance ToScryptTransformable IStatment (Scr.Statement IExpr)"
             declare = IR.Param (ElementaryType IR.Bool) idtf
             e1 = LiteralExpr $ IR.BoolLiteral True
             param = Scr.Param (TypeAnn Scr.Bool nil) (NameAnn "x" nil) (Const False) Nothing Scr.Default (IsStateProp False) nil
-        r1 <- transform2Scrypt $ Just $ IR.DeclareStmt [Just declare] [e1]
+        r1 <- transform2Scrypt $ Just $ IR.DeclareStmt [declare] [e1]
         r1 `shouldBe` Just (Scr.Declare param (Scr.BoolLiteral True nil) nil)
 
       it "should transform IR `int x = 1;` to sCrypt Statment correctly" $ do
@@ -99,7 +99,7 @@ spec = testSpec "instance ToScryptTransformable IStatment (Scr.Statement IExpr)"
             declare = IR.Param (ElementaryType IR.Int) idtf
             e1 = LiteralExpr $ IR.IntLiteral False 1
             param = Scr.Param (TypeAnn Scr.Int nil) (NameAnn "x" nil) (Const False) Nothing Scr.Default (IsStateProp False) nil
-        r1 <- transform2Scrypt $ Just $ IR.DeclareStmt [Just declare] [e1]
+        r1 <- transform2Scrypt $ Just $ IR.DeclareStmt [declare] [e1]
         r1 `shouldBe` Just (Scr.Declare param (Scr.IntLiteral False 1 nil) nil)
 
     describe "#BlockStmt" $ do
@@ -108,7 +108,7 @@ spec = testSpec "instance ToScryptTransformable IStatment (Scr.Statement IExpr)"
           e1 = LiteralExpr $ IR.IntLiteral False 1
           param = Scr.Param (TypeAnn Scr.Int nil) (NameAnn "x" nil) (Const False) Nothing Scr.Default (IsStateProp False) nil
 
-      itBlockStmt "DeclareStmt" (IR.DeclareStmt [Just declare] [e1]) (Scr.Declare param (Scr.IntLiteral False 1 nil) nil)
+      itBlockStmt "DeclareStmt" (IR.DeclareStmt [declare] [e1]) (Scr.Declare param (Scr.IntLiteral False 1 nil) nil)
 
       itBlockStmt "ExprStmt" (IR.ExprStmt (LiteralExpr $ IR.IntLiteral True 15)) (Scr.ExprStmt (Scr.IntLiteral True 15 nil) nil)
 
