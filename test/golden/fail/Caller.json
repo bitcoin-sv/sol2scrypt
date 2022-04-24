@@ -2,36 +2,31 @@
     {
         "src": "test/golden/fail/Caller.sol:13:64:13:74",
         "type": "Error",
-        "message": "unsupported function definition: mutiple-returns"
+        "message": "unsupported function definition with multi-returns"
     },
     {
         "src": "test/golden/fail/Caller.sol:15:17:15:26",
         "type": "Error",
-        "message": "using `msg.value` in non-external function is not supported yet"
+        "message": "unsupported using `msg.value` in non-external function"
     },
     {
         "src": "test/golden/fail/Caller.sol:17:16:17:26",
         "type": "Error",
-        "message": "unsupported expression : `Literal`"
+        "message": "unsupported tuple expression: `(x, value)`"
     },
     {
         "src": "test/golden/fail/Caller.sol:22:19:22:25",
         "type": "Error",
-        "message": "unsupported type `TypeNameUserDefinedTypeName`"
+        "message": "unsupported type: `Callee`"
     },
     {
         "src": "test/golden/fail/Caller.sol:27:9:27:15",
         "type": "Error",
-        "message": "unsupported type `TypeNameUserDefinedTypeName`"
-    },
-    {
-        "src": "test/golden/fail/Caller.sol:27:9:27:39",
-        "type": "Error",
-        "message": "unsupported SimpleStatementVariableDeclarationList"
+        "message": "unsupported type: `Callee`"
     },
     {
         "src": "test/golden/fail/Caller.sol:31:31:31:37",
         "type": "Error",
-        "message": "unsupported type `TypeNameUserDefinedTypeName`"
+        "message": "unsupported type: `Callee`"
     }
 ]

@@ -52,7 +52,7 @@ instance ToIRTransformable (ContractPart SourceRange) IConstructor' where
     (ps, blkTfromParam) <- toIRConstructorParams pl tags block
     body <- toIRConstructorBody block blkTfromParam
     return $ IR.Constructor <$> ps <*> body
-  _toIR c = reportError "unsupported constructor definition: missing body" (ann c) >> return Nothing
+  _toIR c = reportError "unsupported constructor definition without body" (ann c) >> return Nothing
 
 toIRFuncVis :: [FunctionDefinitionTag SourceRange] -> Transformation IVisibility
 toIRFuncVis tags
@@ -95,7 +95,7 @@ toIRFuncRet vis (Just (ParameterList [x])) = do
         _ -> t
   return $ FuncRetTransResult t' t n
 toIRFuncRet _ (Just (ParameterList el)) = do
-  reportError "unsupported function definition: mutiple-returns" (mergeRange (ann $ head el) (ann $ last el))
+  reportError "unsupported function definition with multi-returns" (mergeRange (ann $ head el) (ann $ last el))
   return $ FuncRetTransResult Nothing Nothing Nothing
 
 toIRFuncParams :: ParameterList SourceRange -> [FunctionDefinitionTag SourceRange] -> FuncRetTransResult -> IVisibility -> Block SourceRange -> Transformation (IParamList', TFStmtWrapper)
@@ -123,7 +123,7 @@ toIRFuncParams (ParameterList pl) _ (FuncRetTransResult _ ort rn) vis funcBlk = 
         if vis == Public
           then let (ps, blkT_) = transForFuncWithMsgSender in return (map Just ps ++ extraParams0, mergeTFStmtWrapper blkT0 blkT_)
           else do
-            reportError "using `msg.sender` in non-external function is not supported yet" (snd msgSenderExist)
+            reportError "unsupported using `msg.sender` in non-external function" (snd msgSenderExist)
             return (extraParams0, blkT0)
       else return (extraParams0, blkT0)
 
@@ -135,7 +135,7 @@ toIRFuncParams (ParameterList pl) _ (FuncRetTransResult _ ort rn) vis funcBlk = 
         if vis == Public
           then let (ps, blkT_) = transForFuncWithMsgValue in return (map Just ps ++ extraParams1, mergeTFStmtWrapper blkT1 blkT_)
           else do
-            reportError "using `msg.value` in non-external function is not supported yet" (snd msgValueExist)
+            reportError "unsupported using `msg.value` in non-external function" (snd msgValueExist)
             return (extraParams1, blkT1)
       else return (extraParams1, blkT1)
 
@@ -259,7 +259,7 @@ trueExpr = LiteralExpr $ BoolLiteral True
 
 declareLocalVarStmt :: IParam' -> IExpression -> [IStatement]
 declareLocalVarStmt Nothing _ = []
-declareLocalVarStmt (Just p) e = [IR.DeclareStmt [Just p] [e]]
+declareLocalVarStmt (Just p) e = [IR.DeclareStmt [p] [e]]
 
 -- transformations for functions that need access preimage
 transForPreimageFunc :: ([IParam], TFStmtWrapper)
@@ -285,7 +285,7 @@ transForFuncWithMsgSender =
     TFStmtWrapper
       [ -- PubKeyHash msgSender = hash160(pubKey);
         IR.DeclareStmt
-          [Just $ IR.Param (ElementaryType IR.Address) (IR.ReservedId varMsgSender)]
+          [IR.Param (ElementaryType IR.Address) (IR.ReservedId varMsgSender)]
           [IR.FunctionCallExpr (IdentifierExpr (IR.ReservedId funcHash160)) [IdentifierExpr (IR.ReservedId varPubKey)]],
         -- require(checkSig(sig, pubKey));
         IR.RequireStmt $
@@ -301,7 +301,7 @@ transForFuncWithMsgValue =
     -- int msgValue = SigHash.value(txPreimage);
     TFStmtWrapper
       [ IR.DeclareStmt
-          [Just $ IR.Param (ElementaryType IR.Int) (IR.ReservedId varMsgValue)]
+          [IR.Param (ElementaryType IR.Int) (IR.ReservedId varMsgValue)]
           [ IR.FunctionCallExpr
               (IR.MemberAccessExpr (IdentifierExpr (IR.ReservedId libSigHash)) (IR.Identifier "value"))
               [IdentifierExpr (IR.ReservedId varTxPreimage)]
@@ -420,11 +420,11 @@ prependsForReturnedInit t = do
   return
     [ -- `<T> ret = <defaultValueExprueofT>;`
       IR.DeclareStmt
-        [Just $ IR.Param t' (IR.ReservedId varRetVal)]
+        [IR.Param t' (IR.ReservedId varRetVal)]
         [fromMaybe (LiteralExpr $ BoolLiteral False) e],
       -- `bool returned = false;`
       IR.DeclareStmt
-        [Just $ IR.Param (ElementaryType IR.Bool) (IR.ReservedId varReturned)]
+        [IR.Param (ElementaryType IR.Bool) (IR.ReservedId varReturned)]
         [LiteralExpr $ BoolLiteral False]
     ]
 
@@ -448,14 +448,14 @@ buildPropagateState =
             [IdentifierExpr (IR.ReservedId varTxPreimage)],
         -- add `bytes outputScript = this.getStateScript();`
         IR.DeclareStmt
-          [Just $ IR.Param (ElementaryType IR.Bytes) (IR.ReservedId varOutputScript)]
+          [IR.Param (ElementaryType IR.Bytes) (IR.ReservedId varOutputScript)]
           [ IR.FunctionCallExpr
               (IR.MemberAccessExpr (IdentifierExpr (IR.Identifier "this")) (IR.Identifier "getStateScript"))
               []
           ],
         -- add `bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));`
         IR.DeclareStmt
-          [Just $ IR.Param (ElementaryType IR.Bytes) (IR.ReservedId varOutput)]
+          [IR.Param (ElementaryType IR.Bytes) (IR.ReservedId varOutput)]
           [ IR.FunctionCallExpr
               (IR.MemberAccessExpr (IdentifierExpr (IR.ReservedId libUtils)) (IR.Identifier "buildOutput"))
               [ IdentifierExpr (IR.ReservedId varOutputScript),

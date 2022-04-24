@@ -260,7 +260,7 @@ spec = testSpec "Transpile Type" $ do
     itType "mapping (address => bool)" "HashedMap<PubKeyHash, bool>"
     itType "mapping (address => bytes)" "HashedMap<PubKeyHash, bytes>"
   describe "#unsupported type should report error1" $ do
-    itReportError "aaaE " "unsupported type `TypeNameUserDefinedTypeName`" (1, 5)
+    itReportError "aaaE " "unsupported type: `aaaE`" (1, 5)
     itReportError "uint []  " "array length should be explicitly specified" (1, 8)
     itReportError "bool [2] []  " "array length should be explicitly specified" (1, 12)
      

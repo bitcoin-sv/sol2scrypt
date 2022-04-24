@@ -20,7 +20,7 @@ import IR.Transformations.Sol2IR.Variable ()
 import Protolude.Functor
 import Protolude.Monad (concatMapM)
 import Solidity.Spec as Sol
-import Utils
+import Solidity.Parser (display)
 
 instance ToIRTransformable (Maybe (Sol.Statement SourceRange)) IStatement' where
   _toIR (Just s) = _toIR s
@@ -45,23 +45,23 @@ instance ToIRTransformable (Sol.Statement SourceRange) IStatement' where
     i'' <- maybeStateVarId i'
     checkLHSmapExpr $ IdentifierExpr <$> i''
     return $ AssignStmt <$> sequence [IdentifierExpr <$> i''] <*> sequence [e']
-  _toIR (SimpleStatementVariableAssignmentList _ _ a) = reportError "unsupported SimpleStatementVariableAssignmentList" a >> return Nothing
-  _toIR (SimpleStatementVariableDeclarationList [Just localVar] [e] a) = do
+  _toIR (SimpleStatementVariableAssignmentList vs es a) | length vs > 1 || length es > 1 = reportError "unsupported tuple expression assignment" a >> return Nothing
+  _toIR s@(SimpleStatementVariableAssignmentList _ _ a) = reportError ("unsupported statement: `" ++ display s ++ "`") a >> return Nothing
+  _toIR (SimpleStatementVariableDeclarationList [Just localVar] [e] _) = do
     e' <- _toIR e
     localVar' <- _toIR localVar
     _ <- addSym $ Symbol <$> (paramName <$> localVar') <*> (paramType <$> localVar') <*> Just False <*> Just False <*> Just False
-    case localVar' of
-      Nothing -> reportError "unsupported SimpleStatementVariableDeclarationList" a >> return Nothing
-      Just _ -> return $ DeclareStmt [localVar'] <$> sequence [e']
+    return $ DeclareStmt <$> sequence [localVar'] <*> sequence [e']
   _toIR (SimpleStatementVariableDeclarationList [Just localVar@(VariableDeclaration t _ _ _)] [] a) = do
     localVar' <- _toIR localVar
     t' <- _toIR t
     e' <- defaultValueExpr t'
     case e' of
-      Nothing -> reportError ("unsupported declare `" ++ show t ++ "` without initializing it") a >> return Nothing
-      _ -> return $ DeclareStmt [localVar'] <$> sequence [e']
+      Nothing -> reportError "unsupported variable declaration without initializing it" a >> return Nothing
+      _ -> return $ DeclareStmt <$> sequence [localVar'] <*> sequence [e']
+  _toIR (SimpleStatementVariableDeclarationList vs es a) | length vs > 1 || length es > 1 = reportError "unsupported tuple expression declaration" a >> return Nothing
   _toIR (SimpleStatementVariableDeclarationList [Nothing] [] _) = return Nothing
-  _toIR (SimpleStatementVariableDeclarationList _ _ a) = reportError "unsupported SimpleStatementVariableDeclarationList" a >> return Nothing
+  _toIR s@(SimpleStatementVariableDeclarationList _ _ a) = reportError ("unsupported statement: `" ++ display s ++ "`") a >> return Nothing
   _toIR (Return e _) = do
     returned <- gets stateReturnedInBlock
     e' <- _toIR e
@@ -131,7 +131,9 @@ instance ToIRTransformable (Sol.Statement SourceRange) IStatement' where
         modify $ \s -> s {stateInFuncContinuedLoops = Set.insert (fromJust currentLoop) continuedLoops}
         -- `IR.ContinueStmt` just exists during `Sol2IR` stage and must be transpile to an assignment statement, which is `loopContinueFlag<X> = true;`, before `IR2Scr` stage.
         return $ Just $ IR.ContinueStmt $ continueFlag $ fromJust currentLoop
-  _toIR s = reportError ("unsupported statement `" ++ headWord (show s) ++ "`") (ann s) >> return Nothing
+  _toIR (Sol.Throw a) = reportError "unsupported deprecated throw statement" a >> return Nothing
+  _toIR (Sol.InlineAssemblyStatement _ _ a) = reportError "unsupported assembly statement" a >> return Nothing
+  _toIR e@Sol.SimpleStatementVariableList {} = reportError "unsupported deprecated var statement" (ann e) >> return Nothing
 
 instance ToIRTransformable (Sol.Block SourceRange) IBlock' where
   _toIR (Sol.Block stmts _) = do
@@ -170,7 +172,7 @@ instance ToIRTransformable (Sol.Statement SourceRange) [IStatement'] where
     bodyStmts' <-
       if hasContinueStmt || hasBreakStmt
         then do
-          let initContinueFlagStmt = Just $ IR.DeclareStmt [Just $ IR.Param (IR.ElementaryType IR.Bool) $ continueFlag currentLoop] [IR.LiteralExpr $ IR.BoolLiteral False]
+          let initContinueFlagStmt = Just $ IR.DeclareStmt [IR.Param (IR.ElementaryType IR.Bool) $ continueFlag currentLoop] [IR.LiteralExpr $ IR.BoolLiteral False]
           modify $ \s -> s {stateBCInBlock = []}
           stmts <- transBlockStmtsInLoop bodyStmts []
           return $ [initContinueFlagStmt | hasContinueStmt] ++ stmts
@@ -178,7 +180,7 @@ instance ToIRTransformable (Sol.Statement SourceRange) [IStatement'] where
           return bodyStmts
     leaveScope
 
-    let initBreakFlagStmt = IR.DeclareStmt [Just $ IR.Param (ElementaryType IR.Bool) bFlag] [LiteralExpr $ BoolLiteral False]
+    let initBreakFlagStmt = IR.DeclareStmt [IR.Param (ElementaryType IR.Bool) bFlag] [LiteralExpr $ BoolLiteral False]
         -- only generate break-flag-init-stmt if got its own `break` stmt inside. NOTE: nested loop's break does not count.
         initStmts = [Just initBreakFlagStmt | hasBreakStmt] ++ [initStmt | isJust initStmt]
 

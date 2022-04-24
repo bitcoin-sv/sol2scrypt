@@ -11,8 +11,8 @@ import IR.Spec as IR
 import IR.Transformations.Base
 import IR.Transformations.Sol2IR.Expression ()
 import Solidity.Spec as Sol
+import Solidity.Parser (display)
 import Data.Maybe
-import Utils
 
 -- from TypeName to IType'
 instance ToIRTransformable (TypeName SourceRange) IType' where
@@ -39,8 +39,8 @@ instance ToIRTransformable (TypeName SourceRange) IType' where
     if isJust st' 
       then return $ Just$ UserDefinedType i
       else do
-        reportError ("unsupported type `" ++ headWord (show t) ++ "`") (ann t) >> return Nothing
-  _toIR t = reportError ("unsupported type `" ++ headWord (show t) ++ "`") (ann t) >> return Nothing
+        reportError ("unsupported type: `" ++ display t ++ "`") (ann t) >> return Nothing
+  _toIR t = reportError ("unsupported type: `" ++ display t ++ "`") (ann t) >> return Nothing
 
 -- transpile Sol mapping type to a flattened IR mapping type
 toIRMappingType :: TypeName SourceRange -> TypeName SourceRange -> [IType'] -> Transformation IType'

@@ -65,13 +65,13 @@ spec = testSpec "Transpile Variable" $ do
       itProperty "string public a;" "\n@state\npublic bytes a;"
       itProperty "address public a;" "\n@state\npublic PubKeyHash a;"
       itPropertyReportError "uint aa = 3;" 
-        [("unsupported state variable with init value", newSR (1, 1) (1, 13))]
+        [("unsupported state variable with initial value", newSR (1, 1) (1, 13))]
       itPropertyReportError "uint[] aa;" 
         [("array length should be explicitly specified", newSR (1, 1) (1, 7))]
       itPropertyReportError "address immutable owner = msg.sender;" 
-        [("unsupported state variable with init value", newSR (1, 1) (1, 38))]
+        [("unsupported state variable with initial value", newSR (1, 1) (1, 38))]
       itPropertyReportError "address payable a;" 
-        [("unsupported type `TypeNameElementaryTypeName`", newSR (1, 1) (1, 16))]  
+        [("unsupported type: `address payable`", newSR (1, 1) (1, 16))]  
   describe "#Parameter" $ do
     itParameter "int a" "int a"
     itParameter "uint a" "int a"
@@ -83,11 +83,11 @@ spec = testSpec "Transpile Variable" $ do
     itParameterReportError "bytes[] memory x" 
         [("array length should be explicitly specified", newSR (1, 1) (1, 8))]
     itParameterReportError "address payable a" 
-        [("unsupported type `TypeNameElementaryTypeName`", newSR (1, 1) (1, 16))] 
+        [("unsupported type: `address payable`", newSR (1, 1) (1, 16))] 
   describe "#Static" $ do
     itStatic "uint constant x = 1;" "\nstatic const int x = 1;"
     itStatic "uint constant x = 1 + 1 *(1-1);" "\nstatic const int x = 1 + 1 * (1 - 1);"
     itStatic "bool constant x = true;" "\nstatic const bool x = true;"
     itStatic "int constant internal INT_TWO = 2;" "\nstatic const int INT_TWO = 2;"
     itStaticReportError "int constant internal UINT_MIN = int(2 ** 4);" 
-        [("unsupported binary operator `**`", newSR (1, 40) (1, 42))] 
+        [("unsupported binary operator: `**`", newSR (1, 40) (1, 42))] 

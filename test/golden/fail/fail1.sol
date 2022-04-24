@@ -93,9 +93,10 @@ contract SimpleStorage {
 
         (x, x) = (1, 3);
 
+        (uint8 p1, uint8 p2) = (1, 3);
+
         Foo foo = new Foo(msg.sender);
 
-        
         storedData = x;
     }
 

@@ -484,21 +484,21 @@ spec = testSpec "Transpile Contract" $ do
 
   describe "#ReportError" $ do
     itReportErrorContractPart "modifier onlyAfter(uint _time) { require(_time > 0); _; }" 
-      [("unsupported contract part `ContractPartModifierDefinition`", 
+      [("unsupported modifier definition", 
         newSR (1, 1) (1, 58))]
     itReportErrorContractPart "enum State { Created, Locked, Inactive }" 
-      [("unsupported contract part `ContractPartEnumDefinition`", 
+      [("unsupported enum definition", 
         newSR (1, 2) (1, 41))]
 
     itReportErrorContractPart "using Set for Data;" 
-      [("unsupported contract part `ContractPartUsingForDeclaration`", 
+      [("unsupported using directive", 
         newSR (1, 1) (1, 20))]
-    itReportError "library D {}" [("unsupported contract definition `ContractDefinition`", 
+    itReportError "library D {}" [("unsupported contract definition: `library D {\n\n}`",
       newSR (1, 1) (1, 13))]
     itReportError "abstract contract Feline { }" [("unsupported abstract contract definition", 
       newSR (1, 1) (1, 29))]
-    itReportError "interface D {}" [("unsupported contract definition `ContractDefinition`", 
+    itReportError "interface D {}" [("unsupported interface definition", 
       newSR (1, 1) (1, 15))]
-    itReportError "contract Cat is Feline { }" [("unsupported contract definition `ContractDefinition`", 
+    itReportError "contract Cat is Feline { }" [("unsupported contract inheritance", 
       newSR (1, 1) (1, 27))]
 
