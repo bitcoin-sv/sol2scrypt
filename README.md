@@ -1,4 +1,5 @@
 # sol2scrypt: A Solidity to sCrypt Transpiler
+[![Build Status](https://app.travis-ci.com/sCrypt-Inc/sol2scrypt.svg?token=v6N8VybyjmC1GLSWZv92&branch=master)](https://travis-ci.com/sCrypt-Inc/sol2scrypt)
 
 # Install
 Easies way to install is to download from [Releases](https://github.com/sCrypt-Inc/sol2scrypt/releases).
