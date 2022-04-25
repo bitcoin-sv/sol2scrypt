@@ -362,7 +362,7 @@ loop (__LoopCount__0) {
         i++;
     }
 }</code></pre></td>
-    <td></td>
+    <td>we do not support unbounded loop.</td>
 </tr>
 
 <tr>
