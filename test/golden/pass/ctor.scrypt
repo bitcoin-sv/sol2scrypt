@@ -1,0 +1,30 @@
+contract Ctor {
+  @state
+  int storedData;
+
+  @state
+  PubKeyHash addr;
+
+  constructor(int msgValue, PubKeyHash msgSender) {
+    this.storedData = 0;
+    this.addr = msgSender;
+    this.storedData = msgValue;
+  }
+
+  public function set(int x, SigHashPreimage txPreimage) {
+    int msgValue = SigHash.value(txPreimage);
+    this.storedData = x + msgValue;
+    require(this.propagateState(txPreimage));
+  }
+
+  function get() : int {
+    return this.storedData;
+  }
+
+  function propagateState(SigHashPreimage txPreimage) : bool {
+    require(Tx.checkPreimage(txPreimage));
+    bytes outputScript = this.getStateScript();
+    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    return hash256(output) == SigHash.hashOutputs(txPreimage);
+  }
+}

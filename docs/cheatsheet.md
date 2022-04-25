@@ -32,7 +32,7 @@ pragma experimental ABIEncoderV2;</code></pre></td>
     <td><b>Type address</b></td>
     <td><pre><code> address</code></pre></td>
     <td><pre><code> PubKeyHash</code></pre></td>
-    <td></td>
+    <td><code>address.balance</code> is not currently supported</td>
 </tr>
 
 <tr>
@@ -65,8 +65,8 @@ pragma experimental ABIEncoderV2;</code></pre></td>
 
 <tr>
     <td><b>Type string</b></td>
-    <td><pre><code> string </code></pre></td>
-    <td><pre><code> bytes</code></pre></td>
+    <td><pre><code>string</code></pre></td>
+    <td><pre><code>bytes</code></pre></td>
     <td></td>
 </tr>
 
@@ -344,6 +344,87 @@ HashedMap<MapKeyST0, int> nestedMap</code></pre></td>
     <td></td>
 </tr>
 
+
+<tr>
+    <td rowspan="3"><b>Loop</b></td>
+    <td><pre><code>for(uint i=0; i<2; i++) {
+    sum += i;
+    if(i > 10)
+        break;
+}</code></pre></td>
+    <td><pre><code>bool loopBreakFlag0 = false;
+int i = 0;
+loop (__LoopCount__0) {
+    if (!loopBreakFlag0 && i < 2) {
+        sum += i;
+        if (i > 10)
+            loopBreakFlag0 = true;
+        i++;
+    }
+}</code></pre></td>
+    <td>we do not support unbounded loop.</td>
+</tr>
+
+<tr>
+    <td><pre><code>uint i = 0;
+uint sum = 0;
+do {
+    sum += i;
+    if (sum < 20)
+        continue; 
+    i++;
+} while (i < 100);</code></pre></td>
+    <td><pre><code>int i = 0;
+int sum = 0;
+{
+    sum += i;
+    i++;
+}
+loop (__LoopCount__0) {
+    if (i < 100) {
+        bool loopContinueFlag0 = false;
+        sum += i;
+        if (sum < 20) {
+            {
+                loopContinueFlag0 = true;
+            }
+        }
+        if (!loopContinueFlag0) {
+            i++;
+        }
+    }
+}</code></pre></td>
+    <td></td>
+</tr>
+
+<tr>
+    <td><pre><code>uint i = 0;
+uint sum = 0;
+while(i <10) {
+    sum += i;
+    if (sum > 100) {
+        break;
+    }
+    i++;
+}</code></pre></td>
+    <td><pre><code>int i = 0;
+int sum = 0;
+bool loopBreakFlag0 = false;
+loop (__LoopCount__0) {
+    if (!loopBreakFlag0 && i < 10) {
+        sum += i;
+        if (sum > 100) {
+            loopBreakFlag0 = true;
+        }
+        if(!loopBreakFlag0) {
+            i++;
+        }
+    }
+}</code></pre></td>
+    <td></td>
+</tr>
+
+
 <tr>
     <td ><b>Struct</b></td>
     <td><pre><code>struct Todo {
@@ -354,7 +435,18 @@ HashedMap<MapKeyST0, int> nestedMap</code></pre></td>
     bytes text;
     bool completed; 
 }</code></pre></td>
-    <td>Structures with the same name cannot be supported</td>
+    <td>Structures with the same name is not currently supported</td>
+</tr>
+
+<tr>
+    <td ><b>Library</b></td>
+    <td><pre><code>library HelloWorld {
+    ...
+}</code></pre></td>
+    <td><pre><code>library HelloWorld {
+    ...
+}</code></pre></td>
+    <td></td>
 </tr>
 
 <tr>
@@ -420,12 +512,7 @@ require(checkSig(sig, pubKey));</code></pre></td>
     ...
 }</code></pre></td>
 </tr>
-<tr>
-    <td ><b>Library</b></td>
-    <td><pre><code>library HelloWorld {
-    ...
-}</code></pre></td>
-</tr>
+
 <tr>
     <td ><b>Inheritance</b></td>
     <td><pre><code>contract ERC20 is IERC20 {
@@ -434,41 +521,10 @@ require(checkSig(sig, pubKey));</code></pre></td>
 </tr>
 
 <tr>
-    <td ><b>For loop </b></td>
-    <td><pre><code>for (uint i = 0; i < 3; i++) {
-    ...
-}</code></pre></td>
-</tr>
-
-<tr>
-    <td ><b>While loop </b></td>
-    <td><pre><code>while (a > 0) {
-    ...
-}</code></pre></td>
-</tr>
-
-<tr>
-    <td ><b>Do-While loop </b></td>
-    <td><pre><code>do {
-    ...
-} while (a > 0);</code></pre></td>
-</tr>
-
-<tr>
     <td ><b>Assembly </b></td>
     <td><pre><code>assembly {
     ...
 }</code></pre></td>
-</tr>
-
-<tr>
-    <td ><b>Break </b></td>
-    <td><pre><code>break; </code></pre></td>
-</tr>
-
-<tr>
-    <td ><b>Continue </b></td>
-    <td><pre><code>continue; </code></pre></td>
 </tr>
 
 <tr>
