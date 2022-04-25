@@ -205,14 +205,14 @@ a.pop(); </code></pre> </td>
 </tr>
 
 <tr>
-    <td><b>Public function</b></td>
+    <td><b>Non-external function</b></td>
     <td><pre><code> function get() public view returns (uint) {
     return storedData;
 } </code></pre></td>
     <td><pre><code> function get() : int {
     return this.storedData;
 }</code></pre></td>
-    <td></td>
+    <td>no recursion allowed</td>
 </tr>
 
 <tr>
