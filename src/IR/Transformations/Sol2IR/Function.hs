@@ -330,9 +330,15 @@ toIRConstructorParams (ParameterList pl) _ funcBlk = do
           then let (ps, blkT_) = transForConstructorWithMsgSender in (map Just ps ++ extraParams0, mergeTFStmtWrapper blkT0 blkT_)
           else (extraParams0, blkT0)
 
-  let params' = sequence $ params ++ extraParams1
+  let (extraParams2, blkT2) =
+        if fst (exprExistsInStmt msgValueExpr (Sol.BlockStatement funcBlk))
+          then let (ps, blkT_) = transForConstructorWithMsgValue in (map Just ps ++ extraParams1, mergeTFStmtWrapper blkT1 blkT_)
+          else (extraParams1, blkT1)
 
-  return (IR.ParamList <$> params', blkT1)
+
+  let params' = sequence $ params ++ extraParams2
+
+  return (IR.ParamList <$> params', blkT2)
 
 toIRConstructorBody :: Block SourceRange -> TFStmtWrapper -> Transformation IBlock'
 toIRConstructorBody (Sol.Block ss _) (TFStmtWrapper prepends appends) = do
