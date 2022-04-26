@@ -1,0 +1,27 @@
+[
+    {
+        "src": "test/golden/fail/buildin.sol:14:23:14:57",
+        "type": "Error",
+        "message": "unsupported function call: `keccak256`"
+    },
+    {
+        "src": "test/golden/fail/buildin.sol:17:9:17:37",
+        "type": "Error",
+        "message": "unsupported function call: `selfdestruct`"
+    },
+    {
+        "src": "test/golden/fail/buildin.sol:21:26:21:50",
+        "type": "Error",
+        "message": "unsupported function call: `ecrecover`"
+    },
+    {
+        "src": "test/golden/fail/buildin.sol:30:14:30:29",
+        "type": "Error",
+        "message": "unsupported function call: `addmod`"
+    },
+    {
+        "src": "test/golden/fail/buildin.sol:34:16:34:31",
+        "type": "Error",
+        "message": "unsupported function call: `mulmod`"
+    }
+]
