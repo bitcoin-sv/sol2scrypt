@@ -571,10 +571,9 @@ tx.origin
 </code></pre></td>
 
 <tr>
-    <td ><b>Fallback Function</b></td>
-    <td><pre><code>fallback() external payable {
-    emit Log(gasleft());
-}</code></pre></code></td>
+    <td ><b>Receive and Fallback Function</b></td>
+    <td><pre><code>receive() external payable {}
+fallback() external payable {}</code></pre></code></td>
 </tr>
 
 
@@ -586,6 +585,16 @@ tx.origin
 <tr>
     <td ><b>address.transfer</b></td>
     <td><pre><code>payable(owner).transfer(msg.value)</code></pre></code></td>
+</tr>
+
+<tr>
+    <td ><b>address.send</b></td>
+    <td><pre><code>_to.send(msg.value);</code></pre></code></td>
+</tr>
+
+<tr>
+    <td ><b>address.call</b></td>
+    <td><pre><code>_to.call{value: msg.value}("data");</code></pre></code></td>
 </tr>
 
 <tr>

@@ -22,10 +22,6 @@ contract C {
         require(signer != address(0), "ECDSA: invalid signature");
     }
 
-    function transfer() external payable {
-        payable(owner).transfer(msg.value);
-    }
-
     function callAddMod() public pure returns(uint){
       return addmod(4, 5, 3);
     }
