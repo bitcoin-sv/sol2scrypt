@@ -32,7 +32,7 @@ contract LoopTest {
         i++;
       }
     }
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   public function f2(SigHashPreimage txPreimage) {
@@ -68,7 +68,7 @@ contract LoopTest {
         i++;
       }
     }
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   public function f3(SigHashPreimage txPreimage) {
@@ -93,7 +93,7 @@ contract LoopTest {
         i++;
       }
     }
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   function f4() : int {
@@ -246,10 +246,10 @@ contract LoopTest {
     return r;
   }
 
-  function propagateState(SigHashPreimage txPreimage) : bool {
+  function propagateState(SigHashPreimage txPreimage, int value) : bool {
     require(Tx.checkPreimage(txPreimage));
     bytes outputScript = this.getStateScript();
-    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    bytes output = Utils.buildOutput(outputScript, value);
     return hash256(output) == SigHash.hashOutputs(txPreimage);
   }
 }

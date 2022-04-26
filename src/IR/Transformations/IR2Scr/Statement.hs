@@ -21,28 +21,32 @@ instance ToScryptTransformable [IStatement'] [Maybe (Scr.Statement Ann)] where
 instance ToScryptTransformable IStatement (Scr.Statement Ann) where
   _toScrypt (IR.ExprStmt e) = Scr.ExprStmt (_toScrypt e) nil
   -- Only the following assignment are allowed
-  _toScrypt (IR.AssignStmt [lhs] [e]) = case lhs of
-    -- a = expr;
-    (IR.IdentifierExpr _) -> 
-      let lhs' = _toScrypt lhs
-          e' = _toScrypt e
+  _toScrypt (IR.AssignStmt [lhs] [e]) = 
+    let lhs' = _toScrypt lhs
+        e' = _toScrypt e
       in Scr.Assign lhs' e' nil
-    -- a[1] = expr
-    (IR.BinaryExpr IR.Index _ _) -> 
-      let lhs' = _toScrypt lhs
-          e' = _toScrypt e
-      in Scr.Assign lhs' e' nil
-    -- st.x = expr
-    (IR.MemberAccessExpr (IR.IdentifierExpr _ ) (IR.Identifier _)) -> 
-      let lhs' = _toScrypt lhs
-          e' = _toScrypt e
-      in Scr.Assign lhs' e' nil
-    -- this.todos[0].x = expr
-    (IR.MemberAccessExpr ((IR.BinaryExpr IR.Index _ _)) (IR.Identifier _)) -> 
-      let lhs' = _toScrypt lhs
-          e' = _toScrypt e
-      in Scr.Assign lhs' e' nil
-    _ -> error $ "_toScrypt for `" ++ show lhs ++ "` not implemented in scrypt"
+    -- case lhs of
+    -- -- a = expr;
+    -- (IR.IdentifierExpr _) -> 
+    --   let lhs' = _toScrypt lhs
+    --       e' = _toScrypt e
+    --   in Scr.Assign lhs' e' nil
+    -- -- a[1] = expr
+    -- (IR.BinaryExpr IR.Index _ _) -> 
+    --   let lhs' = _toScrypt lhs
+    --       e' = _toScrypt e
+    --   in Scr.Assign lhs' e' nil
+    -- -- st.x = expr
+    -- (IR.MemberAccessExpr (IR.IdentifierExpr _ ) (IR.Identifier _)) -> 
+    --   let lhs' = _toScrypt lhs
+    --       e' = _toScrypt e
+    --   in Scr.Assign lhs' e' nil
+    -- -- this.todos[0].x = expr
+    -- (IR.MemberAccessExpr ((IR.BinaryExpr IR.Index _ _)) (IR.Identifier _)) -> 
+    --   let lhs' = _toScrypt lhs
+    --       e' = _toScrypt e
+    --   in Scr.Assign lhs' e' nil
+    -- _ -> error $ "_toScrypt for `" ++ show lhs ++ "` not implemented in scrypt"
   -- declare only allows one declared identifier and expr on the left & right, respectively
   _toScrypt (IR.DeclareStmt [declare] [e]) =
     let declare' :: Scr.Param Ann = _toScrypt declare

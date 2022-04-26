@@ -33,6 +33,7 @@ instance ToScryptTransformable IR.IContract (Scr.Contract Ann) where
           filter
             ( \case
                 IR.StateVariableDeclaration (IR.StateVariable _ _ _ _ False _) -> True
+                IR.PropertyDefinition {} -> True
                 _ -> False
             )
             bodyElems
@@ -87,6 +88,7 @@ instance ToScryptTransformable IContractBodyElement' (Maybe (Scr.Param Ann)) whe
 
 instance ToScryptTransformable IR.IContractBodyElement (Scr.Param Ann) where
   _toScrypt (IR.StateVariableDeclaration stateVar) = _toScrypt stateVar
+  _toScrypt (IR.PropertyDefinition prop) = _toScrypt prop
 
 
 instance ToScryptTransformable IContractBodyElement' (Maybe (Scr.Static Ann)) where

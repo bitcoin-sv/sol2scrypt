@@ -36,7 +36,7 @@ contract Coin {
     }
     require(this.b2.set(receiver, this_b2_receiver, this_b2_receiver_index));
     require(this.balances.set(receiver, this_balances_receiver, this_balances_receiver_index));
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   public function send(PubKeyHash receiver, int amount, bool a, bytes b, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, bool this_b1_receiver, int this_b1_receiver_index, bytes this_b2_receiver, int this_b2_receiver_index, int this_balances_msgSender, int this_balances_msgSender_index, int this_balances_receiver, int this_balances_receiver_index) {
@@ -63,13 +63,13 @@ contract Coin {
     require(this.b2.set(receiver, this_b2_receiver, this_b2_receiver_index));
     require(this.balances.set(msgSender, this_balances_msgSender, this_balances_msgSender_index));
     require(this.balances.set(receiver, this_balances_receiver, this_balances_receiver_index));
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  function propagateState(SigHashPreimage txPreimage) : bool {
+  function propagateState(SigHashPreimage txPreimage, int value) : bool {
     require(Tx.checkPreimage(txPreimage));
     bytes outputScript = this.getStateScript();
-    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    bytes output = Utils.buildOutput(outputScript, value);
     return hash256(output) == SigHash.hashOutputs(txPreimage);
   }
 }

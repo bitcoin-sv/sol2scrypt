@@ -15,7 +15,7 @@ contract SimpleStorage {
     int e = 0;
     int[3] aa = [0, 0, 0];
     require(this.storedData == retVal);
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   function get1() : bytes[3] {
@@ -36,10 +36,10 @@ contract SimpleStorage {
     return todos;
   }
 
-  function propagateState(SigHashPreimage txPreimage) : bool {
+  function propagateState(SigHashPreimage txPreimage, int value) : bool {
     require(Tx.checkPreimage(txPreimage));
     bytes outputScript = this.getStateScript();
-    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    bytes output = Utils.buildOutput(outputScript, value);
     return hash256(output) == SigHash.hashOutputs(txPreimage);
   }
 }

@@ -21,7 +21,7 @@ contract DataLocations {
     this._f(this.arr, this.map, this_myStructs_1);
     MyStruct myStruct = this_myStructs_1;
     MyStruct myMemStruct = {0};
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   function g(int[3] _arr) : int[3] {
@@ -29,13 +29,13 @@ contract DataLocations {
   }
 
   public function h(int[3] _arr, SigHashPreimage txPreimage) {
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  function propagateState(SigHashPreimage txPreimage) : bool {
+  function propagateState(SigHashPreimage txPreimage, int value) : bool {
     require(Tx.checkPreimage(txPreimage));
     bytes outputScript = this.getStateScript();
-    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    bytes output = Utils.buildOutput(outputScript, value);
     return hash256(output) == SigHash.hashOutputs(txPreimage);
   }
 }

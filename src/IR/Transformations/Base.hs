@@ -42,7 +42,11 @@ data TransformState = TransformState
     -- loop ids which have `continue` statement(s) inside in a function
     stateInFuncContinuedLoops :: Set Integer,
     -- have `break` /`continue` statement in loop's nested blocks, the first element represents the innermost block's flag
-    stateBCInBlock :: [BreakContinueInBlock]
+    stateBCInBlock :: [BreakContinueInBlock],
+    -- whether contract's balance got changed in function
+    stateBalanceChanged :: Bool,
+    -- need generate a contract property (`initBalance`) to store the initial value of contract balance
+    stateNeedInitBalace :: Bool
   }
   deriving (Show, Eq, Ord)
 

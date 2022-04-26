@@ -89,7 +89,7 @@ contract SolidityTest {
 
   public function unlock(int ab, SigHashPreimage txPreimage) {
     require(this.a == ab);
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   function f1(int x) : int {
@@ -100,10 +100,10 @@ contract SolidityTest {
     return x + 1;
   }
 
-  function propagateState(SigHashPreimage txPreimage) : bool {
+  function propagateState(SigHashPreimage txPreimage, int value) : bool {
     require(Tx.checkPreimage(txPreimage));
     bytes outputScript = this.getStateScript();
-    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    bytes output = Utils.buildOutput(outputScript, value);
     return hash256(output) == SigHash.hashOutputs(txPreimage);
   }
 }

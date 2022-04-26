@@ -157,13 +157,13 @@ contract A {
 
   public function set(int x, SigHashPreimage txPreimage) {
     this.a = x;
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  function propagateState(SigHashPreimage txPreimage) : bool {
+  function propagateState(SigHashPreimage txPreimage, int value) : bool {
     require(Tx.checkPreimage(txPreimage));
     bytes outputScript = this.getStateScript();
-    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    bytes output = Utils.buildOutput(outputScript, value);
     return hash256(output) == SigHash.hashOutputs(txPreimage);
   }
 }|]
@@ -234,13 +234,13 @@ contract A {
 
   public function set(int x, SigHashPreimage txPreimage) {
     this.a = x;
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  function propagateState(SigHashPreimage txPreimage) : bool {
+  function propagateState(SigHashPreimage txPreimage, int value) : bool {
     require(Tx.checkPreimage(txPreimage));
     bytes outputScript = this.getStateScript();
-    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    bytes output = Utils.buildOutput(outputScript, value);
     return hash256(output) == SigHash.hashOutputs(txPreimage);
   }
 }|]
@@ -375,7 +375,7 @@ contract Coin {
       this_balances_receiver += amount;
     }
     require(this.balances.set(receiver, this_balances_receiver, this_balances_receiver_index));
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   public function send(PubKeyHash receiver, int amount, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, int this_balances_msgSender, int this_balances_msgSender_index, int this_balances_receiver, int this_balances_receiver_index) {
@@ -397,13 +397,13 @@ contract Coin {
     }
     require(this.balances.set(msgSender, this_balances_msgSender, this_balances_msgSender_index));
     require(this.balances.set(receiver, this_balances_receiver, this_balances_receiver_index));
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  function propagateState(SigHashPreimage txPreimage) : bool {
+  function propagateState(SigHashPreimage txPreimage, int value) : bool {
     require(Tx.checkPreimage(txPreimage));
     bytes outputScript = this.getStateScript();
-    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    bytes output = Utils.buildOutput(outputScript, value);
     return hash256(output) == SigHash.hashOutputs(txPreimage);
   }
 }|]
@@ -434,7 +434,7 @@ contract EIP20 {
   public function allowance(PubKeyHash _owner, PubKeyHash _spender, SigHashPreimage txPreimage, int retVal, int this_allowed__owner__spender, int this_allowed__owner__spender_index) {
     require((!this.allowed.has({_owner, _spender}, this_allowed__owner__spender_index) && this_allowed__owner__spender == 0) || this.allowed.canGet({_owner, _spender}, this_allowed__owner__spender, this_allowed__owner__spender_index));
     require(this_allowed__owner__spender == retVal);
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   public function approve(PubKeyHash _spender, int _value, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, bool retVal, int this_allowed_msgSender__spender, int this_allowed_msgSender__spender_index) {
@@ -444,13 +444,13 @@ contract EIP20 {
     this_allowed_msgSender__spender = _value;
     require(true == retVal);
     require(this.allowed.set({msgSender, _spender}, this_allowed_msgSender__spender, this_allowed_msgSender__spender_index));
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  function propagateState(SigHashPreimage txPreimage) : bool {
+  function propagateState(SigHashPreimage txPreimage, int value) : bool {
     require(Tx.checkPreimage(txPreimage));
     bytes outputScript = this.getStateScript();
-    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    bytes output = Utils.buildOutput(outputScript, value);
     return hash256(output) == SigHash.hashOutputs(txPreimage);
   }
 }|]
@@ -497,13 +497,13 @@ contract MM {
     this_m3_1_a;
     require(this.m1.set({a, a}, this_m1_a_a, this_m1_a_a_index));
     require(this.m2.set({a, a}, this_m2_a_a, this_m2_a_a_index));
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  function propagateState(SigHashPreimage txPreimage) : bool {
+  function propagateState(SigHashPreimage txPreimage, int value) : bool {
     require(Tx.checkPreimage(txPreimage));
     bytes outputScript = this.getStateScript();
-    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    bytes output = Utils.buildOutput(outputScript, value);
     return hash256(output) == SigHash.hashOutputs(txPreimage);
   }
 }|]
@@ -593,7 +593,7 @@ contract ERC20 {
     require(true == retVal);
     require(this.balanceOf.set(msgSender, this_balanceOf_msgSender, this_balanceOf_msgSender_index));
     require(this.balanceOf.set(recipient, this_balanceOf_recipient, this_balanceOf_recipient_index));
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   public function approve(PubKeyHash spender, int amount, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, bool retVal, int this_allowance_msgSender_spender, int this_allowance_msgSender_spender_index) {
@@ -603,7 +603,7 @@ contract ERC20 {
     this_allowance_msgSender_spender = amount;
     require(true == retVal);
     require(this.allowance.set({msgSender, spender}, this_allowance_msgSender_spender, this_allowance_msgSender_spender_index));
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   public function transferFrom(PubKeyHash sender, PubKeyHash recipient, int amount, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, bool retVal, int this_allowance_sender_msgSender, int this_allowance_sender_msgSender_index, int this_balanceOf_recipient, int this_balanceOf_recipient_index, int this_balanceOf_sender, int this_balanceOf_sender_index) {
@@ -619,7 +619,7 @@ contract ERC20 {
     require(this.allowance.set({sender, msgSender}, this_allowance_sender_msgSender, this_allowance_sender_msgSender_index));
     require(this.balanceOf.set(recipient, this_balanceOf_recipient, this_balanceOf_recipient_index));
     require(this.balanceOf.set(sender, this_balanceOf_sender, this_balanceOf_sender_index));
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   public function mint(int amount, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, int this_balanceOf_msgSender, int this_balanceOf_msgSender_index) {
@@ -629,7 +629,7 @@ contract ERC20 {
     this_balanceOf_msgSender += amount;
     this.totalSupply += amount;
     require(this.balanceOf.set(msgSender, this_balanceOf_msgSender, this_balanceOf_msgSender_index));
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   public function burn(int amount, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, int this_balanceOf_msgSender, int this_balanceOf_msgSender_index) {
@@ -639,13 +639,13 @@ contract ERC20 {
     this_balanceOf_msgSender -= amount;
     this.totalSupply -= amount;
     require(this.balanceOf.set(msgSender, this_balanceOf_msgSender, this_balanceOf_msgSender_index));
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  function propagateState(SigHashPreimage txPreimage) : bool {
+  function propagateState(SigHashPreimage txPreimage, int value) : bool {
     require(Tx.checkPreimage(txPreimage));
     bytes outputScript = this.getStateScript();
-    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    bytes output = Utils.buildOutput(outputScript, value);
     return hash256(output) == SigHash.hashOutputs(txPreimage);
   }
 }|]
@@ -675,13 +675,13 @@ contract VendingMachine {
     require(checkSig(sig, pubKey));
     if (msgSender != this.owner)
       require(false);
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  function propagateState(SigHashPreimage txPreimage) : bool {
+  function propagateState(SigHashPreimage txPreimage, int value) : bool {
     require(Tx.checkPreimage(txPreimage));
     bytes outputScript = this.getStateScript();
-    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    bytes output = Utils.buildOutput(outputScript, value);
     return hash256(output) == SigHash.hashOutputs(txPreimage);
   }
 }|]
@@ -765,7 +765,7 @@ contract SimpleStorage {
     if (!returned) {
       this.storedData = x;
     }
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   function set1(int x) : bool {
@@ -799,14 +799,14 @@ contract SimpleStorage {
       this.storedData = x;
     }
     require((returned ? ret : this.storedData) == retVal);
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   public function set3(int x, SigHashPreimage txPreimage, int _y) {
     int y = 0;
     y = x;
     require(y == _y);
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   private function foo() : bool {
@@ -829,21 +829,21 @@ contract SimpleStorage {
   }
 
   public function foo2(SigHashPreimage txPreimage) {
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   public function get(SigHashPreimage txPreimage) {
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   public function get1(SigHashPreimage txPreimage, int retVal) {
     require(this.storedData == retVal);
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   public function get2(SigHashPreimage txPreimage, int retVal) {
     require(1 + 1 == retVal);
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   public function get3(SigHashPreimage txPreimage, int retVal) {
@@ -854,13 +854,13 @@ contract SimpleStorage {
       }
     }
     require(this.storedData == retVal);
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  function propagateState(SigHashPreimage txPreimage) : bool {
+  function propagateState(SigHashPreimage txPreimage, int value) : bool {
     require(Tx.checkPreimage(txPreimage));
     bytes outputScript = this.getStateScript();
-    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    bytes output = Utils.buildOutput(outputScript, value);
     return hash256(output) == SigHash.hashOutputs(txPreimage);
   }
 }|]
@@ -893,11 +893,11 @@ contract SimpleStorage {
   int s;
 
   public function foo(SigHashPreimage txPreimage) {
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   public function foo1(SigHashPreimage txPreimage) {
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   function foo2() : bool {
@@ -908,10 +908,10 @@ contract SimpleStorage {
     return true;
   }
 
-  function propagateState(SigHashPreimage txPreimage) : bool {
+  function propagateState(SigHashPreimage txPreimage, int value) : bool {
     require(Tx.checkPreimage(txPreimage));
     bytes outputScript = this.getStateScript();
-    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    bytes output = Utils.buildOutput(outputScript, value);
     return hash256(output) == SigHash.hashOutputs(txPreimage);
   }
 }|]
