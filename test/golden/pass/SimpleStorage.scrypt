@@ -2,6 +2,12 @@ contract SimpleStorage {
   @state
   int storedData;
 
+  const int decimals;
+
+  constructor() {
+    this.decimals = 3;
+  }
+
   public function set(int x, SigHashPreimage txPreimage) {
     this.storedData = x;
     require(this.propagateState(txPreimage));
