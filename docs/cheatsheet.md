@@ -174,6 +174,13 @@ a.pop(); </code></pre> </td>
 </tr>
 
 <tr>
+    <td><b>Constant variables</b></td>
+    <td><pre><code>uint constant x = 1;</code></pre></td>
+    <td><pre><code>static const int x = 1;</code></pre></td>
+    <td></td>
+</tr>
+
+<tr>
     <td><b>Immutable variables</b></td>
     <td><pre><code>uint immutable x; </code></pre></td>
     <td><pre><code>const int x;</code></pre></td>
