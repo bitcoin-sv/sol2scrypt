@@ -1,0 +1,22 @@
+[
+    {
+        "src": "test/golden/fail/enum.sol:5:5:5:47",
+        "type": "Error",
+        "message": "unsupported enum definition"
+    },
+    {
+        "src": "test/golden/fail/enum.sol:6:4:6:18",
+        "type": "Error",
+        "message": "unsupported type: `FreshJuiceSize`"
+    },
+    {
+        "src": "test/golden/fail/enum.sol:7:4:7:18",
+        "type": "Error",
+        "message": "unsupported type: `FreshJuiceSize`"
+    },
+    {
+        "src": "test/golden/fail/enum.sol:12:46:12:60",
+        "type": "Error",
+        "message": "unsupported type: `FreshJuiceSize`"
+    }
+]

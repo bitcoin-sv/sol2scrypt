@@ -174,6 +174,13 @@ a.pop(); </code></pre> </td>
 </tr>
 
 <tr>
+    <td><b>Constant variables</b></td>
+    <td><pre><code>uint constant x = 1;</code></pre></td>
+    <td><pre><code>static const int x = 1;</code></pre></td>
+    <td></td>
+</tr>
+
+<tr>
     <td><b>Immutable variables</b></td>
     <td><pre><code>uint immutable x; </code></pre></td>
     <td><pre><code>const int x;</code></pre></td>
@@ -569,7 +576,67 @@ msg.sig
 tx.gasprice
 tx.origin
 </code></pre></td>
+
+<tr>
+    <td ><b>Receive and Fallback Function</b></td>
+    <td><pre><code>receive() external payable {}
+fallback() external payable {}</code></pre></code></td>
 </tr>
+
+
+<tr>
+    <td ><b>address.balance</b></td>
+    <td><pre><code>address(this).balance;</code></pre></code></td>
+</tr>
+
+<tr>
+    <td ><b>address.transfer</b></td>
+    <td><pre><code>payable(owner).transfer(msg.value)</code></pre></code></td>
+</tr>
+
+<tr>
+    <td ><b>address.send</b></td>
+    <td><pre><code>_to.send(msg.value);</code></pre></code></td>
+</tr>
+
+<tr>
+    <td ><b>address.call</b></td>
+    <td><pre><code>_to.call{value: msg.value}("data");</code></pre></code></td>
+</tr>
+
+<tr>
+    <td ><b>Calling Other Contract</b></td>
+    <td><pre><code>function setXandSendEther(Callee _callee, uint _x) public payable {
+    (uint x, uint value) = _callee.setXandSendEther{value: msg.value}(_x);
+}</code></pre></code></td>
+</tr>
+
+
+<tr>
+    <td ><b>Buildin Function</b></td>
+    <td><pre><code>keccak256();
+ecrecover();
+addmod();
+mulmod();
+selfdestruct();
+</code></pre></code></td>
+</tr>
+
+
+<tr>
+    <td ><b>Enum</b></td>
+    <td><pre><code>enum FreshJuiceSize{ SMALL, MEDIUM, LARGE }</code></pre></code></td>
+</tr>
+
+<tr>
+    <td ><b>Modifier</b></td>
+    <td><pre><code>onlySeller</code></pre></code></td>
+</tr>
+
+
+
+
+
 
 
 

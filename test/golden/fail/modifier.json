@@ -1,0 +1,12 @@
+[
+    {
+        "src": "test/golden/fail/modifier.sol:6:4:12:5",
+        "type": "Error",
+        "message": "unsupported modifier definition"
+    },
+    {
+        "src": "test/golden/fail/modifier.sol:14:32:14:39",
+        "type": "Error",
+        "message": "unsupported number unit: `ether`"
+    }
+]
