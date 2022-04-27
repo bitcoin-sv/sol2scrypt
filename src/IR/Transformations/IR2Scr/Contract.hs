@@ -86,7 +86,7 @@ instance ToScryptTransformable IContractBodyElement' (Maybe (Scr.Param Ann)) whe
   _toScrypt = (<$>) _toScrypt
 
 instance ToScryptTransformable IR.IContractBodyElement (Scr.Param Ann) where
-  _toScrypt (IR.PropertyDefinition stateVar) = _toScrypt stateVar
+  _toScrypt (IR.PropertyDefinition prop) = _toScrypt prop
 
 instance ToScryptTransformable IContractBodyElement' (Maybe (Scr.Static Ann)) where
   _toScrypt = (<$>) _toScrypt

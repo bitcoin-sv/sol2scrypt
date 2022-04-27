@@ -51,7 +51,7 @@ contract WithdrawalContract {
   }
 
   function checkInitBalance(SigHashPreimage txPreimage) : bool {
-    if (Utils.isFirstCall(txPreimage))
+    if (VarIntReader.isFirstCall(txPreimage))
       require(SigHash.value(txPreimage) == this.initBalance);
     return true;
   }

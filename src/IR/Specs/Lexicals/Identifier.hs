@@ -55,6 +55,7 @@ reservedNames =
   [ libTx,
     libUtils,
     libSigHash,
+    libVarIntReader,
     funcHash160,
     funcHash256,
     funcCheckSig,
@@ -84,6 +85,9 @@ libUtils = "Utils"
 libSigHash :: String
 libSigHash = "SigHash"
 
+libVarIntReader :: String
+libVarIntReader = "VarIntReader"
+
 funcHash160 :: String
 funcHash160 = "hash160"
 
@@ -98,12 +102,6 @@ funcPropagateState = "propagateState"
 
 funcCheckInitBalance :: String
 funcCheckInitBalance = "checkInitBalance"
-
-funcValue :: String
-funcValue = "value"
-
-funcIsFirstCall :: String
-funcIsFirstCall = "isFirstCall"
 
 varTxPreimage :: String
 varTxPreimage = "txPreimage"

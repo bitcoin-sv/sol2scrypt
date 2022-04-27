@@ -270,7 +270,7 @@ toIRFuncBody blk@(Sol.Block _ _) vis wrapperFromParam (FuncRetTransResult _ ort 
                     [IR.Param (ElementaryType IR.Int) (IR.ReservedId varContractBalance)]
                     [ IR.BinaryExpr
                         Add
-                        (libCallExpr libSigHash funcValue [ridExpr varTxPreimage])
+                        (libCallExpr libSigHash varValue [ridExpr varTxPreimage])
                         (ridExpr varMsgValue)
                     ]
 
@@ -323,7 +323,7 @@ transForPreimageFunc balanceChanged =
             [ IdentifierExpr (IR.ReservedId varTxPreimage),
               let prevBalance =
                     IR.FunctionCallExpr
-                      (IR.MemberAccessExpr (IdentifierExpr (IR.ReservedId libSigHash)) (IR.Identifier "value"))
+                      (IR.MemberAccessExpr (IdentifierExpr (IR.ReservedId libSigHash)) (IR.Identifier varValue))
                       [IdentifierExpr (IR.ReservedId varTxPreimage)]
                in if balanceChanged
                     then IdentifierExpr $ IR.ReservedId varContractBalance
@@ -365,7 +365,7 @@ msgSenderExpr :: Sol.Expression SourceRange
 msgSenderExpr = Sol.MemberAccess (Sol.Literal (PrimaryExpressionIdentifier (Sol.Identifier "msg" defaultSourceRange))) (Sol.Identifier "sender" defaultSourceRange) defaultSourceRange
 
 msgValueExpr :: Sol.Expression SourceRange
-msgValueExpr = Sol.MemberAccess (Sol.Literal (PrimaryExpressionIdentifier (Sol.Identifier "msg" defaultSourceRange))) (Sol.Identifier "value" defaultSourceRange) defaultSourceRange
+msgValueExpr = Sol.MemberAccess (Sol.Literal (PrimaryExpressionIdentifier (Sol.Identifier "msg" defaultSourceRange))) (Sol.Identifier varValue defaultSourceRange) defaultSourceRange
 
 toIRConstructorParams :: ParameterList SourceRange -> [FunctionDefinitionTag SourceRange] -> Block SourceRange -> Transformation (IParamList', TFStmtWrapper)
 toIRConstructorParams (ParameterList pl) _ funcBlk = do
@@ -530,7 +530,7 @@ buildPropagateStateFunc =
           [ IR.FunctionCallExpr
               (IR.MemberAccessExpr (IdentifierExpr (IR.ReservedId libUtils)) (IR.Identifier "buildOutput"))
               [ IdentifierExpr (IR.ReservedId varOutputScript),
-                IdentifierExpr (IR.Identifier funcValue)
+                IdentifierExpr (IR.Identifier varValue)
               ]
           ],
         -- add `retrun hash256(output) == SigHash.hashOutputs(txPreimage);`
@@ -569,11 +569,11 @@ buildCheckInitBalanceFunc =
   where
     body =
       [ IR.IfStmt
-          (libCallExpr libUtils funcIsFirstCall [ridExpr varTxPreimage])
+          (libCallExpr libVarIntReader "isFirstCall" [ridExpr varTxPreimage])
           ( IR.RequireStmt $
               IR.BinaryExpr
                 IR.Equal
-                (libCallExpr libSigHash funcValue [ridExpr varTxPreimage])
+                (libCallExpr libSigHash varValue [ridExpr varTxPreimage])
                 -- (IR.BinaryExpr Dot thisExpr (idExpr varInitBalance))
                 (IR.MemberAccessExpr thisExpr (IR.ReservedId varInitBalance))
           )

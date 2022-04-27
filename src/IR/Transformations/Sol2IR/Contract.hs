@@ -42,9 +42,9 @@ instance ToIRTransformable (ContractDefinition SourceRange) IContract' where
             )
             ([], [])
             cps
-    -- process other parts first
+    -- process other parts first, bcoz ctor may have `msg.value` which would have effect on other public functions transpiling.
     nonFs' <- mapM _toIR nonFs
-    -- process functions then
+    -- process other functions next
     fs' <- mapM _toIR fs
     leaveScope
     let cps' = nonFs' ++ fs'
@@ -55,9 +55,9 @@ instance ToIRTransformable (ContractDefinition SourceRange) IContract' where
     let initBalanceParts =
           if needInitBalance
             then
-              [ -- property `initBalance`
+              [ -- add property `initBalance`
                 IR.PropertyDefinition $ IR.Property (IR.ReservedId varInitBalance) (ElementaryType IR.Int) Default Nothing (IsConst True) (IsStatic False) (IsState False),
-                -- function `checkInitBalance`
+                -- add function `checkInitBalance`
                 buildCheckInitBalanceFunc
               ]
             else []

@@ -33,6 +33,7 @@ instance Generable (Scr.Param a, Bool) where
   genCode (p, _) = genCode p
 
 instance Generable (Scr.Param a) where
+  -- for state properties
   genCode (Param (TypeAnn pt _) pn (Const isConst) _ vis (IsStateProp True) _) = do
     vis' <- genCode vis
     pt' <- genCode pt
@@ -41,6 +42,7 @@ instance Generable (Scr.Param a) where
         visStr = if vis /= Default then vis' ++ " " else ""
     pStr' <- withIndent $ visStr ++ constStr ++ pt' ++ " " ++ pn' ++ ";"
     withIndent $ "@state" ++ pStr'
+  -- for common paremeters, such as function param or struct fields
   genCode (Param (TypeAnn pt _) pn _ _ _ _ _) = do
     pt' <- genCode pt
     pn' <- genCode pn
