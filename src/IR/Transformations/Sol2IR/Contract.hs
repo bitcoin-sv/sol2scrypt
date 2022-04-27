@@ -56,7 +56,7 @@ instance ToIRTransformable (ContractDefinition SourceRange) IContract' where
           if needInitBalance
             then
               [ -- property `initBalance`
-                IR.PropertyDefinition $ IR.Param (ElementaryType IR.Int) $ IR.ReservedId varInitBalance,
+                IR.PropertyDefinition $ IR.Property (IR.ReservedId varInitBalance) (ElementaryType IR.Int) Default Nothing (IsConst True) (IsStatic False) (IsState False),
                 -- function `checkInitBalance`
                 buildCheckInitBalanceFunc
               ]
@@ -86,9 +86,9 @@ instance ToIRTransformable (Sol.PragmaDirective SourceRange) IR.IEmpty where
 
 instance ToIRTransformable (Sol.ContractPart SourceRange) IContractBodyElement' where
   _toIR (Sol.ContractPartStateVariableDeclaration e _) = do
-    e' :: IStateVariable' <- _toIR e
-    addSym $ Symbol <$> (stateVarName <$> e') <*> (stateVarType <$> e') <*> Just True <*> (stateIsConstant <$> e') <*> Just False
-    return $ IR.StateVariableDeclaration <$> e'
+    e' :: IProperty' <- _toIR e
+    addSym $ Symbol <$> (propName <$> e') <*> (propType <$> e') <*> Just True <*> (unConst . propIsConstant <$> e') <*> Just False
+    return $ IR.PropertyDefinition <$> e'
   _toIR Sol.ContractPartEventDefinition {} = return Nothing -- TODO: report info: `event definition will be ignored`
   _toIR func@Sol.ContractPartFunctionDefinition {} = do
     enterScope

@@ -21,8 +21,7 @@ data ILibrary = Library
   deriving (Show, Eq, Ord)
 
 data IContractBodyElement
-  = StateVariableDeclaration IStateVariable
+  = PropertyDefinition IProperty
   | ConstructorDefinition IConstructor
   | FunctionDefinition IFunction
-  | PropertyDefinition IParam
   deriving (Show, Eq, Ord)

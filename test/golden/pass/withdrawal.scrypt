@@ -7,7 +7,8 @@ contract WithdrawalContract {
 
   @state
   HashedMap<PubKeyHash, int> pendingWithdrawals;
-int initBalance
+
+  const int initBalance;
 
   constructor(int msgValue, PubKeyHash msgSender) {
     this.richest = msgSender;

@@ -32,8 +32,7 @@ instance ToScryptTransformable IR.IContract (Scr.Contract Ann) where
         map _toScrypt $
           filter
             ( \case
-                IR.StateVariableDeclaration (IR.StateVariable _ _ _ _ False _) -> True
-                IR.PropertyDefinition {} -> True
+                IR.PropertyDefinition (IR.Property _ _ _ _ _ (IsStatic False) _) -> True
                 _ -> False
             )
             bodyElems
@@ -41,7 +40,7 @@ instance ToScryptTransformable IR.IContract (Scr.Contract Ann) where
         map _toScrypt $
           filter
             ( \case
-                IR.StateVariableDeclaration (IR.StateVariable _ _ _ _ True _) -> True
+                IR.PropertyDefinition (IR.Property _ _ _ _ _ (IsStatic True) _) -> True
                 _ -> False
             )
             bodyElems
@@ -70,7 +69,7 @@ instance ToScryptTransformable IR.ILibrary (Scr.Contract Ann) where
         map _toScrypt $
           filter
             ( \case
-                IR.StateVariableDeclaration (IR.StateVariable _ _ _ _ True _) -> True
+                IR.PropertyDefinition (IR.Property _ _ _ _ _ (IsStatic True) _) -> True
                 _ -> False
             )
             bodyElems
@@ -87,14 +86,12 @@ instance ToScryptTransformable IContractBodyElement' (Maybe (Scr.Param Ann)) whe
   _toScrypt = (<$>) _toScrypt
 
 instance ToScryptTransformable IR.IContractBodyElement (Scr.Param Ann) where
-  _toScrypt (IR.StateVariableDeclaration stateVar) = _toScrypt stateVar
-  _toScrypt (IR.PropertyDefinition prop) = _toScrypt prop
-
+  _toScrypt (IR.PropertyDefinition stateVar) = _toScrypt stateVar
 
 instance ToScryptTransformable IContractBodyElement' (Maybe (Scr.Static Ann)) where
   _toScrypt = (<$>) _toScrypt
 instance ToScryptTransformable IR.IContractBodyElement  (Scr.Static Ann) where
-  _toScrypt (IR.StateVariableDeclaration stateVar) = _toScrypt stateVar
+  _toScrypt (IR.PropertyDefinition prop) = _toScrypt prop
 
 instance ToScryptTransformable IR.IContractBodyElement (Scr.Function Ann) where
   _toScrypt (IR.FunctionDefinition function) = _toScrypt function

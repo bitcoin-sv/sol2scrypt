@@ -14,28 +14,28 @@ instance Generable (Maybe (Scr.Contract Ann)) where
   genCode = maybe (return "") genCode
 
 instance Generable (Scr.Contract Ann) where
-  genCode (Scr.Contract cn _ props stateProps maybector fs False _) = do
+  genCode (Scr.Contract cn _ props staticProps maybector fs False _) = do
     cn' <- genCode cn
     let firstLine = "contract " ++ cn' ++ " {"
     incIndent
     ctor' <- genCode maybector
-    props' <- mapM genCode props
-    stateProps' <- mapM genCode stateProps
+    props' <- mapM (\p -> genCode (p, True)) props
+    staticProps' <- mapM genCode staticProps
     fs' <- mapM genCode fs
     decIndent
     let lastLine = "\n}"
-    return $ firstLine ++ intercalate "\n" (props' ++ stateProps' ++ ([ctor' | ctor' /= ""]) ++ fs') ++ lastLine
-  genCode (Scr.Contract cn _ props stateProps maybector fs True _) = do
+    return $ firstLine ++ intercalate "\n" (props' ++ staticProps' ++ ([ctor' | ctor' /= ""]) ++ fs') ++ lastLine
+  genCode (Scr.Contract cn _ props staticProps maybector fs True _) = do
     cn' <- genCode cn
     let firstLine = "library " ++ cn' ++ " {"
     incIndent
     ctor' <- genCode maybector
     props' <- mapM genCode props
-    stateProps' <- mapM genCode stateProps
+    staticProps' <- mapM genCode staticProps
     fs' <- mapM genCode fs
     decIndent
     let lastLine = "\n}"
-    return $ firstLine ++ intercalate "\n" (props' ++ stateProps' ++ ([ctor' | ctor' /= ""]) ++ fs') ++ lastLine
+    return $ firstLine ++ intercalate "\n" (props' ++ staticProps' ++ ([ctor' | ctor' /= ""]) ++ fs') ++ lastLine
 
 
 instance Generable (Maybe (Scr.Constructor Ann)) where

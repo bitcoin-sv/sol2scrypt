@@ -68,8 +68,8 @@ spec = testSpec "Transpile Variable" $ do
         [("unsupported state variable with initial value", newSR (1, 1) (1, 13))]
       itPropertyReportError "uint[] aa;" 
         [("array length should be explicitly specified", newSR (1, 1) (1, 7))]
-      itPropertyReportError "address immutable owner = msg.sender;" 
-        [("unsupported state variable with initial value", newSR (1, 1) (1, 38))]
+      itPropertyReportError "address owner = msg.sender;" 
+        [("unsupported state variable with initial value", newSR (1, 1) (1, 28))]
       itPropertyReportError "address payable a;" 
         [("unsupported type: `address payable`", newSR (1, 1) (1, 16))]  
   describe "#Parameter" $ do

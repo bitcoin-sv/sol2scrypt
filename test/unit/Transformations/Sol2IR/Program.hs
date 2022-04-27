@@ -25,7 +25,7 @@ contract SimpleStorage {
 
   constructor() {}
 }   
-|]  (Program {programImports = [], programContracts = [Contract {contractName = IR.Identifier "SimpleStorage", contractBody = [IR.StateVariableDeclaration (StateVariable {stateVarName = IR.Identifier "storedData", stateVarType = ElementaryType Int, stateVisibility = Default, stateInitialValue = Nothing, stateIsConstant = False, stateIsImmutable = False}),ConstructorDefinition (Constructor {ctorParams = ParamList [], ctorBody = IR.Block []})]}], programLibraries = [], programStructs = []})
+|]  (Program {programImports = [], programContracts = [Contract {contractName = IR.Identifier "SimpleStorage", contractBody = [IR.PropertyDefinition (Property {propName = IR.Identifier "storedData", propType = ElementaryType Int, propVisibility = Default, propInitialValue = Nothing, propIsConstant = (IsConst False), propIsStatic = (IsStatic False), propIsState = (IsState True)}),ConstructorDefinition (Constructor {ctorParams = ParamList [], ctorBody = IR.Block []})]}], programLibraries = [], programStructs = []})
 
 
   describe "#Program with pragma and import" $ do
@@ -40,7 +40,7 @@ contract SimpleStorage {
 
   constructor() {}
 }   
-|]  (Program {programImports = [IR.ImportDirective "./myLovelyLovelyLib.scrypt"], programContracts = [IR.Contract {contractName = IR.Identifier "SimpleStorage", contractBody = [IR.StateVariableDeclaration (IR.StateVariable {stateVarName = IR.Identifier "storedData", stateVarType = ElementaryType Int, stateVisibility = Default, stateInitialValue = Nothing, stateIsConstant = False, stateIsImmutable = False}),ConstructorDefinition (Constructor {ctorParams = ParamList [], ctorBody = IR.Block []})]}], programLibraries = [], programStructs = []})
+|]  (Program {programImports = [IR.ImportDirective "./myLovelyLovelyLib.scrypt"], programContracts = [IR.Contract {contractName = IR.Identifier "SimpleStorage", contractBody = [IR.PropertyDefinition (IR.Property {propName = IR.Identifier "storedData", propType = ElementaryType Int, propVisibility = Default, propInitialValue = Nothing, propIsConstant = (IsConst False), propIsStatic = (IsStatic False), propIsState = (IsState True)}),ConstructorDefinition (Constructor {ctorParams = ParamList [], ctorBody = IR.Block []})]}], programLibraries = [], programStructs = []})
 
 
   describe "#Program with pragma and multi import" $ do
