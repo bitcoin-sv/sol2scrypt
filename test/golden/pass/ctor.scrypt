@@ -5,6 +5,9 @@ contract Ctor {
   @state
   PubKeyHash addr;
 
+  @state
+  int userDefined_initBalance;
+
   const int initBalance;
 
   constructor(int msgValue, PubKeyHash msgSender) {
@@ -15,15 +18,28 @@ contract Ctor {
   }
 
   public function set(int x, SigHashPreimage txPreimage, int msgValue) {
-    this.checkInitBalance(txPreimage);
+    require(this.checkInitBalance(txPreimage));
     int contractBalance = SigHash.value(txPreimage) + msgValue;
-    require(msgValue > 0);
+    require(msgValue >= 0);
     this.storedData = x + msgValue;
     require(this.propagateState(txPreimage, contractBalance));
   }
 
   function get() : int {
     return this.storedData;
+  }
+
+  function userDefined_checkInitBalance() : int {
+    return 1;
+  }
+
+  public function userDefined_propagateState(SigHashPreimage txPreimage, int msgValue) {
+    require(this.checkInitBalance(txPreimage));
+    int contractBalance = SigHash.value(txPreimage) + msgValue;
+    require(msgValue >= 0);
+    int userDefined_contractBalance = msgValue;
+    int userDefined_msgValue = 15;
+    require(this.propagateState(txPreimage, contractBalance));
   }
 
   function propagateState(SigHashPreimage txPreimage, int value) : bool {
@@ -34,8 +50,6 @@ contract Ctor {
   }
 
   function checkInitBalance(SigHashPreimage txPreimage) : bool {
-    if (VarIntReader.isFirstCall(txPreimage))
-      require(SigHash.value(txPreimage) == this.initBalance);
-    return true;
+    return !VarIntReader.isFirstCall(txPreimage) || SigHash.value(txPreimage) == this.initBalance;
   }
 }

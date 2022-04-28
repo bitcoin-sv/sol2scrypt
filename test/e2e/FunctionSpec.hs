@@ -746,7 +746,7 @@ public function get(PubKeyHash addr, SigHashPreimage txPreimage, Sig sig, PubKey
       [r|
 public function get(SigHashPreimage txPreimage, int msgValue) {
   int contractBalance = SigHash.value(txPreimage) + msgValue;
-  require(msgValue > 0);
+  require(msgValue >= 0);
   int amt = msgValue;
   require(this.propagateState(txPreimage, contractBalance));
 }|]

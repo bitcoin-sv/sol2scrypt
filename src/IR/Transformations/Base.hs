@@ -113,7 +113,7 @@ data Symbol = Symbol
     symbolType :: IType,
     symbolStateVar :: Bool,
     symbolIsConstant :: Bool,
-    symbolStaticFunc :: Bool
+    symbolStatic :: Bool
   }
   deriving (Show, Eq, Ord)
 

@@ -18,7 +18,7 @@ maybeStateVarId (Just i) = do
   s <- lookupSym i
   i' <- case s of
     -- append prefix `this.` for state variables
-    Just (Symbol _ _ True False _) -> return $ IR.Identifier $ "this." ++ IR.unIdentifier i
+    Just (Symbol _ _ True _ False) -> return $ IR.Identifier $ "this." ++ IR.unIdentifier i
     _ -> return i
   return $ Just i'
 

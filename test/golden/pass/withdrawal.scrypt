@@ -17,11 +17,11 @@ contract WithdrawalContract {
   }
 
   public function becomeRichest(SigHashPreimage txPreimage, int msgValue, Sig sig, PubKey pubKey, int this_pendingWithdrawals_this_richest, int this_pendingWithdrawals_this_richest_index) {
-    this.checkInitBalance(txPreimage);
+    require(this.checkInitBalance(txPreimage));
     int contractBalance = SigHash.value(txPreimage) + msgValue;
     PubKeyHash msgSender = hash160(pubKey);
     require(checkSig(sig, pubKey));
-    require(msgValue > 0);
+    require(msgValue >= 0);
     if (msgValue <= this.mostSent)
       require(false);
     require((!this.pendingWithdrawals.has(this.richest, this_pendingWithdrawals_this_richest_index) && this_pendingWithdrawals_this_richest == 0) || this.pendingWithdrawals.canGet(this.richest, this_pendingWithdrawals_this_richest, this_pendingWithdrawals_this_richest_index));
@@ -33,7 +33,7 @@ contract WithdrawalContract {
   }
 
   public function withdraw(SigHashPreimage txPreimage, Sig sig, PubKey pubKey, int this_pendingWithdrawals_msgSender, int this_pendingWithdrawals_msgSender_index) {
-    this.checkInitBalance(txPreimage);
+    require(this.checkInitBalance(txPreimage));
     PubKeyHash msgSender = hash160(pubKey);
     require(checkSig(sig, pubKey));
     require((!this.pendingWithdrawals.has(msgSender, this_pendingWithdrawals_msgSender_index) && this_pendingWithdrawals_msgSender == 0) || this.pendingWithdrawals.canGet(msgSender, this_pendingWithdrawals_msgSender, this_pendingWithdrawals_msgSender_index));
@@ -51,8 +51,6 @@ contract WithdrawalContract {
   }
 
   function checkInitBalance(SigHashPreimage txPreimage) : bool {
-    if (VarIntReader.isFirstCall(txPreimage))
-      require(SigHash.value(txPreimage) == this.initBalance);
-    return true;
+    return !VarIntReader.isFirstCall(txPreimage) || SigHash.value(txPreimage) == this.initBalance;
   }
 }

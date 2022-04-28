@@ -6,6 +6,8 @@ contract Ctor {
 
     address addr;
 
+    uint initBalance;
+
      constructor() payable {
         storedData = 0;
         addr = msg.sender;
@@ -18,5 +20,14 @@ contract Ctor {
 
     function get() public view returns (uint) {
         return storedData;
+    }
+
+    function checkInitBalance() public view returns (uint) {
+        return 1;
+    }
+
+    function propagateState() external {
+        uint contractBalance = msg.value;
+        uint msgValue = 15;
     }
 }

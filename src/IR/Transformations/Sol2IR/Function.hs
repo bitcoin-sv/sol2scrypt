@@ -282,10 +282,10 @@ toIRFuncBody blk@(Sol.Block _ _) vis wrapperFromParam (FuncRetTransResult _ ort 
                 callCheckInitBalance : stmts5
               else stmts5
             where
-              -- call `this.checkInitBalance(txPreimage);`
+              -- call `require(this.checkInitBalance(txPreimage));`
               callCheckInitBalance =
                 Just $
-                  IR.ExprStmt $
+                  IR.RequireStmt $
                     IR.FunctionCallExpr
                       (IR.MemberAccessExpr thisExpr (IR.ReservedId funcCheckInitBalance))
                       [ridExpr varTxPreimage]
@@ -354,11 +354,11 @@ transForFuncWithMsgSender =
 transForFuncWithMsgValue :: ([IParam], TFStmtWrapper)
 transForFuncWithMsgValue =
   ( [IR.Param (ElementaryType IR.Int) $ IR.ReservedId varMsgValue],
-    TFStmtWrapper 
-      [
-        -- require(msgValue > 0);
-        IR.RequireStmt $ IR.BinaryExpr IR.GreaterThan (ridExpr varMsgValue) $ LiteralExpr $ IR.IntLiteral False 0
-      ] []
+    TFStmtWrapper
+      [ -- require(msgValue >= 0);
+        IR.RequireStmt $ IR.BinaryExpr IR.GreaterThanOrEqual (ridExpr varMsgValue) $ LiteralExpr $ IR.IntLiteral False 0
+      ]
+      []
   )
 
 msgSenderExpr :: Sol.Expression SourceRange
@@ -546,13 +546,10 @@ buildPropagateStateFunc =
 {--
   Build function as below:
     function checkInitBalance(SigHashPreimage txPreimage) : bool {
-      if (Util.isFirstCall(txPreimage)) {
-        require(SigHash.value(txPreimage) == this.initBalance);
-      }
-      return true;
+      return !VarIntReader.isFirstCall(txPreimage) || SigHash.value(txPreimage) == this.initBalance;
     }
 
-  in this way, we can call `this.checkInitBalance(txPreimage);` in other public functions
+  in this way, we can call `require(this.checkInitBalance(txPreimage));` in other public functions
 --}
 buildCheckInitBalanceFunc :: IR.IContractBodyElement
 buildCheckInitBalanceFunc =
@@ -568,17 +565,15 @@ buildCheckInitBalanceFunc =
       False
   where
     body =
-      [ IR.IfStmt
-          (libCallExpr libVarIntReader "isFirstCall" [ridExpr varTxPreimage])
-          ( IR.RequireStmt $
-              IR.BinaryExpr
+      [ IR.ReturnStmt $
+          IR.BinaryExpr
+            IR.BoolOr
+            (IR.UnaryExpr IR.Not (libCallExpr libVarIntReader "isFirstCall" [ridExpr varTxPreimage]))
+            ( IR.BinaryExpr
                 IR.Equal
                 (libCallExpr libSigHash varValue [ridExpr varTxPreimage])
-                -- (IR.BinaryExpr Dot thisExpr (idExpr varInitBalance))
                 (IR.MemberAccessExpr thisExpr (IR.ReservedId varInitBalance))
-          )
-          Nothing,
-        IR.ReturnStmt $ IR.LiteralExpr $ IR.BoolLiteral True
+            )
       ]
 
 -- id expression

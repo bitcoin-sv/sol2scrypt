@@ -11,6 +11,7 @@ module IR.Transformations.Sol2IR.Contract where
 import Control.Monad.Except
 import Control.Monad.State
 import Data.Either
+import Data.List
 import Data.Maybe
 import IR.Spec as IR
 import IR.Transformations.Base
@@ -31,23 +32,22 @@ instance ToIRTransformable (ContractDefinition SourceRange) IContract' where
     enterScope
     enterLibrary False
     preprocessFunctionNames cps
-
-    -- split functions from other parts
-    let (fs, nonFs) =
-          foldr
-            ( \part (funcs, others) ->
-                case part of
-                  f@ContractPartFunctionDefinition {} -> (f : funcs, others)
-                  _ -> (funcs, part : others)
-            )
-            ([], [])
-            cps
-    -- process other parts first, bcoz ctor may have `msg.value` which would have effect on other public functions transpiling.
-    nonFs' <- mapM _toIR nonFs
-    -- process other functions next
-    fs' <- mapM _toIR fs
+    cps' <-
+      mapM (_toIR . fst) $
+        sortBy
+          (\a b -> compare (snd b) (snd a))
+          $map
+          ( \part -> case part of
+              -- functions has lower priority
+              ContractPartFunctionDefinition {} -> (part, 0 :: Integer)
+              -- ctor has mid priority
+              -- bcoz ctor may have `msg.value` which would have effect on other public functions transpiling.
+              ContractPartConstructorDefinition {} -> (part, 1)
+              -- properties has higher priority
+              _ -> (part, 2)
+          )
+          cps
     leaveScope
-    let cps' = nonFs' ++ fs'
     let appendPropagateState = findPreimageFunction cps'
     let propagateStateFunc = [buildPropagateStateFunc | appendPropagateState]
 
@@ -87,7 +87,7 @@ instance ToIRTransformable (Sol.PragmaDirective SourceRange) IR.IEmpty where
 instance ToIRTransformable (Sol.ContractPart SourceRange) IContractBodyElement' where
   _toIR (Sol.ContractPartStateVariableDeclaration e _) = do
     e' :: IProperty' <- _toIR e
-    addSym $ Symbol <$> (propName <$> e') <*> (propType <$> e') <*> Just True <*> (unConst . propIsConstant <$> e') <*> Just False
+    addSym $ Symbol <$> (propName <$> e') <*> (propType <$> e') <*> Just True <*> (unConst . propIsConstant <$> e') <*> (unStatic . propIsStatic <$> e')
     return $ IR.PropertyDefinition <$> e'
   _toIR Sol.ContractPartEventDefinition {} = return Nothing -- TODO: report info: `event definition will be ignored`
   _toIR func@Sol.ContractPartFunctionDefinition {} = do
