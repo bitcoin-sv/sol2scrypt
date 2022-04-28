@@ -5,6 +5,7 @@
 
 module IR.Transformations.Sol2IR.Variable where
 
+import Data.Maybe
 import IR.Spec as IR
 import IR.Transformations.Base
 import IR.Transformations.Sol2IR.Expression ()
@@ -28,18 +29,23 @@ instance ToIRTransformable (VariableDeclaration SourceRange) IParam' where
     return $ IR.Param <$> t' <*> i'
 
 
-instance ToIRTransformable (Sol.StateVariableDeclaration SourceRange) IStateVariable' where
+instance ToIRTransformable (Sol.StateVariableDeclaration SourceRange) IProperty' where
   _toIR (Sol.StateVariableDeclaration t vis i expr a) = do
     t' <- _toIR t
     vis' <- toIRVisibility vis
     i' <- _toIR i
     expr' <- _toIR expr
-    isConstant' <- isConstant vis
-    isImmutable' <- isImmutable vis
-    case (isConstant', expr') of 
-      (False, Just _)  -> reportError "unsupported state variable with initial value" a >> return Nothing
-      (True , Nothing)  -> return Nothing
-      _ -> return $ IR.StateVariable <$> i' <*> t' <*> Just vis' <*> Just expr' <*> Just isConstant' <*> Just isImmutable' 
+    let solConst = isSolConstant vis
+    let solImmu = isSolImmutable vis
+
+    let irStatic = isJust expr
+        irConst = solConst || solImmu
+        irState = not solConst && not solImmu
+
+    case (irState, irStatic, irStatic == isJust expr') of
+      (True, True, _) -> reportError "unsupported state variable with initial value" a >> return Nothing
+      (_, _, False) -> return Nothing -- unsupported `expr`
+      _ -> return $ IR.Property <$> i' <*> t' <*> Just vis' <*> Just expr' <*> Just (IsConst irConst) <*> Just (IsStatic irStatic) <*> Just (IsState irState)
 
 toIRVisibility :: [String] -> Transformation IVisibility
 toIRVisibility tags
@@ -47,8 +53,8 @@ toIRVisibility tags
   | "public" `elem` tags = return Public
   | otherwise = return Default
 
-isConstant :: [String] -> Transformation Bool 
-isConstant = return . elem "constant"
+isSolConstant :: [String] -> Bool 
+isSolConstant = elem "constant"
 
-isImmutable :: [String] -> Transformation Bool 
-isImmutable = return . elem "immutable"
+isSolImmutable :: [String] -> Bool 
+isSolImmutable = elem "immutable"

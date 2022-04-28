@@ -49,7 +49,7 @@ contract Todos {
     require((!this.mapTodos.has(owner, this_mapTodos_owner_index) && this_mapTodos_owner == {"", false}) || this.mapTodos.canGet(owner, this_mapTodos_owner, this_mapTodos_owner_index));
     this_mapTodos_owner = {_text, true};
     require(this.mapTodos.set(owner, this_mapTodos_owner, this_mapTodos_owner_index));
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   function testReturnStructArray(bytes _text) : Todo[3] {
@@ -81,10 +81,10 @@ contract Todos {
     return true;
   }
 
-  function propagateState(SigHashPreimage txPreimage) : bool {
+  function propagateState(SigHashPreimage txPreimage, int value) : bool {
     require(Tx.checkPreimage(txPreimage));
     bytes outputScript = this.getStateScript();
-    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    bytes output = Utils.buildOutput(outputScript, value);
     return hash256(output) == SigHash.hashOutputs(txPreimage);
   }
 }

@@ -58,6 +58,8 @@ reservedNames =
     funcHash160,
     funcHash256,
     funcCheckSig,
+    funcPropagateState,
+    funcCheckInitBalance,
     varTxPreimage,
     varOutput,
     varOutputScript,
@@ -68,7 +70,9 @@ reservedNames =
     varReturned,
     varRetVal,
     varLoopBreakFlag,
-    varLoopCount
+    varLoopCount,
+    varContractBalance,
+    varInitBalance
   ]
 
 libTx :: String
@@ -88,6 +92,12 @@ funcHash256 = "hash256"
 
 funcCheckSig :: String
 funcCheckSig = "checkSig"
+
+funcPropagateState :: String
+funcPropagateState = "propagateState"
+
+funcCheckInitBalance :: String
+funcCheckInitBalance = "checkInitBalance"
 
 varTxPreimage :: String
 varTxPreimage = "txPreimage"
@@ -124,3 +134,9 @@ varLoopCount = "__LoopCount__"
 
 varLoopContinueFlag :: String
 varLoopContinueFlag = "loopContinueFlag"
+
+varContractBalance :: String
+varContractBalance = "contractBalance"
+
+varInitBalance :: String
+varInitBalance = "initBalance"

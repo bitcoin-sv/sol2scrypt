@@ -37,7 +37,7 @@ spec = testSpec "Transpile Function" $ do
     [r|
 public function set(int x, SigHashPreimage txPreimage) {
   int y = x;
-  require(this.propagateState(txPreimage));
+  require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
 }|]
 
   itTranspile
@@ -48,7 +48,7 @@ public function set(int x, SigHashPreimage txPreimage, int _y) {
   int y = 0;
   y = x;
   require(y == _y);
-  require(this.propagateState(txPreimage));
+  require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
 }|]
 
   itTranspile
@@ -58,7 +58,7 @@ public function set(int x, SigHashPreimage txPreimage, int _y) {
 public function set(int x, SigHashPreimage txPreimage, int retVal) {
   y = x;
   require(y == retVal);
-  require(this.propagateState(txPreimage));
+  require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
 }|]
 
   itTranspile
@@ -67,7 +67,7 @@ public function set(int x, SigHashPreimage txPreimage, int retVal) {
     [r|
 public function set(int x, SigHashPreimage txPreimage) {
   storedData = x;
-  require(this.propagateState(txPreimage));
+  require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
 }|]
 
   itTranspile
@@ -78,7 +78,7 @@ public function set(int x, SigHashPreimage txPreimage, int _y) {
   int y = 0;
   y = x;
   require(y == _y);
-  require(this.propagateState(txPreimage));
+  require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
 }|]
 
   itTranspile
@@ -609,13 +609,13 @@ private function _approve(PubKeyHash owner, PubKeyHash to, int tokenId) : bool {
       "function get() external payable { return ; }"
       [r|
 public function get(SigHashPreimage txPreimage) {
-  require(this.propagateState(txPreimage));
+  require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
 }|]
 
     itTranspile
       "view external get function with return type"
       "function get() external view returns (uint) { return storedData; }"
-      "\npublic function get(SigHashPreimage txPreimage, int retVal) {\n  require(storedData == retVal);\n  require(this.propagateState(txPreimage));\n}"
+      "\npublic function get(SigHashPreimage txPreimage, int retVal) {\n  require(storedData == retVal);\n  require(this.propagateState(txPreimage, SigHash.value(txPreimage)));\n}"
 
     itTranspile
       "pure external get function with return type"
@@ -623,7 +623,7 @@ public function get(SigHashPreimage txPreimage) {
       [r|
 public function get2(SigHashPreimage txPreimage, int retVal) {
   require(1 + 1 == retVal);
-  require(this.propagateState(txPreimage));
+  require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
 }|]
 
     itTranspile
@@ -631,16 +631,16 @@ public function get2(SigHashPreimage txPreimage, int retVal) {
       "function get() external view { return x; }"
       [r|
 public function get(SigHashPreimage txPreimage) {
-  require(this.propagateState(txPreimage));
+  require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
 }|]
 
     itTranspile
       "payable get function"
       "function get() external payable { return x; }"
-      -- "public function get(SigHashPreimage txPreimage) { require(Tx.checkPreimage(txPreimage)); bytes outputScript = this.getStateScript(); bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage)); require(hash256(output) == SigHash.hashOutputs(txPreimage)); require(x == retVal); }"
+      -- "public function get(SigHashPreimage txPreimage) { require(Tx.checkPreimage(txPreimage)); bytes outputScript = this.getStateScript(); bytes output = Utils.buildOutput(outputScript, value); require(hash256(output) == SigHash.hashOutputs(txPreimage)); require(x == retVal); }"
       [r|
 public function get(SigHashPreimage txPreimage) {
-  require(this.propagateState(txPreimage));
+  require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
 }|]
 
     itTranspile
@@ -649,7 +649,7 @@ public function get(SigHashPreimage txPreimage) {
       [r|
 public function set(int x, SigHashPreimage txPreimage) {
   storedData = x;
-  require(this.propagateState(txPreimage));
+  require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
 }|]
 
     itTranspile
@@ -658,7 +658,7 @@ public function set(int x, SigHashPreimage txPreimage) {
       [r|
 public function set(int x, SigHashPreimage txPreimage) {
   storedData = x;
-  require(this.propagateState(txPreimage));
+  require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
 }|]
 
     itTranspile
@@ -668,7 +668,7 @@ public function set(int x, SigHashPreimage txPreimage) {
 public function set(int x, SigHashPreimage txPreimage, int retVal) {
   storedData = x;
   require(storedData == retVal);
-  require(this.propagateState(txPreimage));
+  require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
 }|]
 
     itTranspile
@@ -677,7 +677,7 @@ public function set(int x, SigHashPreimage txPreimage, int retVal) {
       [r|
 public function set(int x, SigHashPreimage txPreimage) {
   storedData = x;
-  require(this.propagateState(txPreimage));
+  require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
 }|]
 
     itTranspile
@@ -686,7 +686,7 @@ public function set(int x, SigHashPreimage txPreimage) {
       [r|
 public function set(int x, SigHashPreimage txPreimage) {
   storedData = x;
-  require(this.propagateState(txPreimage));
+  require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
 }|]
 
     itTranspile
@@ -695,7 +695,7 @@ public function set(int x, SigHashPreimage txPreimage) {
       [r|
 public function get(SigHashPreimage txPreimage, int retVal) {
   require(storedData == retVal);
-  require(this.propagateState(txPreimage));
+  require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
 }|]
 
 
@@ -713,7 +713,7 @@ public function get(SigHashPreimage txPreimage, int retVal) {
     }
   }
   require(storedData == retVal);
-  require(this.propagateState(txPreimage));
+  require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
 }|]
 
   describe "#msg" $ do
@@ -737,17 +737,18 @@ public function get(PubKeyHash addr, SigHashPreimage txPreimage, Sig sig, PubKey
     PubKeyHash addr1 = msgSender;
   }
   msgSender;
-  require(this.propagateState(txPreimage));
+  require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
 }|]
 
     itTranspile
       "msg.value"
       "function get() external view {uint amt = msg.value;}"
       [r|
-public function get(SigHashPreimage txPreimage) {
-  int msgValue = SigHash.value(txPreimage);
+public function get(SigHashPreimage txPreimage, int msgValue) {
+  int contractBalance = SigHash.value(txPreimage) + msgValue;
+  require(msgValue >= 0);
   int amt = msgValue;
-  require(this.propagateState(txPreimage));
+  require(this.propagateState(txPreimage, contractBalance));
 }|]
 
   describe "#mapping" $ do
@@ -756,7 +757,7 @@ public function get(SigHashPreimage txPreimage) {
             let mapSym = Symbol (IR.Identifier mapName) (Mapping (ElementaryType Address) (ElementaryType IR.Int)) False False False
                 initEnv =  [Map.insert (IR.Identifier mapName) mapSym Map.empty]
             tr :: TranspileResult (Sol.ContractPart SourceRange) IFunction' (Maybe (Scr.Function Ann)) <- 
-                          transpile' (TransformState initEnv Nothing Map.empty [] Map.empty [] 0 [] False Set.empty Set.empty []) sol ""
+                          transpile' (TransformState initEnv Nothing Map.empty [] Map.empty [] 0 [] False Set.empty Set.empty [] False False) sol ""
             scryptCode tr `shouldBe` scrypt
 
     itTranspileWithMapping
@@ -776,7 +777,7 @@ public function send(PubKeyHash receiver, int amount, SigHashPreimage txPreimage
   balances_receiver += amount;
   require(balances.set(msgSender, balances_msgSender, balances_msgSender_index));
   require(balances.set(receiver, balances_receiver, balances_receiver_index));
-  require(this.propagateState(txPreimage));
+  require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
 }|]
 
     itTranspileWithMapping
@@ -796,7 +797,7 @@ public function send(PubKeyHash receiver, int amount, SigHashPreimage txPreimage
   balances_receiver += amount;
   require(balances.set(owner, balances_owner, balances_owner_index));
   require(balances.set(receiver, balances_receiver, balances_receiver_index));
-  require(this.propagateState(txPreimage));
+  require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
 }|]
 
   describe "#ReportError" $ do

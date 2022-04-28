@@ -21,7 +21,7 @@ module IR.Spec
     IBlock',
     IFunction',
     IContractBodyElement',
-    IStateVariable',
+    IProperty',
     IContract',
     IConstructor',
     IProgram',
@@ -63,7 +63,7 @@ type IFunction' = Maybe IFunction
 
 type IConstructor' = Maybe IConstructor
 
-type IStateVariable' = Maybe IStateVariable
+type IProperty' = Maybe IProperty
 
 type IContractBodyElement' = Maybe IContractBodyElement
 

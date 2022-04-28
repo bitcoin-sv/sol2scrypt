@@ -10,9 +10,19 @@
         "message": "unsupported expression: `_other.balance`"
     },
     {
+        "src": "test/golden/fail/address.sol:18:9:18:23",
+        "type": "Error",
+        "message": "unsupported function call: `payable`"
+    },
+    {
         "src": "test/golden/fail/address.sol:22:19:22:34",
         "type": "Error",
         "message": "unsupported type: `address payable`"
+    },
+    {
+        "src": "test/golden/fail/address.sol:23:21:23:29",
+        "type": "Error",
+        "message": "unsupported expression: `_to.send`"
     },
     {
         "src": "test/golden/fail/address.sol:27:19:27:34",

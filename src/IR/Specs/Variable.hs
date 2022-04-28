@@ -1,8 +1,8 @@
 module IR.Specs.Variable where
 
+import IR.Specs.Expression
 import IR.Specs.Lexical
 import IR.Specs.Type
-import IR.Specs.Expression
 
 data IParam = Param
   { paramType :: IType,
@@ -17,14 +17,20 @@ data IVisibility
   | Private
   | Default
   deriving (Show, Eq, Ord)
-  
-data IStateVariable = StateVariable
-  {
-    stateVarName :: IIdentifier,
-    stateVarType :: IType,
-    stateVisibility :: IVisibility,
-    stateInitialValue :: Maybe IExpression,
-    stateIsConstant :: Bool,
-    stateIsImmutable :: Bool
+
+data IProperty = Property
+  { propName :: IIdentifier,
+    propType :: IType,
+    propVisibility :: IVisibility,
+    propInitialValue :: Maybe IExpression,
+    propIsConstant :: IsConst,
+    propIsStatic :: IsStatic,
+    propIsState :: IsState
   }
   deriving (Show, Eq, Ord)
+
+newtype IsConst = IsConst {unConst :: Bool} deriving (Show, Eq, Ord)
+
+newtype IsStatic = IsStatic {unStatic :: Bool} deriving (Show, Eq, Ord)
+
+newtype IsState = IsState {unState :: Bool} deriving (Show, Eq, Ord)

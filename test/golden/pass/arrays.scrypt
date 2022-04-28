@@ -36,7 +36,7 @@ contract Arrays {
     bool[4][3] bools = [[false, false, false], [false, false, false], [false, false, false], [false, false, false]];
     int[3][2] cc = [[0, 0], [0, 0], [0, 0]];
     require(this.todos == retVal);
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   function getByIndex(int k, int x, L l) : bool {
@@ -65,10 +65,10 @@ contract Arrays {
     return k;
   }
 
-  function propagateState(SigHashPreimage txPreimage) : bool {
+  function propagateState(SigHashPreimage txPreimage, int value) : bool {
     require(Tx.checkPreimage(txPreimage));
     bytes outputScript = this.getStateScript();
-    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    bytes output = Utils.buildOutput(outputScript, value);
     return hash256(output) == SigHash.hashOutputs(txPreimage);
   }
 }

@@ -5,26 +5,51 @@ contract Ctor {
   @state
   PubKeyHash addr;
 
+  @state
+  int userDefined_initBalance;
+
+  const int initBalance;
+
   constructor(int msgValue, PubKeyHash msgSender) {
     this.storedData = 0;
     this.addr = msgSender;
     this.storedData = msgValue;
+    this.initBalance = msgValue;
   }
 
-  public function set(int x, SigHashPreimage txPreimage) {
-    int msgValue = SigHash.value(txPreimage);
+  public function set(int x, SigHashPreimage txPreimage, int msgValue) {
+    require(this.checkInitBalance(txPreimage));
+    int contractBalance = SigHash.value(txPreimage) + msgValue;
+    require(msgValue >= 0);
     this.storedData = x + msgValue;
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, contractBalance));
   }
 
   function get() : int {
     return this.storedData;
   }
 
-  function propagateState(SigHashPreimage txPreimage) : bool {
+  function userDefined_checkInitBalance() : int {
+    return 1;
+  }
+
+  public function userDefined_propagateState(SigHashPreimage txPreimage, int msgValue) {
+    require(this.checkInitBalance(txPreimage));
+    int contractBalance = SigHash.value(txPreimage) + msgValue;
+    require(msgValue >= 0);
+    int userDefined_contractBalance = msgValue;
+    int userDefined_msgValue = 15;
+    require(this.propagateState(txPreimage, contractBalance));
+  }
+
+  function propagateState(SigHashPreimage txPreimage, int value) : bool {
     require(Tx.checkPreimage(txPreimage));
     bytes outputScript = this.getStateScript();
-    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    bytes output = Utils.buildOutput(outputScript, value);
     return hash256(output) == SigHash.hashOutputs(txPreimage);
+  }
+
+  function checkInitBalance(SigHashPreimage txPreimage) : bool {
+    return !Tx.isFirstCall(txPreimage) || SigHash.value(txPreimage) == this.initBalance;
   }
 }

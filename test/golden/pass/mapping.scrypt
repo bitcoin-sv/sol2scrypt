@@ -20,7 +20,7 @@ contract MappingTest {
     this_m1_b = a;
     require(this.m1.set(a, this_m1_a, this_m1_a_index));
     require(this.m1.set(b, this_m1_b, this_m1_b_index));
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   public function f2(int a, SigHashPreimage txPreimage, int this_m2_a_a, int this_m2_a_a_index, int this_m2_a_b, int this_m2_a_b_index, int this_m2_b_a, int this_m2_b_a_index) {
@@ -34,13 +34,13 @@ contract MappingTest {
     require(this.m2.set({a, a}, this_m2_a_a, this_m2_a_a_index));
     require(this.m2.set({a, b}, this_m2_a_b, this_m2_a_b_index));
     require(this.m2.set({b, a}, this_m2_b_a, this_m2_b_a_index));
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  function propagateState(SigHashPreimage txPreimage) : bool {
+  function propagateState(SigHashPreimage txPreimage, int value) : bool {
     require(Tx.checkPreimage(txPreimage));
     bytes outputScript = this.getStateScript();
-    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    bytes output = Utils.buildOutput(outputScript, value);
     return hash256(output) == SigHash.hashOutputs(txPreimage);
   }
 }

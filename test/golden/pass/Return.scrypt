@@ -260,7 +260,7 @@ contract Return {
     if (!returned) {
       this.storedData = x;
     }
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   function set1(int x) : bool {
@@ -294,14 +294,14 @@ contract Return {
       this.storedData = x;
     }
     require((returned ? ret : this.storedData) == retVal);
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   public function set3(int x, SigHashPreimage txPreimage, int _y) {
     int y = 0;
     y = x;
     require(y == _y);
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   private function foo() : bool {
@@ -324,21 +324,21 @@ contract Return {
   }
 
   public function foo2(SigHashPreimage txPreimage) {
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   public function get(SigHashPreimage txPreimage) {
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   public function get1(SigHashPreimage txPreimage, int retVal) {
     require(this.storedData == retVal);
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   public function get2(SigHashPreimage txPreimage, int retVal) {
     require(1 + 1 == retVal);
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   public function get3(SigHashPreimage txPreimage, int retVal) {
@@ -349,7 +349,7 @@ contract Return {
       }
     }
     require(this.storedData == retVal);
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   public function unlock(int ab, SigHashPreimage txPreimage) {
@@ -364,13 +364,13 @@ contract Return {
     if (!returned) {
       require(this.storedData == ab);
     }
-    require(this.propagateState(txPreimage));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  function propagateState(SigHashPreimage txPreimage) : bool {
+  function propagateState(SigHashPreimage txPreimage, int value) : bool {
     require(Tx.checkPreimage(txPreimage));
     bytes outputScript = this.getStateScript();
-    bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));
+    bytes output = Utils.buildOutput(outputScript, value);
     return hash256(output) == SigHash.hashOutputs(txPreimage);
   }
 }

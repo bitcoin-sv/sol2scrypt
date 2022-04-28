@@ -32,7 +32,14 @@ data FuncRetTransResult = FuncRetTransResult
 
 instance ToIRTransformable (ContractPart SourceRange) IFunction' where
   _toIR (ContractPartFunctionDefinition (Just (Sol.Identifier fn a)) pl tags maybeRets (Just block) _) = do
-    modify $ \s -> s {stateInFuncMappingCounter = Map.empty, stateInFuncLoopCount = 0, stateInFuncBrokeLoops = Set.empty, stateInFuncContinuedLoops = Set.empty}
+    modify $ \s ->
+      s
+        { stateInFuncMappingCounter = Map.empty,
+          stateInFuncLoopCount = 0,
+          stateInFuncBrokeLoops = Set.empty,
+          stateInFuncContinuedLoops = Set.empty,
+          stateBalanceChanged = False
+        }
     vis <- toIRFuncVis tags
     retTransResult <- toIRFuncRet vis maybeRets
     (ps, blkTfromParam) <- toIRFuncParams pl tags retTransResult vis block
@@ -133,7 +140,11 @@ toIRFuncParams (ParameterList pl) _ (FuncRetTransResult _ ort rn) vis funcBlk = 
     if fst msgValueExist
       then
         if vis == Public
-          then let (ps, blkT_) = transForFuncWithMsgValue in return (map Just ps ++ extraParams1, mergeTFStmtWrapper blkT1 blkT_)
+          then do
+            -- contract's balance got changed if has `msg.value`
+            modify $ \s -> s {stateBalanceChanged = True}
+            let (ps, blkT_) = transForFuncWithMsgValue
+            return (map Just ps ++ extraParams1, mergeTFStmtWrapper blkT1 blkT_)
           else do
             reportError "unsupported using `msg.value` in non-external function" (snd msgValueExist)
             return (extraParams1, blkT1)
@@ -145,7 +156,7 @@ toIRFuncParams (ParameterList pl) _ (FuncRetTransResult _ ort rn) vis funcBlk = 
         | otherwise = False
   let (extraParams3, blkT3) =
         if needPreimageParam
-          then let (ps, blkT_) = transForPreimageFunc in (map Just ps ++ extraParams2, mergeTFStmtWrapper blkT2 blkT_)
+          then let (ps, blkT_) = transForPreimageFunc (fst msgValueExist) in (map Just ps ++ extraParams2, mergeTFStmtWrapper blkT2 blkT_)
           else (extraParams2, blkT2)
 
   let params' = sequence $ params ++ extraParams3
@@ -245,7 +256,41 @@ toIRFuncBody blk@(Sol.Block _ _) vis wrapperFromParam (FuncRetTransResult _ ort 
               then map Just preStmts ++ stmts'''
               else stmts'''
 
-      return $ Right (ParamList pl, IR.Block $ catMaybes stmts4)
+      balanceChanged <- gets stateBalanceChanged
+      let stmts5 =
+            if balanceChanged
+              then -- prepends `contractBalance` declaration
+                declareBalance : stmts4
+              else stmts4
+            where
+              -- `int contractBalance = Sighash.value(txPreimage) + msgValue;`
+              declareBalance =
+                Just $
+                  IR.DeclareStmt
+                    [IR.Param (ElementaryType IR.Int) (IR.ReservedId varContractBalance)]
+                    [ IR.BinaryExpr
+                        Add
+                        (libCallExpr libSigHash varValue [ridExpr varTxPreimage])
+                        (ridExpr varMsgValue)
+                    ]
+
+      needCheckInitBalance <- gets stateNeedInitBalace
+      let stmts6 =
+            -- check initial balance in public functions if needed
+            if needCheckInitBalance && vis == Public
+              then -- prepends checkInitBalance
+                callCheckInitBalance : stmts5
+              else stmts5
+            where
+              -- call `require(this.checkInitBalance(txPreimage));`
+              callCheckInitBalance =
+                Just $
+                  IR.RequireStmt $
+                    IR.FunctionCallExpr
+                      (IR.MemberAccessExpr thisExpr (IR.ReservedId funcCheckInitBalance))
+                      [ridExpr varTxPreimage]
+
+      return $ Right (ParamList pl, IR.Block $ catMaybes stmts6)
 
 mirror :: IIdentifier' -> IIdentifier
 mirror (Just (IR.Identifier i)) = IR.Identifier ("_" ++ i)
@@ -261,18 +306,29 @@ declareLocalVarStmt :: IParam' -> IExpression -> [IStatement]
 declareLocalVarStmt Nothing _ = []
 declareLocalVarStmt (Just p) e = [IR.DeclareStmt [p] [e]]
 
+varValue :: String
+varValue = "value"
+
 -- transformations for functions that need access preimage
-transForPreimageFunc :: ([IParam], TFStmtWrapper)
-transForPreimageFunc =
+transForPreimageFunc :: Bool -> ([IParam], TFStmtWrapper)
+transForPreimageFunc balanceChanged =
   ( [IR.Param (BuiltinType "SigHashPreimage") $ IR.ReservedId varTxPreimage],
     TFStmtWrapper
       []
       -- appends statements
-      [ -- require(this.propagateState(preimage));
+      [ -- require(this.propagateState(preimage, <balanceChanged ? SigHash.value(preimage) + msgValue: SigHash.value(preiamge)> ));
         IR.RequireStmt $
           IR.FunctionCallExpr
-            (IR.MemberAccessExpr (IdentifierExpr (IR.Identifier "this")) (IR.Identifier "propagateState"))
-            [IdentifierExpr (IR.ReservedId varTxPreimage)]
+            (IR.MemberAccessExpr thisExpr (IR.ReservedId funcPropagateState))
+            [ IdentifierExpr (IR.ReservedId varTxPreimage),
+              let prevBalance =
+                    IR.FunctionCallExpr
+                      (IR.MemberAccessExpr (IdentifierExpr (IR.ReservedId libSigHash)) (IR.Identifier varValue))
+                      [IdentifierExpr (IR.ReservedId varTxPreimage)]
+               in if balanceChanged
+                    then IdentifierExpr $ IR.ReservedId varContractBalance
+                    else prevBalance
+            ]
       ]
   )
 
@@ -297,15 +353,10 @@ transForFuncWithMsgSender =
 -- transformations for functions that uses `msg.value`
 transForFuncWithMsgValue :: ([IParam], TFStmtWrapper)
 transForFuncWithMsgValue =
-  ( [],
-    -- int msgValue = SigHash.value(txPreimage);
+  ( [IR.Param (ElementaryType IR.Int) $ IR.ReservedId varMsgValue],
     TFStmtWrapper
-      [ IR.DeclareStmt
-          [IR.Param (ElementaryType IR.Int) (IR.ReservedId varMsgValue)]
-          [ IR.FunctionCallExpr
-              (IR.MemberAccessExpr (IdentifierExpr (IR.ReservedId libSigHash)) (IR.Identifier "value"))
-              [IdentifierExpr (IR.ReservedId varTxPreimage)]
-          ]
+      [ -- require(msgValue >= 0);
+        IR.RequireStmt $ IR.BinaryExpr IR.GreaterThanOrEqual (ridExpr varMsgValue) $ LiteralExpr $ IR.IntLiteral False 0
       ]
       []
   )
@@ -314,7 +365,7 @@ msgSenderExpr :: Sol.Expression SourceRange
 msgSenderExpr = Sol.MemberAccess (Sol.Literal (PrimaryExpressionIdentifier (Sol.Identifier "msg" defaultSourceRange))) (Sol.Identifier "sender" defaultSourceRange) defaultSourceRange
 
 msgValueExpr :: Sol.Expression SourceRange
-msgValueExpr = Sol.MemberAccess (Sol.Literal (PrimaryExpressionIdentifier (Sol.Identifier "msg" defaultSourceRange))) (Sol.Identifier "value" defaultSourceRange) defaultSourceRange
+msgValueExpr = Sol.MemberAccess (Sol.Literal (PrimaryExpressionIdentifier (Sol.Identifier "msg" defaultSourceRange))) (Sol.Identifier varValue defaultSourceRange) defaultSourceRange
 
 toIRConstructorParams :: ParameterList SourceRange -> [FunctionDefinitionTag SourceRange] -> Block SourceRange -> Transformation (IParamList', TFStmtWrapper)
 toIRConstructorParams (ParameterList pl) _ funcBlk = do
@@ -330,11 +381,17 @@ toIRConstructorParams (ParameterList pl) _ funcBlk = do
           then let (ps, blkT_) = transForConstructorWithMsgSender in (map Just ps ++ extraParams0, mergeTFStmtWrapper blkT0 blkT_)
           else (extraParams0, blkT0)
 
-  let (extraParams2, blkT2) =
-        if fst (exprExistsInStmt msgValueExpr (Sol.BlockStatement funcBlk))
-          then let (ps, blkT_) = transForConstructorWithMsgValue in (map Just ps ++ extraParams1, mergeTFStmtWrapper blkT1 blkT_)
-          else (extraParams1, blkT1)
-
+  -- for function that uses `msg.value`
+  let msgValueExist = exprExistsInStmt msgValueExpr (Sol.BlockStatement funcBlk)
+  (extraParams2, blkT2) <-
+    if fst msgValueExist
+      then do
+        -- set `stateNeedInitBalace` to true,
+        -- thus the initial balance assigned by `msg.value` can be checked in other public functions.
+        modify $ \s -> s {stateNeedInitBalace = True}
+        let (ps, blkT_) = transForConstructorWithMsgValue
+        return (map Just ps ++ extraParams1, mergeTFStmtWrapper blkT1 blkT_)
+      else return (extraParams1, blkT1)
 
   let params' = sequence $ params ++ extraParams2
 
@@ -358,10 +415,14 @@ transForConstructorWithMsgSender =
 -- transformations for constructor that uses `msg.value`
 transForConstructorWithMsgValue :: ([IR.IParam], TFStmtWrapper)
 transForConstructorWithMsgValue =
-  ( [IR.Param (ElementaryType Int) $ IR.ReservedId varMsgValue],
+  ( [IR.Param (ElementaryType IR.Int) $ IR.ReservedId varMsgValue],
     TFStmtWrapper
-      [] -- prepends
-      [] -- appends
+      []
+      -- append `this.initBalance = msgValue;` to set the initial contract balance
+      [ IR.AssignStmt
+          [IR.MemberAccessExpr thisExpr (IR.ReservedId varInitBalance)]
+          [IR.IdentifierExpr $ IR.ReservedId varMsgValue]
+      ]
   )
 
 -- <mapExpr>.set(<keyExpr>, <valExpr>, <idxExpr>)
@@ -435,12 +496,16 @@ prependsForReturnedInit t = do
     ]
 
 -- build `propagateState` function, in this way we can call `require(this.propagateState(txPreimage));` in other public functions
-buildPropagateState :: IR.IContractBodyElement
-buildPropagateState =
+buildPropagateStateFunc :: IR.IContractBodyElement
+buildPropagateStateFunc =
   IR.FunctionDefinition $
     IR.Function
-      (IR.Identifier "propagateState")
-      (IR.ParamList [IR.Param (BuiltinType "SigHashPreimage") $ IR.ReservedId varTxPreimage])
+      (IR.ReservedId funcPropagateState)
+      ( IR.ParamList
+          [ IR.Param (BuiltinType "SigHashPreimage") $ IR.ReservedId varTxPreimage,
+            IR.Param (ElementaryType IR.Int) $ IR.Identifier varValue
+          ]
+      )
       (IR.Block body)
       (ElementaryType Bool)
       Default
@@ -456,7 +521,7 @@ buildPropagateState =
         IR.DeclareStmt
           [IR.Param (ElementaryType IR.Bytes) (IR.ReservedId varOutputScript)]
           [ IR.FunctionCallExpr
-              (IR.MemberAccessExpr (IdentifierExpr (IR.Identifier "this")) (IR.Identifier "getStateScript"))
+              (IR.MemberAccessExpr thisExpr (IR.Identifier "getStateScript"))
               []
           ],
         -- add `bytes output = Utils.buildOutput(outputScript, SigHash.value(txPreimage));`
@@ -465,9 +530,7 @@ buildPropagateState =
           [ IR.FunctionCallExpr
               (IR.MemberAccessExpr (IdentifierExpr (IR.ReservedId libUtils)) (IR.Identifier "buildOutput"))
               [ IdentifierExpr (IR.ReservedId varOutputScript),
-                IR.FunctionCallExpr
-                  (IR.MemberAccessExpr (IdentifierExpr (IR.ReservedId libSigHash)) (IR.Identifier "value"))
-                  [IdentifierExpr (IR.ReservedId varTxPreimage)]
+                IdentifierExpr (IR.Identifier varValue)
               ]
           ],
         -- add `retrun hash256(output) == SigHash.hashOutputs(txPreimage);`
@@ -479,3 +542,52 @@ buildPropagateState =
               (IR.MemberAccessExpr (IdentifierExpr (IR.ReservedId libSigHash)) (IR.Identifier "hashOutputs"))
               [IdentifierExpr (IR.ReservedId varTxPreimage)]
       ]
+
+{--
+  Build function as below:
+    function checkInitBalance(SigHashPreimage txPreimage) : bool {
+      return !VarIntReader.isFirstCall(txPreimage) || SigHash.value(txPreimage) == this.initBalance;
+    }
+
+  in this way, we can call `require(this.checkInitBalance(txPreimage));` in other public functions
+--}
+buildCheckInitBalanceFunc :: IR.IContractBodyElement
+buildCheckInitBalanceFunc =
+  IR.FunctionDefinition $
+    IR.Function
+      (IR.ReservedId funcCheckInitBalance)
+      ( IR.ParamList
+          [IR.Param (BuiltinType "SigHashPreimage") $ IR.ReservedId varTxPreimage]
+      )
+      (IR.Block body)
+      (ElementaryType Bool)
+      Default
+      False
+  where
+    body =
+      [ IR.ReturnStmt $
+          IR.BinaryExpr
+            IR.BoolOr
+            (IR.UnaryExpr IR.Not (libCallExpr libTx "isFirstCall" [ridExpr varTxPreimage]))
+            ( IR.BinaryExpr
+                IR.Equal
+                (libCallExpr libSigHash varValue [ridExpr varTxPreimage])
+                (IR.MemberAccessExpr thisExpr (IR.ReservedId varInitBalance))
+            )
+      ]
+
+-- id expression
+idExpr :: String -> IExpression
+idExpr = IR.IdentifierExpr . IR.Identifier
+
+-- reserved id expression
+ridExpr :: String -> IExpression
+ridExpr = IR.IdentifierExpr . IR.ReservedId
+
+-- library function call expression
+libCallExpr :: String -> String -> [IExpression] -> IExpression
+libCallExpr lib func = IR.FunctionCallExpr (IR.MemberAccessExpr (ridExpr lib) $ IR.Identifier func)
+
+-- `this` expression
+thisExpr :: IExpression
+thisExpr = idExpr "this"

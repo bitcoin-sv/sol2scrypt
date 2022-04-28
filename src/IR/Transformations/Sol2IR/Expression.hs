@@ -13,9 +13,9 @@ import IR.Spec as IR
 import IR.Transformations.Base
 import IR.Transformations.Sol2IR.Identifier
 import Numeric
+import Solidity.Parser (display)
 import Solidity.Spec as Sol
 import Utils
-import Solidity.Parser (display)
 
 -- only used by Transfer array sub. eg. int[20]
 instance ToIRTransformable (Sol.Expression SourceRange) Int where
@@ -126,20 +126,24 @@ instance ToIRTransformable (Sol.Expression SourceRange) IExpression' where
               then case pl of
                 Just (ExpressionList [p]) -> _toIR p
                 _ -> reportError ("unsupported function call: `" ++ fn ++ "`") fa >> return Nothing
-              -- transpile sol `address(0)` to sCrypt `Ripemd160(b'')`
-              else if isAddress0 fe pl then return $ Just $ FunctionCallExpr (IdentifierExpr (IR.ReservedId "Ripemd160")) [LiteralExpr $ BytesLiteral [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]
-              else if isJust st' then do
-                ps' <- case pl of
-                  Nothing -> return []
-                  Just (ExpressionList ps) -> mapM _toIR ps
-                return $ StructLiteralExpr <$> sequence ps'
-              else do
-                i' <- _toIR i
-                i'' <- maybeMemberFunctionCall i'
-                ps' <- case pl of
-                  Nothing -> return []
-                  Just (ExpressionList ps) -> mapM _toIR ps
-                return $ FunctionCallExpr <$> (IdentifierExpr <$>  i'') <*> sequence ps'
+              else -- transpile sol `address(0)` to sCrypt `Ripemd160(b'')`
+
+                if isAddress0 fe pl
+                  then return $ Just $ FunctionCallExpr (IdentifierExpr (IR.ReservedId "Ripemd160")) [LiteralExpr $ BytesLiteral [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+                  else
+                    if isJust st'
+                      then do
+                        ps' <- case pl of
+                          Nothing -> return []
+                          Just (ExpressionList ps) -> mapM _toIR ps
+                        return $ StructLiteralExpr <$> sequence ps'
+                      else do
+                        i' <- _toIR i
+                        i'' <- maybeMemberFunctionCall i'
+                        ps' <- case pl of
+                          Nothing -> return []
+                          Just (ExpressionList ps) -> mapM _toIR ps
+                        return $ FunctionCallExpr <$> (IdentifierExpr <$> i'') <*> sequence ps'
           else reportError ("unsupported function call: `" ++ fn ++ "`") fa >> return Nothing
       (New (TypeNameElementaryTypeName (ElementaryTypeName (BytesType Nothing) a) _) _) -> do
         -- eg. transpile Solidity `new bytes(3)` to `num2bin(0, 3)`
@@ -163,17 +167,19 @@ instance ToIRTransformable (Sol.Expression SourceRange) IExpression' where
               then case pl of
                 Just (NameValueList [nv]) -> _toIR (snd nv)
                 _ -> reportError ("unsupported function call: `" ++ fn ++ "`") fa >> return Nothing
-              else if isJust st' then do
-                ps' <- case pl of
-                  Nothing -> return []
-                  Just (NameValueList ps) -> mapM (_toIR . snd) ps
-                return $ StructLiteralExpr <$> sequence ps'
-              else do
-                fe' <- _toIR fe
-                ps' <- case pl of
-                  Nothing -> return []
-                  Just (NameValueList ps) -> mapM (_toIR . snd) ps
-                return $ FunctionCallExpr <$> fe' <*> sequence ps'
+              else
+                if isJust st'
+                  then do
+                    ps' <- case pl of
+                      Nothing -> return []
+                      Just (NameValueList ps) -> mapM (_toIR . snd) ps
+                    return $ StructLiteralExpr <$> sequence ps'
+                  else do
+                    fe' <- _toIR fe
+                    ps' <- case pl of
+                      Nothing -> return []
+                      Just (NameValueList ps) -> mapM (_toIR . snd) ps
+                    return $ FunctionCallExpr <$> fe' <*> sequence ps'
           else reportError ("unsupported function call: `" ++ fn ++ "`") fa >> return Nothing
       _ -> do
         fe' <- _toIR fe
@@ -200,13 +206,10 @@ transformUnaryExpr (Operator opStr a) e' =
     "~" -> return $ UnaryExpr Invert <$> e'
     s -> reportError ("unsupported unary operator: `" ++ s ++ "`") a >> return Nothing
 
-
-
 transformBinraryExpr :: Operator SourceRange -> IExpression' -> IExpression' -> Transformation IExpression'
 transformBinraryExpr (Operator opStr a) e1' e2' = do
-    op <- str2BinaryOp opStr a
-    return $ BinaryExpr <$> op <*> e1' <*> e2'
-
+  op <- str2BinaryOp opStr a
+  return $ BinaryExpr <$> op <*> e1' <*> e2'
 
 str2BinaryOp :: String -> SourceRange -> Transformation (Maybe IBinaryOp)
 str2BinaryOp "+" _ = return $ Just Add
@@ -241,21 +244,21 @@ str2BinaryOp ">>" _ = return $ Just RShift
 str2BinaryOp s a = reportError ("unsupported binary operator: `" ++ s ++ "`") a >> return Nothing
 
 -- give an expression a var name which can be used in transformation, for example, declare a var for the expression.
-toExprName :: IExpression -> ExprName
-toExprName (LiteralExpr (BoolLiteral b)) = show b
-toExprName (LiteralExpr (IntLiteral _ i)) = show i
-toExprName (LiteralExpr (BytesLiteral bytes)) = concatMap showHexWithPadded bytes
-toExprName (IdentifierExpr (IR.Identifier n)) = replaceDotWithUnderscore n
-toExprName (IdentifierExpr (IR.ReservedId n)) = replaceDotWithUnderscore n
-toExprName (BinaryExpr _ le re) = toExprName le ++ "_" ++ toExprName re
-toExprName (StructLiteralExpr es) = intercalate "_" $ map toExprName es
-toExprName (MemberAccessExpr e (IR.Identifier n)) = toExprName e ++ "_" ++ replaceDotWithUnderscore n
-toExprName e = error $ "the expr is not supported in #toExprName: " ++ show e
+toExprName :: Bool -> IExpression -> ExprName
+toExprName _ (LiteralExpr (BoolLiteral b)) = show b
+toExprName _ (LiteralExpr (IntLiteral _ i)) = show i
+toExprName _ (LiteralExpr (BytesLiteral bytes)) = concatMap showHexWithPadded bytes
+toExprName keepDot (IdentifierExpr (IR.Identifier n)) = if keepDot then n else replaceDotWithUnderscore n
+toExprName keepDot (IdentifierExpr (IR.ReservedId n)) = if keepDot then n else replaceDotWithUnderscore n
+toExprName _ (BinaryExpr _ le re) = toExprName False le ++ "_" ++ toExprName False re
+toExprName _ (StructLiteralExpr es) = intercalate "_" $ map (toExprName False) es
+toExprName keepDot (MemberAccessExpr e i@(IR.Identifier _)) = toExprName keepDot e ++ (if keepDot then "." else "_") ++ toExprName keepDot (IdentifierExpr i)
+toExprName _ e = error $ "the expr is not supported in #toExprName: " ++ show e
 
 incExprCounter :: MappingExprCounter -> IExpression' -> IExpression' -> IType -> MappingExprCounter
 incExprCounter ec (Just mapping) (Just key) et = Map.insert en (MECEntry et mapping key cnt updated) ec
   where
-    en = toExprName $ BinaryExpr Index mapping key
+    en = toExprName True $ BinaryExpr Index mapping key
     entry = Map.lookup en ec
     cnt = maybe 0 exprCnt entry
     updated = maybe False entryUpdated entry
@@ -276,7 +279,7 @@ keyExprOfMapping (Binary (Operator "[]" _) _ ke _) keys =
   if null keys
     then do
       e <- _toIR ke
-      let ke' = case toExprName <$> e of
+      let ke' = case toExprName True <$> e of
             Just kn -> if kn `elem` reservedNames then Just (IR.ReservedId kn) else Just (IR.Identifier kn)
             _ -> Nothing
       -- use IdentifierExpr for non-nested-mapping key
@@ -291,7 +294,7 @@ keyExprOfMapping _ _ = return Nothing
 valueNameOfMapping :: IExpression' -> String -> Maybe String
 valueNameOfMapping e postfix = n'
   where
-    n = replaceDotWithUnderscore . toExprName <$> e
+    n = toExprName False <$> e
     n' = (++) <$> n <*> Just postfix
 
 -- use identifier expression to replace mapping expression
@@ -315,7 +318,7 @@ checkLHSmapExpr :: IExpression' -> Transformation ()
 checkLHSmapExpr e = do
   -- set updated flag for mapping type LHS
   mapCounter <- gets stateInFuncMappingCounter
-  let mapName = toExprName <$> e
+  let mapName = toExprName False <$> e
   case join $ Map.lookup <$> mapName <*> Just mapCounter of
     Just entry -> do
       let mapCounter' = Map.insert (fromJust mapName) (entry {entryUpdated = True}) mapCounter
@@ -324,7 +327,20 @@ checkLHSmapExpr e = do
 
 -- some solidity buildin functions are not supported
 isBuiltInFnSupported :: String -> Bool
-isBuiltInFnSupported fn = fn `notElem` ["assert", "keccak256", "ecrecover", "addmod", "blockhash", "mulmod", "revert", "selfdestruct", "type", "gasleft"]
+isBuiltInFnSupported fn =
+  fn
+    `notElem` [ "assert",
+                "keccak256",
+                "ecrecover",
+                "addmod",
+                "blockhash",
+                "mulmod",
+                "revert",
+                "selfdestruct",
+                "type",
+                "gasleft",
+                "payable"
+              ]
 
 -- some solidity buildin member access are not supported
 isMemberAccessSupported :: (String, String) -> Transformation Bool
@@ -337,12 +353,17 @@ isMemberAccessSupported (e, i) = case (e, i) of
   ("abi", _) -> return False
   (v, "balance") -> do
     sym <- lookupSym $ IR.Identifier v
-    return (case sym of
-      Nothing -> False
-      Just sym' -> (case symbolType sym' of
-          ElementaryType Address -> False
-          _ -> True
-        ))
+    return
+      ( case sym of
+          Nothing -> False
+          Just sym' ->
+            ( case symbolType sym' of
+                ElementaryType Address -> False
+                _ -> True
+            )
+      )
+  (_, "transfer") -> return False
+  (_, "send") -> return False
   _ -> return True
 
 -- cast functions in solidity need to be ignored
@@ -452,4 +473,4 @@ shouldIgnoreBuiltInTypes fn =
 
 isAddress0 :: Expression SourceRange -> Maybe (ExpressionList a) -> Bool
 isAddress0 (Literal (PrimaryExpressionIdentifier (Sol.Identifier "address" _))) (Just (ExpressionList [Literal (PrimaryExpressionNumberLiteral (NumberLiteral (NumberLiteralDec "0" Nothing) _))])) = True
-isAddress0  _ _ = False
+isAddress0 _ _ = False

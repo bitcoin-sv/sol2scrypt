@@ -14,10 +14,10 @@ spec = testSpec "Variables" $ do
 
   let itStateVariable sol t vis initvalue = it ("should transfrom Solidity `" ++ sol ++ "` to IR Type correctly") $ do
         r1 <- sol2Ir sol2StateVariable sol
-        r1 `shouldBe` Just (IR.StateVariable (IR.Identifier "a") t vis initvalue False False)
+        r1 `shouldBe` Just (IR.Property (IR.Identifier "a") t vis initvalue (IsConst False) (IsStatic False) (IsState True))
   let itImmutable sol t vis initvalue = it ("should transfrom Solidity `" ++ sol ++ "` to IR Type correctly") $ do
         r1 <- sol2Ir sol2StateVariable sol
-        r1 `shouldBe` Just (IR.StateVariable (IR.Identifier "a") t vis initvalue False True)
+        r1 `shouldBe` Just (IR.Property (IR.Identifier "a") t vis initvalue (IsConst True) (IsStatic False) (IsState False))
   describe "#Parameter" $ do
     itParameter "bool a" (ElementaryType Bool)
     itParameter "int a" (ElementaryType Int)
@@ -32,7 +32,7 @@ spec = testSpec "Variables" $ do
     itParameter "bytes32 a" (ElementaryType Bytes)
     itParameter "address a" (ElementaryType Address)
 
-  describe "#StateVariable" $ do
+  describe "#Property" $ do
     itStateVariable "bool a;" (ElementaryType Bool) Default Nothing 
     itStateVariable "address a;" (ElementaryType Address) Default Nothing 
     itStateVariable "address public a;" (ElementaryType Address) Public Nothing 

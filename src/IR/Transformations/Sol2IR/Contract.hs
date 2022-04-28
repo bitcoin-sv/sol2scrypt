@@ -9,30 +9,60 @@
 module IR.Transformations.Sol2IR.Contract where
 
 import Control.Monad.Except
+import Control.Monad.State
 import Data.Either
+import Data.List
 import Data.Maybe
 import IR.Spec as IR
 import IR.Transformations.Base
 import IR.Transformations.Sol2IR.Expression ()
-import IR.Transformations.Sol2IR.Function (buildPropagateState)
+import IR.Transformations.Sol2IR.Function (buildCheckInitBalanceFunc, buildPropagateStateFunc)
 import IR.Transformations.Sol2IR.Identifier ()
 import IR.Transformations.Sol2IR.Struct ()
 import IR.Transformations.Sol2IR.Variable ()
-import Solidity.Spec as Sol
 import Solidity.Parser (display)
+import Solidity.Spec as Sol
 
 instance ToIRTransformable (ContractDefinition SourceRange) IContract' where
   _toIR (Sol.ContractDefinition False "contract" cn [] cps _) = do
+    -- reset state
+    modify $ \s -> s {stateNeedInitBalace = False}
     cn' <- _toIR cn
     addSym $ Symbol <$> cn' <*> Just contractSymType <*> Just False <*> Just False <*> Just False
     enterScope
     enterLibrary False
     preprocessFunctionNames cps
-    cps' <- mapM _toIR cps
+    cps' <-
+      mapM (_toIR . fst) $
+        sortBy
+          (\a b -> compare (snd b) (snd a))
+          $map
+          ( \part -> case part of
+              -- functions has lower priority
+              ContractPartFunctionDefinition {} -> (part, 0 :: Integer)
+              -- ctor has mid priority
+              -- bcoz ctor may have `msg.value` which would have effect on other public functions transpiling.
+              ContractPartConstructorDefinition {} -> (part, 1)
+              -- properties has higher priority
+              _ -> (part, 2)
+          )
+          cps
     leaveScope
     let appendPropagateState = findPreimageFunction cps'
-    let propagateState = [buildPropagateState | appendPropagateState]
-    let cps'' = catMaybes cps' ++ propagateState
+    let propagateStateFunc = [buildPropagateStateFunc | appendPropagateState]
+
+    needInitBalance <- gets stateNeedInitBalace
+    let initBalanceParts =
+          if needInitBalance
+            then
+              [ -- add property `initBalance`
+                IR.PropertyDefinition $ IR.Property (IR.ReservedId varInitBalance) (ElementaryType IR.Int) Default Nothing (IsConst True) (IsStatic False) (IsState False),
+                -- add function `checkInitBalance`
+                buildCheckInitBalanceFunc
+              ]
+            else []
+
+    let cps'' = catMaybes cps' ++ propagateStateFunc ++ initBalanceParts
     return $ Just $ IR.Contract (fromJust cn') cps''
   _toIR (Sol.ContractDefinition True "contract" _ _ _ a) = reportError "unsupported abstract contract definition" a >> return Nothing
   _toIR (Sol.ContractDefinition _ "interface" _ _ _ a) = reportError "unsupported interface definition" a >> return Nothing
@@ -56,9 +86,9 @@ instance ToIRTransformable (Sol.PragmaDirective SourceRange) IR.IEmpty where
 
 instance ToIRTransformable (Sol.ContractPart SourceRange) IContractBodyElement' where
   _toIR (Sol.ContractPartStateVariableDeclaration e _) = do
-    e' :: IStateVariable' <- _toIR e
-    addSym $ Symbol <$> (stateVarName <$> e') <*> (stateVarType <$> e') <*> Just True <*> (stateIsConstant <$> e') <*> Just False
-    return $ IR.StateVariableDeclaration <$> e'
+    e' :: IProperty' <- _toIR e
+    addSym $ Symbol <$> (propName <$> e') <*> (propType <$> e') <*> Just True <*> (unConst . propIsConstant <$> e') <*> (unStatic . propIsStatic <$> e')
+    return $ IR.PropertyDefinition <$> e'
   _toIR Sol.ContractPartEventDefinition {} = return Nothing -- TODO: report info: `event definition will be ignored`
   _toIR func@Sol.ContractPartFunctionDefinition {} = do
     enterScope

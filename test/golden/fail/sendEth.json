@@ -1,0 +1,27 @@
+[
+    {
+        "src": "test/golden/fail/sendEth.sol:9:30:9:45",
+        "type": "Error",
+        "message": "unsupported type: `address payable`"
+    },
+    {
+        "src": "test/golden/fail/sendEth.sol:11:9:11:21",
+        "type": "Error",
+        "message": "unsupported expression: `_to.transfer`"
+    },
+    {
+        "src": "test/golden/fail/sendEth.sol:14:26:14:41",
+        "type": "Error",
+        "message": "unsupported type: `address payable`"
+    },
+    {
+        "src": "test/golden/fail/sendEth.sol:17:21:17:29",
+        "type": "Error",
+        "message": "unsupported expression: `_to.send`"
+    },
+    {
+        "src": "test/golden/fail/sendEth.sol:21:26:21:41",
+        "type": "Error",
+        "message": "unsupported type: `address payable`"
+    }
+]

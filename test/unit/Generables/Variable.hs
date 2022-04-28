@@ -19,5 +19,5 @@ spec = testSpec "Variables" $ do
       r `shouldBe` "\nstatic const int a = 8;"
 
     it "instance Generable (Maybe (Scr.Param Ann))" $ do
-      r <- generateScrypt (CodeGenState 0) (Just (Scr.Param (TypeAnn Scr.Bool nil) (NameAnn "p" nil) (Const True) Nothing Default (IsStateProp True) nil))
+      r <- generateScrypt (CodeGenState 0) (Just (Scr.Param (TypeAnn Scr.Bool nil) (NameAnn "p" nil) (Const True) Nothing Default (IsStateProp False) nil, True))
       r `shouldBe` "\nconst bool p;"
