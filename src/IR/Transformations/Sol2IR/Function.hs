@@ -568,7 +568,7 @@ buildCheckInitBalanceFunc =
       [ IR.ReturnStmt $
           IR.BinaryExpr
             IR.BoolOr
-            (IR.UnaryExpr IR.Not (libCallExpr libVarIntReader "isFirstCall" [ridExpr varTxPreimage]))
+            (IR.UnaryExpr IR.Not (libCallExpr libTx "isFirstCall" [ridExpr varTxPreimage]))
             ( IR.BinaryExpr
                 IR.Equal
                 (libCallExpr libSigHash varValue [ridExpr varTxPreimage])

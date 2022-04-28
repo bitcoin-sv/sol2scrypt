@@ -51,6 +51,6 @@ contract WithdrawalContract {
   }
 
   function checkInitBalance(SigHashPreimage txPreimage) : bool {
-    return !VarIntReader.isFirstCall(txPreimage) || SigHash.value(txPreimage) == this.initBalance;
+    return !Tx.isFirstCall(txPreimage) || SigHash.value(txPreimage) == this.initBalance;
   }
 }
