@@ -426,8 +426,8 @@ transForConstructorWithMsgValue =
   )
 
 -- <mapExpr>.set(<keyExpr>, <valExpr>, <idxExpr>)
-mapSetExpr :: IExpression -> IExpression -> String -> IExpression
-mapSetExpr mapExpr keyExpr postfix =
+mapSetExpr :: IExpression -> IExpression -> String -> Int -> IExpression
+mapSetExpr mapExpr keyExpr postfix idx =
   let e = Just $ BinaryExpr Index mapExpr keyExpr
    in FunctionCallExpr
         { funcExpr =
@@ -438,14 +438,14 @@ mapSetExpr mapExpr keyExpr postfix =
           funcParamExprs =
             [ keyExpr,
               fromJust $ valueExprOfMapping e postfix,
-              fromJust $ indexExprOfMapping e postfix
+              fromJust $ indexExprOfMapping ("i" ++ show idx)
             ]
         }
 
 -- -- require(<mapExpr>.set(keyExpr, valExpr, idxExpr))
-afterCheckStmt :: IExpression -> IExpression -> String -> IStatement
-afterCheckStmt mapExpr keyExpr postfix =
-  IR.RequireStmt $ mapSetExpr mapExpr keyExpr postfix
+afterCheckStmt :: IExpression -> IExpression -> String -> Int -> IStatement
+afterCheckStmt mapExpr keyExpr postfix i =
+  IR.RequireStmt $ mapSetExpr mapExpr keyExpr postfix i
 
 transForMappingAccess :: String -> MappingExprCounter -> IVisibility -> Transformation (Either String ([IR.IParam], TFStmtWrapper))
 transForMappingAccess fn mCounter vis = do
@@ -453,10 +453,10 @@ transForMappingAccess fn mCounter vis = do
   -- injected params
   let injectedParams =
         concatMap
-          ( \(MECEntry t me ke _ _) ->
+          ( \(MECEntry t me ke _ _ i) ->
               let e = Just $ BinaryExpr Index me ke
                in [ IR.Param t $ IR.Identifier $ fromJust $ valueNameOfMapping e initTag, -- init value
-                    IR.Param (ElementaryType Int) $ IR.Identifier $ fromJust $ indexNameOfMapping e initTag -- init value index
+                    IR.Param (ElementaryType Int) $ IR.Identifier ("i" ++ show i)
                   ]
           )
           $ Map.elems mCounter
@@ -464,8 +464,8 @@ transForMappingAccess fn mCounter vis = do
   -- injected statements
   injectedStatements <-
     foldlM
-      ( \mc (MECEntry _ me ke _ updated) -> do
-          return $ mergeTFStmtWrapper' mc (Just (TFStmtWrapper [] [afterCheckStmt me ke initTag | updated]))
+      ( \mc (MECEntry _ me ke _ updated i) -> do
+          return $ mergeTFStmtWrapper' mc (Just (TFStmtWrapper [] [afterCheckStmt me ke initTag i | updated]))
       )
       (Just (TFStmtWrapper [] []))
       mCounter

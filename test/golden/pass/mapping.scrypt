@@ -10,30 +10,30 @@ contract MappingTest {
   @state
   HashedMap<MapKeyST0, int> m2;
 
-  public function f1(int a, SigHashPreimage txPreimage, int this_m1_a, int this_m1_a_index, int this_m1_b, int this_m1_b_index) {
-    require((!this.m1.has(a, this_m1_a_index) && this_m1_a == 0) || this.m1.canGet(a, this_m1_a, this_m1_a_index));
-    this_m1_a = 1;
-    this_m1_a = 2;
+  public function f1(int a, SigHashPreimage txPreimage, int m1_a, int i0, int m1_b, int i1) {
+    require((!this.m1.has(a, i0) && m1_a == 0) || this.m1.canGet(a, m1_a, i0));
+    m1_a = 1;
+    m1_a = 2;
     int b = 2;
-    this_m1_a = b;
-    require((!this.m1.has(b, this_m1_b_index) && this_m1_b == 0) || this.m1.canGet(b, this_m1_b, this_m1_b_index));
-    this_m1_b = a;
-    require(this.m1.set(a, this_m1_a, this_m1_a_index));
-    require(this.m1.set(b, this_m1_b, this_m1_b_index));
+    m1_a = b;
+    require((!this.m1.has(b, i1) && m1_b == 0) || this.m1.canGet(b, m1_b, i1));
+    m1_b = a;
+    require(this.m1.set(a, m1_a, i0));
+    require(this.m1.set(b, m1_b, i1));
     require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  public function f2(int a, SigHashPreimage txPreimage, int this_m2_a_a, int this_m2_a_a_index, int this_m2_a_b, int this_m2_a_b_index, int this_m2_b_a, int this_m2_b_a_index) {
-    require((!this.m2.has({a, a}, this_m2_a_a_index) && this_m2_a_a == 0) || this.m2.canGet({a, a}, this_m2_a_a, this_m2_a_a_index));
-    this_m2_a_a = 1;
+  public function f2(int a, SigHashPreimage txPreimage, int m2_a_a, int i0, int m2_a_b, int i1, int m2_b_a, int i2) {
+    require((!this.m2.has({a, a}, i0) && m2_a_a == 0) || this.m2.canGet({a, a}, m2_a_a, i0));
+    m2_a_a = 1;
     int b = a;
-    require((!this.m2.has({a, b}, this_m2_a_b_index) && this_m2_a_b == 0) || this.m2.canGet({a, b}, this_m2_a_b, this_m2_a_b_index));
-    this_m2_a_b = a + 1;
-    require((!this.m2.has({b, a}, this_m2_b_a_index) && this_m2_b_a == 0) || this.m2.canGet({b, a}, this_m2_b_a, this_m2_b_a_index));
-    this_m2_b_a = b + 1;
-    require(this.m2.set({a, a}, this_m2_a_a, this_m2_a_a_index));
-    require(this.m2.set({a, b}, this_m2_a_b, this_m2_a_b_index));
-    require(this.m2.set({b, a}, this_m2_b_a, this_m2_b_a_index));
+    require((!this.m2.has({a, b}, i1) && m2_a_b == 0) || this.m2.canGet({a, b}, m2_a_b, i1));
+    m2_a_b = a + 1;
+    require((!this.m2.has({b, a}, i2) && m2_b_a == 0) || this.m2.canGet({b, a}, m2_b_a, i2));
+    m2_b_a = b + 1;
+    require(this.m2.set({a, a}, m2_a_a, i0));
+    require(this.m2.set({a, b}, m2_a_b, i1));
+    require(this.m2.set({b, a}, m2_b_a, i2));
     require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
