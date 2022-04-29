@@ -42,14 +42,14 @@ instance ToIRTransformable (ContractPart SourceRange) IFunction' where
         }
     vis <- toIRFuncVis tags
     retTransResult <- toIRFuncRet vis maybeRets
-    (ps, blkTfromParam) <- toIRFuncParams pl tags retTransResult vis block
+    (ps, preimageParams, blkTfromParam) <- toIRFuncParams pl tags retTransResult vis block
     functionBody <- toIRFuncBody fn block vis blkTfromParam retTransResult
     case functionBody of
       Left msg -> reportError msg a >> return Nothing
       Right (ParamList paramsForMap, body) -> do
         let ps' = case ps of
-              Just (ParamList pps) -> Just (ParamList $ pps ++ paramsForMap)
-              _ -> Just $ ParamList paramsForMap
+              Just (ParamList pps) -> Just (ParamList $ pps ++ paramsForMap ++ preimageParams)
+              _ -> Just $ ParamList $ preimageParams ++ paramsForMap
         inL <- isInLibrary
         return $ Function (IR.Identifier fn) <$> ps' <*> Just body <*> targetType retTransResult <*> Just vis <*> Just inL
   _toIR _ = return Nothing
@@ -105,7 +105,7 @@ toIRFuncRet _ (Just (ParameterList el)) = do
   reportError "unsupported function definition with multi-returns" (mergeRange (ann $ head el) (ann $ last el))
   return $ FuncRetTransResult Nothing Nothing Nothing
 
-toIRFuncParams :: ParameterList SourceRange -> [FunctionDefinitionTag SourceRange] -> FuncRetTransResult -> IVisibility -> Block SourceRange -> Transformation (IParamList', TFStmtWrapper)
+toIRFuncParams :: ParameterList SourceRange -> [FunctionDefinitionTag SourceRange] -> FuncRetTransResult -> IVisibility -> Block SourceRange -> Transformation (IParamList', [IParam], TFStmtWrapper)
 toIRFuncParams (ParameterList pl) _ (FuncRetTransResult _ ort rn) vis funcBlk = do
   params <- mapM _toIR pl
 
@@ -154,16 +154,16 @@ toIRFuncParams (ParameterList pl) _ (FuncRetTransResult _ ort rn) vis funcBlk = 
         | vis == IR.Public = True
         | fst msgValueExist = True
         | otherwise = False
-  let (extraParams3, blkT3) =
+  let (extraParams3, preimageParam, blkT3) =
         if needPreimageParam
-          then let (ps, blkT_) = transForPreimageFunc (fst msgValueExist) in (map Just ps ++ extraParams2, mergeTFStmtWrapper blkT2 blkT_)
-          else (extraParams2, blkT2)
+          then let (ps, blkT_) = transForPreimageFunc (fst msgValueExist) in (extraParams2, ps, mergeTFStmtWrapper blkT2 blkT_)
+          else (extraParams2, [], blkT2)
 
   let params' = sequence $ params ++ extraParams3
 
   forM_ params' $ mapM_ (\p -> addSym $ Just $ Symbol (paramName p) (paramType p) False False False)
 
-  return (IR.ParamList <$> params', blkT3)
+  return (IR.ParamList <$> params', preimageParam, blkT3)
 
 toIRFuncBody :: String -> Block SourceRange -> IVisibility -> TFStmtWrapper -> FuncRetTransResult -> Transformation (Either String (IParamList, IBlock))
 toIRFuncBody fn blk@(Sol.Block _ _) vis wrapperFromParam (FuncRetTransResult _ ort rn) = do

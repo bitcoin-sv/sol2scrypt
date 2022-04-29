@@ -16,7 +16,6 @@ import Numeric
 import Solidity.Parser (display)
 import Solidity.Spec as Sol
 import Utils
-import Debug.Trace
 
 -- only used by Transfer array sub. eg. int[20]
 instance ToIRTransformable (Sol.Expression SourceRange) Int where

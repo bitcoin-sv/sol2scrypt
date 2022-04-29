@@ -17,7 +17,7 @@ contract Return {
     return returned ? ret : 1;
   }
 
-  public function unlock(int ab, SigHashPreimage txPreimage, int retVal) {
+  public function unlock(int ab, int retVal, SigHashPreimage txPreimage) {
     int ret = 0;
     bool returned = false;
     if (ab > 0) {

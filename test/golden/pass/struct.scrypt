@@ -45,7 +45,7 @@ contract Todos {
     return {"", false};
   }
 
-  public function update(bytes _text, PubKeyHash owner, SigHashPreimage txPreimage, Todo mapTodos_owner, int i0) {
+  public function update(bytes _text, PubKeyHash owner, Todo mapTodos_owner, int i0, SigHashPreimage txPreimage) {
     require((!this.mapTodos.has(owner, i0) && mapTodos_owner == {"", false}) || this.mapTodos.canGet(owner, mapTodos_owner, i0));
     mapTodos_owner = {_text, true};
     require(this.mapTodos.set(owner, mapTodos_owner, i0));

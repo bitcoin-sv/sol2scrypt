@@ -16,7 +16,7 @@ contract WithdrawalContract {
     this.initBalance = msgValue;
   }
 
-  public function becomeRichest(SigHashPreimage txPreimage, int msgValue, Sig sig, PubKey pubKey, int pendingWithdrawals_richest, int i0) {
+  public function becomeRichest(int msgValue, Sig sig, PubKey pubKey, int pendingWithdrawals_richest, int i0, SigHashPreimage txPreimage) {
     require(this.checkInitBalance(txPreimage));
     int contractBalance = SigHash.value(txPreimage) + msgValue;
     PubKeyHash msgSender = hash160(pubKey);
@@ -32,7 +32,7 @@ contract WithdrawalContract {
     require(this.propagateState(txPreimage, contractBalance));
   }
 
-  public function withdraw(SigHashPreimage txPreimage, Sig sig, PubKey pubKey, int pendingWithdrawals_msgSender, int i0) {
+  public function withdraw(Sig sig, PubKey pubKey, int pendingWithdrawals_msgSender, int i0, SigHashPreimage txPreimage) {
     require(this.checkInitBalance(txPreimage));
     PubKeyHash msgSender = hash160(pubKey);
     require(checkSig(sig, pubKey));

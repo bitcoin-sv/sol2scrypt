@@ -19,7 +19,7 @@ contract ERC20 {
 
   static const int decimals = 18;
 
-  public function transfer(PubKeyHash recipient, int amount, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, bool retVal, int balanceOf_msgSender, int i0, int balanceOf_recipient, int i1) {
+  public function transfer(PubKeyHash recipient, int amount, Sig sig, PubKey pubKey, bool retVal, int balanceOf_msgSender, int i0, int balanceOf_recipient, int i1, SigHashPreimage txPreimage) {
     PubKeyHash msgSender = hash160(pubKey);
     require(checkSig(sig, pubKey));
     require((!this.balanceOf.has(msgSender, i0) && balanceOf_msgSender == 0) || this.balanceOf.canGet(msgSender, balanceOf_msgSender, i0));
@@ -32,7 +32,7 @@ contract ERC20 {
     require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  public function approve(PubKeyHash spender, int amount, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, bool retVal, int allowance_msgSender_spender, int i0) {
+  public function approve(PubKeyHash spender, int amount, Sig sig, PubKey pubKey, bool retVal, int allowance_msgSender_spender, int i0, SigHashPreimage txPreimage) {
     PubKeyHash msgSender = hash160(pubKey);
     require(checkSig(sig, pubKey));
     require((!this.allowance.has({msgSender, spender}, i0) && allowance_msgSender_spender == 0) || this.allowance.canGet({msgSender, spender}, allowance_msgSender_spender, i0));
@@ -42,7 +42,7 @@ contract ERC20 {
     require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  public function transferFrom(PubKeyHash sender, PubKeyHash recipient, int amount, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, bool retVal, int allowance_sender_msgSender, int i0, int balanceOf_recipient, int i2, int balanceOf_sender, int i1) {
+  public function transferFrom(PubKeyHash sender, PubKeyHash recipient, int amount, Sig sig, PubKey pubKey, bool retVal, int allowance_sender_msgSender, int i0, int balanceOf_recipient, int i2, int balanceOf_sender, int i1, SigHashPreimage txPreimage) {
     PubKeyHash msgSender = hash160(pubKey);
     require(checkSig(sig, pubKey));
     require((!this.allowance.has({sender, msgSender}, i0) && allowance_sender_msgSender == 0) || this.allowance.canGet({sender, msgSender}, allowance_sender_msgSender, i0));
@@ -58,7 +58,7 @@ contract ERC20 {
     require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  public function mint(int amount, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, int balanceOf_msgSender, int i0) {
+  public function mint(int amount, Sig sig, PubKey pubKey, int balanceOf_msgSender, int i0, SigHashPreimage txPreimage) {
     PubKeyHash msgSender = hash160(pubKey);
     require(checkSig(sig, pubKey));
     require((!this.balanceOf.has(msgSender, i0) && balanceOf_msgSender == 0) || this.balanceOf.canGet(msgSender, balanceOf_msgSender, i0));
@@ -68,7 +68,7 @@ contract ERC20 {
     require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  public function burn(int amount, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, int balanceOf_msgSender, int i0) {
+  public function burn(int amount, Sig sig, PubKey pubKey, int balanceOf_msgSender, int i0, SigHashPreimage txPreimage) {
     PubKeyHash msgSender = hash160(pubKey);
     require(checkSig(sig, pubKey));
     require((!this.balanceOf.has(msgSender, i0) && balanceOf_msgSender == 0) || this.balanceOf.canGet(msgSender, balanceOf_msgSender, i0));

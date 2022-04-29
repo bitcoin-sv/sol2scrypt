@@ -10,7 +10,7 @@ contract MappingTest {
   @state
   HashedMap<MapKeyST0, int> m2;
 
-  public function f1(int a, SigHashPreimage txPreimage, int m1_a, int i0, int m1_b, int i1) {
+  public function f1(int a, int m1_a, int i0, int m1_b, int i1, SigHashPreimage txPreimage) {
     require((!this.m1.has(a, i0) && m1_a == 0) || this.m1.canGet(a, m1_a, i0));
     m1_a = 1;
     m1_a = 2;
@@ -23,7 +23,7 @@ contract MappingTest {
     require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  public function f2(int a, SigHashPreimage txPreimage, int m2_a_a, int i0, int m2_a_b, int i1, int m2_b_a, int i2) {
+  public function f2(int a, int m2_a_a, int i0, int m2_a_b, int i1, int m2_b_a, int i2, SigHashPreimage txPreimage) {
     require((!this.m2.has({a, a}, i0) && m2_a_a == 0) || this.m2.canGet({a, a}, m2_a_a, i0));
     m2_a_a = 1;
     int b = a;

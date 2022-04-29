@@ -16,7 +16,7 @@ contract DataLocations {
     return true;
   }
 
-  public function f(SigHashPreimage txPreimage, MyStruct myStructs_1, int i0) {
+  public function f(MyStruct myStructs_1, int i0, SigHashPreimage txPreimage) {
     require((!this.myStructs.has(1, i0) && myStructs_1 == {0}) || this.myStructs.canGet(1, myStructs_1, i0));
     this._f(this.arr, this.map, myStructs_1);
     MyStruct myStruct = myStructs_1;

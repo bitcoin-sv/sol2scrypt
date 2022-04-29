@@ -8,7 +8,7 @@ contract Mapping {
         myMap[addr]++;
     }
     
-    // function set(address addr, uint x) external {
-    //     myMap[addr] = x;
-    // }
+    function set(address addr, uint x) external {
+        myMap[addr] = x;
+    }
 }

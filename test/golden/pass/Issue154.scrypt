@@ -7,7 +7,7 @@ contract SimpleStorage {
   @state
   int storedData;
 
-  public function get(SigHashPreimage txPreimage, int retVal) {
+  public function get(int retVal, SigHashPreimage txPreimage) {
     int a = 0;
     int b = 0;
     int c = 0;
