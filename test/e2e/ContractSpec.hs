@@ -456,7 +456,7 @@ spec = testSpec "Transpile Contract" $ do
     this.minter = msgSender;
   }
 
-  public function mint(PubKeyHash receiver, int amount, SigHashPreimage txPreimage, Sig sig, PubKey pubKey) {
+  public function mint(PubKeyHash receiver, int amount, Sig sig, PubKey pubKey, SigHashPreimage txPreimage) {
     bool ret = false;
     bool returned = false;
     PubKeyHash msgSender = hash160(pubKey);

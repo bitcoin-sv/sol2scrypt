@@ -65,11 +65,11 @@ spec = testSpec "Transpile Variable" $ do
       itProperty "string public a;" "\n@state\npublic bytes a;"
       itProperty "address public a;" "\n@state\npublic PubKeyHash a;"
       itPropertyReportError "uint aa = 3;" 
-        [("unsupported state variable with initial value", newSR (1, 1) (1, 13))]
+        [("unsupported state variable `aa` with initial value", newSR (1, 1) (1, 13))]
       itPropertyReportError "uint[] aa;" 
         [("array length should be explicitly specified", newSR (1, 1) (1, 7))]
       itPropertyReportError "address owner = msg.sender;" 
-        [("unsupported state variable with initial value", newSR (1, 1) (1, 28))]
+        [("unsupported state variable `owner` with initial value", newSR (1, 1) (1, 28))]
       itPropertyReportError "address payable a;" 
         [("unsupported type: `address payable`", newSR (1, 1) (1, 16))]  
   describe "#Parameter" $ do

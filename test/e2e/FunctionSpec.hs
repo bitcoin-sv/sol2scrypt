@@ -44,7 +44,7 @@ public function set(int x, SigHashPreimage txPreimage) {
     "external pure function with named return"
     "function set(uint x) external pure returns (uint y) { y = x; }"
     [r|
-public function set(int x, SigHashPreimage txPreimage, int _y) {
+public function set(int x, int _y, SigHashPreimage txPreimage) {
   int y = 0;
   y = x;
   require(y == _y);
@@ -55,7 +55,7 @@ public function set(int x, SigHashPreimage txPreimage, int _y) {
     "external pure function with unnamed return"
     "function set(uint x) external pure returns (uint) { y = x; return y; }"
     [r|
-public function set(int x, SigHashPreimage txPreimage, int retVal) {
+public function set(int x, int retVal, SigHashPreimage txPreimage) {
   y = x;
   require(y == retVal);
   require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
@@ -74,7 +74,7 @@ public function set(int x, SigHashPreimage txPreimage) {
     "external view function with named return"
     "function set(uint x) external view returns (uint y) { y = x; }"
     [r|
-public function set(int x, SigHashPreimage txPreimage, int _y) {
+public function set(int x, int _y, SigHashPreimage txPreimage) {
   int y = 0;
   y = x;
   require(y == _y);
@@ -615,13 +615,13 @@ public function get(SigHashPreimage txPreimage) {
     itTranspile
       "view external get function with return type"
       "function get() external view returns (uint) { return storedData; }"
-      "\npublic function get(SigHashPreimage txPreimage, int retVal) {\n  require(storedData == retVal);\n  require(this.propagateState(txPreimage, SigHash.value(txPreimage)));\n}"
+      "\npublic function get(int retVal, SigHashPreimage txPreimage) {\n  require(storedData == retVal);\n  require(this.propagateState(txPreimage, SigHash.value(txPreimage)));\n}"
 
     itTranspile
       "pure external get function with return type"
       "function get2() external pure returns (uint) { return 1 + 1; }"
       [r|
-public function get2(SigHashPreimage txPreimage, int retVal) {
+public function get2(int retVal, SigHashPreimage txPreimage) {
   require(1 + 1 == retVal);
   require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
 }|]
@@ -665,7 +665,7 @@ public function set(int x, SigHashPreimage txPreimage) {
       "set function with retrun"
       "function set(uint x) external returns (uint) { storedData = x; return storedData; }"
       [r|
-public function set(int x, SigHashPreimage txPreimage, int retVal) {
+public function set(int x, int retVal, SigHashPreimage txPreimage) {
   storedData = x;
   require(storedData == retVal);
   require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
@@ -693,7 +693,7 @@ public function set(int x, SigHashPreimage txPreimage) {
       "external function with returns"
       "function get() external view returns (uint) { return storedData; }"
       [r|
-public function get(SigHashPreimage txPreimage, int retVal) {
+public function get(int retVal, SigHashPreimage txPreimage) {
   require(storedData == retVal);
   require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
 }|]
@@ -705,7 +705,7 @@ public function get(SigHashPreimage txPreimage, int retVal) {
         "external function with returns"
         "function get() external view returns (uint) { {true; {true;} } return storedData; }"
         [r|
-public function get(SigHashPreimage txPreimage, int retVal) {
+public function get(int retVal, SigHashPreimage txPreimage) {
   {
     true;
     {
@@ -728,7 +728,7 @@ public function get(SigHashPreimage txPreimage, int retVal) {
   msg.sender;
 }|]
       [r|
-public function get(PubKeyHash addr, SigHashPreimage txPreimage, Sig sig, PubKey pubKey) {
+public function get(PubKeyHash addr, Sig sig, PubKey pubKey, SigHashPreimage txPreimage) {
   PubKeyHash msgSender = hash160(pubKey);
   require(checkSig(sig, pubKey));
   if (msgSender == addr)
@@ -744,7 +744,7 @@ public function get(PubKeyHash addr, SigHashPreimage txPreimage, Sig sig, PubKey
       "msg.value"
       "function get() external view {uint amt = msg.value;}"
       [r|
-public function get(SigHashPreimage txPreimage, int msgValue) {
+public function get(int msgValue, SigHashPreimage txPreimage) {
   int contractBalance = SigHash.value(txPreimage) + msgValue;
   require(msgValue >= 0);
   int amt = msgValue;
@@ -768,15 +768,15 @@ public function get(SigHashPreimage txPreimage, int msgValue) {
     balances[receiver] += amount;
 }|]
       [r|
-public function send(PubKeyHash receiver, int amount, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, int balances_msgSender, int balances_msgSender_index, int balances_receiver, int balances_receiver_index) {
+public function send(PubKeyHash receiver, int amount, Sig sig, PubKey pubKey, int balances_msgSender, int i0, int balances_receiver, int i1, SigHashPreimage txPreimage) {
   PubKeyHash msgSender = hash160(pubKey);
   require(checkSig(sig, pubKey));
-  require((!balances.has(msgSender, balances_msgSender_index) && balances_msgSender == 0) || balances.canGet(msgSender, balances_msgSender, balances_msgSender_index));
+  require((!balances.has(msgSender, i0) && balances_msgSender == 0) || balances.canGet(msgSender, balances_msgSender, i0));
   balances_msgSender -= amount;
-  require((!balances.has(receiver, balances_receiver_index) && balances_receiver == 0) || balances.canGet(receiver, balances_receiver, balances_receiver_index));
+  require((!balances.has(receiver, i1) && balances_receiver == 0) || balances.canGet(receiver, balances_receiver, i1));
   balances_receiver += amount;
-  require(balances.set(msgSender, balances_msgSender, balances_msgSender_index));
-  require(balances.set(receiver, balances_receiver, balances_receiver_index));
+  require(balances.set(msgSender, balances_msgSender, i0));
+  require(balances.set(receiver, balances_receiver, i1));
   require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
 }|]
 
@@ -789,14 +789,14 @@ public function send(PubKeyHash receiver, int amount, SigHashPreimage txPreimage
     balances[receiver] += amount;
 }|]
       [r|
-public function send(PubKeyHash receiver, int amount, SigHashPreimage txPreimage, int balances_owner, int balances_owner_index, int balances_receiver, int balances_receiver_index) {
+public function send(PubKeyHash receiver, int amount, int balances_owner, int i0, int balances_receiver, int i1, SigHashPreimage txPreimage) {
   PubKeyHash owner = getOwner();
-  require((!balances.has(owner, balances_owner_index) && balances_owner == 0) || balances.canGet(owner, balances_owner, balances_owner_index));
+  require((!balances.has(owner, i0) && balances_owner == 0) || balances.canGet(owner, balances_owner, i0));
   balances_owner -= amount;
-  require((!balances.has(receiver, balances_receiver_index) && balances_receiver == 0) || balances.canGet(receiver, balances_receiver, balances_receiver_index));
+  require((!balances.has(receiver, i1) && balances_receiver == 0) || balances.canGet(receiver, balances_receiver, i1));
   balances_receiver += amount;
-  require(balances.set(owner, balances_owner, balances_owner_index));
-  require(balances.set(receiver, balances_receiver, balances_receiver_index));
+  require(balances.set(owner, balances_owner, i0));
+  require(balances.set(receiver, balances_receiver, i1));
   require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
 }|]
 
