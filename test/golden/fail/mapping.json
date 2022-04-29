@@ -5,7 +5,7 @@
         "message": "unsupported state variable `i` with initial value"
     },
     {
-        "src": "test/golden/fail/mapping.sol:15:14:15:18",
+        "src": "test/golden/fail/mapping.sol:16:14:16:18",
         "type": "Error",
         "message": "accessing mapping expression in non-external function `get2` is not supported"
     }
