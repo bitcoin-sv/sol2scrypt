@@ -27,7 +27,7 @@
     {
         "src": "test/golden/fail/fail1.sol:79:5:79:23",
         "type": "Error",
-        "message": "unsupported state variable with initial value"
+        "message": "unsupported state variable `i` with initial value"
     },
     {
         "src": "test/golden/fail/fail1.sol:82:26:82:34",
@@ -97,6 +97,6 @@
     {
         "src": "test/golden/fail/fail1.sol:116:14:116:21",
         "type": "Error",
-        "message": "accessing mapping expression in non-external function is not supported"
+        "message": "accessing mapping expression in non-external function `ownerOf` is not supported"
     }
 ]

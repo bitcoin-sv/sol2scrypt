@@ -30,7 +30,7 @@ instance ToIRTransformable (VariableDeclaration SourceRange) IParam' where
 
 
 instance ToIRTransformable (Sol.StateVariableDeclaration SourceRange) IProperty' where
-  _toIR (Sol.StateVariableDeclaration t vis i expr a) = do
+  _toIR (Sol.StateVariableDeclaration t vis i@(Sol.Identifier sn _) expr a) = do
     t' <- _toIR t
     vis' <- toIRVisibility vis
     i' <- _toIR i
@@ -43,7 +43,7 @@ instance ToIRTransformable (Sol.StateVariableDeclaration SourceRange) IProperty'
         irState = not solConst && not solImmu
 
     case (irState, irStatic, irStatic == isJust expr') of
-      (True, True, _) -> reportError "unsupported state variable with initial value" a >> return Nothing
+      (True, True, _) -> reportError ("unsupported state variable `" ++ sn ++  "` with initial value") a >> return Nothing
       (_, _, False) -> return Nothing -- unsupported `expr`
       _ -> return $ IR.Property <$> i' <*> t' <*> Just vis' <*> Just expr' <*> Just (IsConst irConst) <*> Just (IsStatic irStatic) <*> Just (IsState irState)
 

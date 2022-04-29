@@ -43,7 +43,7 @@ instance ToIRTransformable (ContractPart SourceRange) IFunction' where
     vis <- toIRFuncVis tags
     retTransResult <- toIRFuncRet vis maybeRets
     (ps, blkTfromParam) <- toIRFuncParams pl tags retTransResult vis block
-    functionBody <- toIRFuncBody block vis blkTfromParam retTransResult
+    functionBody <- toIRFuncBody fn block vis blkTfromParam retTransResult
     case functionBody of
       Left msg -> reportError msg a >> return Nothing
       Right (ParamList paramsForMap, body) -> do
@@ -165,8 +165,8 @@ toIRFuncParams (ParameterList pl) _ (FuncRetTransResult _ ort rn) vis funcBlk = 
 
   return (IR.ParamList <$> params', blkT3)
 
-toIRFuncBody :: Block SourceRange -> IVisibility -> TFStmtWrapper -> FuncRetTransResult -> Transformation (Either String (IParamList, IBlock))
-toIRFuncBody blk@(Sol.Block _ _) vis wrapperFromParam (FuncRetTransResult _ ort rn) = do
+toIRFuncBody :: String -> Block SourceRange -> IVisibility -> TFStmtWrapper -> FuncRetTransResult -> Transformation (Either String (IParamList, IBlock))
+toIRFuncBody fn blk@(Sol.Block _ _) vis wrapperFromParam (FuncRetTransResult _ ort rn) = do
   modify $ \s -> s {stateReturnedInBlock = []}
   blk' <- _toIR blk
   let stmts = case blk' of
@@ -178,7 +178,7 @@ toIRFuncBody blk@(Sol.Block _ _) vis wrapperFromParam (FuncRetTransResult _ ort 
         _ -> False
 
   mCounter <- gets stateInFuncMappingCounter
-  transformforMap <- transForMappingAccess mCounter vis
+  transformforMap <- transForMappingAccess fn mCounter vis
 
   case transformforMap of
     Left msg -> return (Left msg)
@@ -447,8 +447,8 @@ afterCheckStmt :: IExpression -> IExpression -> String -> IStatement
 afterCheckStmt mapExpr keyExpr postfix =
   IR.RequireStmt $ mapSetExpr mapExpr keyExpr postfix
 
-transForMappingAccess :: MappingExprCounter -> IVisibility -> Transformation (Either String ([IR.IParam], TFStmtWrapper))
-transForMappingAccess mCounter vis = do
+transForMappingAccess :: String -> MappingExprCounter -> IVisibility -> Transformation (Either String ([IR.IParam], TFStmtWrapper))
+transForMappingAccess fn mCounter vis = do
   let initTag = ""
   -- injected params
   let injectedParams =
@@ -473,7 +473,7 @@ transForMappingAccess mCounter vis = do
   case injectedStatements of
     Just ss ->
       if (vis == Private || vis == Default) && not (null injectedParams)
-        then return $ Left "accessing mapping expression in non-external function is not supported"
+        then return $ Left ("accessing mapping expression in non-external function `" ++ fn ++ "` is not supported")
         else return $ Right (injectedParams, ss)
     Nothing -> return $ Left "injected statements failed when transpiling mapping"
 

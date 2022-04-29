@@ -1,0 +1,12 @@
+[
+    {
+        "src": "test/golden/fail/mapping.sol:7:5:7:17",
+        "type": "Error",
+        "message": "unsupported state variable `i` with initial value"
+    },
+    {
+        "src": "test/golden/fail/mapping.sol:15:14:15:18",
+        "type": "Error",
+        "message": "accessing mapping expression in non-external function `get2` is not supported"
+    }
+]
