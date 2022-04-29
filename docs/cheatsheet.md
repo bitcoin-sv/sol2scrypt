@@ -253,8 +253,8 @@ a.pop(); </code></pre> </td>
     <td><pre><code>mapping (address => uint)</code></pre></td>
     <td><pre><code>HashedMap<PubKeyHash, int></code></pre></td>
     <td>See <a href="https://scryptdoc.readthedocs.io/en/latest/contracts.html#library-hashedmap">HashedMap</a> <br>
-    mapping key has some limitations: <br>
-1: the following code is not supported: <br><pre><code>
+some limitations: <br>
+1: dynamic modification of the key value is not supported, such as the following code: <br><pre><code>
 map[a] = 1;
 a++;
 map[a] = 2;
