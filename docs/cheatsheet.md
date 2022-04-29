@@ -253,11 +253,14 @@ a.pop(); </code></pre> </td>
     <td><pre><code>mapping (address => uint)</code></pre></td>
     <td><pre><code>HashedMap<PubKeyHash, int></code></pre></td>
     <td>See <a href="https://scryptdoc.readthedocs.io/en/latest/contracts.html#library-hashedmap">HashedMap</a> <br>
-    mapping key has some limitations, the following code is not supported: <br><pre><code>
+    mapping key has some limitations: <br>
+1: the following code is not supported: <br><pre><code>
 map[a] = 1;
 a++;
 map[a] = 2;
-</code></pre></td>
+</code></pre>
+2: only supports using mapping in external function.
+</td>
 </tr>
 
 <tr>
@@ -353,7 +356,7 @@ HashedMap<MapKeyST0, int> nestedMap</code></pre></td>
 
 
 <tr>
-    <td rowspan="3"><b>Loop</b></td>
+    <td><b>For Loop</b></td>
     <td><pre><code>for(uint i=0; i<2; i++) {
     sum += i;
     if(i > 10)
@@ -372,7 +375,37 @@ loop (__LoopCount__0) {
     <td>we do not support unbounded loop.</td>
 </tr>
 
+
 <tr>
+    <td><b>While Loop</b></td>
+    <td><pre><code>uint i = 0;
+uint sum = 0;
+while(i <10) {
+    sum += i;
+    if (sum > 100) {
+        break;
+    }
+    i++;
+}</code></pre></td>
+    <td><pre><code>int i = 0;
+int sum = 0;
+bool loopBreakFlag0 = false;
+loop (__LoopCount__0) {
+    if (!loopBreakFlag0 && i < 10) {
+        sum += i;
+        if (sum > 100) {
+            loopBreakFlag0 = true;
+        }
+        if(!loopBreakFlag0) {
+            i++;
+        }
+    }
+}</code></pre></td>
+    <td></td>
+</tr>
+
+<tr>
+   <td><b>Do While Loop</b></td>
     <td><pre><code>uint i = 0;
 uint sum = 0;
 do {
@@ -397,33 +430,6 @@ loop (__LoopCount__0) {
             }
         }
         if (!loopContinueFlag0) {
-            i++;
-        }
-    }
-}</code></pre></td>
-    <td></td>
-</tr>
-
-<tr>
-    <td><pre><code>uint i = 0;
-uint sum = 0;
-while(i <10) {
-    sum += i;
-    if (sum > 100) {
-        break;
-    }
-    i++;
-}</code></pre></td>
-    <td><pre><code>int i = 0;
-int sum = 0;
-bool loopBreakFlag0 = false;
-loop (__LoopCount__0) {
-    if (!loopBreakFlag0 && i < 10) {
-        sum += i;
-        if (sum > 100) {
-            loopBreakFlag0 = true;
-        }
-        if(!loopBreakFlag0) {
             i++;
         }
     }
