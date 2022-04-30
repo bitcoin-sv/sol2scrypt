@@ -42,14 +42,14 @@ instance ToIRTransformable (ContractPart SourceRange) IFunction' where
         }
     vis <- toIRFuncVis tags
     retTransResult <- toIRFuncRet vis maybeRets
-    (ps, blkTfromParam) <- toIRFuncParams pl tags retTransResult vis block
-    functionBody <- toIRFuncBody block vis blkTfromParam retTransResult
+    (ps, preimageParams, blkTfromParam) <- toIRFuncParams pl tags retTransResult vis block
+    functionBody <- toIRFuncBody fn block vis blkTfromParam retTransResult
     case functionBody of
       Left msg -> reportError msg a >> return Nothing
       Right (ParamList paramsForMap, body) -> do
         let ps' = case ps of
-              Just (ParamList pps) -> Just (ParamList $ pps ++ paramsForMap)
-              _ -> Just $ ParamList paramsForMap
+              Just (ParamList pps) -> Just (ParamList $ pps ++ paramsForMap ++ preimageParams)
+              _ -> Just $ ParamList $ preimageParams ++ paramsForMap
         inL <- isInLibrary
         return $ Function (IR.Identifier fn) <$> ps' <*> Just body <*> targetType retTransResult <*> Just vis <*> Just inL
   _toIR _ = return Nothing
@@ -105,7 +105,7 @@ toIRFuncRet _ (Just (ParameterList el)) = do
   reportError "unsupported function definition with multi-returns" (mergeRange (ann $ head el) (ann $ last el))
   return $ FuncRetTransResult Nothing Nothing Nothing
 
-toIRFuncParams :: ParameterList SourceRange -> [FunctionDefinitionTag SourceRange] -> FuncRetTransResult -> IVisibility -> Block SourceRange -> Transformation (IParamList', TFStmtWrapper)
+toIRFuncParams :: ParameterList SourceRange -> [FunctionDefinitionTag SourceRange] -> FuncRetTransResult -> IVisibility -> Block SourceRange -> Transformation (IParamList', [IParam], TFStmtWrapper)
 toIRFuncParams (ParameterList pl) _ (FuncRetTransResult _ ort rn) vis funcBlk = do
   params <- mapM _toIR pl
 
@@ -154,19 +154,19 @@ toIRFuncParams (ParameterList pl) _ (FuncRetTransResult _ ort rn) vis funcBlk = 
         | vis == IR.Public = True
         | fst msgValueExist = True
         | otherwise = False
-  let (extraParams3, blkT3) =
+  let (extraParams3, preimageParam, blkT3) =
         if needPreimageParam
-          then let (ps, blkT_) = transForPreimageFunc (fst msgValueExist) in (map Just ps ++ extraParams2, mergeTFStmtWrapper blkT2 blkT_)
-          else (extraParams2, blkT2)
+          then let (ps, blkT_) = transForPreimageFunc (fst msgValueExist) in (extraParams2, ps, mergeTFStmtWrapper blkT2 blkT_)
+          else (extraParams2, [], blkT2)
 
   let params' = sequence $ params ++ extraParams3
 
   forM_ params' $ mapM_ (\p -> addSym $ Just $ Symbol (paramName p) (paramType p) False False False)
 
-  return (IR.ParamList <$> params', blkT3)
+  return (IR.ParamList <$> params', preimageParam, blkT3)
 
-toIRFuncBody :: Block SourceRange -> IVisibility -> TFStmtWrapper -> FuncRetTransResult -> Transformation (Either String (IParamList, IBlock))
-toIRFuncBody blk@(Sol.Block _ _) vis wrapperFromParam (FuncRetTransResult _ ort rn) = do
+toIRFuncBody :: String -> Block SourceRange -> IVisibility -> TFStmtWrapper -> FuncRetTransResult -> Transformation (Either String (IParamList, IBlock))
+toIRFuncBody fn blk@(Sol.Block _ _) vis wrapperFromParam (FuncRetTransResult _ ort rn) = do
   modify $ \s -> s {stateReturnedInBlock = []}
   blk' <- _toIR blk
   let stmts = case blk' of
@@ -178,7 +178,7 @@ toIRFuncBody blk@(Sol.Block _ _) vis wrapperFromParam (FuncRetTransResult _ ort 
         _ -> False
 
   mCounter <- gets stateInFuncMappingCounter
-  transformforMap <- transForMappingAccess mCounter vis
+  transformforMap <- transForMappingAccess fn mCounter vis
 
   case transformforMap of
     Left msg -> return (Left msg)
@@ -426,8 +426,8 @@ transForConstructorWithMsgValue =
   )
 
 -- <mapExpr>.set(<keyExpr>, <valExpr>, <idxExpr>)
-mapSetExpr :: IExpression -> IExpression -> String -> IExpression
-mapSetExpr mapExpr keyExpr postfix =
+mapSetExpr :: IExpression -> IExpression -> String -> Int -> IExpression
+mapSetExpr mapExpr keyExpr postfix idx =
   let e = Just $ BinaryExpr Index mapExpr keyExpr
    in FunctionCallExpr
         { funcExpr =
@@ -438,25 +438,25 @@ mapSetExpr mapExpr keyExpr postfix =
           funcParamExprs =
             [ keyExpr,
               fromJust $ valueExprOfMapping e postfix,
-              fromJust $ indexExprOfMapping e postfix
+              fromJust $ indexExprOfMapping idx
             ]
         }
 
 -- -- require(<mapExpr>.set(keyExpr, valExpr, idxExpr))
-afterCheckStmt :: IExpression -> IExpression -> String -> IStatement
-afterCheckStmt mapExpr keyExpr postfix =
-  IR.RequireStmt $ mapSetExpr mapExpr keyExpr postfix
+afterCheckStmt :: IExpression -> IExpression -> String -> Int -> IStatement
+afterCheckStmt mapExpr keyExpr postfix i =
+  IR.RequireStmt $ mapSetExpr mapExpr keyExpr postfix i
 
-transForMappingAccess :: MappingExprCounter -> IVisibility -> Transformation (Either String ([IR.IParam], TFStmtWrapper))
-transForMappingAccess mCounter vis = do
+transForMappingAccess :: String -> MappingExprCounter -> IVisibility -> Transformation (Either String ([IR.IParam], TFStmtWrapper))
+transForMappingAccess fn mCounter vis = do
   let initTag = ""
   -- injected params
   let injectedParams =
         concatMap
-          ( \(MECEntry t me ke _ _) ->
+          ( \(MECEntry t me ke _ _ i) ->
               let e = Just $ BinaryExpr Index me ke
                in [ IR.Param t $ IR.Identifier $ fromJust $ valueNameOfMapping e initTag, -- init value
-                    IR.Param (ElementaryType Int) $ IR.Identifier $ fromJust $ indexNameOfMapping e initTag -- init value index
+                    IR.Param (ElementaryType Int) $ IR.Identifier ("i" ++ show i)
                   ]
           )
           $ Map.elems mCounter
@@ -464,8 +464,8 @@ transForMappingAccess mCounter vis = do
   -- injected statements
   injectedStatements <-
     foldlM
-      ( \mc (MECEntry _ me ke _ updated) -> do
-          return $ mergeTFStmtWrapper' mc (Just (TFStmtWrapper [] [afterCheckStmt me ke initTag | updated]))
+      ( \mc (MECEntry _ me ke _ updated i) -> do
+          return $ mergeTFStmtWrapper' mc (Just (TFStmtWrapper [] [afterCheckStmt me ke initTag i | updated]))
       )
       (Just (TFStmtWrapper [] []))
       mCounter
@@ -473,7 +473,7 @@ transForMappingAccess mCounter vis = do
   case injectedStatements of
     Just ss ->
       if (vis == Private || vis == Default) && not (null injectedParams)
-        then return $ Left "accessing mapping expression in non-external function is not supported"
+        then return $ Left ("accessing mapping expression in non-external function `" ++ fn ++ "` is not supported")
         else return $ Right (injectedParams, ss)
     Nothing -> return $ Left "injected statements failed when transpiling mapping"
 

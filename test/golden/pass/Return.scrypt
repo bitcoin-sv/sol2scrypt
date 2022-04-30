@@ -279,7 +279,7 @@ contract Return {
     return ret;
   }
 
-  public function set2(int x, SigHashPreimage txPreimage, int retVal) {
+  public function set2(int x, int retVal, SigHashPreimage txPreimage) {
     int ret = 0;
     bool returned = false;
     this.storedData++;
@@ -297,7 +297,7 @@ contract Return {
     require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  public function set3(int x, SigHashPreimage txPreimage, int _y) {
+  public function set3(int x, int _y, SigHashPreimage txPreimage) {
     int y = 0;
     y = x;
     require(y == _y);
@@ -331,17 +331,17 @@ contract Return {
     require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  public function get1(SigHashPreimage txPreimage, int retVal) {
+  public function get1(int retVal, SigHashPreimage txPreimage) {
     require(this.storedData == retVal);
     require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  public function get2(SigHashPreimage txPreimage, int retVal) {
+  public function get2(int retVal, SigHashPreimage txPreimage) {
     require(1 + 1 == retVal);
     require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  public function get3(SigHashPreimage txPreimage, int retVal) {
+  public function get3(int retVal, SigHashPreimage txPreimage) {
     {
       true;
       {

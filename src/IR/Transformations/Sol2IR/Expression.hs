@@ -248,20 +248,21 @@ toExprName :: Bool -> IExpression -> ExprName
 toExprName _ (LiteralExpr (BoolLiteral b)) = show b
 toExprName _ (LiteralExpr (IntLiteral _ i)) = show i
 toExprName _ (LiteralExpr (BytesLiteral bytes)) = concatMap showHexWithPadded bytes
-toExprName keepDot (IdentifierExpr (IR.Identifier n)) = if keepDot then n else replaceDotWithUnderscore n
-toExprName keepDot (IdentifierExpr (IR.ReservedId n)) = if keepDot then n else replaceDotWithUnderscore n
+toExprName keepDot (IdentifierExpr (IR.Identifier n)) = if keepDot then n else replaceDotWithUnderscore $ stripThis n
+toExprName keepDot (IdentifierExpr (IR.ReservedId n)) = if keepDot then n else replaceDotWithUnderscore $ stripThis n
 toExprName _ (BinaryExpr _ le re) = toExprName False le ++ "_" ++ toExprName False re
 toExprName _ (StructLiteralExpr es) = intercalate "_" $ map (toExprName False) es
 toExprName keepDot (MemberAccessExpr e i@(IR.Identifier _)) = toExprName keepDot e ++ (if keepDot then "." else "_") ++ toExprName keepDot (IdentifierExpr i)
 toExprName _ e = error $ "the expr is not supported in #toExprName: " ++ show e
 
 incExprCounter :: MappingExprCounter -> IExpression' -> IExpression' -> IType -> MappingExprCounter
-incExprCounter ec (Just mapping) (Just key) et = Map.insert en (MECEntry et mapping key cnt updated) ec
+incExprCounter ec (Just mapping) (Just key) et = Map.insert en (MECEntry et mapping key cnt updated i) ec
   where
     en = toExprName True $ BinaryExpr Index mapping key
     entry = Map.lookup en ec
     cnt = maybe 0 exprCnt entry
     updated = maybe False entryUpdated entry
+    i = maybe (Map.size ec) index entry
 incExprCounter ec _ _ _ = ec
 
 -- get base identifier for binary index expression: `a[x][y]` -> `a`
@@ -309,9 +310,8 @@ indexNameOfMapping e postfix = (++) <$> valName <*> Just "_index"
     valName = valueNameOfMapping e postfix
 
 -- corresponding index expression for mapping expression
-indexExprOfMapping :: IExpression' -> String -> IExpression'
-indexExprOfMapping e@(Just (BinaryExpr Index _ _)) postfix = IdentifierExpr <$> (IR.Identifier <$> indexNameOfMapping e postfix)
-indexExprOfMapping _ _ = Nothing
+indexExprOfMapping :: Int -> IExpression'
+indexExprOfMapping i = Just $ IdentifierExpr $ IR.Identifier ("i" ++ show i)
 
 -- check left-hand-side map expression
 checkLHSmapExpr :: IExpression' -> Transformation ()

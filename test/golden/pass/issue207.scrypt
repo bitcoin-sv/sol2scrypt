@@ -1,0 +1,25 @@
+contract Mapping {
+  @state
+  public HashedMap<PubKeyHash, int> myMap;
+
+  public function get(PubKeyHash addr, int myMap_addr, int i0, SigHashPreimage txPreimage) {
+    require((!this.myMap.has(addr, i0) && myMap_addr == 0) || this.myMap.canGet(addr, myMap_addr, i0));
+    myMap_addr++;
+    require(this.myMap.set(addr, myMap_addr, i0));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
+  }
+
+  public function set(PubKeyHash addr, int x, int myMap_addr, int i0, SigHashPreimage txPreimage) {
+    require((!this.myMap.has(addr, i0) && myMap_addr == 0) || this.myMap.canGet(addr, myMap_addr, i0));
+    myMap_addr = x;
+    require(this.myMap.set(addr, myMap_addr, i0));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
+  }
+
+  function propagateState(SigHashPreimage txPreimage, int value) : bool {
+    require(Tx.checkPreimage(txPreimage));
+    bytes outputScript = this.getStateScript();
+    bytes output = Utils.buildOutput(outputScript, value);
+    return hash256(output) == SigHash.hashOutputs(txPreimage);
+  }
+}

@@ -15,7 +15,7 @@ contract Coin {
     this.minter = msgSender;
   }
 
-  public function mint(PubKeyHash receiver, int amount, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, bool this_b1_receiver, int this_b1_receiver_index, bytes this_b2_receiver, int this_b2_receiver_index, int this_balances_receiver, int this_balances_receiver_index) {
+  public function mint(PubKeyHash receiver, int amount, Sig sig, PubKey pubKey, bool b1_receiver, int i1, bytes b2_receiver, int i2, int balances_receiver, int i0, SigHashPreimage txPreimage) {
     bool ret = false;
     bool returned = false;
     PubKeyHash msgSender = hash160(pubKey);
@@ -27,42 +27,42 @@ contract Coin {
       }
     }
     if (!returned) {
-      require((!this.balances.has(receiver, this_balances_receiver_index) && this_balances_receiver == 0) || this.balances.canGet(receiver, this_balances_receiver, this_balances_receiver_index));
-      this_balances_receiver += amount;
-      require((!this.b1.has(receiver, this_b1_receiver_index) && this_b1_receiver == false) || this.b1.canGet(receiver, this_b1_receiver, this_b1_receiver_index));
-      this_b1_receiver != true;
-      require((!this.b2.has(receiver, this_b2_receiver_index) && this_b2_receiver == b'') || this.b2.canGet(receiver, this_b2_receiver, this_b2_receiver_index));
-      this_b2_receiver = b'0001';
+      require((!this.balances.has(receiver, i0) && balances_receiver == 0) || this.balances.canGet(receiver, balances_receiver, i0));
+      balances_receiver += amount;
+      require((!this.b1.has(receiver, i1) && b1_receiver == false) || this.b1.canGet(receiver, b1_receiver, i1));
+      b1_receiver != true;
+      require((!this.b2.has(receiver, i2) && b2_receiver == b'') || this.b2.canGet(receiver, b2_receiver, i2));
+      b2_receiver = b'0001';
     }
-    require(this.b2.set(receiver, this_b2_receiver, this_b2_receiver_index));
-    require(this.balances.set(receiver, this_balances_receiver, this_balances_receiver_index));
+    require(this.b2.set(receiver, b2_receiver, i2));
+    require(this.balances.set(receiver, balances_receiver, i0));
     require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  public function send(PubKeyHash receiver, int amount, bool a, bytes b, SigHashPreimage txPreimage, Sig sig, PubKey pubKey, bool this_b1_receiver, int this_b1_receiver_index, bytes this_b2_receiver, int this_b2_receiver_index, int this_balances_msgSender, int this_balances_msgSender_index, int this_balances_receiver, int this_balances_receiver_index) {
+  public function send(PubKeyHash receiver, int amount, bool a, bytes b, Sig sig, PubKey pubKey, bool b1_receiver, int i2, bytes b2_receiver, int i3, int balances_msgSender, int i0, int balances_receiver, int i1, SigHashPreimage txPreimage) {
     bool ret = false;
     bool returned = false;
     PubKeyHash msgSender = hash160(pubKey);
     require(checkSig(sig, pubKey));
-    require((!this.balances.has(msgSender, this_balances_msgSender_index) && this_balances_msgSender == 0) || this.balances.canGet(msgSender, this_balances_msgSender, this_balances_msgSender_index));
-    if (this_balances_msgSender < amount) {
+    require((!this.balances.has(msgSender, i0) && balances_msgSender == 0) || this.balances.canGet(msgSender, balances_msgSender, i0));
+    if (balances_msgSender < amount) {
       {
         ret = true;
         returned = true;
       }
     }
     if (!returned) {
-      this_balances_msgSender -= amount;
-      require((!this.balances.has(receiver, this_balances_receiver_index) && this_balances_receiver == 0) || this.balances.canGet(receiver, this_balances_receiver, this_balances_receiver_index));
-      this_balances_receiver += amount;
-      require((!this.b1.has(receiver, this_b1_receiver_index) && this_b1_receiver == false) || this.b1.canGet(receiver, this_b1_receiver, this_b1_receiver_index));
-      this_b1_receiver != a;
-      require((!this.b2.has(receiver, this_b2_receiver_index) && this_b2_receiver == b'') || this.b2.canGet(receiver, this_b2_receiver, this_b2_receiver_index));
-      this_b2_receiver = b;
+      balances_msgSender -= amount;
+      require((!this.balances.has(receiver, i1) && balances_receiver == 0) || this.balances.canGet(receiver, balances_receiver, i1));
+      balances_receiver += amount;
+      require((!this.b1.has(receiver, i2) && b1_receiver == false) || this.b1.canGet(receiver, b1_receiver, i2));
+      b1_receiver != a;
+      require((!this.b2.has(receiver, i3) && b2_receiver == b'') || this.b2.canGet(receiver, b2_receiver, i3));
+      b2_receiver = b;
     }
-    require(this.b2.set(receiver, this_b2_receiver, this_b2_receiver_index));
-    require(this.balances.set(msgSender, this_balances_msgSender, this_balances_msgSender_index));
-    require(this.balances.set(receiver, this_balances_receiver, this_balances_receiver_index));
+    require(this.b2.set(receiver, b2_receiver, i3));
+    require(this.balances.set(msgSender, balances_msgSender, i0));
+    require(this.balances.set(receiver, balances_receiver, i1));
     require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 

@@ -17,7 +17,7 @@ contract Ctor {
     this.initBalance = msgValue;
   }
 
-  public function set(int x, SigHashPreimage txPreimage, int msgValue) {
+  public function set(int x, int msgValue, SigHashPreimage txPreimage) {
     require(this.checkInitBalance(txPreimage));
     int contractBalance = SigHash.value(txPreimage) + msgValue;
     require(msgValue >= 0);
@@ -33,7 +33,7 @@ contract Ctor {
     return 1;
   }
 
-  public function userDefined_propagateState(SigHashPreimage txPreimage, int msgValue) {
+  public function userDefined_propagateState(int msgValue, SigHashPreimage txPreimage) {
     require(this.checkInitBalance(txPreimage));
     int contractBalance = SigHash.value(txPreimage) + msgValue;
     require(msgValue >= 0);

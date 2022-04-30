@@ -267,8 +267,8 @@ instance ToIRTransformable (Sol.Statement SourceRange) [IStatement'] where
     mc' <- gets stateInFuncMappingCounter
     mapCheckStmts <-
       foldlM
-        ( \ss (MECEntry t me ke _ _) -> do
-            preCheckStmt' <- preCheckStmt (Just t) me ke ""
+        ( \ss (MECEntry t me ke _ _ i) -> do
+            preCheckStmt' <- preCheckStmt (Just t) me ke "" i
             return $ ss ++ [Just preCheckStmt']
         )
         []
@@ -430,8 +430,8 @@ leaveBlockInLoop = do
     propagateFlags flags = flags
 
 -- -- require((!<mapExpr>.has(<keyExpr>, <idxExpr>)) || <mapExpr>.canGet(<keyExpr>, <valExpr>, <idxExpr>));
-preCheckStmt :: IType' -> IExpression -> IExpression -> String -> Transformation IStatement
-preCheckStmt t mapExpr keyExpr postfix = do
+preCheckStmt :: IType' -> IExpression -> IExpression -> String -> Int -> Transformation IStatement
+preCheckStmt t mapExpr keyExpr postfix idx = do
   defaultValue <- defaultValueExpr t
   return $
     IR.RequireStmt $
@@ -454,7 +454,7 @@ preCheckStmt t mapExpr keyExpr postfix = do
                                       },
                                   funcParamExprs =
                                     [ keyExpr,
-                                      fromJust $ indexExprOfMapping e postfix
+                                      fromJust $ indexExprOfMapping idx
                                     ]
                                 }
                           },
@@ -466,14 +466,14 @@ preCheckStmt t mapExpr keyExpr postfix = do
                           }
                     }
               },
-          rExpr = mapCanGetExpr mapExpr keyExpr postfix
+          rExpr = mapCanGetExpr mapExpr keyExpr postfix idx
         }
   where
     e = Just $ BinaryExpr Index mapExpr keyExpr
 
 -- -- <mapExpr>.canGet(<keyExpr>, <valExpr>, <idxExpr>)
-mapCanGetExpr :: IExpression -> IExpression -> String -> IExpression
-mapCanGetExpr mapExpr keyExpr postfix =
+mapCanGetExpr :: IExpression -> IExpression -> String -> Int -> IExpression
+mapCanGetExpr mapExpr keyExpr postfix idx =
   let e = Just $ BinaryExpr Index mapExpr keyExpr
    in FunctionCallExpr
         { funcExpr =
@@ -484,6 +484,6 @@ mapCanGetExpr mapExpr keyExpr postfix =
           funcParamExprs =
             [ keyExpr,
               fromJust $ valueExprOfMapping e postfix,
-              fromJust $ indexExprOfMapping e postfix
+              fromJust $ indexExprOfMapping idx
             ]
         }

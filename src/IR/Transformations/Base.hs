@@ -101,7 +101,9 @@ data MECEntry = MECEntry
     -- the expression occurrences count
     exprCnt :: Int,
     -- whether the entry been updated, i.e. used as LHS expr.
-    entryUpdated :: Bool
+    entryUpdated :: Bool,
+    -- Represents the index of keyIndex, i0 when index = 0
+    index :: Int
   }
   deriving (Show, Eq, Ord)
 
