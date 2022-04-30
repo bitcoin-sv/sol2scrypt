@@ -102,6 +102,7 @@ data MECEntry = MECEntry
     exprCnt :: Int,
     -- whether the entry been updated, i.e. used as LHS expr.
     entryUpdated :: Bool,
+    -- Represents the index of keyIndex, i0 when index = 0
     index :: Int
   }
   deriving (Show, Eq, Ord)

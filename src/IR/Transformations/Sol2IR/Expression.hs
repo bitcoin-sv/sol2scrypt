@@ -310,8 +310,8 @@ indexNameOfMapping e postfix = (++) <$> valName <*> Just "_index"
     valName = valueNameOfMapping e postfix
 
 -- corresponding index expression for mapping expression
-indexExprOfMapping :: String -> IExpression'
-indexExprOfMapping i = Just $ IdentifierExpr $ IR.Identifier i
+indexExprOfMapping :: Int -> IExpression'
+indexExprOfMapping i = Just $ IdentifierExpr $ IR.Identifier ("i" ++ show i)
 
 -- check left-hand-side map expression
 checkLHSmapExpr :: IExpression' -> Transformation ()

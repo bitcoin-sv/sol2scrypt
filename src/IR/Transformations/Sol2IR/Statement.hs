@@ -454,7 +454,7 @@ preCheckStmt t mapExpr keyExpr postfix idx = do
                                       },
                                   funcParamExprs =
                                     [ keyExpr,
-                                      fromJust $ indexExprOfMapping ("i" ++ show idx)
+                                      fromJust $ indexExprOfMapping idx
                                     ]
                                 }
                           },
@@ -484,6 +484,6 @@ mapCanGetExpr mapExpr keyExpr postfix idx =
           funcParamExprs =
             [ keyExpr,
               fromJust $ valueExprOfMapping e postfix,
-              fromJust $ indexExprOfMapping ("i" ++ show idx)
+              fromJust $ indexExprOfMapping idx
             ]
         }

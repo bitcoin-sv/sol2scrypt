@@ -438,7 +438,7 @@ mapSetExpr mapExpr keyExpr postfix idx =
           funcParamExprs =
             [ keyExpr,
               fromJust $ valueExprOfMapping e postfix,
-              fromJust $ indexExprOfMapping ("i" ++ show idx)
+              fromJust $ indexExprOfMapping idx
             ]
         }
 
