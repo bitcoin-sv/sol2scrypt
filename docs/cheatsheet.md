@@ -212,8 +212,8 @@ a.pop(); </code></pre> </td>
 </tr>
 
 <tr>
-    <td><b>Non-external function</b></td>
-    <td><pre><code> function get() public view returns (uint) {
+    <td><b>Internal function</b></td>
+    <td><pre><code> function get() internal view returns (uint) {
     return storedData;
 } </code></pre></td>
     <td><pre><code> function get() : int {
@@ -223,7 +223,18 @@ a.pop(); </code></pre> </td>
 </tr>
 
 <tr>
-    <td><b>External function</b></td>
+    <td><b>Private function</b></td>
+    <td><pre><code> function get() private view returns (uint) {
+    return storedData;
+} </code></pre></td>
+    <td><pre><code>private function get() : int {
+    return this.storedData;
+}</code></pre></td>
+    <td>no recursion allowed</td>
+</tr>
+
+<tr>
+    <td><b>Public and External function</b></td>
     <td><pre><code>function set(uint x) external {
     storedData = x;
 }</code></pre></td>
@@ -231,7 +242,7 @@ a.pop(); </code></pre> </td>
     this.storedData = x;
     require(this.propagateState(txPreimage));
 }</code></pre></td>
-    <td >automatically add require statement <pre><code>require(this.propagateState(txPreimage));</code></pre> and function paremeter <pre><code>SigHashPreimage txPreimage</code></pre> when transpiling external function</td>
+    <td >automatically add require statement <pre><code>require(this.propagateState(txPreimage));</code></pre> and function paremeter <pre><code>SigHashPreimage txPreimage</code></pre> when transpiling public and external function</td>
 </tr>
 
 <tr>
@@ -259,7 +270,7 @@ map[a] = 1;
 a++;
 map[a] = 2;
 </code></pre>
-2: only supports using mapping in external function.
+2: only supports using mapping in public and external function.
 </td>
 </tr>
 
