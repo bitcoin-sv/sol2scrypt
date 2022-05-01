@@ -65,7 +65,7 @@ contract Arrays {
     }
 
 
-    function f1(uint k) public pure returns (uint)  {
+    function f1(uint k) private pure returns (uint)  {
         return k;
     }
 }

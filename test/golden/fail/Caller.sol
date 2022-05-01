@@ -10,7 +10,7 @@ contract Callee {
         return x;
     }
 
-    function setXandSendEther(uint _x) public payable returns (uint, uint) {
+    function setXandSendEther(uint _x) private payable returns (uint, uint) {
         x = _x;
         value = msg.value;
 

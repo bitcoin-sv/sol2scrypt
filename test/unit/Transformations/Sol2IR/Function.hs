@@ -36,30 +36,32 @@ spec = testSpec "instance ToIRTransformable Contractpart IFunction'" $ do
 
   describe "when the function is `public pure`" $ do
     let vis = "public"; mut = "pure"
-    itTransformFunc (funcWithoutRet vis mut) $ expFuncWithoutRet_G1 Default
-    itTransformFunc (funcWithOnlyTypeRet vis mut) $ expFuncWithOnlyTypeRet_G1 Default
-    itTransformFunc (funcWithNamedRet vis mut) $ expFuncWithNamedRet_G1 Default
+
+    itTransformFunc (funcWithoutRet vis mut) $ expFuncWithoutRet_G3 Public
+    itTransformFunc (funcWithOnlyTypeRet vis mut) $ expFuncWithOnlyTypeRet_G3 Public
+    itTransformFunc (funcWithNamedRet vis mut) $ expFuncWithNamedRet_G3 Public
     itTransformFunc (funcWithMultiRet vis mut) Nothing
 
   describe "when the function is `public view`" $ do
     let vis = "public"; mut = "view"
-    itTransformFunc (funcWithoutRet vis mut) $ expFuncWithoutRet_G1 Default
-    itTransformFunc (funcWithOnlyTypeRet vis mut) $ expFuncWithOnlyTypeRet_G1 Default
-    itTransformFunc (funcWithNamedRet vis mut) $ expFuncWithNamedRet_G1 Default
+    itTransformFunc (funcWithoutRet vis mut) $ expFuncWithoutRet_G4 Public
+    itTransformFunc (funcWithOnlyTypeRet vis mut) $ expFuncWithOnlyTypeRet_G4 Public
+    itTransformFunc (funcWithNamedRet vis mut) $ expFuncWithNamedRet_G4 Public
     itTransformFunc (funcWithMultiRet vis mut) Nothing
 
   describe "when the function is `public payable`" $ do
     let vis = "public"; mut = "payable"
-    itTransformFunc (funcWithoutRet vis mut) $ expFuncWithoutRet_G1 Default
-    itTransformFunc (funcWithOnlyTypeRet vis mut) $ expFuncWithOnlyTypeRet_G1 Default
-    itTransformFunc (funcWithNamedRet vis mut) $ expFuncWithNamedRet_G1 Default
+    itTransformFunc (funcWithoutRet vis mut) $ expFuncWithoutRet_G4 Public
+    itTransformFunc (funcWithOnlyTypeRet vis mut) $ expFuncWithOnlyTypeRet_G4 Public
+    itTransformFunc (funcWithNamedRet vis mut) $ expFuncWithNamedRet_G4 Public
     itTransformFunc (funcWithMultiRet vis mut) Nothing
+
 
   describe "when the function is `public non-payable`" $ do
     let vis = "public"; mut = ""
-    itTransformFunc (funcWithoutRet vis mut) $ expFuncWithoutRet_G1 Default
-    itTransformFunc (funcWithOnlyTypeRet vis mut) $ expFuncWithOnlyTypeRet_G1 Default
-    itTransformFunc (funcWithNamedRet vis mut) $ expFuncWithNamedRet_G1 Default
+    itTransformFunc (funcWithoutRet vis mut) $ expFuncWithoutRet_G4 Public
+    itTransformFunc (funcWithOnlyTypeRet vis mut) $ expFuncWithOnlyTypeRet_G4 Public
+    itTransformFunc (funcWithNamedRet vis mut) $ expFuncWithNamedRet_G4 Public
     itTransformFunc (funcWithMultiRet vis mut) Nothing
 
   describe "when the function is `private pure`" $ do
@@ -92,30 +94,30 @@ spec = testSpec "instance ToIRTransformable Contractpart IFunction'" $ do
 
   describe "when the function is `internal pure`" $ do
     let vis = "internal"; mut = "pure"
-    itTransformFunc (funcWithoutRet vis mut) $ expFuncWithoutRet_G1 Private
-    itTransformFunc (funcWithOnlyTypeRet vis mut) $ expFuncWithOnlyTypeRet_G1 Private
-    itTransformFunc (funcWithNamedRet vis mut) $ expFuncWithNamedRet_G1 Private
+    itTransformFunc (funcWithoutRet vis mut) $ expFuncWithoutRet_G1 Default
+    itTransformFunc (funcWithOnlyTypeRet vis mut) $ expFuncWithOnlyTypeRet_G1 Default
+    itTransformFunc (funcWithNamedRet vis mut) $ expFuncWithNamedRet_G1 Default
     itTransformFunc (funcWithMultiRet vis mut) Nothing
 
   describe "when the function is `internal view`" $ do
     let vis = "internal"; mut = "view"
-    itTransformFunc (funcWithoutRet vis mut) $ expFuncWithoutRet_G1 Private
-    itTransformFunc (funcWithOnlyTypeRet vis mut) $ expFuncWithOnlyTypeRet_G1 Private
-    itTransformFunc (funcWithNamedRet vis mut) $ expFuncWithNamedRet_G1 Private
+    itTransformFunc (funcWithoutRet vis mut) $ expFuncWithoutRet_G1 Default
+    itTransformFunc (funcWithOnlyTypeRet vis mut) $ expFuncWithOnlyTypeRet_G1 Default
+    itTransformFunc (funcWithNamedRet vis mut) $ expFuncWithNamedRet_G1 Default
     itTransformFunc (funcWithMultiRet vis mut) Nothing
 
   describe "when the function is `internal payable`" $ do
     let vis = "internal"; mut = "payable"
-    itTransformFunc (funcWithoutRet vis mut) $ expFuncWithoutRet_G1 Private
-    itTransformFunc (funcWithOnlyTypeRet vis mut) $ expFuncWithOnlyTypeRet_G1 Private
-    itTransformFunc (funcWithNamedRet vis mut) $ expFuncWithNamedRet_G1 Private
+    itTransformFunc (funcWithoutRet vis mut) $ expFuncWithoutRet_G1 Default
+    itTransformFunc (funcWithOnlyTypeRet vis mut) $ expFuncWithOnlyTypeRet_G1 Default
+    itTransformFunc (funcWithNamedRet vis mut) $ expFuncWithNamedRet_G1 Default
     itTransformFunc (funcWithMultiRet vis mut) Nothing
 
   describe "when the function is `internal non-payable`" $ do
     let vis = "internal"; mut = ""
-    itTransformFunc (funcWithoutRet vis mut) $ expFuncWithoutRet_G1 Private
-    itTransformFunc (funcWithOnlyTypeRet vis mut) $ expFuncWithOnlyTypeRet_G1 Private
-    itTransformFunc (funcWithNamedRet vis mut) $ expFuncWithNamedRet_G1 Private
+    itTransformFunc (funcWithoutRet vis mut) $ expFuncWithoutRet_G1 Default
+    itTransformFunc (funcWithOnlyTypeRet vis mut) $ expFuncWithOnlyTypeRet_G1 Default
+    itTransformFunc (funcWithNamedRet vis mut) $ expFuncWithNamedRet_G1 Default
     itTransformFunc (funcWithMultiRet vis mut) Nothing
 
   describe "when the function is `external pure`" $ do

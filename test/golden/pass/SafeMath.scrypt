@@ -1,21 +1,21 @@
 library SafeMath {
-  private static function mul(int a, int b) : int {
+  static function mul(int a, int b) : int {
     int c = a * b;
     require(a == 0 || c / a == b);
     return c;
   }
 
-  private static function div(int a, int b) : int {
+  static function div(int a, int b) : int {
     int c = a / b;
     return c;
   }
 
-  private static function sub(int a, int b) : int {
+  static function sub(int a, int b) : int {
     require(b <= a);
     return a - b;
   }
 
-  private static function add(int a, int b) : int {
+  static function add(int a, int b) : int {
     int c = 0;
     c = a + b;
     require(c >= a);

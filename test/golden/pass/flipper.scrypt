@@ -11,8 +11,9 @@ contract flipper {
     require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  function get() : bool {
-    return this.value;
+  public function get(bool retVal, SigHashPreimage txPreimage) {
+    require(this.value == retVal);
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   function propagateState(SigHashPreimage txPreimage, int value) : bool {

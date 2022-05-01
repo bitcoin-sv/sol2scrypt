@@ -25,12 +25,16 @@ contract Ctor {
     require(this.propagateState(txPreimage, contractBalance));
   }
 
-  function get() : int {
-    return this.storedData;
+  public function get(int retVal, SigHashPreimage txPreimage) {
+    require(this.checkInitBalance(txPreimage));
+    require(this.storedData == retVal);
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  function userDefined_checkInitBalance() : int {
-    return 1;
+  public function userDefined_checkInitBalance(int retVal, SigHashPreimage txPreimage) {
+    require(this.checkInitBalance(txPreimage));
+    require(1 == retVal);
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   public function userDefined_propagateState(int msgValue, SigHashPreimage txPreimage) {

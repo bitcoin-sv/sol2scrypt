@@ -13,8 +13,9 @@ contract SimpleStorage {
     require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  function get() : int {
-    return this.storedData;
+  public function get(int retVal, SigHashPreimage txPreimage) {
+    require(this.storedData == retVal);
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   function propagateState(SigHashPreimage txPreimage, int value) : bool {

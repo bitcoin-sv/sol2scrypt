@@ -113,7 +113,7 @@ contract SimpleStorage {
     }
 
 
-    function ownerOf(uint tokenId) public view  returns (address owner) {
+    function ownerOf(uint tokenId) internal view  returns (address owner) {
         owner = _owners[tokenId];
         require(owner != address(0), "token doesn't exist");
     }

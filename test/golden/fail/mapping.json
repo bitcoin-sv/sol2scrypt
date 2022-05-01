@@ -7,6 +7,6 @@
     {
         "src": "test/golden/fail/mapping.sol:16:14:16:18",
         "type": "Error",
-        "message": "accessing mapping expression in non-external function `get2` is not supported"
+        "message": "accessing mapping expression in `internal` or `private` function `get2` is not supported"
     }
 ]

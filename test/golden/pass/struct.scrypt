@@ -33,7 +33,7 @@ contract Todos {
   @state
   public HashedMap<PubKeyHash, Todo> mapTodos;
 
-  function create(bytes _text) : Todo {
+  public function create(bytes _text, Todo retVal, SigHashPreimage txPreimage) {
     this.todos[0] = {_text, false};
     this.todos[0] = {_text, false};
     bool completed = this.todos[0].completed;
@@ -42,7 +42,7 @@ contract Todos {
     this.todos[0].completed = false;
     Todo todo = {"", false};
     todo.text = _text;
-    return {"", false};
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   public function update(bytes _text, PubKeyHash owner, Todo mapTodos_owner, int i0, SigHashPreimage txPreimage) {
@@ -52,7 +52,7 @@ contract Todos {
     require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  function testReturnStructArray(bytes _text) : Todo[3] {
+  public function testReturnStructArray(bytes _text, Todo[3] retVal, SigHashPreimage txPreimage) {
     Todo[3] ret = [{"", false}, {"", false}, {"", false}];
     bool returned = false;
     if (true) {
@@ -61,10 +61,11 @@ contract Todos {
         returned = true;
       }
     }
-    return returned ? ret : this.todos;
+    require((returned ? ret : this.todos) == retVal);
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  function testReturnNestStruct(bytes _text) : TodoW {
+  public function testReturnNestStruct(bytes _text, TodoW retVal, SigHashPreimage txPreimage) {
     TodoW ret = {"", false, {[{"", false, [0, 0, 0]}], ""}};
     bool returned = false;
     if (true) {
@@ -73,12 +74,13 @@ contract Todos {
         returned = true;
       }
     }
-    return returned ? ret : this.tw;
+    require((returned ? ret : this.tw) == retVal);
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  function testStructAsParam(TodoW tw) : bool {
+  public function testStructAsParam(TodoW tw, SigHashPreimage txPreimage) {
     TodoW a = tw;
-    return true;
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   function propagateState(SigHashPreimage txPreimage, int value) : bool {

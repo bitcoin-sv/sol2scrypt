@@ -13,7 +13,7 @@ contract Mapping {
         return myMap[_addr];
     }
 
-    function get2(address _addr) public view returns (uint) {
+    function get2(address _addr) internal view returns (uint) {
         return myMap[_addr];
     }
     

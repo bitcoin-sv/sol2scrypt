@@ -32,12 +32,14 @@ contract TestArray {
   @state
   public int[9] arr;
 
-  function testAdd(int x, int y) : int {
-    return SafeMath.add(x, y);
+  public function testAdd(int x, int y, int retVal, SigHashPreimage txPreimage) {
+    require(SafeMath.add(x, y) == retVal);
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  function testSquareRoot(int x) : int {
-    return Math.sqrt(x);
+  public function testSquareRoot(int x, int retVal, SigHashPreimage txPreimage) {
+    require(Math.sqrt(x) == retVal);
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   public function testArrayRemove(SigHashPreimage txPreimage) {

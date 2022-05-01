@@ -297,11 +297,10 @@ contract Return {
     require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  public function set3(int x, int _y, SigHashPreimage txPreimage) {
+  function set3(int x) : int {
     int y = 0;
     y = x;
-    require(y == _y);
-    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
+    return y;
   }
 
   private function foo() : bool {

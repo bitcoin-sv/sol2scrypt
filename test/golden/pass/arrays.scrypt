@@ -39,7 +39,7 @@ contract Arrays {
     require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  function getByIndex(int k, int x, L l) : bool {
+  public function getByIndex(int k, int x, L l, SigHashPreimage txPreimage) {
     int[3][2] aa = [[1, 2], [1, 2], [1, 2]];
     int i = 0;
     loop (__LoopCount__0) {
@@ -58,10 +58,10 @@ contract Arrays {
     l.b[k][x].a[k][k][x].text = "aaa";
     l.b[k][x].a[k][0][x * k].text = "aaa";
     l.b[this.f1(k)][this.f1(k)].a[aa[k][k]][0][x * k].text = "aaa";
-    return true;
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  function f1(int k) : int {
+  private function f1(int k) : int {
     return k;
   }
 

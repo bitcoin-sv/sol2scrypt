@@ -82,8 +82,8 @@ public function set(int x, int _y, SigHashPreimage txPreimage) {
 }|]
 
   itTranspile
-    "public view function without return"
-    "function get() public view { storedData = 1; }"
+    "internal view function without return"
+    "function get() internal view { storedData = 1; }"
     [r|
 function get() : bool {
   storedData = 1;
@@ -91,8 +91,8 @@ function get() : bool {
 }|]
   
   itTranspile
-    "public view function with named return"
-    "function get() public view returns (uint y) { y = storedData; }"
+    "internal view function with named return"
+    "function get() internal view returns (uint y) { y = storedData; }"
     [r|
 function get() : int {
   int y = 0;
@@ -101,8 +101,8 @@ function get() : int {
 }|]
 
   itTranspile
-    "public view function with unnamed return"
-    "function get() public view returns (uint) { return storedData; }"
+    "internal view function with unnamed return"
+    "function get() internal view returns (uint) { return storedData; }"
     [r|
 function get() : int {
   return storedData;
@@ -114,46 +114,46 @@ function get() : int {
     itTranspile
       "public function"
       "function get() public { return x; }"
-      "\nfunction get() : bool {\n  return x;\n}"
+      "\npublic function get(SigHashPreimage txPreimage) {\n  require(this.propagateState(txPreimage, SigHash.value(txPreimage)));\n}"
 
     itTranspile
       "pure function"
-      "function get() public pure { return x; }"
+      "function get() internal pure { return x; }"
       "\nfunction get() : bool {\n  return x;\n}"
 
     itTranspile
       "constant function"
-      "function get() public constant { return x; }"
+      "function get() internal constant { return x; }"
       "\nfunction get() : bool {\n  return x;\n}"
 
     itTranspile
       "view function"
-      "function get() public view { return x; }"
+      "function get() internal view { return x; }"
       "\nfunction get() : bool {\n  return x;\n}"
 
     itTranspile
       "payable function"
-      "function get() public payable { return x; }"
+      "function get() internal payable { return x; }"
       "\nfunction get() : bool {\n  return x;\n}"
 
     itTranspile
       "public function with returns"
-      "function privateFunc() public pure returns (bool memory) { return true; }"
+      "function privateFunc() internal pure returns (bool memory) { return true; }"
       "\nfunction privateFunc() : bool {\n  return true;\n}"
 
     itTranspile
       "public view function with returns"
-      "function get() public view returns (uint) { return storedData; }"
+      "function get() internal view returns (uint) { return storedData; }"
       "\nfunction get() : int {\n  return storedData;\n}"
 
     itTranspile
       "function empty"
-      "function g() public { }"
+      "function g() internal { }"
       "\nfunction g() : bool {\n  return true;\n}"
 
     itTranspile
       "function with Expression"
-      "function g(uint a) public pure returns (uint ret) { return a + f(); }"
+      "function g(uint a) internal pure returns (uint ret) { return a + f(); }"
       [r|
 function g(int a) : int {
   int userDefined_ret = 0;
@@ -162,7 +162,7 @@ function g(int a) : int {
 
     itTranspile
       "function with return in if branch"
-      [r|function test0( uint amount) public view returns (uint) {
+      [r|function test0( uint amount) internal view returns (uint) {
   uint x = 3;
   if(x == 0) {
       x++;
@@ -191,7 +191,7 @@ function test0(int amount) : int {
 
     itTranspile
       "function with return in else branch"
-      [r|function test4( uint amount, uint y) public returns (uint) {
+      [r|function test4( uint amount, uint y) internal returns (uint) {
   uint x = 3;
   if(x > 0) {
     x++;
@@ -227,7 +227,7 @@ function test4(int amount, int y) : int {
 
     itTranspile
       "function with return in both if & else branch"
-      [r|function test1( uint amount) public returns (uint) {
+      [r|function test1( uint amount) internal returns (uint) {
     uint x = 3;
     if(x == 3) {
         return x;
@@ -257,7 +257,7 @@ function test1(int amount) : int {
 
     itTranspile
       "function with return in nested if branch"
-      [r|function test5( uint amount, uint y) public returns (uint) {
+      [r|function test5( uint amount, uint y) internal returns (uint) {
     uint x = 3;
     if(x > 0) {
         x++;
@@ -317,7 +317,7 @@ function test5(int amount, int y) : int {
 
     itTranspile
       "function with return in non-block if branch"
-      [r|function test6( uint x) public view returns (bool) {
+      [r|function test6( uint x) internal view returns (bool) {
     if(x == 0) 
         return true;
     return false;
@@ -337,7 +337,7 @@ function test6(int x) : bool {
 
     itTranspile
       "function with no return at the end"
-      [r|function test9(uint x) public pure returns (uint) {
+      [r|function test9(uint x) internal pure returns (uint) {
     uint y = 1;
 }|]
       [r|
@@ -348,7 +348,7 @@ function test9(int x) : int {
 
     itTranspile
       "function with named but omitted return at the end"
-      [r|function test10(uint x) public view returns (uint z) {
+      [r|function test10(uint x) internal view returns (uint z) {
     if(x == 0) {
         if(x > 1){ 
             if(x > 9) {
@@ -400,7 +400,7 @@ function test10(int x) : int {
 
     itTranspile
       "function with return bytes"
-      [r|function test9(uint x) public pure returns (bytes) {
+      [r|function test9(uint x) internal pure returns (bytes) {
     bytes y = hex"00";
     if(x == 10000) {
       return y;
@@ -503,7 +503,7 @@ function test9(int x) : bytes {
 
     itTranspile
       "function with return bool"
-      [r|function test6( uint x) public view returns (bool) {
+      [r|function test6( uint x) internal view returns (bool) {
     if(x == 0) 
         return true;
     
@@ -575,31 +575,36 @@ private function _approve(PubKeyHash owner, PubKeyHash to, int tokenId) : bool {
     itTranspile
       "internal function"
       "function get() internal { return x; }"
-      "\nprivate function get() : bool {\n  return x;\n}"
+      "\nfunction get() : bool {\n  return x;\n}"
 
     itTranspile
       "pure function"
-      "function get() internal pure { return x; }"
+      "function get() private pure { return x; }"
       "\nprivate function get() : bool {\n  return x;\n}"
 
     itTranspile
       "constant function"
-      "function get() internal constant { return x; }"
+      "function get() private constant { return x; }"
       "\nprivate function get() : bool {\n  return x;\n}"
 
     itTranspile
       "view function"
-      "function get() internal view { return x; }"
+      "function get() private view { return x; }"
       "\nprivate function get() : bool {\n  return x;\n}"
 
     itTranspile
       "payable function"
-      "function get() internal payable { return x; }"
+      "function get() private payable { return x; }"
       "\nprivate function get() : bool {\n  return x;\n}"
 
     itTranspile
       "internal function with returns"
       "function privateFunc() internal pure returns (bool memory) { return true; }"
+      "\nfunction privateFunc() : bool {\n  return true;\n}"
+
+    itTranspile
+      "private function with returns"
+      "function privateFunc() private pure returns (bool memory) { return true; }"
       "\nprivate function privateFunc() : bool {\n  return true;\n}"
 
   describe "#external " $ do
@@ -801,12 +806,12 @@ public function send(PubKeyHash receiver, int amount, int balances_owner, int i0
 }|]
 
   describe "#ReportError" $ do
-    itReportError "public function access msg.sender" 
-      [r|function send(address receiver, uint amount) public {
+    itReportError "internal function access msg.sender" 
+      [r|function send(address receiver, uint amount) internal {
     balances[msg.sender] -= amount;
     balances[receiver] += amount;
 }|]
-      "unsupported using `msg.sender` in non-external function" (2, 14) (2, 24)
+      "unsupported using `msg.sender` in `internal` or `private` function" (2, 14) (2, 24)
       [r|
 function send(PubKeyHash receiver, int amount) : bool {
   balances[msgSender] -= amount;

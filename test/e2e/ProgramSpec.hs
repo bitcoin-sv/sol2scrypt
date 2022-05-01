@@ -82,14 +82,22 @@ contract flipper {
     this.value = initvalue;
   }
 
-  function flip() : bool {
+  public function flip(SigHashPreimage txPreimage) {
     require(this.value);
     this.value = !this.value;
-    return true;
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  function get() : bool {
-    return this.value;
+  public function get(bool retVal, SigHashPreimage txPreimage) {
+    require(this.value == retVal);
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
+  }
+
+  function propagateState(SigHashPreimage txPreimage, int value) : bool {
+    require(Tx.checkPreimage(txPreimage));
+    bytes outputScript = this.getStateScript();
+    bytes output = Utils.buildOutput(outputScript, value);
+    return hash256(output) == SigHash.hashOutputs(txPreimage);
   }
 }|]
 
@@ -110,11 +118,11 @@ contract SimpleStorage {
 contract flipper {
     bool private value;
 
-    function flip() public {
+    function flip() internal {
         value = !value;
     }
 
-    function get() public view returns (bool) {
+    function get() internal view returns (bool) {
         return value;
     }
 }
@@ -187,11 +195,11 @@ contract SimpleStorage {
 contract flipper {
     bool private value;
 
-    function flip() public {
+    function flip() internal {
         value = !value;
     }
 
-    function get() public view returns (bool) {
+    function get() internal view returns (bool) {
         return value;
     }
 }
@@ -703,7 +711,7 @@ contract SimpleStorage {
         storedData = x;
     }
 
-    function set1(uint x) public {
+    function set1(uint x) internal {
 
         uint a = 3;
         if(x > a) {
@@ -875,15 +883,15 @@ contract SimpleStorage {
   
     }
 
-    function foo1() external {
+    function foo1() public {
       return;
     }
 
-    function foo2() public {
+    function foo2() internal {
       
     }
 
-    function foo3() public {
+    function foo3() private {
       return;
     }
 }
@@ -904,7 +912,7 @@ contract SimpleStorage {
     return true;
   }
 
-  function foo3() : bool {
+  private function foo3() : bool {
     return true;
   }
 

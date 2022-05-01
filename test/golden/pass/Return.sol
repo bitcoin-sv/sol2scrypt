@@ -4,7 +4,7 @@ contract Return {
     uint storedData;
 
     // test return only in if
-    function test0( uint amount) public view returns (uint) {
+    function test0( uint amount) internal view returns (uint) {
         uint x = 3;
         if(x == 0) {
             x++;
@@ -16,7 +16,7 @@ contract Return {
     }
 
     // test return both in if and else
-    function test1( uint amount) public returns (uint) {
+    function test1( uint amount) internal returns (uint) {
         uint x = 3;
         if(x == 3) {
             return x;
@@ -26,7 +26,7 @@ contract Return {
     }
 
      // test return in nested if
-    function test2( uint amount) public returns (uint)  {
+    function test2( uint amount) internal returns (uint)  {
         uint x = 3;
         if(x > 0) {
             if(x == 3) {
@@ -42,7 +42,7 @@ contract Return {
     }
 
 
-    function test3( uint amount, uint y) public returns (uint) {
+    function test3( uint amount, uint y) internal returns (uint) {
         uint x = 3;
         if(x > 0) {
             if (x > 1) {
@@ -71,7 +71,7 @@ contract Return {
     }
 
     // return only in else
-    function test4( uint amount, uint y) public returns (uint) {
+    function test4( uint amount, uint y) internal returns (uint) {
         uint x = 3;
         if(x > 0) {
             x++;
@@ -87,7 +87,7 @@ contract Return {
 
 
 
-    function test5( uint amount, uint y) public returns (uint) {
+    function test5( uint amount, uint y) internal returns (uint) {
         uint x = 3;
         if(x > 0) {
             x++;
@@ -111,7 +111,7 @@ contract Return {
 
 
     // test return no in a block
-    function test6( uint x) public view returns (bool) {
+    function test6( uint x) internal view returns (bool) {
         if(x == 0) 
             return true;
         
@@ -120,7 +120,7 @@ contract Return {
 
 
     // test return no in a block
-    function test7( uint x) public view returns (bytes8) {
+    function test7( uint x) internal view returns (bytes8) {
         if(x == 0) {
             if(x > 1){ 
                 if(x > 9) {
@@ -135,7 +135,7 @@ contract Return {
     }
 
     //  no return at the end.
-    function test8(uint x) public view returns (uint) {
+    function test8(uint x) internal view returns (uint) {
         uint y = 1;
         if(x == 0) {
             if(x > 1){ 
@@ -153,7 +153,7 @@ contract Return {
 
 
     //  no return at the end.
-    function test9(uint x) public pure returns (uint) {
+    function test9(uint x) internal pure returns (uint) {
         uint y = 1;
         
     }
@@ -168,7 +168,7 @@ contract Return {
         storedData = x;
     }
 
-    function set1(uint x) public {
+    function set1(uint x) internal {
 
         uint a = 3;
         if(x > a) {
@@ -188,7 +188,7 @@ contract Return {
         return storedData;
     }
 
-    function set3(uint x) external view returns (uint y) { y = x; }
+    function set3(uint x) internal view returns (uint y) { y = x; }
 
     function foo() private {
         if (true) return;
