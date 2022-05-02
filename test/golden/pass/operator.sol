@@ -134,11 +134,11 @@ contract SolidityTest {
         require(a == ab);
     }
 
-    function f1(uint x) public pure returns (uint) {
+    function f1(uint x) internal pure returns (uint) {
         return x + 1;
     }
 
-    function f2(uint8 x) public pure returns (uint8) {
+    function f2(uint8 x) internal pure returns (uint8) {
         return x + 1;
     }
 

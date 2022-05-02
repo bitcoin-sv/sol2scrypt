@@ -12,7 +12,7 @@ contract DataLocations {
   @state
   HashedMap<int, MyStruct> myStructs;
 
-  private function _f(int[3] _arr, HashedMap<int, PubKeyHash> _map, MyStruct _myStruct) : bool {
+  function _f(int[3] _arr, HashedMap<int, PubKeyHash> _map, MyStruct _myStruct) : bool {
     return true;
   }
 
@@ -24,8 +24,8 @@ contract DataLocations {
     require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  function g(int[3] _arr) : int[3] {
-    return [0, 0, 0];
+  public function g(int[3] _arr, int[3] retVal, SigHashPreimage txPreimage) {
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   public function h(int[3] _arr, SigHashPreimage txPreimage) {

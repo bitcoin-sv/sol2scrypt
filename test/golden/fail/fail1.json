@@ -97,6 +97,6 @@
     {
         "src": "test/golden/fail/fail1.sol:116:14:116:21",
         "type": "Error",
-        "message": "accessing mapping expression in non-external function `ownerOf` is not supported"
+        "message": "accessing mapping expression in `internal` or `private` function `ownerOf` is not supported"
     }
 ]

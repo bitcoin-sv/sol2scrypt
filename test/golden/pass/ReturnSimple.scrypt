@@ -2,7 +2,7 @@ contract Return {
   @state
   int counter;
 
-  function test(int x) : int {
+  public function test(int x, int retVal, SigHashPreimage txPreimage) {
     int ret = 0;
     bool returned = false;
     if (x > 0) {
@@ -14,7 +14,8 @@ contract Return {
     if (!returned) {
       this.counter++;
     }
-    return returned ? ret : 1;
+    require((returned ? ret : 1) == retVal);
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   public function unlock(int ab, int retVal, SigHashPreimage txPreimage) {

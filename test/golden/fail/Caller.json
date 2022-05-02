@@ -1,13 +1,13 @@
 [
     {
-        "src": "test/golden/fail/Caller.sol:13:64:13:74",
+        "src": "test/golden/fail/Caller.sol:13:65:13:75",
         "type": "Error",
         "message": "unsupported function definition with multi-returns"
     },
     {
         "src": "test/golden/fail/Caller.sol:15:17:15:26",
         "type": "Error",
-        "message": "unsupported using `msg.value` in non-external function"
+        "message": "unsupported using `msg.value` in `internal` or `private` function"
     },
     {
         "src": "test/golden/fail/Caller.sol:17:16:17:26",

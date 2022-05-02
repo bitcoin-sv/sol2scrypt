@@ -71,7 +71,8 @@ toIRFuncVis tags
       map
         ( \tag -> case tag of
             FunctionDefinitionTagStateMutability (StateMutability External _) -> Public
-            FunctionDefinitionTagStateMutability (StateMutability Internal _) -> Private
+            FunctionDefinitionTagPublic _ -> Public
+            FunctionDefinitionTagStateMutability (StateMutability Internal _) -> Default
             FunctionDefinitionTagPrivate _ -> Private
             _ -> Default
         )
@@ -130,7 +131,7 @@ toIRFuncParams (ParameterList pl) _ (FuncRetTransResult _ ort rn) vis funcBlk = 
         if vis == Public
           then let (ps, blkT_) = transForFuncWithMsgSender in return (map Just ps ++ extraParams0, mergeTFStmtWrapper blkT0 blkT_)
           else do
-            reportError "unsupported using `msg.sender` in non-external function" (snd msgSenderExist)
+            reportError "unsupported using `msg.sender` in `internal` or `private` function" (snd msgSenderExist)
             return (extraParams0, blkT0)
       else return (extraParams0, blkT0)
 
@@ -146,7 +147,7 @@ toIRFuncParams (ParameterList pl) _ (FuncRetTransResult _ ort rn) vis funcBlk = 
             let (ps, blkT_) = transForFuncWithMsgValue
             return (map Just ps ++ extraParams1, mergeTFStmtWrapper blkT1 blkT_)
           else do
-            reportError "unsupported using `msg.value` in non-external function" (snd msgValueExist)
+            reportError "unsupported using `msg.value` in `internal` or `private` function" (snd msgValueExist)
             return (extraParams1, blkT1)
       else return (extraParams1, blkT1)
 
@@ -473,7 +474,7 @@ transForMappingAccess fn mCounter vis = do
   case injectedStatements of
     Just ss ->
       if (vis == Private || vis == Default) && not (null injectedParams)
-        then return $ Left ("accessing mapping expression in non-external function `" ++ fn ++ "` is not supported")
+        then return $ Left ("accessing mapping expression in `internal` or `private` function `" ++ fn ++ "` is not supported")
         else return $ Right (injectedParams, ss)
     Nothing -> return $ Left "injected statements failed when transpiling mapping"
 

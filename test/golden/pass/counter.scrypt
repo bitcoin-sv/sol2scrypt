@@ -2,8 +2,9 @@ contract Counter {
   @state
   public int count;
 
-  function get() : int {
-    return this.count;
+  public function get(int retVal, SigHashPreimage txPreimage) {
+    require(this.count == retVal);
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   public function inc(SigHashPreimage txPreimage) {
@@ -11,9 +12,9 @@ contract Counter {
     require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  function set(int _count) : bool {
+  public function set(int _count, SigHashPreimage txPreimage) {
     this.count = _count;
-    return true;
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   function propagateState(SigHashPreimage txPreimage, int value) : bool {

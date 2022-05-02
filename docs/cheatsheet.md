@@ -211,19 +211,55 @@ a.pop(); </code></pre> </td>
     <td>cannot support property with initialization: <pre><code>uint amount = 1000;</code></pre></td>
 </tr>
 
+
 <tr>
-    <td><b>Non-external function</b></td>
-    <td><pre><code> function get() public view returns (uint) {
+    <td rowspan="4"><b>Access Modifier</b></td>
+    <td><pre><code>private</code></pre></td>
+    <td><pre><code>private</code></pre></td>
+    <td></td>
+</tr>
+
+<tr >
+    <td><pre><code>public</code></pre></td>
+    <td><pre><code>public</code></pre></td>
+    <td></td>
+</tr>
+<tr >
+    <td><pre><code>internal</code></pre></td>
+    <td><pre><code>default</code></pre></td>
+    <td></td>
+</tr>
+<tr >
+    <td><pre><code>external</code></pre></td>
+    <td><pre><code>public</code></pre></td>
+    <td></td>
+</tr>
+
+
+<tr>
+    <td><b>Internal function</b></td>
+    <td><pre><code> function get() internal view returns (uint) {
     return storedData;
 } </code></pre></td>
-    <td><pre><code> function get() : int {
+    <td><pre><code>function get() : int {
     return this.storedData;
 }</code></pre></td>
     <td>no recursion allowed</td>
 </tr>
 
 <tr>
-    <td><b>External function</b></td>
+    <td><b>Private function</b></td>
+    <td><pre><code>function get() private view returns (uint) {
+    return storedData;
+} </code></pre></td>
+    <td><pre><code>private function get() : int {
+    return this.storedData;
+}</code></pre></td>
+    <td>no recursion allowed</td>
+</tr>
+
+<tr>
+    <td><b>Public and External function</b></td>
     <td><pre><code>function set(uint x) external {
     storedData = x;
 }</code></pre></td>
@@ -231,7 +267,7 @@ a.pop(); </code></pre> </td>
     this.storedData = x;
     require(this.propagateState(txPreimage));
 }</code></pre></td>
-    <td >automatically add require statement <pre><code>require(this.propagateState(txPreimage));</code></pre> and function paremeter <pre><code>SigHashPreimage txPreimage</code></pre> when transpiling external function</td>
+    <td >automatically add require statement <pre><code>require(this.propagateState(txPreimage));</code></pre> and function paremeter <pre><code>SigHashPreimage txPreimage</code></pre> when transpiling public and external function</td>
 </tr>
 
 <tr>
@@ -259,7 +295,7 @@ map[a] = 1;
 a++;
 map[a] = 2;
 </code></pre>
-2: only supports using mapping in external function.
+2: only supports using mapping in public and external function.
 </td>
 </tr>
 
@@ -453,13 +489,22 @@ loop (__LoopCount__0) {
 
 <tr>
     <td ><b>Library</b></td>
-    <td><pre><code>library HelloWorld {
-    ...
+    <td><pre><code>library SafeMath {
+    function add(uint x, uint y) internal pure returns (uint) {
+        uint z = x + y;
+        require(z >= x, "uint overflow");
+        return z;
+    }
 }</code></pre></td>
-    <td><pre><code>library HelloWorld {
-    ...
+    <td><pre><code>library SafeMath {
+  static function add(int x, int y) : int {
+    int z = x + y;
+    require(z >= x);
+    return z;
+  }
 }</code></pre></td>
-    <td></td>
+    <td>1: Library cannot be independently deployed<br>
+2: Library function will be transpiled into static function</td>
 </tr>
 
 <tr>
@@ -635,7 +680,7 @@ selfdestruct();
 </tr>
 
 <tr>
-    <td ><b>Modifier</b></td>
+    <td ><b>Access Modifier</b></td>
     <td><pre><code>onlySeller</code></pre></code></td>
 </tr>
 

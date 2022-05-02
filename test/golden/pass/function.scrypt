@@ -17,7 +17,7 @@ contract Test {
     require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  function f4(int a) : int {
+  private function f4(int a) : int {
     return L.f1(a, a);
   }
 

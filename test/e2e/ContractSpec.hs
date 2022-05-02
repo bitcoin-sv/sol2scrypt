@@ -77,7 +77,7 @@ spec = testSpec "Transpile Contract" $ do
         storedData = x;
     }
 
-    function get() public view returns (uint) {
+    function get() internal view returns (uint) {
         return storedData;
     }
 }|]
@@ -102,11 +102,11 @@ spec = testSpec "Transpile Contract" $ do
   }
 }|]
 
-  itTransContract "contract A with only public function"
+  itTransContract "contract A with only internal function"
     [r|contract A {
     uint a;
 
-    function set(uint x) public {
+    function set(uint x) internal {
         a = x;
         {
           uint a = 2;
@@ -117,7 +117,7 @@ spec = testSpec "Transpile Contract" $ do
       x = a; 
     }
 
-    function add(uint a) {
+    function add(uint a) internal {
         a = 1; 
         uint b = a;
     }
@@ -161,13 +161,21 @@ spec = testSpec "Transpile Contract" $ do
   @state
   private bool value;
 
-  function flip() : bool {
+  public function flip(SigHashPreimage txPreimage) {
     this.value = !this.value;
-    return true;
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  function get() : bool {
-    return this.value;
+  public function get(bool retVal, SigHashPreimage txPreimage) {
+    require(this.value == retVal);
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
+  }
+
+  function propagateState(SigHashPreimage txPreimage, int value) : bool {
+    require(Tx.checkPreimage(txPreimage));
+    bytes outputScript = this.getStateScript();
+    bytes output = Utils.buildOutput(outputScript, value);
+    return hash256(output) == SigHash.hashOutputs(txPreimage);
   }
 }|]
 
@@ -192,8 +200,9 @@ spec = testSpec "Transpile Contract" $ do
     require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  function get() : bool {
-    return this.value;
+  public function get(bool retVal, SigHashPreimage txPreimage) {
+    require(this.value == retVal);
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   function propagateState(SigHashPreimage txPreimage, int value) : bool {
@@ -225,18 +234,26 @@ spec = testSpec "Transpile Contract" $ do
   @state
   public int count;
 
-  function get() : int {
-    return this.count;
+  public function get(int retVal, SigHashPreimage txPreimage) {
+    require(this.count == retVal);
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  function inc() : bool {
+  public function inc(SigHashPreimage txPreimage) {
     this.count += 1;
-    return true;
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  function set(int _count) : bool {
+  public function set(int _count, SigHashPreimage txPreimage) {
     this.count = _count;
-    return true;
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
+  }
+
+  function propagateState(SigHashPreimage txPreimage, int value) : bool {
+    require(Tx.checkPreimage(txPreimage));
+    bytes outputScript = this.getStateScript();
+    bytes output = Utils.buildOutput(outputScript, value);
+    return hash256(output) == SigHash.hashOutputs(txPreimage);
   }
 }|]
 
@@ -258,14 +275,14 @@ spec = testSpec "Transpile Contract" $ do
     event Log(address indexed sender, string message);
     event AnotherLog();
 
-    function test() public {
+    function test() private {
         emit Log(msg.sender, "Hello World!");
         emit Log(msg.sender, "Hello EVM!");
         emit AnotherLog();
     }
 }|]
       [r|contract Event {
-  function test() : bool {
+  private function test() : bool {
     return true;
   }
 }|]
@@ -284,7 +301,7 @@ spec = testSpec "Transpile Contract" $ do
         storedData = x;
     }
 
-    function get() public view returns (uint) {
+    function get() internal view returns (uint) {
         return storedData;
     }
 }|]

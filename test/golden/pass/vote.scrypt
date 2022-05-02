@@ -83,7 +83,7 @@ contract Ballot {
     require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  function winningProposal() : int {
+  public function winningProposal(int _winningProposal_, SigHashPreimage txPreimage) {
     int winningProposal_ = 0;
     int winningVoteCount = 0;
     int p = 0;
@@ -96,7 +96,8 @@ contract Ballot {
         p++;
       }
     }
-    return winningProposal_;
+    require(winningProposal_ == _winningProposal_);
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   public function winnerName(bytes _winnerName_, SigHashPreimage txPreimage) {
