@@ -96,7 +96,7 @@ contract LoopTest {
     require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
-  public function f4(int retVal, SigHashPreimage txPreimage) {
+  function f4() : int {
     int ret = 0;
     bool returned = false;
     int r = 0;
@@ -135,11 +135,10 @@ contract LoopTest {
         i++;
       }
     }
-    require((returned ? ret : r) == retVal);
-    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
+    return returned ? ret : r;
   }
 
-  public function f5(int retVal, SigHashPreimage txPreimage) {
+  function f5() : int {
     int r = 0;
     bool loopBreakFlag0 = false;
     int i = 0;
@@ -169,11 +168,10 @@ contract LoopTest {
         }
       }
     }
-    require(r == retVal);
-    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
+    return r;
   }
 
-  public function f6(int retVal, SigHashPreimage txPreimage) {
+  function f6() : int {
     int ret = 0;
     bool returned = false;
     int r = 0;
@@ -204,11 +202,10 @@ contract LoopTest {
         i++;
       }
     }
-    require((returned ? ret : r) == retVal);
-    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
+    return returned ? ret : r;
   }
 
-  public function f7(int retVal, SigHashPreimage txPreimage) {
+  function f7() : int {
     int r = 0;
     int i = 0;
     loop (__LoopCount__0) {
@@ -246,8 +243,29 @@ contract LoopTest {
         i++;
       }
     }
-    require(r == retVal);
-    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
+    return r;
+  }
+
+  function f8() : int {
+    int sum = 0;
+    int i = 0;
+    {
+      sum += i;
+      i++;
+    }
+    loop (__LoopCount__0) {
+      if (i < 100) {
+        bool loopContinueFlag0 = false;
+        sum += i;
+        if (sum < 20) {
+          loopContinueFlag0 = true;
+        }
+        if (!loopContinueFlag0) {
+          i++;
+        }
+      }
+    }
+    return sum;
   }
 
   function propagateState(SigHashPreimage txPreimage, int value) : bool {

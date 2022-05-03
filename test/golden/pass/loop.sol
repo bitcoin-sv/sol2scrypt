@@ -47,7 +47,7 @@ contract LoopTest {
     }
   }
 
-  function f4() public returns(uint) {
+  function f4() internal pure  returns(uint) {
     uint r = 0;
     for(uint i =0; i<10; i++) {
       do {
@@ -65,7 +65,7 @@ contract LoopTest {
   }
 
 
-  function f5() public returns(uint) {
+  function f5() internal pure  returns(uint) {
     uint r = 0;
     for (uint i = 0; i < 10; i++) {
         while (true) {
@@ -85,7 +85,7 @@ contract LoopTest {
   }
 
 
-  function f6() public returns(uint) {
+  function f6() internal pure  returns(uint) {
     uint r = 0;
     for (uint i = 0; i < 10; i++) {
         if (i == 3) {
@@ -102,7 +102,7 @@ contract LoopTest {
     return r;
   }
 
-   function f7() public returns(uint) {
+   function f7() internal pure returns(uint) {
     uint r = 0;
     for (uint i = 0; i < 10; i++) {
         r++;
@@ -125,6 +125,18 @@ contract LoopTest {
         r++;
     }
     return r;
+  }
+
+  function f8() internal pure returns(uint) {
+    uint sum = 0;
+    uint i = 0;
+    do {
+      sum += i;
+      if (sum < 20)
+          continue;
+      i++;
+    } while (i < 100);
+    return sum;
   }
 
 }
