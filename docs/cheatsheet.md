@@ -509,7 +509,7 @@ loop (__LoopCount__0) {
 
 <tr>
     <td ><b>msg.sender</b></td>
-    <td><pre><code>msg.sender;</code></pre></td>
+    <td><pre><code>msg.sender</code></pre></td>
     <td><pre><code>PubKeyHash msgSender = hash160(pubKey);
 require(checkSig(sig, pubKey));</code></pre></td>
     <td>will automatically add two parameters to the function signature： <pre><code>Sig sig, PubKey pubKey</code></pre></td>
@@ -517,7 +517,7 @@ require(checkSig(sig, pubKey));</code></pre></td>
 
 <tr>
     <td ><b>msg.value</b></td>
-    <td><pre><code>msg.value;</code></pre></td>
+    <td><pre><code>msg.value</code></pre></td>
     <td><pre><code>SigHash.value(txPreimage);</code></pre></td>
     <td>will automatically add one parameter to the function signature： <pre><code>SigHashPreimage txPreimage</code></pre></td>
 </tr>
@@ -665,11 +665,11 @@ fallback() external payable {}</code></pre></code></td>
 
 <tr>
     <td ><b>Buildin Function</b></td>
-    <td><pre><code>keccak256();
-ecrecover();
-addmod();
-mulmod();
-selfdestruct();
+    <td><pre><code>keccak256()
+ecrecover()
+addmod()
+mulmod()
+selfdestruct()
 </code></pre></code></td>
 </tr>
 
