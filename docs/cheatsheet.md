@@ -556,7 +556,7 @@ require(this.propagateState(txPreimage, contractBalance));
 </tr>
 
 <tr>
-    <td ><b>Parallel Assignment</b></td>
+    <td ><b>Destructuring Assignment</b></td>
     <td><pre><code>(x, y) = (0, 1); </code></pre></td>
 </tr>
 
