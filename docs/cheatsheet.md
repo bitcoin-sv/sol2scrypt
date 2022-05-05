@@ -518,8 +518,13 @@ require(checkSig(sig, pubKey));</code></pre></td>
 <tr>
     <td ><b>msg.value</b></td>
     <td><pre><code>msg.value</code></pre></td>
-    <td><pre><code>SigHash.value(txPreimage);</code></pre></td>
-    <td>will automatically add one parameter to the function signature： <pre><code>SigHashPreimage txPreimage</code></pre></td>
+    <td><pre><code>int contractBalance = SigHash.value(txPreimage) + msgValue;
+...
+require(this.propagateState(txPreimage, contractBalance));
+</code></pre></td>
+    <td>will automatically add one parameter to the function signature： <code>int msgValue</code> 
+<br>
+<code>propagateState</code> makes sure that the contract balance has indeed increased</td>
 </tr>
 
 </tbody>
