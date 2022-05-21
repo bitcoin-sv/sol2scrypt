@@ -24,11 +24,11 @@ contract WithdrawalContract {
     require(msgValue >= 0);
     if (msgValue <= this.mostSent)
       require(false);
-    require((!this.pendingWithdrawals.has(this.richest, i0) && pendingWithdrawals_richest == 0) || this.pendingWithdrawals.canGet(this.richest, pendingWithdrawals_richest, i0));
+    require((!this.pendingWithdrawals.has({this.richest, i0}) && pendingWithdrawals_richest == 0) || this.pendingWithdrawals.canGet({this.richest, i0}, pendingWithdrawals_richest));
     pendingWithdrawals_richest += msgValue;
     this.richest = msgSender;
     this.mostSent = msgValue;
-    require(this.pendingWithdrawals.set(this.richest, pendingWithdrawals_richest, i0));
+    require(this.pendingWithdrawals.set({this.richest, i0}, pendingWithdrawals_richest));
     require(this.propagateState(txPreimage, contractBalance));
   }
 
@@ -36,10 +36,10 @@ contract WithdrawalContract {
     require(this.checkInitBalance(txPreimage));
     PubKeyHash msgSender = hash160(pubKey);
     require(checkSig(sig, pubKey));
-    require((!this.pendingWithdrawals.has(msgSender, i0) && pendingWithdrawals_msgSender == 0) || this.pendingWithdrawals.canGet(msgSender, pendingWithdrawals_msgSender, i0));
+    require((!this.pendingWithdrawals.has({msgSender, i0}) && pendingWithdrawals_msgSender == 0) || this.pendingWithdrawals.canGet({msgSender, i0}, pendingWithdrawals_msgSender));
     int amount = pendingWithdrawals_msgSender;
     pendingWithdrawals_msgSender = 0;
-    require(this.pendingWithdrawals.set(msgSender, pendingWithdrawals_msgSender, i0));
+    require(this.pendingWithdrawals.set({msgSender, i0}, pendingWithdrawals_msgSender));
     require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 

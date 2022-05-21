@@ -426,7 +426,7 @@ transForConstructorWithMsgValue =
       ]
   )
 
--- <mapExpr>.set(<keyExpr>, <valExpr>, <idxExpr>)
+-- <mapExpr>.set({<keyExpr>, <idxExpr>}, <valExpr>)
 mapSetExpr :: IExpression -> IExpression -> String -> Int -> IExpression
 mapSetExpr mapExpr keyExpr postfix idx =
   let e = Just $ BinaryExpr Index mapExpr keyExpr
@@ -437,13 +437,12 @@ mapSetExpr mapExpr keyExpr postfix idx =
                 member = IR.Identifier "set"
               },
           funcParamExprs =
-            [ keyExpr,
-              fromJust $ valueExprOfMapping e postfix,
-              fromJust $ indexExprOfMapping idx
+            [ StructLiteralExpr [keyExpr, fromJust $ indexExprOfMapping idx],
+              fromJust $ valueExprOfMapping e postfix
             ]
         }
 
--- -- require(<mapExpr>.set(keyExpr, valExpr, idxExpr))
+-- -- require(<mapExpr>.set({keyExpr, idxExpr}, valExpr))
 afterCheckStmt :: IExpression -> IExpression -> String -> Int -> IStatement
 afterCheckStmt mapExpr keyExpr postfix i =
   IR.RequireStmt $ mapSetExpr mapExpr keyExpr postfix i

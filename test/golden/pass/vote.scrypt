@@ -22,7 +22,7 @@ contract Ballot {
 
   constructor(bytes[10] proposalNames, PubKeyHash msgSender) {
     this.chairperson = msgSender;
-    require((!this.voters.has(this.chairperson, i0) && voters_chairperson == {0, false, Ripemd160(b'0000000000000000000000000000000000000000'), 0}) || this.voters.canGet(this.chairperson, voters_chairperson, i0));
+    require((!this.voters.has({this.chairperson, i0}) && voters_chairperson == {0, false, Ripemd160(b'0000000000000000000000000000000000000000'), 0}) || this.voters.canGet({this.chairperson, i0}, voters_chairperson));
     voters_chairperson.weight = 1;
     int i = 0;
     loop (__LoopCount__0) {
@@ -37,7 +37,7 @@ contract Ballot {
     PubKeyHash msgSender = hash160(pubKey);
     require(checkSig(sig, pubKey));
     require(msgSender == this.chairperson);
-    require((!this.voters.has(voter, i0) && voters_voter == {0, false, Ripemd160(b'0000000000000000000000000000000000000000'), 0}) || this.voters.canGet(voter, voters_voter, i0));
+    require((!this.voters.has({voter, i0}) && voters_voter == {0, false, Ripemd160(b'0000000000000000000000000000000000000000'), 0}) || this.voters.canGet({voter, i0}, voters_voter));
     require(!voters_voter.voted);
     require(voters_voter.weight == 0);
     voters_voter.weight = 1;
@@ -47,7 +47,7 @@ contract Ballot {
   public function delegate(PubKeyHash to, Sig sig, PubKey pubKey, Voter voters_msgSender, int i0, Voter voters_to, int i1, SigHashPreimage txPreimage) {
     PubKeyHash msgSender = hash160(pubKey);
     require(checkSig(sig, pubKey));
-    require((!this.voters.has(msgSender, i0) && voters_msgSender == {0, false, Ripemd160(b'0000000000000000000000000000000000000000'), 0}) || this.voters.canGet(msgSender, voters_msgSender, i0));
+    require((!this.voters.has({msgSender, i0}) && voters_msgSender == {0, false, Ripemd160(b'0000000000000000000000000000000000000000'), 0}) || this.voters.canGet({msgSender, i0}, voters_msgSender));
     Voter sender = voters_msgSender;
     require(!sender.voted);
     require(to != msgSender);
@@ -73,7 +73,7 @@ contract Ballot {
   public function vote(int proposal, Sig sig, PubKey pubKey, Voter voters_msgSender, int i0, SigHashPreimage txPreimage) {
     PubKeyHash msgSender = hash160(pubKey);
     require(checkSig(sig, pubKey));
-    require((!this.voters.has(msgSender, i0) && voters_msgSender == {0, false, Ripemd160(b'0000000000000000000000000000000000000000'), 0}) || this.voters.canGet(msgSender, voters_msgSender, i0));
+    require((!this.voters.has({msgSender, i0}) && voters_msgSender == {0, false, Ripemd160(b'0000000000000000000000000000000000000000'), 0}) || this.voters.canGet({msgSender, i0}, voters_msgSender));
     Voter sender = voters_msgSender;
     require(sender.weight != 0);
     require(!sender.voted);

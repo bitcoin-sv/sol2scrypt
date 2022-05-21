@@ -27,15 +27,15 @@ contract Coin {
       }
     }
     if (!returned) {
-      require((!this.balances.has(receiver, i0) && balances_receiver == 0) || this.balances.canGet(receiver, balances_receiver, i0));
+      require((!this.balances.has({receiver, i0}) && balances_receiver == 0) || this.balances.canGet({receiver, i0}, balances_receiver));
       balances_receiver += amount;
-      require((!this.b1.has(receiver, i1) && b1_receiver == false) || this.b1.canGet(receiver, b1_receiver, i1));
+      require((!this.b1.has({receiver, i1}) && b1_receiver == false) || this.b1.canGet({receiver, i1}, b1_receiver));
       b1_receiver != true;
-      require((!this.b2.has(receiver, i2) && b2_receiver == b'') || this.b2.canGet(receiver, b2_receiver, i2));
+      require((!this.b2.has({receiver, i2}) && b2_receiver == b'') || this.b2.canGet({receiver, i2}, b2_receiver));
       b2_receiver = b'0001';
     }
-    require(this.b2.set(receiver, b2_receiver, i2));
-    require(this.balances.set(receiver, balances_receiver, i0));
+    require(this.b2.set({receiver, i2}, b2_receiver));
+    require(this.balances.set({receiver, i0}, balances_receiver));
     require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
@@ -44,7 +44,7 @@ contract Coin {
     bool returned = false;
     PubKeyHash msgSender = hash160(pubKey);
     require(checkSig(sig, pubKey));
-    require((!this.balances.has(msgSender, i0) && balances_msgSender == 0) || this.balances.canGet(msgSender, balances_msgSender, i0));
+    require((!this.balances.has({msgSender, i0}) && balances_msgSender == 0) || this.balances.canGet({msgSender, i0}, balances_msgSender));
     if (balances_msgSender < amount) {
       {
         ret = true;
@@ -53,16 +53,16 @@ contract Coin {
     }
     if (!returned) {
       balances_msgSender -= amount;
-      require((!this.balances.has(receiver, i1) && balances_receiver == 0) || this.balances.canGet(receiver, balances_receiver, i1));
+      require((!this.balances.has({receiver, i1}) && balances_receiver == 0) || this.balances.canGet({receiver, i1}, balances_receiver));
       balances_receiver += amount;
-      require((!this.b1.has(receiver, i2) && b1_receiver == false) || this.b1.canGet(receiver, b1_receiver, i2));
+      require((!this.b1.has({receiver, i2}) && b1_receiver == false) || this.b1.canGet({receiver, i2}, b1_receiver));
       b1_receiver != a;
-      require((!this.b2.has(receiver, i3) && b2_receiver == b'') || this.b2.canGet(receiver, b2_receiver, i3));
+      require((!this.b2.has({receiver, i3}) && b2_receiver == b'') || this.b2.canGet({receiver, i3}, b2_receiver));
       b2_receiver = b;
     }
-    require(this.b2.set(receiver, b2_receiver, i3));
-    require(this.balances.set(msgSender, balances_msgSender, i0));
-    require(this.balances.set(receiver, balances_receiver, i1));
+    require(this.b2.set({receiver, i3}, b2_receiver));
+    require(this.balances.set({msgSender, i0}, balances_msgSender));
+    require(this.balances.set({receiver, i1}, balances_receiver));
     require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 

@@ -429,7 +429,7 @@ leaveBlockInLoop = do
     -- keep the flag if has no outer block
     propagateFlags flags = flags
 
--- -- require((!<mapExpr>.has(<keyExpr>, <idxExpr>)) || <mapExpr>.canGet(<keyExpr>, <valExpr>, <idxExpr>));
+-- -- require((!<mapExpr>.has({<keyExpr>, <idxExpr>})) && <valExpr> == <defaultValue> || <mapExpr>.canGet({<keyExpr>, <idxExpr>}, <valExpr>));
 preCheckStmt :: IType' -> IExpression -> IExpression -> String -> Int -> Transformation IStatement
 preCheckStmt t mapExpr keyExpr postfix idx = do
   defaultValue <- defaultValueExpr t
@@ -453,8 +453,7 @@ preCheckStmt t mapExpr keyExpr postfix idx = do
                                         member = IR.Identifier "has"
                                       },
                                   funcParamExprs =
-                                    [ keyExpr,
-                                      fromJust $ indexExprOfMapping idx
+                                    [ StructLiteralExpr [keyExpr, fromJust $ indexExprOfMapping idx]
                                     ]
                                 }
                           },
@@ -471,7 +470,7 @@ preCheckStmt t mapExpr keyExpr postfix idx = do
   where
     e = Just $ BinaryExpr Index mapExpr keyExpr
 
--- -- <mapExpr>.canGet(<keyExpr>, <valExpr>, <idxExpr>)
+-- -- <mapExpr>.canGet({<keyExpr>, <idxExpr>}, <valExpr>)
 mapCanGetExpr :: IExpression -> IExpression -> String -> Int -> IExpression
 mapCanGetExpr mapExpr keyExpr postfix idx =
   let e = Just $ BinaryExpr Index mapExpr keyExpr
@@ -482,8 +481,7 @@ mapCanGetExpr mapExpr keyExpr postfix idx =
                 member = IR.Identifier "canGet"
               },
           funcParamExprs =
-            [ keyExpr,
-              fromJust $ valueExprOfMapping e postfix,
-              fromJust $ indexExprOfMapping idx
+            [ StructLiteralExpr [keyExpr, fromJust $ indexExprOfMapping idx],
+              fromJust $ valueExprOfMapping e postfix
             ]
         }

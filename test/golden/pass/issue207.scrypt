@@ -3,16 +3,16 @@ contract Mapping {
   public HashedMap<PubKeyHash, int> myMap;
 
   public function get(PubKeyHash addr, int myMap_addr, int i0, SigHashPreimage txPreimage) {
-    require((!this.myMap.has(addr, i0) && myMap_addr == 0) || this.myMap.canGet(addr, myMap_addr, i0));
+    require((!this.myMap.has({addr, i0}) && myMap_addr == 0) || this.myMap.canGet({addr, i0}, myMap_addr));
     myMap_addr++;
-    require(this.myMap.set(addr, myMap_addr, i0));
+    require(this.myMap.set({addr, i0}, myMap_addr));
     require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
   public function set(PubKeyHash addr, int x, int myMap_addr, int i0, SigHashPreimage txPreimage) {
-    require((!this.myMap.has(addr, i0) && myMap_addr == 0) || this.myMap.canGet(addr, myMap_addr, i0));
+    require((!this.myMap.has({addr, i0}) && myMap_addr == 0) || this.myMap.canGet({addr, i0}, myMap_addr));
     myMap_addr = x;
-    require(this.myMap.set(addr, myMap_addr, i0));
+    require(this.myMap.set({addr, i0}, myMap_addr));
     require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
   }
 
