@@ -776,12 +776,12 @@ public function get(int msgValue, SigHashPreimage txPreimage) {
 public function send(PubKeyHash receiver, int amount, Sig sig, PubKey pubKey, int balances_msgSender, int i0, int balances_receiver, int i1, SigHashPreimage txPreimage) {
   PubKeyHash msgSender = hash160(pubKey);
   require(checkSig(sig, pubKey));
-  require((!balances.has(msgSender, i0) && balances_msgSender == 0) || balances.canGet(msgSender, balances_msgSender, i0));
+  require((!balances.has({msgSender, i0}) && balances_msgSender == 0) || balances.canGet({msgSender, i0}, balances_msgSender));
   balances_msgSender -= amount;
-  require((!balances.has(receiver, i1) && balances_receiver == 0) || balances.canGet(receiver, balances_receiver, i1));
+  require((!balances.has({receiver, i1}) && balances_receiver == 0) || balances.canGet({receiver, i1}, balances_receiver));
   balances_receiver += amount;
-  require(balances.set(msgSender, balances_msgSender, i0));
-  require(balances.set(receiver, balances_receiver, i1));
+  require(balances.set({msgSender, i0}, balances_msgSender));
+  require(balances.set({receiver, i1}, balances_receiver));
   require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
 }|]
 
@@ -796,12 +796,12 @@ public function send(PubKeyHash receiver, int amount, Sig sig, PubKey pubKey, in
       [r|
 public function send(PubKeyHash receiver, int amount, int balances_owner, int i0, int balances_receiver, int i1, SigHashPreimage txPreimage) {
   PubKeyHash owner = getOwner();
-  require((!balances.has(owner, i0) && balances_owner == 0) || balances.canGet(owner, balances_owner, i0));
+  require((!balances.has({owner, i0}) && balances_owner == 0) || balances.canGet({owner, i0}, balances_owner));
   balances_owner -= amount;
-  require((!balances.has(receiver, i1) && balances_receiver == 0) || balances.canGet(receiver, balances_receiver, i1));
+  require((!balances.has({receiver, i1}) && balances_receiver == 0) || balances.canGet({receiver, i1}, balances_receiver));
   balances_receiver += amount;
-  require(balances.set(owner, balances_owner, i0));
-  require(balances.set(receiver, balances_receiver, i1));
+  require(balances.set({owner, i0}, balances_owner));
+  require(balances.set({receiver, i1}, balances_receiver));
   require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
 }|]
 

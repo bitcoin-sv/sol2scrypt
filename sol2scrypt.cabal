@@ -5,7 +5,7 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           sol2scrypt
-version:        0.1.4
+version:        0.1.5
 description:    A Solidity to sCrypt Transpiler. See more at https://github.com/sCrypt-Inc/sol2scrypt
 homepage:       https://github.com/sCrypt-Inc/sol2scrypt#readme
 bug-reports:    https://github.com/sCrypt-Inc/sol2scrypt/issues
