@@ -15,10 +15,14 @@ import Utils
 import Helper
 import qualified Data.Set as Set
 
+
+testTranspile :: (Parseable a, ToIRTransformable a b, ToScryptTransformable b c, Generable c) => String -> FilePath -> IO (TranspileResult a b c)
+testTranspile = transpile' (TransformState [] Nothing Map.empty [] Map.empty [] 0 [] False Set.empty Set.empty [] False False 1)
+
 -- transpile full solidity function
 transpileSol :: String -> IO (String, Logs)
 transpileSol sol = do
-  tr :: TranspileResult (Sol.ContractPart SourceRange) IFunction' (Maybe (Scr.Function Ann)) <- transpile sol ""
+  tr :: TranspileResult (Sol.ContractPart SourceRange) IFunction' (Maybe (Scr.Function Ann)) <- testTranspile sol ""
   return (scryptCode tr, transpileLogs tr)
 
 spec :: IO TestTree
@@ -762,7 +766,7 @@ public function get(int msgValue, SigHashPreimage txPreimage) {
             let mapSym = Symbol (IR.Identifier mapName) (Mapping (ElementaryType Address) (ElementaryType IR.Int)) False False False
                 initEnv =  [Map.insert (IR.Identifier mapName) mapSym Map.empty]
             tr :: TranspileResult (Sol.ContractPart SourceRange) IFunction' (Maybe (Scr.Function Ann)) <- 
-                          transpile' (TransformState initEnv Nothing Map.empty [] Map.empty [] 0 [] False Set.empty Set.empty [] False False) sol ""
+                          transpile' (TransformState initEnv Nothing Map.empty [] Map.empty [] 0 [] False Set.empty Set.empty [] False False 1) sol ""
             scryptCode tr `shouldBe` scrypt
 
     itTranspileWithMapping
