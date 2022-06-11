@@ -151,7 +151,9 @@ toIRFuncParams (ParameterList pl) _ (FuncRetTransResult _ ort rn) vis funcBlk = 
             return (extraParams1, blkT1)
       else return (extraParams1, blkT1)
 
+  sCount <- gets stateStatePropertyCount
   let needPreimageParam
+        | sCount == 0 = False
         | vis == IR.Public = True
         | fst msgValueExist = True
         | otherwise = False
@@ -291,7 +293,18 @@ toIRFuncBody fn blk@(Sol.Block _ _) vis wrapperFromParam (FuncRetTransResult _ o
                       (IR.MemberAccessExpr thisExpr (IR.ReservedId funcCheckInitBalance))
                       [ridExpr varTxPreimage]
 
-      return $ Right (ParamList pl, IR.Block $ catMaybes stmts6)
+      let stmts7 = if vis == Public 
+                    then 
+                      if null stmts6 then
+                        [Just (IR.RequireStmt (IR.LiteralExpr (IR.BoolLiteral True)))]
+                      else 
+                        case last stmts6 of
+                          (Just (IR.RequireStmt _)) -> stmts6
+                          _ -> stmts6 ++ [Just (IR.RequireStmt (IR.LiteralExpr (IR.BoolLiteral True)))]
+                    else 
+                      stmts6
+
+      return $ Right (ParamList pl, IR.Block $ catMaybes stmts7)
 
 mirror :: IIdentifier' -> IIdentifier
 mirror (Just (IR.Identifier i)) = IR.Identifier ("_" ++ i)

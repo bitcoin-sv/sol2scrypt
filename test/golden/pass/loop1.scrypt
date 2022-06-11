@@ -1,0 +1,33 @@
+contract Loop {
+  static const int __LoopCount__0 = 1;
+
+  static const int __LoopCount__1 = 1;
+
+  public function userDefined_loop() {
+    bool loopBreakFlag0 = false;
+    int i = 0;
+    loop (__LoopCount__0) {
+      if (!loopBreakFlag0 && i < 10) {
+        bool loopContinueFlag0 = false;
+        if (i == 3) {
+          loopContinueFlag0 = true;
+        }
+        if (!loopContinueFlag0) {
+          if (i == 5) {
+            loopBreakFlag0 = true;
+          }
+        }
+        if (!loopBreakFlag0) {
+          i++;
+        }
+      }
+    }
+    int j = 0;
+    loop (__LoopCount__1) {
+      if (j < 10) {
+        j++;
+      }
+    }
+    require(true);
+  }
+}

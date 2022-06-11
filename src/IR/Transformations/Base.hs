@@ -46,7 +46,8 @@ data TransformState = TransformState
     -- whether contract's balance got changed in function
     stateBalanceChanged :: Bool,
     -- need generate a contract property (`initBalance`) to store the initial value of contract balance
-    stateNeedInitBalace :: Bool
+    stateNeedInitBalace :: Bool,
+    stateStatePropertyCount :: Integer
   }
   deriving (Show, Eq, Ord)
 
@@ -175,6 +176,7 @@ addSym (Just sym) = do
 lookupSymbol :: SymbolName -> Env -> Maybe Symbol
 lookupSymbol _ [] = Nothing
 lookupSymbol sn (scope : scopes) = Map.lookup sn scope <|> lookupSymbol sn scopes
+
 
 lookupSym :: SymbolName -> Transformation (Maybe Symbol)
 lookupSym sn = do

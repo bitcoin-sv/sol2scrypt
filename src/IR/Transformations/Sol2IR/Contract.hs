@@ -26,7 +26,7 @@ import Solidity.Spec as Sol
 instance ToIRTransformable (ContractDefinition SourceRange) IContract' where
   _toIR (Sol.ContractDefinition False "contract" cn [] cps _) = do
     -- reset state
-    modify $ \s -> s {stateNeedInitBalace = False}
+    modify $ \s -> s {stateNeedInitBalace = False, stateStatePropertyCount = 0}
     cn' <- _toIR cn
     addSym $ Symbol <$> cn' <*> Just contractSymType <*> Just False <*> Just False <*> Just False
     enterScope
@@ -86,7 +86,14 @@ instance ToIRTransformable (Sol.PragmaDirective SourceRange) IR.IEmpty where
 
 instance ToIRTransformable (Sol.ContractPart SourceRange) IContractBodyElement' where
   _toIR (Sol.ContractPartStateVariableDeclaration e _) = do
+
+    sCount <- gets stateStatePropertyCount
     e' :: IProperty' <- _toIR e
+
+    let isState = fromMaybe False (unState . propIsState <$> e')
+
+    modify $ \s -> s { stateStatePropertyCount = if isState then sCount + 1 else sCount }
+
     addSym $ Symbol <$> (propName <$> e') <*> (propType <$> e') <*> Just True <*> (unConst . propIsConstant <$> e') <*> (unStatic . propIsStatic <$> e')
     return $ IR.PropertyDefinition <$> e'
   _toIR Sol.ContractPartEventDefinition {} = return Nothing -- TODO: report info: `event definition will be ignored`
